@@ -3,6 +3,7 @@ import { CitationVerificationState, EntityKind, FactEditorialStatus, FactSensiti
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { AuthUser } from '../../common/decorators/current-user.decorator';
+import { buildHistoricalDateColumns } from '../../common/historical-date/historical-date.util';
 import { CreateFactDto } from './dto/fact.dto';
 
 const FORWARD_TRANSITIONS: Record<FactEditorialStatus, FactEditorialStatus[]> = {
@@ -27,13 +28,21 @@ export class FactsService {
   constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
 
   async create(dto: CreateFactDto, actorId: string) {
+    const date = buildHistoricalDateColumns(dto.date);
     const fact = await this.prisma.historicalFact.create({
       data: {
         factType: dto.factType,
-        dateStart: dto.dateStart ? new Date(dto.dateStart) : undefined,
-        dateEnd: dto.dateEnd ? new Date(dto.dateEnd) : undefined,
-        datePrecision: dto.datePrecision,
-        dateLabel: dto.dateLabel,
+        dateYear: date.year,
+        dateMonth: date.month,
+        dateDay: date.day,
+        datePrecision: date.precision,
+        dateQualifier: date.qualifier,
+        dateEndYear: date.endYear,
+        dateEndMonth: date.endMonth,
+        dateEndDay: date.endDay,
+        dateLabel: date.label,
+        dateSortStart: date.sortStart,
+        dateSortEnd: date.sortEnd,
         certainty: dto.certainty,
         sensitivity: dto.sensitivity ?? FactSensitivity.NORMAL,
         createdById: actorId,

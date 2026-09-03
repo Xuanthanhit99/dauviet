@@ -28,8 +28,13 @@ A `User.roles` is a Postgres array (`Role[]`) - one account can hold several rol
 | Events | `POST /events` | `EDITOR`, `ADMIN` |
 | Events | `PATCH /events/:id/publication-status` | `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` |
 | Eras | `POST /eras` | `EDITOR`, `ADMIN` |
+| Eras | `PATCH /eras/:id/parent` | `EDITOR`, `ADMIN` (cycle-checked in service - see `docs/backend/HISTORICAL_DOMAIN.md` section 8) |
 | Dynasties | `POST /dynasties` | `EDITOR`, `ADMIN` |
 | Territories | `POST /territories` | `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` |
+| Territories | `PATCH /territories/:id/geometry` | `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` (appends a `TerritoryGeometryRevision`, resets `geometryStatus` to `DRAFT`) |
+| Territories | `PATCH /territories/:id/geometry-status` | `HISTORIAN_REVIEWER`, `ADMIN` only (publishing reviewed geometry is intentionally a stricter gate than editing it) |
+| Aliases | `POST /aliases`, `DELETE /aliases/:id` | `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` |
+| Themes | `POST /themes`, `POST/DELETE /themes/:id/events/:eventId` | `EDITOR`, `ADMIN` |
 | Facts | every `/facts/**` route (create, link, editorial-status) | `CONTRIBUTOR`, `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` (module-level guard; see separation-of-duties note for the extra in-service check on publishing) |
 | Sources | `POST /sources` | `CONTRIBUTOR`, `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` |
 | Sources | `POST /sources/:id/documents` | `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` |

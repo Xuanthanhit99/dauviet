@@ -85,13 +85,17 @@ export class MapService {
     let territoryFeatures: any[] = [];
     if (query.year !== undefined) {
       const yearDate = new Date(Date.UTC(query.year, 0, 1));
+      // geometryStatus = 'PUBLISHED' only - draft/in-review/sensitive
+      // historical geometry must never leak through the generic bbox
+      // endpoint (spec section 33).
       const territoryRows = await this.prisma.$queryRaw<TerritoryRow[]>`
         SELECT t."id", t."canonicalSlug", t."type"::text as type, ST_AsGeoJSON(t."geometry") as geojson
         FROM "Territory" t
         WHERE t."geometry" IS NOT NULL
+          AND t."geometryStatus" = 'PUBLISHED'
           AND ST_Intersects(t."geometry", ST_MakeEnvelope(${minLng}, ${minLat}, ${maxLng}, ${maxLat}, 4326))
-          AND (t."validFrom" IS NULL OR t."validFrom" <= ${yearDate})
-          AND (t."validTo" IS NULL OR t."validTo" >= ${yearDate})
+          AND (t."sortStart" IS NULL OR t."sortStart" <= ${yearDate})
+          AND (t."sortEnd" IS NULL OR t."sortEnd" >= ${yearDate})
         LIMIT ${MAX_FEATURES}
       `;
 

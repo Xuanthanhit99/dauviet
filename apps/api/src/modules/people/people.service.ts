@@ -5,6 +5,7 @@ import { AuditService } from '../audit/audit.service';
 import { resolveTranslation } from '../../common/translation/resolve-translation.util';
 import { toSlug } from '../../common/util/slug.util';
 import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
+import { buildHistoricalDateColumns, toHistoricalDateResponse } from '../../common/historical-date/historical-date.util';
 import { CreatePersonDto } from './dto/person.dto';
 
 @Injectable()
@@ -28,16 +29,34 @@ export class PeopleService {
     if (!canonical) throw new BadRequestException('At least one translation is required.');
 
     const canonicalSlug = await this.ensureUniqueSlug(toSlug(canonical.displayName));
+    const birth = buildHistoricalDateColumns(dto.birth);
+    const death = buildHistoricalDateColumns(dto.death);
 
     const person = await this.prisma.person.create({
       data: {
         canonicalSlug,
-        birthDateStart: dto.birthDateStart ? new Date(dto.birthDateStart) : undefined,
-        birthDatePrecision: dto.birthDatePrecision,
-        birthDateLabel: dto.birthDateLabel,
-        deathDateStart: dto.deathDateStart ? new Date(dto.deathDateStart) : undefined,
-        deathDatePrecision: dto.deathDatePrecision,
-        deathDateLabel: dto.deathDateLabel,
+        birthYear: birth.year,
+        birthMonth: birth.month,
+        birthDay: birth.day,
+        birthPrecision: birth.precision,
+        birthQualifier: birth.qualifier,
+        birthEndYear: birth.endYear,
+        birthEndMonth: birth.endMonth,
+        birthEndDay: birth.endDay,
+        birthLabel: birth.label,
+        birthSortStart: birth.sortStart,
+        birthSortEnd: birth.sortEnd,
+        deathYear: death.year,
+        deathMonth: death.month,
+        deathDay: death.day,
+        deathPrecision: death.precision,
+        deathQualifier: death.qualifier,
+        deathEndYear: death.endYear,
+        deathEndMonth: death.endMonth,
+        deathEndDay: death.endDay,
+        deathLabel: death.label,
+        deathSortStart: death.sortStart,
+        deathSortEnd: death.sortEnd,
         translations: {
           create: dto.translations.map((t) => ({
             locale: t.locale,
@@ -70,16 +89,38 @@ export class PeopleService {
     return {
       id: person.id,
       slug: person.canonicalSlug,
-      birth: {
-        start: person.birthDateStart,
-        precision: person.birthDatePrecision,
-        label: person.birthDateLabel,
-      },
-      death: {
-        start: person.deathDateStart,
-        precision: person.deathDatePrecision,
-        label: person.deathDateLabel,
-      },
+      birth: toHistoricalDateResponse(
+        {
+          year: person.birthYear,
+          month: person.birthMonth,
+          day: person.birthDay,
+          precision: person.birthPrecision,
+          qualifier: person.birthQualifier,
+          endYear: person.birthEndYear,
+          endMonth: person.birthEndMonth,
+          endDay: person.birthEndDay,
+          label: person.birthLabel,
+          sortStart: person.birthSortStart,
+          sortEnd: person.birthSortEnd,
+        },
+        locale,
+      ),
+      death: toHistoricalDateResponse(
+        {
+          year: person.deathYear,
+          month: person.deathMonth,
+          day: person.deathDay,
+          precision: person.deathPrecision,
+          qualifier: person.deathQualifier,
+          endYear: person.deathEndYear,
+          endMonth: person.deathEndMonth,
+          endDay: person.deathEndDay,
+          label: person.deathLabel,
+          sortStart: person.deathSortStart,
+          sortEnd: person.deathSortEnd,
+        },
+        locale,
+      ),
       heroMedia: person.heroMedia,
       translation,
       meta: { requestedLocale: locale, resolvedLocale, fallbackApplied },

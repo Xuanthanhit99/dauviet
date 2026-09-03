@@ -11,7 +11,9 @@
 // - PostGIS geometry columns are declared Unsupported() because Prisma has no native GIS
 //   type; all spatial writes/reads go through raw SQL in the map/territory services.
 // - Historical dates are never forced into a single precise timestamp: every dated entity
-//   carries start/end/precision/label columns instead of one DateTime.
+//   carries explicit year/month/day + precision + qualifier columns (never a fabricated
+//   Jan-1 for a year-only date) plus internal sort-only DateTime columns for range queries.
+//   See docs/backend/HISTORICAL_DOMAIN.md for the full contract (spec Phase 03 section 3).
 
 generator client {
   provider        = "prisma-client-js"
@@ -94,13 +96,28 @@ enum PlaceType {
   OTHER
 }
 
+// Historical date model (docs/backend/HISTORICAL_DOMAIN.md). `precision`
+// says how granular the known value is; `DateQualifier` (below) says how
+// certain/bounded it is. The two are independent: a YEAR-precision date can
+// be EXACT, CIRCA, BEFORE, AFTER, part of a BETWEEN range, UNCERTAIN, or a
+// TRADITIONAL/legendary account. Never conflate "coarse" with "uncertain".
 enum DatePrecision {
-  EXACT
+  DAY
   MONTH
   YEAR
-  APPROXIMATE_YEAR
-  RANGE
+  DECADE
+  CENTURY
   UNKNOWN
+}
+
+enum DateQualifier {
+  EXACT
+  CIRCA
+  BEFORE
+  AFTER
+  BETWEEN
+  UNCERTAIN
+  TRADITIONAL
 }
 
 enum FactType {
@@ -194,11 +211,41 @@ enum TranslationMethod {
   AI_ASSISTED
 }
 
+// Section 9: Person aliases in particular need finer distinctions than a
+// generic "alternate name" (a regnal name is not a temple name is not a
+// title). Place/Event aliases mostly use the first four values.
 enum AliasType {
   ALTERNATE_NAME
   HISTORICAL_NAME
   ROMANIZATION
+  TRANSLITERATION
+  ALTERNATE_SPELLING
   ABBREVIATION
+  BIRTH_NAME
+  REGNAL_NAME
+  TEMPLE_NAME
+  TITLE
+  EPITHET
+  OTHER
+}
+
+// Event classification (spec section 11). A catalog table + M2M join, not a
+// single rigid enum on HistoricalEvent - an event can carry more than one
+// theme (e.g. Bach Dang 1288 is both MILITARY and TERRITORIAL), and new
+// specific themes can be added as data without a schema migration. The
+// enum below is only the coarse, bounded category used for top-level
+// filters - it is intentionally not Vietnam-specific so it can grow.
+enum ThemeCategory {
+  POLITICAL
+  MILITARY
+  CULTURAL
+  DIPLOMATIC
+  RELIGIOUS
+  ECONOMIC
+  SOCIAL
+  SCIENTIFIC
+  TERRITORIAL
+  HERITAGE
   OTHER
 }
 
@@ -385,31 +432,33 @@ model Session {
 // =========================================================================
 
 model MediaAsset {
-  id                   String        @id @default(cuid())
-  type                 MediaType
-  storageKey           String
-  mimeType             String
-  sizeBytes            Int?
-  width                Int?
-  height               Int?
-  checksum             String?
-  title                String?
-  caption              String?
-  creatorName          String?
-  sourceId             String?
-  captureDate          DateTime?
-  captureDatePrecision DatePrecision @default(UNKNOWN)
-  license              String?
-  rightsHolder         String?
-  provenanceNote       String?
-  isHistorical         Boolean       @default(false)
-  isAiGenerated        Boolean       @default(false)
-  aiDisclosure         String?
-  parentAssetId        String?
-  accessPolicy         AccessPolicy  @default(PUBLIC)
-  uploadedById         String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  type             MediaType
+  storageKey       String
+  mimeType         String
+  sizeBytes        Int?
+  width            Int?
+  height           Int?
+  checksum         String?
+  title            String?
+  caption          String?
+  creatorName      String?
+  sourceId         String?
+  captureYear      Int?
+  captureMonth     Int?
+  captureDay       Int?
+  capturePrecision DatePrecision @default(UNKNOWN)
+  license          String?
+  rightsHolder     String?
+  provenanceNote   String?
+  isHistorical     Boolean       @default(false)
+  isAiGenerated    Boolean       @default(false)
+  aiDisclosure     String?
+  parentAssetId    String?
+  accessPolicy     AccessPolicy  @default(PUBLIC)
+  uploadedById     String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   source      Source?      @relation(fields: [sourceId], references: [id])
   parentAsset MediaAsset?  @relation("MediaDerivatives", fields: [parentAssetId], references: [id])
@@ -454,11 +503,15 @@ model EntityAlias {
   id         String     @id @default(cuid())
   entityType EntityKind
   entityId   String
-  locale     String?
+  // "" (not null) for a locale-agnostic alias, so the unique constraint
+  // below actually catches duplicates - Postgres treats NULL as distinct
+  // from NULL in unique indexes, which would silently let dupes through.
+  locale     String     @default("")
   alias      String
   aliasType  AliasType  @default(ALTERNATE_NAME)
   createdAt  DateTime   @default(now())
 
+  @@unique([entityType, entityId, locale, alias])
   @@index([entityType, entityId])
   @@index([alias])
 }
@@ -524,16 +577,36 @@ model PlaceTranslation {
 }
 
 model Person {
-  id                   String            @id @default(cuid())
-  canonicalSlug        String            @unique
-  birthDateStart       DateTime?
-  birthDateEnd         DateTime?
-  birthDatePrecision   DatePrecision     @default(UNKNOWN)
-  birthDateLabel       String?
-  deathDateStart       DateTime?
-  deathDateEnd         DateTime?
-  deathDatePrecision   DatePrecision     @default(UNKNOWN)
-  deathDateLabel       String?
+  id            String @id @default(cuid())
+  canonicalSlug String @unique
+
+  // Historical date model (docs/backend/HISTORICAL_DOMAIN.md) - year/month/day
+  // hold only what is actually known; birth*SortStart/End are internal
+  // ordering aids only, never returned as "the" date over the API.
+  birthYear      Int?
+  birthMonth     Int?
+  birthDay       Int?
+  birthPrecision DatePrecision @default(UNKNOWN)
+  birthQualifier DateQualifier @default(UNCERTAIN)
+  birthEndYear   Int?
+  birthEndMonth  Int?
+  birthEndDay    Int?
+  birthLabel     String?
+  birthSortStart DateTime?
+  birthSortEnd   DateTime?
+
+  deathYear      Int?
+  deathMonth     Int?
+  deathDay       Int?
+  deathPrecision DatePrecision @default(UNKNOWN)
+  deathQualifier DateQualifier @default(UNCERTAIN)
+  deathEndYear   Int?
+  deathEndMonth  Int?
+  deathEndDay    Int?
+  deathLabel     String?
+  deathSortStart DateTime?
+  deathSortEnd   DateTime?
+
   heroMediaId          String?
   historicalImportance Int               @default(0)
   publicationStatus    PublicationStatus @default(DRAFT)
@@ -579,10 +652,17 @@ model HistoricalEvent {
   canonicalSlug     String            @unique
   eraId             String?
   territoryId       String?
-  dateStart         DateTime?
-  dateEnd           DateTime?
+  dateYear          Int?
+  dateMonth         Int?
+  dateDay           Int?
   datePrecision     DatePrecision     @default(UNKNOWN)
+  dateQualifier     DateQualifier     @default(UNCERTAIN)
+  dateEndYear       Int?
+  dateEndMonth      Int?
+  dateEndDay        Int?
   dateLabel         String?
+  dateSortStart     DateTime?
+  dateSortEnd       DateTime?
   importance        Int               @default(0)
   heroMediaId       String?
   publicationStatus PublicationStatus @default(DRAFT)
@@ -599,9 +679,11 @@ model HistoricalEvent {
   factLinks      FactEvent[]
   storyLinks     StoryEvent[]
   communityLinks CommunityStoryEvent[]
+  themeLinks     EventTheme[]
 
   @@index([eraId])
   @@index([territoryId])
+  @@index([dateSortStart])
 }
 
 model HistoricalEventTranslation {
@@ -628,15 +710,30 @@ model HistoricalEventTranslation {
 }
 
 model HistoricalEra {
-  id            String        @id @default(cuid())
-  canonicalSlug String        @unique
+  id            String  @id @default(cuid())
+  canonicalSlug String  @unique
   parentEraId   String?
-  dateStart     DateTime?
-  dateEnd       DateTime?
-  datePrecision DatePrecision @default(UNKNOWN)
-  dateLabel     String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+
+  // Period date model: start/end are each independently qualified (an era
+  // can start "circa" and end on an exact year). No end recorded (both
+  // endYear and endPrecision null) means "still ongoing", distinct from an
+  // explicitly UNKNOWN end. sortStart/sortEnd are internal ordering aids.
+  startYear      Int?
+  startMonth     Int?
+  startDay       Int?
+  startPrecision DatePrecision  @default(UNKNOWN)
+  startQualifier DateQualifier  @default(UNCERTAIN)
+  endYear        Int?
+  endMonth       Int?
+  endDay         Int?
+  endPrecision   DatePrecision?
+  endQualifier   DateQualifier?
+  dateLabel      String?
+  sortStart      DateTime?
+  sortEnd        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   parentEra HistoricalEra?  @relation("EraHierarchy", fields: [parentEraId], references: [id])
   childEras HistoricalEra[] @relation("EraHierarchy")
@@ -645,6 +742,8 @@ model HistoricalEra {
   events         HistoricalEvent[]
   factLinks      FactEra[]
   communityLinks CommunityStoryEra[]
+
+  @@index([sortStart])
 }
 
 model HistoricalEraTranslation {
@@ -667,18 +766,32 @@ model HistoricalEraTranslation {
 }
 
 model Dynasty {
-  id             String        @id @default(cuid())
-  canonicalSlug  String        @unique
+  id             String  @id @default(cuid())
+  canonicalSlug  String  @unique
   capitalPlaceId String?
-  dateStart      DateTime?
-  dateEnd        DateTime?
-  datePrecision  DatePrecision @default(UNKNOWN)
+
+  // Period date model - see HistoricalEra for the field-by-field contract.
+  startYear      Int?
+  startMonth     Int?
+  startDay       Int?
+  startPrecision DatePrecision  @default(UNKNOWN)
+  startQualifier DateQualifier  @default(UNCERTAIN)
+  endYear        Int?
+  endMonth       Int?
+  endDay         Int?
+  endPrecision   DatePrecision?
+  endQualifier   DateQualifier?
   dateLabel      String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  sortStart      DateTime?
+  sortEnd        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   translations DynastyTranslation[]
   personLinks  PersonDynasty[]
+
+  @@index([sortStart])
 }
 
 model DynastyTranslation {
@@ -701,22 +814,65 @@ model DynastyTranslation {
 }
 
 model Territory {
-  id              String                                   @id @default(cuid())
-  canonicalSlug   String                                   @unique
-  type            TerritoryType
-  geometry        Unsupported("geometry(Geometry, 4326)")?
-  validFrom       DateTime?
-  validTo         DateTime?
-  datePrecision   DatePrecision                            @default(UNKNOWN)
-  dateLabel       String?
-  provenanceNote  String?
-  geometryVersion Int                                      @default(1)
-  createdAt       DateTime                                 @default(now())
-  updatedAt       DateTime                                 @updatedAt
+  id            String                                   @id @default(cuid())
+  canonicalSlug String                                   @unique
+  type          TerritoryType
+  geometry      Unsupported("geometry(Geometry, 4326)")?
 
-  translations TerritoryTranslation[]
-  events       HistoricalEvent[]
-  factLinks    FactTerritory[]
+  // Period date model (historical validity window) - see HistoricalEra for
+  // the field-by-field contract. sortStart/sortEnd are what MapService's
+  // year-scoped bbox query actually filters on (EPSG:4326, see
+  // docs/backend/HISTORICAL_DOMAIN.md).
+  startYear      Int?
+  startMonth     Int?
+  startDay       Int?
+  startPrecision DatePrecision  @default(UNKNOWN)
+  startQualifier DateQualifier  @default(UNCERTAIN)
+  endYear        Int?
+  endMonth       Int?
+  endDay         Int?
+  endPrecision   DatePrecision?
+  endQualifier   DateQualifier?
+  dateLabel      String?
+  sortStart      DateTime?
+  sortEnd        DateTime?
+
+  // Geometry provenance (section 17): interpretive historical polygons must
+  // never be silently overwritten - provenanceNote + geometryVersion give a
+  // minimal audit trail; TerritoryGeometryRevision (below) keeps prior
+  // versions instead of discarding them.
+  provenanceNote       String?
+  geometryVersion      Int               @default(1)
+  geometryReviewedById String?
+  geometryReviewedAt   DateTime?
+  geometryStatus       PublicationStatus @default(DRAFT)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  translations    TerritoryTranslation[]
+  events          HistoricalEvent[]
+  factLinks       FactTerritory[]
+  geometryHistory TerritoryGeometryRevision[]
+
+  @@index([sortStart])
+}
+
+// Historical boundary polygons are interpretive and revisable - a new
+// version is appended here (never overwritten in place) before the live
+// `geometry` column is updated, so disputed/superseded shapes stay
+// reconstructable (spec section 17).
+model TerritoryGeometryRevision {
+  id          String                                   @id @default(cuid())
+  territoryId String
+  version     Int
+  geometry    Unsupported("geometry(Geometry, 4326)")?
+  sourceNote  String?
+  createdById String?
+  createdAt   DateTime                                 @default(now())
+
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+
+  @@unique([territoryId, version])
 }
 
 model TerritoryTranslation {
@@ -776,6 +932,43 @@ model PersonDynasty {
   @@unique([personId, dynastyId])
 }
 
+// Event classification catalog (spec section 11) - see the ThemeCategory
+// comment above. `slug` is stable/locale-agnostic (used for filter query
+// params); display name is localized via ThemeTranslation.
+model Theme {
+  id        String        @id @default(cuid())
+  slug      String        @unique
+  category  ThemeCategory
+  createdAt DateTime      @default(now())
+
+  translations ThemeTranslation[]
+  eventLinks   EventTheme[]
+
+  @@index([category])
+}
+
+model ThemeTranslation {
+  id      String @id @default(cuid())
+  themeId String
+  locale  String
+  name    String
+
+  theme Theme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@unique([themeId, locale])
+}
+
+model EventTheme {
+  id      String @id @default(cuid())
+  eventId String
+  themeId String
+
+  event HistoricalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  theme Theme           @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, themeId])
+}
+
 // =========================================================================
 // TRUST LAYER  (Phase 04)
 // =========================================================================
@@ -783,10 +976,17 @@ model PersonDynasty {
 model HistoricalFact {
   id              String              @id @default(cuid())
   factType        FactType
-  dateStart       DateTime?
-  dateEnd         DateTime?
+  dateYear        Int?
+  dateMonth       Int?
+  dateDay         Int?
   datePrecision   DatePrecision       @default(UNKNOWN)
+  dateQualifier   DateQualifier       @default(UNCERTAIN)
+  dateEndYear     Int?
+  dateEndMonth    Int?
+  dateEndDay      Int?
   dateLabel       String?
+  dateSortStart   DateTime?
+  dateSortEnd     DateTime?
   certainty       FactCertainty       @default(UNCERTAIN)
   sensitivity     FactSensitivity     @default(NORMAL)
   editorialStatus FactEditorialStatus @default(DRAFT)
@@ -1163,8 +1363,11 @@ model CommunityStory {
   heroMediaId        String?
   verificationState  CommunityVerificationState @default(PERSONAL_MEMORY)
   moderationStatus   ModerationStatus           @default(VISIBLE)
-  eventDateStart     DateTime?
-  eventDateEnd       DateTime?
+  // Simplified point date (no qualifier/BETWEEN-range needed for a personal
+  // memory) - still never fabricates a month/day for a year-only memory.
+  eventDateYear      Int?
+  eventDateMonth     Int?
+  eventDateDay       Int?
   eventDatePrecision DatePrecision              @default(UNKNOWN)
   eventDateLabel     String?
   createdAt          DateTime                   @default(now())

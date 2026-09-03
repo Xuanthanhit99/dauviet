@@ -1,7 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsDateString, IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { DatePrecision, TranslationMethod } from '@prisma/client';
+import { ArrayMinSize, IsArray, IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { TranslationMethod } from '@prisma/client';
+import { HistoricalDateInputDto } from '../../../common/historical-date/historical-date.dto';
 
 export class PersonTranslationInputDto {
   @ApiProperty({ example: 'vi' })
@@ -34,35 +35,17 @@ export class PersonTranslationInputDto {
 }
 
 export class CreatePersonDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: HistoricalDateInputDto })
   @IsOptional()
-  @IsDateString()
-  birthDateStart?: string;
+  @ValidateNested()
+  @Type(() => HistoricalDateInputDto)
+  birth?: HistoricalDateInputDto;
 
-  @ApiPropertyOptional({ enum: DatePrecision })
+  @ApiPropertyOptional({ type: HistoricalDateInputDto })
   @IsOptional()
-  @IsEnum(DatePrecision)
-  birthDatePrecision?: DatePrecision;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  birthDateLabel?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsDateString()
-  deathDateStart?: string;
-
-  @ApiPropertyOptional({ enum: DatePrecision })
-  @IsOptional()
-  @IsEnum(DatePrecision)
-  deathDatePrecision?: DatePrecision;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  deathDateLabel?: string;
+  @ValidateNested()
+  @Type(() => HistoricalDateInputDto)
+  death?: HistoricalDateInputDto;
 
   @ApiProperty({ type: [PersonTranslationInputDto] })
   @IsArray()

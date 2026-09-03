@@ -4,6 +4,7 @@ import { AuditService } from '../audit/audit.service';
 import { resolveTranslation } from '../../common/translation/resolve-translation.util';
 import { toSlug } from '../../common/util/slug.util';
 import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
+import { buildHistoricalPeriodColumns, toHistoricalPeriodResponse } from '../../common/historical-date/historical-date.util';
 import { CreateDynastyDto } from './dto/dynasty.dto';
 
 @Injectable()
@@ -27,15 +28,25 @@ export class DynastiesService {
     if (!canonical) throw new BadRequestException('At least one translation is required.');
 
     const canonicalSlug = await this.ensureUniqueSlug(toSlug(canonical.name));
+    const period = buildHistoricalPeriodColumns(dto.start, dto.end, dto.dateLabel);
 
     const dynasty = await this.prisma.dynasty.create({
       data: {
         canonicalSlug,
         capitalPlaceId: dto.capitalPlaceId,
-        dateStart: dto.dateStart ? new Date(dto.dateStart) : undefined,
-        dateEnd: dto.dateEnd ? new Date(dto.dateEnd) : undefined,
-        datePrecision: dto.datePrecision,
-        dateLabel: dto.dateLabel,
+        startYear: period.startYear,
+        startMonth: period.startMonth,
+        startDay: period.startDay,
+        startPrecision: period.startPrecision,
+        startQualifier: period.startQualifier,
+        endYear: period.endYear,
+        endMonth: period.endMonth,
+        endDay: period.endDay,
+        endPrecision: period.endPrecision,
+        endQualifier: period.endQualifier,
+        dateLabel: period.dateLabel,
+        sortStart: period.sortStart,
+        sortEnd: period.sortEnd,
         translations: { create: dto.translations.map((t) => ({ locale: t.locale, name: t.name, slug: toSlug(t.name), summary: t.summary, description: t.description })) },
       },
       include: { translations: true },
@@ -56,10 +67,24 @@ export class DynastiesService {
     return {
       id: dynasty.id,
       slug: dynasty.canonicalSlug,
-      dateStart: dynasty.dateStart,
-      dateEnd: dynasty.dateEnd,
-      datePrecision: dynasty.datePrecision,
-      dateLabel: dynasty.dateLabel,
+      period: toHistoricalPeriodResponse(
+        {
+          startYear: dynasty.startYear,
+          startMonth: dynasty.startMonth,
+          startDay: dynasty.startDay,
+          startPrecision: dynasty.startPrecision,
+          startQualifier: dynasty.startQualifier,
+          endYear: dynasty.endYear,
+          endMonth: dynasty.endMonth,
+          endDay: dynasty.endDay,
+          endPrecision: dynasty.endPrecision,
+          endQualifier: dynasty.endQualifier,
+          dateLabel: dynasty.dateLabel,
+          sortStart: dynasty.sortStart,
+          sortEnd: dynasty.sortEnd,
+        },
+        locale,
+      ),
       people: dynasty.personLinks.map((l) => {
         const { translation: pt } = resolveTranslation(l.person.translations, locale);
         return { id: l.person.id, slug: l.person.canonicalSlug, displayName: pt?.displayName, role: l.role };
@@ -70,10 +95,32 @@ export class DynastiesService {
   }
 
   async list(locale: string) {
-    const dynasties = await this.prisma.dynasty.findMany({ include: { translations: true }, orderBy: { dateStart: 'asc' } });
+    const dynasties = await this.prisma.dynasty.findMany({ include: { translations: true }, orderBy: { sortStart: 'asc' } });
     return dynasties.map((d) => {
       const { translation } = resolveTranslation(d.translations, locale);
-      return { id: d.id, slug: d.canonicalSlug, name: translation?.name ?? d.canonicalSlug, dateStart: d.dateStart, dateEnd: d.dateEnd };
+      return {
+        id: d.id,
+        slug: d.canonicalSlug,
+        name: translation?.name ?? d.canonicalSlug,
+        period: toHistoricalPeriodResponse(
+          {
+            startYear: d.startYear,
+            startMonth: d.startMonth,
+            startDay: d.startDay,
+            startPrecision: d.startPrecision,
+            startQualifier: d.startQualifier,
+            endYear: d.endYear,
+            endMonth: d.endMonth,
+            endDay: d.endDay,
+            endPrecision: d.endPrecision,
+            endQualifier: d.endQualifier,
+            dateLabel: d.dateLabel,
+            sortStart: d.sortStart,
+            sortEnd: d.sortEnd,
+          },
+          locale,
+        ),
+      };
     });
   }
 }

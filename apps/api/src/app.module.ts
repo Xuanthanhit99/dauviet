@@ -31,6 +31,8 @@ import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { CommunityModule } from './modules/community/community.module';
 import { ContributionsModule } from './modules/contributions/contributions.module';
+import { AliasesModule } from './modules/aliases/aliases.module';
+import { ThemesModule } from './modules/themes/themes.module';
 
 @Module({
   imports: [
@@ -77,6 +79,8 @@ import { ContributionsModule } from './modules/contributions/contributions.modul
     ReportsModule,
     CommunityModule,
     ContributionsModule,
+    AliasesModule,
+    ThemesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

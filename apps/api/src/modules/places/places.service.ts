@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { resolveTranslation } from '../../common/translation/resolve-translation.util';
 import { toSlug } from '../../common/util/slug.util';
+import { toHistoricalDateResponse } from '../../common/historical-date/historical-date.util';
 import { CreatePlaceDto, UpdatePlaceDto } from './dto/place.dto';
 import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
 
@@ -171,10 +172,22 @@ export class PlacesService {
           id: l.event.id,
           slug: l.event.canonicalSlug,
           title: translation?.title ?? l.event.canonicalSlug,
-          dateStart: l.event.dateStart,
-          dateEnd: l.event.dateEnd,
-          datePrecision: l.event.datePrecision,
-          dateLabel: l.event.dateLabel,
+          date: toHistoricalDateResponse(
+            {
+              year: l.event.dateYear,
+              month: l.event.dateMonth,
+              day: l.event.dateDay,
+              precision: l.event.datePrecision,
+              qualifier: l.event.dateQualifier,
+              endYear: l.event.dateEndYear,
+              endMonth: l.event.dateEndMonth,
+              endDay: l.event.dateEndDay,
+              label: l.event.dateLabel,
+              sortStart: l.event.dateSortStart,
+              sortEnd: l.event.dateSortEnd,
+            },
+            locale,
+          ),
         };
       });
   }

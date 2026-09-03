@@ -5,6 +5,7 @@ import { AuditService } from '../audit/audit.service';
 import { resolveTranslation } from '../../common/translation/resolve-translation.util';
 import { toSlug } from '../../common/util/slug.util';
 import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
+import { buildHistoricalDateColumns, toHistoricalDateResponse } from '../../common/historical-date/historical-date.util';
 import { CreateEventDto } from './dto/event.dto';
 
 @Injectable()
@@ -28,16 +29,24 @@ export class EventsService {
     if (!canonical) throw new BadRequestException('At least one translation is required.');
 
     const canonicalSlug = await this.ensureUniqueSlug(toSlug(canonical.title));
+    const date = buildHistoricalDateColumns(dto.date);
 
     const event = await this.prisma.historicalEvent.create({
       data: {
         canonicalSlug,
         eraId: dto.eraId,
         territoryId: dto.territoryId,
-        dateStart: dto.dateStart ? new Date(dto.dateStart) : undefined,
-        dateEnd: dto.dateEnd ? new Date(dto.dateEnd) : undefined,
-        datePrecision: dto.datePrecision,
-        dateLabel: dto.dateLabel,
+        dateYear: date.year,
+        dateMonth: date.month,
+        dateDay: date.day,
+        datePrecision: date.precision,
+        dateQualifier: date.qualifier,
+        dateEndYear: date.endYear,
+        dateEndMonth: date.endMonth,
+        dateEndDay: date.endDay,
+        dateLabel: date.label,
+        dateSortStart: date.sortStart,
+        dateSortEnd: date.sortEnd,
         translations: {
           create: dto.translations.map((t) => ({
             locale: t.locale,
@@ -66,6 +75,7 @@ export class EventsService {
         territory: { include: { translations: true } },
         placeLinks: { include: { place: { include: { translations: true } } } },
         personLinks: { include: { person: { include: { translations: true } } } },
+        themeLinks: { include: { theme: { include: { translations: true } } } },
       },
     });
     if (!event || event.publicationStatus !== PublicationStatus.PUBLISHED) {
@@ -77,10 +87,22 @@ export class EventsService {
     return {
       id: event.id,
       slug: event.canonicalSlug,
-      dateStart: event.dateStart,
-      dateEnd: event.dateEnd,
-      datePrecision: event.datePrecision,
-      dateLabel: event.dateLabel,
+      date: toHistoricalDateResponse(
+        {
+          year: event.dateYear,
+          month: event.dateMonth,
+          day: event.dateDay,
+          precision: event.datePrecision,
+          qualifier: event.dateQualifier,
+          endYear: event.dateEndYear,
+          endMonth: event.dateEndMonth,
+          endDay: event.dateEndDay,
+          label: event.dateLabel,
+          sortStart: event.dateSortStart,
+          sortEnd: event.dateSortEnd,
+        },
+        locale,
+      ),
       heroMedia: event.heroMedia,
       era: event.era ? { id: event.era.id, slug: event.era.canonicalSlug } : null,
       territory: event.territory ? { id: event.territory.id, slug: event.territory.canonicalSlug } : null,
@@ -91,6 +113,10 @@ export class EventsService {
       people: event.personLinks.map((l) => {
         const { translation: pt } = resolveTranslation(l.person.translations, locale);
         return { id: l.person.id, slug: l.person.canonicalSlug, displayName: pt?.displayName };
+      }),
+      themes: event.themeLinks.map((l) => {
+        const { translation: tt } = resolveTranslation(l.theme.translations, locale);
+        return { id: l.theme.id, slug: l.theme.slug, category: l.theme.category, name: tt?.name ?? l.theme.slug };
       }),
       translation,
       meta: { requestedLocale: locale, resolvedLocale, fallbackApplied },
@@ -108,7 +134,27 @@ export class EventsService {
     const hasMore = events.length > limit;
     const page = events.slice(0, limit).map((e) => {
       const { translation } = resolveTranslation(e.translations, locale);
-      return { id: e.id, slug: e.canonicalSlug, title: translation?.title ?? e.canonicalSlug, dateStart: e.dateStart };
+      return {
+        id: e.id,
+        slug: e.canonicalSlug,
+        title: translation?.title ?? e.canonicalSlug,
+        date: toHistoricalDateResponse(
+          {
+            year: e.dateYear,
+            month: e.dateMonth,
+            day: e.dateDay,
+            precision: e.datePrecision,
+            qualifier: e.dateQualifier,
+            endYear: e.dateEndYear,
+            endMonth: e.dateEndMonth,
+            endDay: e.dateEndDay,
+            label: e.dateLabel,
+            sortStart: e.dateSortStart,
+            sortEnd: e.dateSortEnd,
+          },
+          locale,
+        ),
+      };
     });
     return { items: page, nextCursor: hasMore ? events[limit].id : null, hasMore };
   }

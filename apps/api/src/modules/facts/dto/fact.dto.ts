@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
-import { DatePrecision, FactCertainty, FactEditorialStatus, FactSensitivity, FactType } from '@prisma/client';
+import { Type } from 'class-transformer';
+import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { FactCertainty, FactEditorialStatus, FactSensitivity, FactType } from '@prisma/client';
+import { HistoricalDateInputDto } from '../../../common/historical-date/historical-date.dto';
 
 export class CreateFactDto {
   @ApiProperty({ enum: FactType })
@@ -15,25 +17,11 @@ export class CreateFactDto {
   @IsString()
   statement!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: HistoricalDateInputDto })
   @IsOptional()
-  @IsDateString()
-  dateStart?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsDateString()
-  dateEnd?: string;
-
-  @ApiPropertyOptional({ enum: DatePrecision })
-  @IsOptional()
-  @IsEnum(DatePrecision)
-  datePrecision?: DatePrecision;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  dateLabel?: string;
+  @ValidateNested()
+  @Type(() => HistoricalDateInputDto)
+  date?: HistoricalDateInputDto;
 
   @ApiPropertyOptional({ enum: FactCertainty })
   @IsOptional()

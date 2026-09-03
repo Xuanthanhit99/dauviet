@@ -1,5 +1,5 @@
 /**
- * Golden Dataset seed (spec sections 50-52).
+ * Golden Dataset seed (spec sections 37-38).
  *
  * Trust-model discipline followed here, deliberately:
  * - Every Place/Person/Event/Era/Dynasty gets a short, uncontroversial,
@@ -17,18 +17,51 @@
  * - Hoang Sa and Truong Sa are seeded as real Place rows (type ARCHIPELAGO)
  *   with approximate real-world coordinates (public geographic knowledge,
  *   not a contested historical/territorial claim) - never hard-coded map
- *   labels (spec section 3).
+ *   labels (spec section 7).
  * - No Territory geometry is seeded - historical boundary polygons require
- *   real GIS/source material this seed does not fabricate (spec section 25).
+ *   real GIS/source material this seed does not fabricate (spec section 17).
+ * - Historical dates use year/month/day + precision/qualifier, never a
+ *   fabricated "YYYY-01-01" ISO string (spec section 3, CRITICAL) - see
+ *   `HistoricalDateSeed` below and docs/backend/HISTORICAL_DOMAIN.md.
  */
-import { PrismaClient, PlaceType, DatePrecision, Role, AuthProvider, FactType, FactCertainty, PublicationStatus } from '@prisma/client';
+import { PrismaClient, PlaceType, DatePrecision, DateQualifier, Role, AuthProvider, FactType, FactCertainty, PublicationStatus, ThemeCategory } from '@prisma/client';
 import * as argon2 from 'argon2';
 import slugify from 'slugify';
+import { GOLDEN_PLACES } from './golden-dataset';
 
 const prisma = new PrismaClient();
 
 function slug(input: string) {
   return slugify(input, { lower: true, strict: true, locale: 'vi' });
+}
+
+/** Mirrors HistoricalDateInput (apps/api/src/common/historical-date) without importing across the package boundary. */
+interface HistoricalDateSeed {
+  year?: number;
+  month?: number;
+  day?: number;
+  precision: DatePrecision;
+  qualifier?: DateQualifier;
+}
+
+function yearOnly(year: number, qualifier: DateQualifier = DateQualifier.EXACT): HistoricalDateSeed {
+  return { year, precision: DatePrecision.YEAR, qualifier };
+}
+
+function exactDate(year: number, month: number, day: number): HistoricalDateSeed {
+  return { year, month, day, precision: DatePrecision.DAY, qualifier: DateQualifier.EXACT };
+}
+
+const UNKNOWN_DATE: HistoricalDateSeed = { precision: DatePrecision.UNKNOWN, qualifier: DateQualifier.UNCERTAIN };
+
+/** Deterministic sort-only bounds - see apps/api's historical-date.util.ts for the authoritative (validated) version this mirrors. */
+function sortBounds(d: HistoricalDateSeed): { start: Date | null; end: Date | null } {
+  if (d.precision === DatePrecision.UNKNOWN || d.year == null) return { start: null, end: null };
+  if (d.precision === DatePrecision.DAY) {
+    const dt = new Date(Date.UTC(d.year, (d.month ?? 1) - 1, d.day ?? 1));
+    return { start: dt, end: dt };
+  }
+  return { start: new Date(Date.UTC(d.year, 0, 1)), end: new Date(Date.UTC(d.year, 11, 31)) };
 }
 
 async function upsertPlace(params: {
@@ -64,10 +97,11 @@ async function upsertPlace(params: {
 
   if (params.aliases) {
     for (const alias of params.aliases) {
-      const existing = await prisma.entityAlias.findFirst({ where: { entityType: 'PLACE', entityId: place.id, alias } });
-      if (!existing) {
-        await prisma.entityAlias.create({ data: { entityType: 'PLACE', entityId: place.id, alias, aliasType: 'ROMANIZATION' } });
-      }
+      await prisma.entityAlias.upsert({
+        where: { entityType_entityId_locale_alias: { entityType: 'PLACE', entityId: place.id, locale: '', alias } },
+        update: {},
+        create: { entityType: 'PLACE', entityId: place.id, alias, aliasType: 'ROMANIZATION' },
+      });
     }
   }
 
@@ -77,22 +111,36 @@ async function upsertPlace(params: {
 async function upsertPerson(params: {
   vi: { name: string; summary?: string };
   en?: { name: string };
-  birth?: { start?: string; precision: DatePrecision; label?: string };
-  death?: { start?: string; precision: DatePrecision; label?: string };
+  birth?: HistoricalDateSeed;
+  death?: HistoricalDateSeed;
+  aliases?: { alias: string; type: 'REGNAL_NAME' | 'TEMPLE_NAME' | 'BIRTH_NAME' | 'TITLE' | 'EPITHET' }[];
 }) {
   const canonicalSlug = slug(params.vi.name);
-  return prisma.person.upsert({
+  const birth = params.birth ?? UNKNOWN_DATE;
+  const death = params.death ?? UNKNOWN_DATE;
+  const birthSort = sortBounds(birth);
+  const deathSort = sortBounds(death);
+
+  const person = await prisma.person.upsert({
     where: { canonicalSlug },
     update: {},
     create: {
       canonicalSlug,
       publicationStatus: PublicationStatus.PUBLISHED,
-      birthDateStart: params.birth?.start ? new Date(params.birth.start) : undefined,
-      birthDatePrecision: params.birth?.precision,
-      birthDateLabel: params.birth?.label,
-      deathDateStart: params.death?.start ? new Date(params.death.start) : undefined,
-      deathDatePrecision: params.death?.precision,
-      deathDateLabel: params.death?.label,
+      birthYear: birth.year,
+      birthMonth: birth.month,
+      birthDay: birth.day,
+      birthPrecision: birth.precision,
+      birthQualifier: birth.qualifier ?? DateQualifier.EXACT,
+      birthSortStart: birthSort.start,
+      birthSortEnd: birthSort.end,
+      deathYear: death.year,
+      deathMonth: death.month,
+      deathDay: death.day,
+      deathPrecision: death.precision,
+      deathQualifier: death.qualifier ?? DateQualifier.EXACT,
+      deathSortStart: deathSort.start,
+      deathSortEnd: deathSort.end,
       translations: {
         create: [
           { locale: 'vi', displayName: params.vi.name, slug: slug(params.vi.name), summary: params.vi.summary, method: 'ORIGINAL' },
@@ -101,59 +149,116 @@ async function upsertPerson(params: {
       },
     },
   });
+
+  for (const a of params.aliases ?? []) {
+    await prisma.entityAlias.upsert({
+      where: { entityType_entityId_locale_alias: { entityType: 'PERSON', entityId: person.id, locale: '', alias: a.alias } },
+      update: {},
+      create: { entityType: 'PERSON', entityId: person.id, alias: a.alias, aliasType: a.type },
+    });
+  }
+
+  return person;
 }
 
 async function upsertEvent(params: {
   vi: { title: string; summary?: string };
-  dateStart?: string;
-  dateEnd?: string;
-  precision: DatePrecision;
-  label?: string;
+  date: HistoricalDateSeed;
+  rangeEndYear?: number;
   importance?: number;
 }) {
   const canonicalSlug = slug(params.vi.title);
+  const qualifier = params.rangeEndYear ? DateQualifier.BETWEEN : params.date.qualifier ?? DateQualifier.EXACT;
+  const sort = sortBounds(params.date);
+  const sortEnd = params.rangeEndYear ? new Date(Date.UTC(params.rangeEndYear, 11, 31)) : sort.end;
+
   return prisma.historicalEvent.upsert({
     where: { canonicalSlug },
     update: {},
     create: {
       canonicalSlug,
       publicationStatus: PublicationStatus.PUBLISHED,
-      dateStart: params.dateStart ? new Date(params.dateStart) : undefined,
-      dateEnd: params.dateEnd ? new Date(params.dateEnd) : undefined,
-      datePrecision: params.precision,
-      dateLabel: params.label,
+      dateYear: params.date.year,
+      dateMonth: params.date.month,
+      dateDay: params.date.day,
+      datePrecision: params.date.precision,
+      dateQualifier: qualifier,
+      dateEndYear: params.rangeEndYear,
+      dateSortStart: sort.start,
+      dateSortEnd: sortEnd,
       importance: params.importance ?? 5,
       translations: { create: [{ locale: 'vi', title: params.vi.title, slug: slug(params.vi.title), summary: params.vi.summary, method: 'ORIGINAL' }] },
     },
   });
 }
 
-async function upsertEra(params: { vi: { name: string; summary?: string }; dateStart?: string; dateEnd?: string; precision: DatePrecision }) {
+async function upsertEra(params: { vi: { name: string; summary?: string }; start: HistoricalDateSeed; end?: HistoricalDateSeed }) {
   const canonicalSlug = slug(params.vi.name);
+  const startSort = sortBounds(params.start);
+  const endSort = params.end ? sortBounds(params.end) : null;
+
   return prisma.historicalEra.upsert({
     where: { canonicalSlug },
     update: {},
     create: {
       canonicalSlug,
-      dateStart: params.dateStart ? new Date(params.dateStart) : undefined,
-      dateEnd: params.dateEnd ? new Date(params.dateEnd) : undefined,
-      datePrecision: params.precision,
+      startYear: params.start.year,
+      startMonth: params.start.month,
+      startDay: params.start.day,
+      startPrecision: params.start.precision,
+      startQualifier: params.start.qualifier ?? DateQualifier.EXACT,
+      endYear: params.end?.year,
+      endMonth: params.end?.month,
+      endDay: params.end?.day,
+      endPrecision: params.end?.precision,
+      endQualifier: params.end?.qualifier ?? (params.end ? DateQualifier.EXACT : undefined),
+      sortStart: startSort.start,
+      sortEnd: endSort ? endSort.end : new Date(Date.UTC(9999, 11, 31)),
       translations: { create: [{ locale: 'vi', name: params.vi.name, slug: slug(params.vi.name), summary: params.vi.summary }] },
     },
   });
 }
 
-async function upsertDynasty(params: { vi: { name: string; summary?: string }; dateStart?: string; dateEnd?: string; precision: DatePrecision }) {
+async function upsertDynasty(params: { vi: { name: string; summary?: string }; start: HistoricalDateSeed; end?: HistoricalDateSeed }) {
   const canonicalSlug = slug(params.vi.name);
+  const startSort = sortBounds(params.start);
+  const endSort = params.end ? sortBounds(params.end) : null;
+
   return prisma.dynasty.upsert({
     where: { canonicalSlug },
     update: {},
     create: {
       canonicalSlug,
-      dateStart: params.dateStart ? new Date(params.dateStart) : undefined,
-      dateEnd: params.dateEnd ? new Date(params.dateEnd) : undefined,
-      datePrecision: params.precision,
+      startYear: params.start.year,
+      startMonth: params.start.month,
+      startDay: params.start.day,
+      startPrecision: params.start.precision,
+      startQualifier: params.start.qualifier ?? DateQualifier.EXACT,
+      endYear: params.end?.year,
+      endMonth: params.end?.month,
+      endDay: params.end?.day,
+      endPrecision: params.end?.precision,
+      endQualifier: params.end?.qualifier ?? (params.end ? DateQualifier.EXACT : undefined),
+      sortStart: startSort.start,
+      sortEnd: endSort ? endSort.end : new Date(Date.UTC(9999, 11, 31)),
       translations: { create: [{ locale: 'vi', name: params.vi.name, slug: slug(params.vi.name), summary: params.vi.summary }] },
+    },
+  });
+}
+
+async function upsertTheme(params: { slug: string; category: ThemeCategory; vi: string; en?: string }) {
+  return prisma.theme.upsert({
+    where: { slug: params.slug },
+    update: {},
+    create: {
+      slug: params.slug,
+      category: params.category,
+      translations: {
+        create: [
+          { locale: 'vi', name: params.vi },
+          ...(params.en ? [{ locale: 'en', name: params.en }] : []),
+        ],
+      },
     },
   });
 }
@@ -183,163 +288,105 @@ async function main() {
   await upsertDevUser('user@dauviet.vn', 'Dau Viet Reader', [Role.USER]);
 
   console.log('Seeding eras and dynasties...');
-  const eraLy = await upsertEra({ vi: { name: 'Thoi Ly', summary: 'Trieu dai phong kien Viet Nam, kinh do tai Thang Long.' }, dateStart: '1009-01-01', dateEnd: '1225-12-31', precision: DatePrecision.YEAR });
-  const eraTran = await upsertEra({ vi: { name: 'Thoi Tran' }, dateStart: '1225-01-01', dateEnd: '1400-12-31', precision: DatePrecision.YEAR });
-  const eraLeSo = await upsertEra({ vi: { name: 'Thoi Le So' }, dateStart: '1428-01-01', dateEnd: '1527-12-31', precision: DatePrecision.YEAR });
-  const eraTaySon = await upsertEra({ vi: { name: 'Thoi Tay Son' }, dateStart: '1778-01-01', dateEnd: '1802-12-31', precision: DatePrecision.YEAR });
-  const eraNguyen = await upsertEra({ vi: { name: 'Thoi Nguyen' }, dateStart: '1802-01-01', dateEnd: '1945-12-31', precision: DatePrecision.YEAR });
-  const eraModern = await upsertEra({ vi: { name: 'Thoi ky hien dai' }, dateStart: '1945-01-01', precision: DatePrecision.YEAR });
+  const eraLy = await upsertEra({ vi: { name: 'Thoi Ly', summary: 'Trieu dai phong kien Viet Nam, kinh do tai Thang Long.' }, start: yearOnly(1009), end: yearOnly(1225) });
+  const eraTran = await upsertEra({ vi: { name: 'Thoi Tran' }, start: yearOnly(1225), end: yearOnly(1400) });
+  const eraLeSo = await upsertEra({ vi: { name: 'Thoi Le So' }, start: yearOnly(1428), end: yearOnly(1527) });
+  const eraTaySon = await upsertEra({ vi: { name: 'Thoi Tay Son' }, start: yearOnly(1778), end: yearOnly(1802) });
+  const eraNguyen = await upsertEra({ vi: { name: 'Thoi Nguyen' }, start: yearOnly(1802), end: yearOnly(1945) });
+  const eraModern = await upsertEra({ vi: { name: 'Thoi ky hien dai' }, start: yearOnly(1945) }); // no `end`: still ongoing, not an unknown end
 
-  await upsertDynasty({ vi: { name: 'Nha Ly' }, dateStart: '1009-01-01', dateEnd: '1225-12-31', precision: DatePrecision.YEAR });
-  await upsertDynasty({ vi: { name: 'Nha Tran' }, dateStart: '1225-01-01', dateEnd: '1400-12-31', precision: DatePrecision.YEAR });
-  await upsertDynasty({ vi: { name: 'Nha Nguyen' }, dateStart: '1802-01-01', dateEnd: '1945-12-31', precision: DatePrecision.YEAR });
+  await upsertDynasty({ vi: { name: 'Nha Ly' }, start: yearOnly(1009), end: yearOnly(1225) });
+  await upsertDynasty({ vi: { name: 'Nha Tran' }, start: yearOnly(1225), end: yearOnly(1400) });
+  await upsertDynasty({ vi: { name: 'Nha Nguyen' }, start: yearOnly(1802), end: yearOnly(1945) });
 
-  console.log('Seeding places...');
-  const hoangThanh = await upsertPlace({
-    type: PlaceType.CITADEL,
-    vi: { name: 'Hoang thanh Thang Long', summary: 'Kinh do cua Viet Nam qua nhieu trieu dai, di san van hoa the gioi UNESCO.' },
-    en: { name: 'Imperial Citadel of Thang Long' },
-    lat: 21.0359, lng: 105.8402,
-    aliases: ['Imperial Citadel of Thang Long', 'Thang Long'],
-  });
-  const vanMieu = await upsertPlace({
-    type: PlaceType.TEMPLE,
-    vi: { name: 'Van Mieu Quoc Tu Giam', summary: 'Van mieu va truong dai hoc dau tien cua Viet Nam, xay dung nam 1070.' },
-    en: { name: 'Temple of Literature' },
-    lat: 21.0288, lng: 105.8355,
-  });
-  const coLoa = await upsertPlace({
-    type: PlaceType.ARCHAEOLOGICAL_SITE,
-    vi: { name: 'Co Loa', summary: 'Kinh do cua nha nuoc Au Lac thoi An Duong Vuong.' },
-    lat: 21.1000, lng: 105.8700,
-  });
-  const hoaLu = await upsertPlace({
-    type: PlaceType.CITADEL,
-    vi: { name: 'Hoa Lu', summary: 'Kinh do cua Viet Nam thoi nha Dinh va Tien Le.' },
-    lat: 20.2650, lng: 105.9150,
-  });
-  const coDoHue = await upsertPlace({
-    type: PlaceType.PALACE,
-    vi: { name: 'Co do Hue', summary: 'Kinh do cua Viet Nam thoi nha Nguyen, di san van hoa the gioi UNESCO.' },
-    en: { name: 'Hue Imperial City' },
-    lat: 16.4674, lng: 107.5793,
-    aliases: ['Hue', 'Imperial City of Hue'],
-  });
-  const myson = await upsertPlace({
-    type: PlaceType.ARCHAEOLOGICAL_SITE,
-    vi: { name: 'My Son', summary: 'Quan the den thap Champa, di san van hoa the gioi UNESCO.' },
-    lat: 15.7639, lng: 108.1246,
-  });
-  const hoiAn = await upsertPlace({
-    type: PlaceType.URBAN_AREA,
-    vi: { name: 'Hoi An', summary: 'Do thi co, thuong cang lich su, di san van hoa the gioi UNESCO.' },
-    lat: 15.8801, lng: 108.3380,
-  });
-  const dienBienPhu = await upsertPlace({
-    type: PlaceType.BATTLEFIELD,
-    vi: { name: 'Dien Bien Phu', summary: 'Dia diem chien dich Dien Bien Phu nam 1954.' },
-    lat: 21.3860, lng: 103.0169,
-  });
-  const diaDaoCuChi = await upsertPlace({
-    type: PlaceType.HISTORICAL_SITE,
-    vi: { name: 'Dia dao Cu Chi', summary: 'He thong dia dao lich su tai Cu Chi, Thanh pho Ho Chi Minh.' },
-    lat: 11.1400, lng: 106.4550,
-  });
-  const dinhDocLap = await upsertPlace({
-    type: PlaceType.PALACE,
-    vi: { name: 'Dinh Doc Lap', summary: 'Di tich lich su tai Thanh pho Ho Chi Minh.' },
-    en: { name: 'Independence Palace' },
-    lat: 10.7772, lng: 106.6953,
-  });
-  const hoangSa = await upsertPlace({
-    type: PlaceType.ARCHIPELAGO,
-    vi: { name: 'Hoang Sa', summary: 'Quan dao thuoc Bien Dong.' },
-    en: { name: 'Hoang Sa (Paracel Islands)' },
-    lat: 16.5, lng: 112.0,
-    aliases: ['Paracel Islands'],
-  });
-  const truongSa = await upsertPlace({
-    type: PlaceType.ARCHIPELAGO,
-    vi: { name: 'Truong Sa', summary: 'Quan dao thuoc Bien Dong.' },
-    en: { name: 'Truong Sa (Spratly Islands)' },
-    lat: 8.6, lng: 111.9,
-    aliases: ['Spratly Islands'],
-  });
+  console.log('Seeding places from the golden dataset (see prisma/golden-dataset.ts)...');
+  const placesBySlug = new Map<string, Awaited<ReturnType<typeof upsertPlace>>>();
+  for (const spec of GOLDEN_PLACES) {
+    const place = await upsertPlace(spec);
+    placesBySlug.set(slug(spec.vi.name), place);
+  }
+  const hoangThanh = placesBySlug.get(slug('Hoang thanh Thang Long'))!;
+  const coDoHue = placesBySlug.get(slug('Co do Hue'))!;
+  const dienBienPhu = placesBySlug.get(slug('Dien Bien Phu'))!;
+  const dinhDocLap = placesBySlug.get(slug('Dinh Doc Lap'))!;
 
   console.log('Seeding people...');
   const lyCongUan = await upsertPerson({
     vi: { name: 'Ly Cong Uan', summary: 'Vi vua sang lap nha Ly, nguoi doi do ve Thang Long nam 1010.' },
-    birth: { start: '0974-01-01', precision: DatePrecision.YEAR },
-    death: { start: '1028-01-01', precision: DatePrecision.YEAR },
+    birth: yearOnly(974),
+    death: yearOnly(1028),
   });
   const tranHungDao = await upsertPerson({
     vi: { name: 'Tran Hung Dao', summary: 'Thong linh quan doi nha Tran trong khang chien chong Nguyen Mong.' },
-    death: { start: '1300-01-01', precision: DatePrecision.YEAR },
+    death: yearOnly(1300),
+    aliases: [{ alias: 'Hung Dao Dai Vuong', type: 'TITLE' }],
   });
   const leLoi = await upsertPerson({
     vi: { name: 'Le Loi', summary: 'Nguoi lanh dao khoi nghia Lam Son, vi vua sang lap nha Le so.' },
-    birth: { start: '1385-01-01', precision: DatePrecision.YEAR },
-    death: { start: '1433-01-01', precision: DatePrecision.YEAR },
+    birth: yearOnly(1385),
+    death: yearOnly(1433),
   });
   const quangTrung = await upsertPerson({
     vi: { name: 'Quang Trung', summary: 'Hoang de nha Tay Son, lanh dao chien thang Ngoc Hoi Dong Da.' },
     en: { name: 'Emperor Quang Trung' },
-    birth: { start: '1753-01-01', precision: DatePrecision.YEAR },
-    death: { start: '1792-01-01', precision: DatePrecision.YEAR },
+    birth: yearOnly(1753),
+    death: yearOnly(1792),
+    aliases: [{ alias: 'Nguyen Hue', type: 'BIRTH_NAME' }],
   });
   const giaLong = await upsertPerson({
     vi: { name: 'Gia Long', summary: 'Vi vua sang lap nha Nguyen.' },
-    birth: { start: '1762-01-01', precision: DatePrecision.YEAR },
-    death: { start: '1820-01-01', precision: DatePrecision.YEAR },
+    birth: yearOnly(1762),
+    death: yearOnly(1820),
+    aliases: [{ alias: 'Nguyen Anh', type: 'BIRTH_NAME' }],
   });
   const minhMang = await upsertPerson({
     vi: { name: 'Minh Mang', summary: 'Hoang de thu hai nha Nguyen.' },
-    birth: { start: '1791-01-01', precision: DatePrecision.YEAR },
-    death: { start: '1841-01-01', precision: DatePrecision.YEAR },
+    birth: yearOnly(1791),
+    death: yearOnly(1841),
   });
   const hoChiMinh = await upsertPerson({
     vi: { name: 'Ho Chi Minh', summary: 'Nguoi sang lap nuoc Viet Nam Dan chu Cong hoa, doc Tuyen ngon Doc lap ngay 2/9/1945.' },
-    birth: { start: '1890-05-19', precision: DatePrecision.EXACT },
-    death: { start: '1969-09-02', precision: DatePrecision.EXACT },
+    birth: exactDate(1890, 5, 19),
+    death: exactDate(1969, 9, 2),
   });
   const voNguyenGiap = await upsertPerson({
     vi: { name: 'Vo Nguyen Giap', summary: 'Dai tuong, tong tu lenh Quan doi nhan dan Viet Nam trong chien dich Dien Bien Phu.' },
-    birth: { start: '1911-08-25', precision: DatePrecision.EXACT },
-    death: { start: '2013-10-04', precision: DatePrecision.EXACT },
+    birth: exactDate(1911, 8, 25),
+    death: exactDate(2013, 10, 4),
   });
 
   console.log('Seeding events...');
   const doiDo1010 = await upsertEvent({
     vi: { title: 'Doi do ve Thang Long nam 1010', summary: 'Ly Cong Uan doi kinh do tu Hoa Lu ve Dai La, doi ten thanh Thang Long.' },
-    dateStart: '1010-01-01', precision: DatePrecision.YEAR, importance: 9,
+    date: yearOnly(1010), importance: 9,
   });
   const bachDang1288 = await upsertEvent({
     vi: { title: 'Chien thang Bach Dang 1288', summary: 'Chien thang cua quan doi nha Tran truoc quan Nguyen Mong tren song Bach Dang.' },
-    dateStart: '1288-01-01', precision: DatePrecision.YEAR, importance: 9,
+    date: yearOnly(1288), importance: 9,
   });
   const lamSon = await upsertEvent({
     vi: { title: 'Khoi nghia Lam Son', summary: 'Cuoc khoi nghia do Le Loi lanh dao chong quan Minh, 1418-1427.' },
-    dateStart: '1418-01-01', dateEnd: '1427-12-31', precision: DatePrecision.RANGE, importance: 8,
+    date: yearOnly(1418), rangeEndYear: 1427, importance: 8,
   });
   const ngocHoiDongDa = await upsertEvent({
     vi: { title: 'Ngoc Hoi Dong Da 1789', summary: 'Chien thang cua nghia quan Tay Son do Quang Trung lanh dao truoc quan Thanh.' },
-    dateStart: '1789-01-01', precision: DatePrecision.YEAR, importance: 9,
+    date: yearOnly(1789), importance: 9,
   });
   const nguyenFounding = await upsertEvent({
     vi: { title: 'Thanh lap nha Nguyen', summary: 'Gia Long len ngoi, thanh lap trieu Nguyen nam 1802.' },
-    dateStart: '1802-01-01', precision: DatePrecision.YEAR, importance: 7,
+    date: yearOnly(1802), importance: 7,
   });
   const tuyenNgon1945 = await upsertEvent({
     vi: { title: 'Tuyen ngon Doc lap 1945', summary: 'Ho Chi Minh doc Tuyen ngon Doc lap tai Quang truong Ba Dinh ngay 2/9/1945.' },
-    dateStart: '1945-09-02', precision: DatePrecision.EXACT, importance: 10,
+    date: exactDate(1945, 9, 2), importance: 10,
   });
   const dienBienPhu1954 = await upsertEvent({
     vi: { title: 'Chien thang Dien Bien Phu 1954', summary: 'Chien dich quyet dinh cham dut chien tranh Dong Duong lan thu nhat.' },
-    dateStart: '1954-05-07', precision: DatePrecision.EXACT, importance: 10,
+    date: exactDate(1954, 5, 7), importance: 10,
   });
   const ngay30thang4 = await upsertEvent({
     vi: { title: '30 thang 4 nam 1975', summary: 'Ngay thong nhat dat nuoc Viet Nam.' },
-    dateStart: '1975-04-30', precision: DatePrecision.EXACT, importance: 10,
+    date: exactDate(1975, 4, 30), importance: 10,
   });
 
   console.log('Linking events to eras/places/people...');
@@ -369,6 +416,27 @@ async function main() {
   await linkEventPerson(dienBienPhu1954.id, voNguyenGiap.id);
   await linkEventPlace(ngay30thang4.id, dinhDocLap.id);
 
+  console.log('Seeding event themes (spec section 11)...');
+  const themePolitical = await upsertTheme({ slug: 'political', category: ThemeCategory.POLITICAL, vi: 'Chinh tri', en: 'Political' });
+  const themeMilitary = await upsertTheme({ slug: 'military', category: ThemeCategory.MILITARY, vi: 'Quan su', en: 'Military' });
+  const themeTerritorial = await upsertTheme({ slug: 'territorial', category: ThemeCategory.TERRITORIAL, vi: 'Lanh tho', en: 'Territorial' });
+  const themeHeritage = await upsertTheme({ slug: 'heritage', category: ThemeCategory.HERITAGE, vi: 'Di san', en: 'Heritage' });
+
+  const linkEventTheme = (eventId: string, themeId: string) =>
+    prisma.eventTheme.upsert({ where: { eventId_themeId: { eventId, themeId } }, update: {}, create: { eventId, themeId } });
+
+  await linkEventTheme(doiDo1010.id, themePolitical.id);
+  await linkEventTheme(doiDo1010.id, themeHeritage.id);
+  await linkEventTheme(bachDang1288.id, themeMilitary.id);
+  await linkEventTheme(bachDang1288.id, themeTerritorial.id);
+  await linkEventTheme(lamSon.id, themeMilitary.id);
+  await linkEventTheme(ngocHoiDongDa.id, themeMilitary.id);
+  await linkEventTheme(nguyenFounding.id, themePolitical.id);
+  await linkEventTheme(tuyenNgon1945.id, themePolitical.id);
+  await linkEventTheme(dienBienPhu1954.id, themeMilitary.id);
+  await linkEventTheme(dienBienPhu1954.id, themeTerritorial.id);
+  await linkEventTheme(ngay30thang4.id, themePolitical.id);
+
   const linkPersonDynasty = async (personId: string, dynastyName: string) => {
     const dynasty = await prisma.dynasty.findUnique({ where: { canonicalSlug: slug(dynastyName) } });
     if (!dynasty) return;
@@ -384,14 +452,19 @@ async function main() {
   await linkPersonDynasty(minhMang.id, 'Nha Nguyen');
 
   console.log('Seeding draft (unverified, uncited) historical facts to exercise the trust layer...');
+  const doiDo1010Date = yearOnly(1010);
+  const doiDo1010Sort = sortBounds(doiDo1010Date);
   const draftFact1 = await prisma.historicalFact.upsert({
     where: { id: 'seed-fact-doi-do-1010' },
     update: {},
     create: {
       id: 'seed-fact-doi-do-1010',
       factType: FactType.EVENT_DETAIL,
-      dateStart: new Date('1010-01-01'),
-      datePrecision: DatePrecision.YEAR,
+      dateYear: doiDo1010Date.year,
+      datePrecision: doiDo1010Date.precision,
+      dateQualifier: doiDo1010Date.qualifier,
+      dateSortStart: doiDo1010Sort.start,
+      dateSortEnd: doiDo1010Sort.end,
       certainty: FactCertainty.HIGH_CONFIDENCE,
       createdById: editor.id,
       translations: {
@@ -402,14 +475,21 @@ async function main() {
   await prisma.factEvent.upsert({ where: { factId_eventId: { factId: draftFact1.id, eventId: doiDo1010.id } }, update: {}, create: { factId: draftFact1.id, eventId: doiDo1010.id } });
   await prisma.factPerson.upsert({ where: { factId_personId: { factId: draftFact1.id, personId: lyCongUan.id } }, update: {}, create: { factId: draftFact1.id, personId: lyCongUan.id } });
 
+  const dbp1954Date = exactDate(1954, 5, 7);
+  const dbp1954Sort = sortBounds(dbp1954Date);
   const draftFact2 = await prisma.historicalFact.upsert({
     where: { id: 'seed-fact-dbp-1954' },
     update: {},
     create: {
       id: 'seed-fact-dbp-1954',
       factType: FactType.MILITARY,
-      dateStart: new Date('1954-05-07'),
-      datePrecision: DatePrecision.EXACT,
+      dateYear: dbp1954Date.year,
+      dateMonth: dbp1954Date.month,
+      dateDay: dbp1954Date.day,
+      datePrecision: dbp1954Date.precision,
+      dateQualifier: dbp1954Date.qualifier,
+      dateSortStart: dbp1954Sort.start,
+      dateSortEnd: dbp1954Sort.end,
       certainty: FactCertainty.CONFIRMED,
       createdById: historian.id,
       translations: {

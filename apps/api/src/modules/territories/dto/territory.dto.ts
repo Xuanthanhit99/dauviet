@@ -1,7 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsDateString, IsEnum, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { DatePrecision, TerritoryType } from '@prisma/client';
+import { ArrayMinSize, IsArray, IsEnum, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { TerritoryType } from '@prisma/client';
+import { HistoricalDateInputDto } from '../../../common/historical-date/historical-date.dto';
 
 export class TerritoryTranslationInputDto {
   @ApiProperty({ example: 'vi' })
@@ -33,22 +34,18 @@ export class CreateTerritoryDto {
   @IsObject()
   geometry?: Record<string, unknown>;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsDateString()
-  validFrom?: string;
+  @ApiProperty({ type: HistoricalDateInputDto, description: 'Start of the historical validity window.' })
+  @ValidateNested()
+  @Type(() => HistoricalDateInputDto)
+  start!: HistoricalDateInputDto;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: HistoricalDateInputDto, description: 'Omit if the territory is still valid / has no recorded end.' })
   @IsOptional()
-  @IsDateString()
-  validTo?: string;
+  @ValidateNested()
+  @Type(() => HistoricalDateInputDto)
+  end?: HistoricalDateInputDto;
 
-  @ApiPropertyOptional({ enum: DatePrecision })
-  @IsOptional()
-  @IsEnum(DatePrecision)
-  datePrecision?: DatePrecision;
-
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Overall period display override.' })
   @IsOptional()
   @IsString()
   dateLabel?: string;

@@ -39,7 +39,9 @@ export class CommunityService {
       data: {
         type: dto.type,
         authorId,
-        eventDateStart: dto.eventDateStart ? new Date(dto.eventDateStart) : undefined,
+        eventDateYear: dto.eventDateYear,
+        eventDateMonth: dto.eventDateMonth,
+        eventDateDay: dto.eventDateDay,
         eventDatePrecision: dto.eventDatePrecision,
         eventDateLabel: dto.eventDateLabel,
         canonicalSlug,
@@ -94,7 +96,9 @@ export class CommunityService {
       author: story.author,
       heroMedia: story.heroMedia,
       eventDate: {
-        start: story.eventDateStart,
+        year: story.eventDateYear,
+        month: story.eventDateMonth,
+        day: story.eventDateDay,
         precision: story.eventDatePrecision,
         label: story.eventDateLabel,
       },

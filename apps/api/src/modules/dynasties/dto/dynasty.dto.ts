@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsDateString, IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { DatePrecision } from '@prisma/client';
+import { ArrayMinSize, IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { HistoricalDateInputDto } from '../../../common/historical-date/historical-date.dto';
 
 export class DynastyTranslationInputDto {
   @ApiProperty({ example: 'vi' })
@@ -29,22 +29,18 @@ export class CreateDynastyDto {
   @IsString()
   capitalPlaceId?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsDateString()
-  dateStart?: string;
+  @ApiProperty({ type: HistoricalDateInputDto })
+  @ValidateNested()
+  @Type(() => HistoricalDateInputDto)
+  start!: HistoricalDateInputDto;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: HistoricalDateInputDto, description: 'Omit for a dynasty with no recorded end.' })
   @IsOptional()
-  @IsDateString()
-  dateEnd?: string;
+  @ValidateNested()
+  @Type(() => HistoricalDateInputDto)
+  end?: HistoricalDateInputDto;
 
-  @ApiPropertyOptional({ enum: DatePrecision })
-  @IsOptional()
-  @IsEnum(DatePrecision)
-  datePrecision?: DatePrecision;
-
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Overall period display override, e.g. "1802-1945".' })
   @IsOptional()
   @IsString()
   dateLabel?: string;

@@ -1,7 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsDateString, IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { DatePrecision, TranslationMethod } from '@prisma/client';
+import { ArrayMinSize, IsArray, IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { TranslationMethod } from '@prisma/client';
+import { HistoricalDateInputDto } from '../../../common/historical-date/historical-date.dto';
 
 export class EventTranslationInputDto {
   @ApiProperty({ example: 'vi' })
@@ -39,25 +40,10 @@ export class CreateEventDto {
   @IsString()
   territoryId?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsDateString()
-  dateStart?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsDateString()
-  dateEnd?: string;
-
-  @ApiPropertyOptional({ enum: DatePrecision })
-  @IsOptional()
-  @IsEnum(DatePrecision)
-  datePrecision?: DatePrecision;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  dateLabel?: string;
+  @ApiProperty({ type: HistoricalDateInputDto })
+  @ValidateNested()
+  @Type(() => HistoricalDateInputDto)
+  date!: HistoricalDateInputDto;
 
   @ApiProperty({ type: [EventTranslationInputDto] })
   @IsArray()
