@@ -1,0 +1,1382 @@
+// Dau Viet - Living Digital Atlas of Vietnam
+// Backend system of record. PostgreSQL + PostGIS.
+//
+// Design notes (see docs/backend/BACKEND_HANDOFF.md for full rationale):
+// - Translation tables carry all locale-specific display text (no nameVi/nameEn columns).
+// - High-integrity historical relationships (Fact<->Entity, Event<->Entity, Story<->Entity,
+//   CommunityStory<->Entity, JourneyStop) use real FK join tables, not polymorphic columns.
+// - Lower-integrity, cross-cutting attachments (Comment, Bookmark, Report, gallery media,
+//   generic aliases) use a validated polymorphic (entityType + entityId) pattern - this is
+//   the explicit exception carved out by the spec for non-critical relations.
+// - PostGIS geometry columns are declared Unsupported() because Prisma has no native GIS
+//   type; all spatial writes/reads go through raw SQL in the map/territory services.
+// - Historical dates are never forced into a single precise timestamp: every dated entity
+//   carries start/end/precision/label columns instead of one DateTime.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis, pg_trgm]
+}
+
+// =========================================================================
+// ENUMS
+// =========================================================================
+
+enum Role {
+  USER
+  CONTRIBUTOR
+  EDITOR
+  HISTORIAN_REVIEWER
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+  DELETED
+}
+
+enum AuthProvider {
+  PASSWORD
+  GOOGLE
+}
+
+enum ClientPlatform {
+  WEB
+  IOS
+  ANDROID
+  OTHER
+}
+
+enum PublicationStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum FactEditorialStatus {
+  DRAFT
+  SOURCE_CHECK
+  FACT_REVIEW
+  EDITORIAL_REVIEW
+  READY
+  PUBLISHED
+}
+
+enum PlaceType {
+  HISTORICAL_SITE
+  ARCHAEOLOGICAL_SITE
+  MONUMENT
+  TEMPLE
+  PAGODA
+  PALACE
+  CITADEL
+  BATTLEFIELD
+  MUSEUM
+  PRISON
+  TOMB
+  PORT
+  VILLAGE
+  ISLAND
+  ARCHIPELAGO
+  RIVER
+  MOUNTAIN
+  URBAN_AREA
+  OTHER
+}
+
+enum DatePrecision {
+  EXACT
+  MONTH
+  YEAR
+  APPROXIMATE_YEAR
+  RANGE
+  UNKNOWN
+}
+
+enum FactType {
+  BIOGRAPHICAL
+  EVENT_DETAIL
+  TERRITORIAL
+  ARCHITECTURAL
+  CULTURAL
+  ADMINISTRATIVE
+  MILITARY
+  ECONOMIC
+  OTHER
+}
+
+enum FactCertainty {
+  CONFIRMED
+  HIGH_CONFIDENCE
+  DISPUTED
+  UNCERTAIN
+  TRADITIONAL_ACCOUNT
+  ORAL_HISTORY
+}
+
+enum FactSensitivity {
+  NORMAL
+  HIGH
+  TERRITORIAL
+  LEGAL
+  CONTESTED
+}
+
+enum SourceType {
+  BOOK
+  PRIMARY_DOCUMENT
+  ARCHIVAL_DOCUMENT
+  MAP
+  MANUSCRIPT
+  ACADEMIC_PAPER
+  MUSEUM_RECORD
+  GOVERNMENT_DOCUMENT
+  UNESCO_RECORD
+  NEWSPAPER
+  PHOTO_ARCHIVE
+  ORAL_HISTORY
+  WEBSITE
+  OTHER
+}
+
+enum SourceCredibility {
+  PRIMARY
+  SECONDARY
+  TERTIARY
+  UNKNOWN
+}
+
+enum CitationVerificationState {
+  UNVERIFIED
+  VERIFIED
+  DISPUTED
+}
+
+enum AccessPolicy {
+  PUBLIC
+  PREVIEW_ONLY
+  METADATA_ONLY
+  RESTRICTED
+}
+
+enum MediaType {
+  PHOTO
+  ARCHIVAL_PHOTO
+  DOCUMENT_SCAN
+  MAP
+  ILLUSTRATION
+  RECONSTRUCTION
+  AUDIO
+  VIDEO
+  MODEL_3D
+}
+
+enum TranslationStatus {
+  DRAFT
+  AI_ASSISTED
+  HUMAN_REVIEWED
+  PUBLISHED
+}
+
+enum TranslationMethod {
+  ORIGINAL
+  HUMAN
+  AI_ASSISTED
+}
+
+enum AliasType {
+  ALTERNATE_NAME
+  HISTORICAL_NAME
+  ROMANIZATION
+  ABBREVIATION
+  OTHER
+}
+
+enum TerritoryType {
+  KINGDOM
+  PROTECTORATE
+  HISTORICAL_PROVINCE
+  DISPUTED_ZONE
+  ADMINISTRATIVE_BOUNDARY
+  OTHER
+}
+
+enum EntityKind {
+  PLACE
+  PERSON
+  EVENT
+  ERA
+  DYNASTY
+  TERRITORY
+  FACT
+  STORY
+  JOURNEY
+  COMMUNITY_STORY
+  SOURCE
+  CONTRIBUTION
+  MEDIA_ASSET
+  COMMENT
+}
+
+enum CommunityStoryType {
+  MEMORY
+  LOCAL_STORY
+  TRAVEL_EXPERIENCE
+  THEN_AND_NOW
+  DOCUMENT_CONTRIBUTION
+  FAMILY_HISTORY
+  PHOTO_STORY
+}
+
+enum CommunityVerificationState {
+  PERSONAL_MEMORY
+  COMMUNITY_SUBMISSION
+  SOURCE_ATTACHED
+  UNDER_REVIEW
+  VERIFIED_CONTRIBUTION
+}
+
+enum ModerationStatus {
+  VISIBLE
+  LIMITED
+  UNDER_REVIEW
+  REMOVED
+  LOCKED
+}
+
+enum ReportCategory {
+  MISINFORMATION
+  HATEFUL_CONTENT
+  HARASSMENT
+  SPAM
+  COPYRIGHT
+  PERSONAL_INFORMATION
+  GRAPHIC_CONTENT
+  OFF_TOPIC
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum ContributionStatus {
+  SUBMITTED
+  TRIAGE
+  PROVENANCE_REVIEW
+  HISTORICAL_REVIEW
+  ACCEPTED
+  CATALOGUED
+  REJECTED
+}
+
+// =========================================================================
+// IDENTITY & AUTH  (Phase 02)
+// =========================================================================
+
+model User {
+  id              String     @id @default(cuid())
+  email           String     @unique
+  emailVerifiedAt DateTime?
+  displayName     String
+  avatarMediaId   String?
+  status          UserStatus @default(ACTIVE)
+  roles           Role[]     @default([USER])
+  locale          String     @default("vi")
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  authIdentities      AuthIdentity[]
+  sessions            Session[]
+  emailVerifications  EmailVerificationToken[]
+  passwordResets      PasswordResetToken[]
+  comments            Comment[]
+  commentVotes        CommentVote[]
+  bookmarks           Bookmark[]
+  reports             Report[]                 @relation("ReportsFiled")
+  resolvedReports     Report[]                 @relation("ReportsResolved")
+  placeVisits         PlaceVisit[]
+  communityStories    CommunityStory[]
+  contributions       Contribution[]
+  contributionReviews ContributionReviewNote[]
+  auditLogs           AuditLog[]
+  revisionsAuthored   Revision[]
+
+  avatarMedia MediaAsset? @relation("UserAvatar", fields: [avatarMediaId], references: [id])
+
+  @@index([email])
+}
+
+model AuthIdentity {
+  id             String       @id @default(cuid())
+  userId         String
+  provider       AuthProvider
+  providerUserId String?
+  passwordHash   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@unique([userId, provider])
+}
+
+model EmailVerificationToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Session {
+  id               String         @id @default(cuid())
+  userId           String
+  refreshTokenHash String         @unique
+  platform         ClientPlatform @default(OTHER)
+  userAgent        String?
+  ip               String?
+  deviceLabel      String?
+  createdAt        DateTime       @default(now())
+  lastUsedAt       DateTime       @default(now())
+  revokedAt        DateTime?
+  revokedReason    String?
+  expiresAt        DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// =========================================================================
+// SHARED: MEDIA  (Phase 05)
+// =========================================================================
+
+model MediaAsset {
+  id                   String        @id @default(cuid())
+  type                 MediaType
+  storageKey           String
+  mimeType             String
+  sizeBytes            Int?
+  width                Int?
+  height               Int?
+  checksum             String?
+  title                String?
+  caption              String?
+  creatorName          String?
+  sourceId             String?
+  captureDate          DateTime?
+  captureDatePrecision DatePrecision @default(UNKNOWN)
+  license              String?
+  rightsHolder         String?
+  provenanceNote       String?
+  isHistorical         Boolean       @default(false)
+  isAiGenerated        Boolean       @default(false)
+  aiDisclosure         String?
+  parentAssetId        String?
+  accessPolicy         AccessPolicy  @default(PUBLIC)
+  uploadedById         String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  source      Source?      @relation(fields: [sourceId], references: [id])
+  parentAsset MediaAsset?  @relation("MediaDerivatives", fields: [parentAssetId], references: [id])
+  derivatives MediaAsset[] @relation("MediaDerivatives")
+
+  userAvatars          User[]              @relation("UserAvatar")
+  placesHero           Place[]             @relation("PlaceHeroMedia")
+  peopleHero           Person[]            @relation("PersonHeroMedia")
+  eventsHero           HistoricalEvent[]   @relation("EventHeroMedia")
+  storiesHero          Story[]             @relation("StoryHeroMedia")
+  journeysHero         Journey[]           @relation("JourneyHeroMedia")
+  communityStoriesHero CommunityStory[]    @relation("CommunityStoryHeroMedia")
+  sourceDocuments      SourceDocument[]
+  entityMedia          EntityMedia[]
+  contributionMedia    ContributionMedia[]
+
+  @@index([type])
+  @@index([sourceId])
+}
+
+// generic gallery attachment (lower-integrity per spec section 15/41)
+model EntityMedia {
+  id           String     @id @default(cuid())
+  entityType   EntityKind
+  entityId     String
+  mediaAssetId String
+  role         String     @default("gallery")
+  order        Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId])
+  @@index([mediaAssetId])
+}
+
+// =========================================================================
+// SHARED: ALIASES  (cross-language / alternate names search - section 22)
+// =========================================================================
+
+model EntityAlias {
+  id         String     @id @default(cuid())
+  entityType EntityKind
+  entityId   String
+  locale     String?
+  alias      String
+  aliasType  AliasType  @default(ALTERNATE_NAME)
+  createdAt  DateTime   @default(now())
+
+  @@index([entityType, entityId])
+  @@index([alias])
+}
+
+// =========================================================================
+// HISTORICAL KNOWLEDGE GRAPH  (Phase 03)
+// =========================================================================
+
+model Place {
+  id                   String                                   @id @default(cuid())
+  canonicalSlug        String                                   @unique
+  type                 PlaceType
+  parentPlaceId        String?
+  location             Unsupported("geometry(Point, 4326)")?
+  geometry             Unsupported("geometry(Geometry, 4326)")?
+  currentAdminRegion   String?
+  historicalImportance Int                                      @default(0)
+  heroMediaId          String?
+  unescoStatus         String?
+  unescoInscribedYear  Int?
+  publicationStatus    PublicationStatus                        @default(DRAFT)
+  createdAt            DateTime                                 @default(now())
+  updatedAt            DateTime                                 @updatedAt
+
+  parentPlace Place?      @relation("PlaceHierarchy", fields: [parentPlaceId], references: [id])
+  childPlaces Place[]     @relation("PlaceHierarchy")
+  heroMedia   MediaAsset? @relation("PlaceHeroMedia", fields: [heroMediaId], references: [id])
+
+  translations   PlaceTranslation[]
+  visits         PlaceVisit[]
+  factLinks      FactPlace[]
+  eventLinks     EventPlace[]
+  storyLinks     StoryPlace[]
+  journeyStops   JourneyStop[]
+  communityLinks CommunityStoryPlace[]
+  contributions  Contribution[]
+
+  @@index([type])
+  @@index([parentPlaceId])
+}
+
+model PlaceTranslation {
+  id             String            @id @default(cuid())
+  placeId        String
+  locale         String
+  name           String
+  slug           String
+  summary        String?
+  description    String?
+  seoTitle       String?
+  seoDescription String?
+  status         TranslationStatus @default(DRAFT)
+  method         TranslationMethod @default(ORIGINAL)
+  reviewedById   String?
+  reviewedAt     DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([placeId, locale])
+  @@unique([locale, slug])
+}
+
+model Person {
+  id                   String            @id @default(cuid())
+  canonicalSlug        String            @unique
+  birthDateStart       DateTime?
+  birthDateEnd         DateTime?
+  birthDatePrecision   DatePrecision     @default(UNKNOWN)
+  birthDateLabel       String?
+  deathDateStart       DateTime?
+  deathDateEnd         DateTime?
+  deathDatePrecision   DatePrecision     @default(UNKNOWN)
+  deathDateLabel       String?
+  heroMediaId          String?
+  historicalImportance Int               @default(0)
+  publicationStatus    PublicationStatus @default(DRAFT)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  heroMedia MediaAsset? @relation("PersonHeroMedia", fields: [heroMediaId], references: [id])
+
+  translations   PersonTranslation[]
+  dynastyLinks   PersonDynasty[]
+  factLinks      FactPerson[]
+  eventLinks     EventPerson[]
+  storyLinks     StoryPerson[]
+  communityLinks CommunityStoryPerson[]
+}
+
+model PersonTranslation {
+  id             String            @id @default(cuid())
+  personId       String
+  locale         String
+  displayName    String
+  slug           String
+  alternateNames String?
+  summary        String?
+  description    String?
+  seoTitle       String?
+  seoDescription String?
+  status         TranslationStatus @default(DRAFT)
+  method         TranslationMethod @default(ORIGINAL)
+  reviewedById   String?
+  reviewedAt     DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, locale])
+  @@unique([locale, slug])
+}
+
+model HistoricalEvent {
+  id                String            @id @default(cuid())
+  canonicalSlug     String            @unique
+  eraId             String?
+  territoryId       String?
+  dateStart         DateTime?
+  dateEnd           DateTime?
+  datePrecision     DatePrecision     @default(UNKNOWN)
+  dateLabel         String?
+  importance        Int               @default(0)
+  heroMediaId       String?
+  publicationStatus PublicationStatus @default(DRAFT)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  era       HistoricalEra? @relation(fields: [eraId], references: [id])
+  territory Territory?     @relation(fields: [territoryId], references: [id])
+  heroMedia MediaAsset?    @relation("EventHeroMedia", fields: [heroMediaId], references: [id])
+
+  translations   HistoricalEventTranslation[]
+  placeLinks     EventPlace[]
+  personLinks    EventPerson[]
+  factLinks      FactEvent[]
+  storyLinks     StoryEvent[]
+  communityLinks CommunityStoryEvent[]
+
+  @@index([eraId])
+  @@index([territoryId])
+}
+
+model HistoricalEventTranslation {
+  id             String            @id @default(cuid())
+  eventId        String
+  locale         String
+  title          String
+  slug           String
+  summary        String?
+  description    String?
+  seoTitle       String?
+  seoDescription String?
+  status         TranslationStatus @default(DRAFT)
+  method         TranslationMethod @default(ORIGINAL)
+  reviewedById   String?
+  reviewedAt     DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  event HistoricalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, locale])
+  @@unique([locale, slug])
+}
+
+model HistoricalEra {
+  id            String        @id @default(cuid())
+  canonicalSlug String        @unique
+  parentEraId   String?
+  dateStart     DateTime?
+  dateEnd       DateTime?
+  datePrecision DatePrecision @default(UNKNOWN)
+  dateLabel     String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  parentEra HistoricalEra?  @relation("EraHierarchy", fields: [parentEraId], references: [id])
+  childEras HistoricalEra[] @relation("EraHierarchy")
+
+  translations   HistoricalEraTranslation[]
+  events         HistoricalEvent[]
+  factLinks      FactEra[]
+  communityLinks CommunityStoryEra[]
+}
+
+model HistoricalEraTranslation {
+  id          String            @id @default(cuid())
+  eraId       String
+  locale      String
+  name        String
+  slug        String
+  summary     String?
+  description String?
+  status      TranslationStatus @default(DRAFT)
+  method      TranslationMethod @default(ORIGINAL)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  era HistoricalEra @relation(fields: [eraId], references: [id], onDelete: Cascade)
+
+  @@unique([eraId, locale])
+  @@unique([locale, slug])
+}
+
+model Dynasty {
+  id             String        @id @default(cuid())
+  canonicalSlug  String        @unique
+  capitalPlaceId String?
+  dateStart      DateTime?
+  dateEnd        DateTime?
+  datePrecision  DatePrecision @default(UNKNOWN)
+  dateLabel      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  translations DynastyTranslation[]
+  personLinks  PersonDynasty[]
+}
+
+model DynastyTranslation {
+  id          String            @id @default(cuid())
+  dynastyId   String
+  locale      String
+  name        String
+  slug        String
+  summary     String?
+  description String?
+  status      TranslationStatus @default(DRAFT)
+  method      TranslationMethod @default(ORIGINAL)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  dynasty Dynasty @relation(fields: [dynastyId], references: [id], onDelete: Cascade)
+
+  @@unique([dynastyId, locale])
+  @@unique([locale, slug])
+}
+
+model Territory {
+  id              String                                   @id @default(cuid())
+  canonicalSlug   String                                   @unique
+  type            TerritoryType
+  geometry        Unsupported("geometry(Geometry, 4326)")?
+  validFrom       DateTime?
+  validTo         DateTime?
+  datePrecision   DatePrecision                            @default(UNKNOWN)
+  dateLabel       String?
+  provenanceNote  String?
+  geometryVersion Int                                      @default(1)
+  createdAt       DateTime                                 @default(now())
+  updatedAt       DateTime                                 @updatedAt
+
+  translations TerritoryTranslation[]
+  events       HistoricalEvent[]
+  factLinks    FactTerritory[]
+}
+
+model TerritoryTranslation {
+  id          String            @id @default(cuid())
+  territoryId String
+  locale      String
+  name        String
+  slug        String
+  summary     String?
+  description String?
+  status      TranslationStatus @default(DRAFT)
+  method      TranslationMethod @default(ORIGINAL)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+
+  @@unique([territoryId, locale])
+  @@unique([locale, slug])
+}
+
+// --- high-integrity join tables: knowledge graph ---
+
+model EventPlace {
+  id      String  @id @default(cuid())
+  eventId String
+  placeId String
+  role    String?
+
+  event HistoricalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  place Place           @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, placeId])
+}
+
+model EventPerson {
+  id       String  @id @default(cuid())
+  eventId  String
+  personId String
+  role     String?
+
+  event  HistoricalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  person Person          @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, personId])
+}
+
+model PersonDynasty {
+  id        String  @id @default(cuid())
+  personId  String
+  dynastyId String
+  role      String?
+
+  person  Person  @relation(fields: [personId], references: [id], onDelete: Cascade)
+  dynasty Dynasty @relation(fields: [dynastyId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, dynastyId])
+}
+
+// =========================================================================
+// TRUST LAYER  (Phase 04)
+// =========================================================================
+
+model HistoricalFact {
+  id              String              @id @default(cuid())
+  factType        FactType
+  dateStart       DateTime?
+  dateEnd         DateTime?
+  datePrecision   DatePrecision       @default(UNKNOWN)
+  dateLabel       String?
+  certainty       FactCertainty       @default(UNCERTAIN)
+  sensitivity     FactSensitivity     @default(NORMAL)
+  editorialStatus FactEditorialStatus @default(DRAFT)
+  createdById     String?
+  reviewedById    String?
+  reviewedAt      DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  translations   HistoricalFactTranslation[]
+  citations      Citation[]
+  placeLinks     FactPlace[]
+  personLinks    FactPerson[]
+  eventLinks     FactEvent[]
+  eraLinks       FactEra[]
+  territoryLinks FactTerritory[]
+  revisions      Revision[]
+
+  @@index([editorialStatus])
+  @@index([sensitivity])
+}
+
+model HistoricalFactTranslation {
+  id        String            @id @default(cuid())
+  factId    String
+  locale    String
+  statement String
+  status    TranslationStatus @default(DRAFT)
+  method    TranslationMethod @default(ORIGINAL)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  fact HistoricalFact @relation(fields: [factId], references: [id], onDelete: Cascade)
+
+  @@unique([factId, locale])
+}
+
+model FactPlace {
+  id      String @id @default(cuid())
+  factId  String
+  placeId String
+
+  fact  HistoricalFact @relation(fields: [factId], references: [id], onDelete: Cascade)
+  place Place          @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([factId, placeId])
+}
+
+model FactPerson {
+  id       String @id @default(cuid())
+  factId   String
+  personId String
+
+  fact   HistoricalFact @relation(fields: [factId], references: [id], onDelete: Cascade)
+  person Person         @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([factId, personId])
+}
+
+model FactEvent {
+  id      String @id @default(cuid())
+  factId  String
+  eventId String
+
+  fact  HistoricalFact  @relation(fields: [factId], references: [id], onDelete: Cascade)
+  event HistoricalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([factId, eventId])
+}
+
+model FactEra {
+  id     String @id @default(cuid())
+  factId String
+  eraId  String
+
+  fact HistoricalFact @relation(fields: [factId], references: [id], onDelete: Cascade)
+  era  HistoricalEra  @relation(fields: [eraId], references: [id], onDelete: Cascade)
+
+  @@unique([factId, eraId])
+}
+
+model FactTerritory {
+  id          String @id @default(cuid())
+  factId      String
+  territoryId String
+
+  fact      HistoricalFact @relation(fields: [factId], references: [id], onDelete: Cascade)
+  territory Territory      @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+
+  @@unique([factId, territoryId])
+}
+
+model Source {
+  id               String            @id @default(cuid())
+  sourceType       SourceType
+  title            String
+  author           String?
+  organization     String?
+  publisher        String?
+  publicationYear  Int?
+  isbn             String?
+  issn             String?
+  edition          String?
+  volume           String?
+  archiveName      String?
+  archiveCode      String?
+  originalLanguage String?
+  url              String?
+  accessedAt       DateTime?
+  credibilityLevel SourceCredibility @default(UNKNOWN)
+  notes            String?
+  createdById      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  translations    SourceTranslation[]
+  citations       Citation[]
+  sourceDocuments SourceDocument[]
+  mediaAssets     MediaAsset[]
+
+  @@index([sourceType])
+}
+
+// optional localized display title only - original bibliographic identity is
+// never overwritten (see spec section 21).
+model SourceTranslation {
+  id           String   @id @default(cuid())
+  sourceId     String
+  locale       String
+  displayTitle String
+  createdAt    DateTime @default(now())
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, locale])
+}
+
+model Citation {
+  id                String                    @id @default(cuid())
+  factId            String
+  sourceId          String
+  pageFrom          String?
+  pageTo            String?
+  volume            String?
+  chapter           String?
+  excerpt           String?
+  editorNote        String?
+  verificationState CitationVerificationState @default(UNVERIFIED)
+  verifiedById      String?
+  verifiedAt        DateTime?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  fact   HistoricalFact @relation(fields: [factId], references: [id], onDelete: Cascade)
+  source Source         @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  storyLinks StoryCitation[]
+
+  @@index([factId])
+  @@index([sourceId])
+}
+
+model SourceDocument {
+  id            String       @id @default(cuid())
+  sourceId      String
+  mediaAssetId  String
+  pageCount     Int?
+  extractedText String?
+  usageRights   String?
+  rightsHolder  String?
+  accessPolicy  AccessPolicy @default(METADATA_ONLY)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  source     Source     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id])
+
+  @@index([sourceId])
+}
+
+// generic revision snapshot store for high-value editorial entities (section 37)
+model Revision {
+  id          String     @id @default(cuid())
+  entityType  EntityKind
+  entityId    String
+  snapshot    Json
+  changeNote  String?
+  changedById String?
+  factId      String?
+  storyId     String?
+  createdAt   DateTime   @default(now())
+
+  changedBy User?           @relation(fields: [changedById], references: [id])
+  fact      HistoricalFact? @relation(fields: [factId], references: [id])
+  story     Story?          @relation(fields: [storyId], references: [id])
+
+  @@index([entityType, entityId])
+}
+
+// append-only, never editable through normal editorial APIs (section 38)
+model AuditLog {
+  id         String      @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType EntityKind?
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime    @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([action])
+}
+
+// =========================================================================
+// EDITORIAL CONTENT  (Phase 06)
+// =========================================================================
+
+model Story {
+  id              String            @id @default(cuid())
+  canonicalSlug   String            @unique
+  heroMediaId     String?
+  authorId        String?
+  editorialStatus PublicationStatus @default(DRAFT)
+  publishedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  heroMedia MediaAsset? @relation("StoryHeroMedia", fields: [heroMediaId], references: [id])
+
+  translations  StoryTranslation[]
+  placeLinks    StoryPlace[]
+  personLinks   StoryPerson[]
+  eventLinks    StoryEvent[]
+  citationLinks StoryCitation[]
+  revisions     Revision[]
+
+  @@index([editorialStatus])
+}
+
+model StoryTranslation {
+  id             String            @id @default(cuid())
+  storyId        String
+  locale         String
+  title          String
+  slug           String
+  summary        String?
+  content        String?
+  seoTitle       String?
+  seoDescription String?
+  status         TranslationStatus @default(DRAFT)
+  method         TranslationMethod @default(ORIGINAL)
+  reviewedById   String?
+  reviewedAt     DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, locale])
+  @@unique([locale, slug])
+}
+
+model StoryPlace {
+  id      String @id @default(cuid())
+  storyId String
+  placeId String
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, placeId])
+}
+
+model StoryPerson {
+  id       String @id @default(cuid())
+  storyId  String
+  personId String
+
+  story  Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, personId])
+}
+
+model StoryEvent {
+  id      String @id @default(cuid())
+  storyId String
+  eventId String
+
+  story Story           @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  event HistoricalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, eventId])
+}
+
+model StoryCitation {
+  id         String @id @default(cuid())
+  storyId    String
+  citationId String
+
+  story    Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  citation Citation @relation(fields: [citationId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, citationId])
+}
+
+model Journey {
+  id              String                                     @id @default(cuid())
+  canonicalSlug   String                                     @unique
+  heroMediaId     String?
+  durationMinutes Int?
+  distanceMeters  Int?
+  difficulty      String?
+  region          String?
+  routeGeometry   Unsupported("geometry(LineString, 4326)")?
+  editorialStatus PublicationStatus                          @default(DRAFT)
+  publishedAt     DateTime?
+  createdAt       DateTime                                   @default(now())
+  updatedAt       DateTime                                   @updatedAt
+
+  heroMedia MediaAsset? @relation("JourneyHeroMedia", fields: [heroMediaId], references: [id])
+
+  translations JourneyTranslation[]
+  stops        JourneyStop[]
+
+  @@index([editorialStatus])
+}
+
+model JourneyTranslation {
+  id          String            @id @default(cuid())
+  journeyId   String
+  locale      String
+  title       String
+  slug        String
+  summary     String?
+  description String?
+  status      TranslationStatus @default(DRAFT)
+  method      TranslationMethod @default(ORIGINAL)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  @@unique([journeyId, locale])
+  @@unique([locale, slug])
+}
+
+model JourneyStop {
+  id                         String  @id @default(cuid())
+  journeyId                  String
+  placeId                    String
+  order                      Int
+  recommendedDurationMinutes Int?
+  notes                      String?
+
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  place   Place   @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([journeyId, placeId])
+  @@index([journeyId, order])
+}
+
+// =========================================================================
+// COMMUNITY  (Phase 08)
+// =========================================================================
+
+model CommunityStory {
+  id                 String                     @id @default(cuid())
+  canonicalSlug      String                     @unique
+  type               CommunityStoryType
+  authorId           String
+  heroMediaId        String?
+  verificationState  CommunityVerificationState @default(PERSONAL_MEMORY)
+  moderationStatus   ModerationStatus           @default(VISIBLE)
+  eventDateStart     DateTime?
+  eventDateEnd       DateTime?
+  eventDatePrecision DatePrecision              @default(UNKNOWN)
+  eventDateLabel     String?
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+
+  author    User        @relation(fields: [authorId], references: [id])
+  heroMedia MediaAsset? @relation("CommunityStoryHeroMedia", fields: [heroMediaId], references: [id])
+
+  translations CommunityStoryTranslation[]
+  placeLinks   CommunityStoryPlace[]
+  personLinks  CommunityStoryPerson[]
+  eventLinks   CommunityStoryEvent[]
+  eraLinks     CommunityStoryEra[]
+
+  @@index([authorId])
+  @@index([moderationStatus])
+}
+
+model CommunityStoryTranslation {
+  id        String            @id @default(cuid())
+  storyId   String
+  locale    String
+  title     String
+  slug      String
+  content   String?
+  status    TranslationStatus @default(DRAFT)
+  method    TranslationMethod @default(ORIGINAL)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  story CommunityStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, locale])
+  @@unique([locale, slug])
+}
+
+model CommunityStoryPlace {
+  id      String @id @default(cuid())
+  storyId String
+  placeId String
+
+  story CommunityStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  place Place          @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, placeId])
+}
+
+model CommunityStoryPerson {
+  id       String @id @default(cuid())
+  storyId  String
+  personId String
+
+  story  CommunityStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  person Person         @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, personId])
+}
+
+model CommunityStoryEvent {
+  id      String @id @default(cuid())
+  storyId String
+  eventId String
+
+  story CommunityStory  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  event HistoricalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, eventId])
+}
+
+model CommunityStoryEra {
+  id      String @id @default(cuid())
+  storyId String
+  eraId   String
+
+  story CommunityStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  era   HistoricalEra  @relation(fields: [eraId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, eraId])
+}
+
+model Comment {
+  id         String           @id @default(cuid())
+  targetType EntityKind
+  targetId   String
+  authorId   String
+  parentId   String?
+  body       String
+  status     ModerationStatus @default(VISIBLE)
+  score      Int              @default(0)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  author  User          @relation(fields: [authorId], references: [id])
+  parent  Comment?      @relation("CommentReplies", fields: [parentId], references: [id])
+  replies Comment[]     @relation("CommentReplies")
+  votes   CommentVote[]
+
+  @@index([targetType, targetId])
+  @@index([parentId])
+}
+
+model CommentVote {
+  id        String   @id @default(cuid())
+  commentId String
+  userId    String
+  value     Int
+  createdAt DateTime @default(now())
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+}
+
+model Bookmark {
+  id         String     @id @default(cuid())
+  userId     String
+  targetType EntityKind
+  targetId   String
+  createdAt  DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+}
+
+model Report {
+  id             String         @id @default(cuid())
+  reporterId     String
+  targetType     EntityKind
+  targetId       String
+  category       ReportCategory
+  status         ReportStatus   @default(OPEN)
+  notes          String?
+  resolvedById   String?
+  resolvedAt     DateTime?
+  resolutionNote String?
+  createdAt      DateTime       @default(now())
+
+  reporter User  @relation("ReportsFiled", fields: [reporterId], references: [id])
+  resolver User? @relation("ReportsResolved", fields: [resolvedById], references: [id])
+
+  @@index([targetType, targetId])
+  @@index([status])
+}
+
+model PlaceVisit {
+  id        String   @id @default(cuid())
+  userId    String
+  placeId   String
+  visitedAt DateTime @default(now())
+  note      String?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([placeId])
+}
+
+// =========================================================================
+// CONTRIBUTIONS  (Phase 09)
+// =========================================================================
+
+model Contribution {
+  id              String             @id @default(cuid())
+  contributorId   String
+  status          ContributionStatus @default(SUBMITTED)
+  title           String
+  description     String?
+  originSource    String?
+  currentOwner    String?
+  sharingRights   String?
+  approxDateLabel String?
+  approxDateStart DateTime?
+  approxDateEnd   DateTime?
+  peopleShown     String[]           @default([])
+  placeId         String?
+  contextNote     String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  contributor User   @relation(fields: [contributorId], references: [id])
+  place       Place? @relation(fields: [placeId], references: [id])
+
+  media       ContributionMedia[]
+  reviewNotes ContributionReviewNote[]
+
+  @@index([status])
+}
+
+model ContributionMedia {
+  id             String @id @default(cuid())
+  contributionId String
+  mediaAssetId   String
+
+  contribution Contribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  mediaAsset   MediaAsset   @relation(fields: [mediaAssetId], references: [id])
+
+  @@unique([contributionId, mediaAssetId])
+}
+
+model ContributionReviewNote {
+  id             String             @id @default(cuid())
+  contributionId String
+  reviewerId     String
+  stage          ContributionStatus
+  note           String
+  createdAt      DateTime           @default(now())
+
+  contribution Contribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  reviewer     User         @relation(fields: [reviewerId], references: [id])
+
+  @@index([contributionId])
+}

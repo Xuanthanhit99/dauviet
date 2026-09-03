@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.pnpm-store/
+apps/*/dist/
+apps/*/node_modules/
+packages/*/dist/
+packages/*/node_modules/
+generated/
+.turbo/
