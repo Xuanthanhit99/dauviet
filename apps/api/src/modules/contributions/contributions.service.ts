@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { ContributionStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { MediaService } from '../media/media.service';
 import { CreateContributionDto, AdvanceContributionDto } from './dto/contribution.dto';
 
 const FORWARD: Record<ContributionStatus, ContributionStatus[]> = {
@@ -22,9 +23,24 @@ const FORWARD: Record<ContributionStatus, ContributionStatus[]> = {
  */
 @Injectable()
 export class ContributionsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+    private readonly media: MediaService,
+  ) {}
 
-  async create(dto: CreateContributionDto, contributorId: string) {
+  async create(dto: CreateContributionDto, contributor: { id: string; roles: string[] }) {
+    const contributorId = contributor.id;
+    // A contributor cannot attach a MediaAsset uploaded by someone else
+    // (spec section 29/30) - each referenced id must belong to the caller
+    // (or the caller must hold an EDITOR+ role, e.g. cataloguing on behalf
+    // of a donor with pre-uploaded scans).
+    if (dto.mediaAssetIds?.length) {
+      for (const mediaAssetId of dto.mediaAssetIds) {
+        await this.media.assertOwnedByOrPrivileged(mediaAssetId, contributor);
+      }
+    }
+
     const contribution = await this.prisma.contribution.create({
       data: {
         contributorId,

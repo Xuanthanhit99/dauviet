@@ -55,6 +55,11 @@ export class FactsController {
 
   @Patch(':id/editorial-status')
   setStatus(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: SetFactEditorialStatusDto) {
-    return this.facts.setEditorialStatus(id, dto.status, user);
+    return this.facts.setEditorialStatus(id, dto.status, user, { notes: dto.notes, decision: dto.decision });
+  }
+
+  @Get(':id/reviews')
+  listReviews(@Param('id') id: string) {
+    return this.facts.listReviews(id);
   }
 }

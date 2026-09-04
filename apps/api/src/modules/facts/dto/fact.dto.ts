@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { FactCertainty, FactEditorialStatus, FactSensitivity, FactType } from '@prisma/client';
+import { FactCertainty, FactEditorialStatus, FactSensitivity, FactType, ReviewDecision } from '@prisma/client';
 import { HistoricalDateInputDto } from '../../../common/historical-date/historical-date.dto';
 
 export class CreateFactDto {
@@ -38,6 +38,16 @@ export class SetFactEditorialStatusDto {
   @ApiProperty({ enum: FactEditorialStatus })
   @IsEnum(FactEditorialStatus)
   status!: FactEditorialStatus;
+
+  @ApiPropertyOptional({ description: 'Required when sending a fact back to DRAFT or retracting it - the reviewer reason.' })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @ApiPropertyOptional({ enum: ReviewDecision, description: 'Explicit review decision for this transition; inferred from the direction of the move when omitted.' })
+  @IsOptional()
+  @IsEnum(ReviewDecision)
+  decision?: ReviewDecision;
 }
 
 export class LinkFactEntityDto {

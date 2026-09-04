@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Param, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { IsEnum, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { EntityKind, ModerationStatus, Role } from '@prisma/client';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
@@ -23,6 +24,13 @@ class CreateCommentDto {
   body!: string;
 }
 
+class UpdateCommentDto {
+  @IsString()
+  @MinLength(1)
+  @MaxLength(4000)
+  body!: string;
+}
+
 class VoteDto {
   @IsIn([1, -1])
   value!: 1 | -1;
@@ -39,11 +47,18 @@ class ModerateCommentDto {
 export class CommentsController {
   constructor(private readonly comments: CommentsService) {}
 
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateCommentDto) {
     return this.comments.create(user.id, dto.targetType, dto.targetId, dto.body, dto.parentId);
   }
 
+  @Patch(':id')
+  update(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateCommentDto) {
+    return this.comments.update(user.id, id, dto.body);
+  }
+
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
   @Post(':id/vote')
   vote(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: VoteDto) {
     return this.comments.vote(user.id, id, dto.value);

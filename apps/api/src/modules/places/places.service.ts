@@ -1,16 +1,39 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { FactEditorialStatus, Prisma, PublicationStatus } from '@prisma/client';
+import { PlaceType, Prisma, PublicationStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { resolveTranslation } from '../../common/translation/resolve-translation.util';
 import { toSlug } from '../../common/util/slug.util';
 import { toHistoricalDateResponse } from '../../common/historical-date/historical-date.util';
+import { getPublicSourcesForEntity } from '../facts/fact-sources.util';
+import { StoriesService } from '../stories/stories.service';
+import { JourneysService } from '../journeys/journeys.service';
+import { DISCOVERY_ERROR_CODES } from '../../common/errors/discovery-error-codes';
+import { PUBLIC_VISIBLE_STATUSES } from '../../common/moderation/public-visible-statuses.util';
 import { CreatePlaceDto, UpdatePlaceDto } from './dto/place.dto';
+import { NearbyPlacesQueryDto } from './dto/nearby-query.dto';
 import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
+
+const MAX_NEARBY_RADIUS_METERS = 50_000;
+const DEFAULT_NEARBY_RADIUS_METERS = 5_000;
+const DEFAULT_NEARBY_LIMIT = 20;
+
+interface NearbyRow {
+  id: string;
+  canonicalSlug: string;
+  type: PlaceType;
+  historicalImportance: number;
+  distanceMeters: number;
+}
 
 @Injectable()
 export class PlacesService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+    private readonly stories: StoriesService,
+    private readonly journeys: JourneysService,
+  ) {}
 
   private async ensureUniqueCanonicalSlug(base: string): Promise<string> {
     let slug = base;
@@ -192,25 +215,83 @@ export class PlacesService {
       });
   }
 
+  /**
+   * "Kham pha quanh toi" foundation (spec Phase 07 section 51-54).
+   * Stateless - `lat`/`lng` are request parameters only, never persisted
+   * (spec section 52); no precise-location logging is added beyond normal
+   * infrastructure request logs. Distance is always meters (spec section
+   * 53), computed via a geography cast so `ST_DWithin`/`ST_Distance` return
+   * real great-circle distances rather than raw degree units.
+   */
+  async findNearby(query: NearbyPlacesQueryDto, locale: string) {
+    if (query.lat < -90 || query.lat > 90 || query.lng < -180 || query.lng > 180 || !Number.isFinite(query.lat) || !Number.isFinite(query.lng)) {
+      throw new BadRequestException({ code: DISCOVERY_ERROR_CODES.NEARBY_INVALID_COORDINATES, message: 'lat must be in [-90,90] and lng in [-180,180].' });
+    }
+    const radius = Math.min(query.radius ?? DEFAULT_NEARBY_RADIUS_METERS, MAX_NEARBY_RADIUS_METERS);
+    if (radius <= 0) {
+      throw new BadRequestException({ code: DISCOVERY_ERROR_CODES.NEARBY_INVALID_RADIUS, message: 'radius must be a positive number of meters.' });
+    }
+    const limit = Math.min(query.limit ?? DEFAULT_NEARBY_LIMIT, 100);
+
+    const types = query.types
+      ? query.types.split(',').map((t) => t.trim())
+      : undefined;
+    if (types && types.some((t) => !Object.values(PlaceType).includes(t as PlaceType))) {
+      throw new BadRequestException('types must be a comma-separated list of valid PlaceType values.');
+    }
+
+    const rows = await this.prisma.$queryRaw<NearbyRow[]>`
+      SELECT p."id", p."canonicalSlug", p."type", p."historicalImportance",
+             ST_Distance(p."location"::geography, ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography) as "distanceMeters"
+      FROM "Place" p
+      WHERE p."publicationStatus" = 'PUBLISHED'
+        AND p."location" IS NOT NULL
+        AND ST_DWithin(p."location"::geography, ST_SetSRID(ST_MakePoint(${query.lng}, ${query.lat}), 4326)::geography, ${radius})
+        ${types && types.length > 0 ? Prisma.sql`AND p."type"::text IN (${Prisma.join(types)})` : Prisma.sql``}
+      ORDER BY "distanceMeters" ASC
+      LIMIT ${limit}
+    `;
+
+    const placeIds = rows.map((r) => r.id);
+    const translations = placeIds.length
+      ? await this.prisma.placeTranslation.findMany({ where: { placeId: { in: placeIds } } })
+      : [];
+    const byPlace = new Map<string, typeof translations>();
+    for (const t of translations) {
+      const arr = byPlace.get(t.placeId) ?? [];
+      arr.push(t);
+      byPlace.set(t.placeId, arr);
+    }
+
+    return rows.map((row) => {
+      const { translation, resolvedLocale, fallbackApplied } = resolveTranslation(byPlace.get(row.id) ?? [], locale);
+      return {
+        id: row.id,
+        slug: row.canonicalSlug,
+        type: row.type,
+        historicalImportance: row.historicalImportance,
+        name: translation?.name ?? row.canonicalSlug,
+        distanceMeters: Math.round(row.distanceMeters),
+        meta: { requestedLocale: locale, resolvedLocale, fallbackApplied },
+      };
+    });
+  }
+
   async getSources(slug: string) {
     const place = await this.getPublishedIdBySlug(slug);
-    const factLinks = await this.prisma.factPlace.findMany({
-      where: { placeId: place.id },
-      include: {
-        fact: {
-          include: { citations: { include: { source: true } } },
-        },
-      },
-    });
+    return getPublicSourcesForEntity(this.prisma, 'place', place.id);
+  }
 
-    const sourceMap = new Map<string, Prisma.SourceGetPayload<Record<string, never>>>();
-    for (const link of factLinks) {
-      if (link.fact.editorialStatus !== FactEditorialStatus.PUBLISHED) continue;
-      for (const citation of link.fact.citations) {
-        sourceMap.set(citation.source.id, citation.source);
-      }
-    }
-    return Array.from(sourceMap.values());
+  /** Editorial Stories about this Place (spec section 42) - PUBLISHED only. */
+  async getStories(slug: string, locale: string) {
+    const place = await this.getPublishedIdBySlug(slug);
+    return this.stories.listForEntity('place', place.id, locale);
+  }
+
+  /** Journeys that stop at this Place (spec section 43) - PUBLISHED only. */
+  async getJourneys(slug: string, locale: string) {
+    const place = await this.getPublishedIdBySlug(slug);
+    return this.journeys.listForPlace(place.id, locale);
   }
 
   async getMedia(slug: string) {
@@ -230,7 +311,7 @@ export class PlacesService {
       include: { story: { include: { translations: true } } },
     });
     return links
-      .filter((l) => l.story.moderationStatus === 'VISIBLE')
+      .filter((l) => PUBLIC_VISIBLE_STATUSES.includes(l.story.moderationStatus))
       .map((l) => {
         const { translation } = resolveTranslation(l.story.translations, locale);
         return {

@@ -40,6 +40,18 @@ export class EventsController {
     return this.comments.list('EVENT', event.id, query);
   }
 
+  @Public()
+  @Get(':slug/sources')
+  getSources(@Param('slug') slug: string) {
+    return this.events.getSources(slug);
+  }
+
+  @Public()
+  @Get(':slug/stories')
+  getStories(@Param('slug') slug: string, @Locale() locale: string) {
+    return this.events.getStories(slug, locale);
+  }
+
   @ApiBearerAuth()
   @Roles(Role.EDITOR, Role.ADMIN)
   @Post()

@@ -40,6 +40,24 @@ export class PeopleController {
     return this.comments.list('PERSON', person.id, query);
   }
 
+  @Public()
+  @Get(':slug/sources')
+  getSources(@Param('slug') slug: string) {
+    return this.people.getSources(slug);
+  }
+
+  @Public()
+  @Get(':slug/timeline')
+  getTimeline(@Param('slug') slug: string, @Locale() locale: string) {
+    return this.people.getTimeline(slug, locale);
+  }
+
+  @Public()
+  @Get(':slug/stories')
+  getStories(@Param('slug') slug: string, @Locale() locale: string) {
+    return this.people.getStories(slug, locale);
+  }
+
   @ApiBearerAuth()
   @Roles(Role.EDITOR, Role.ADMIN)
   @Post()

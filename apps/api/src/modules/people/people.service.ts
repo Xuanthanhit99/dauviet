@@ -6,11 +6,17 @@ import { resolveTranslation } from '../../common/translation/resolve-translation
 import { toSlug } from '../../common/util/slug.util';
 import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
 import { buildHistoricalDateColumns, toHistoricalDateResponse } from '../../common/historical-date/historical-date.util';
+import { getPublicSourcesForEntity } from '../facts/fact-sources.util';
+import { StoriesService } from '../stories/stories.service';
 import { CreatePersonDto } from './dto/person.dto';
 
 @Injectable()
 export class PeopleService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+    private readonly stories: StoriesService,
+  ) {}
 
   private async ensureUniqueSlug(base: string): Promise<string> {
     let slug = base;
@@ -141,6 +147,62 @@ export class PeopleService {
       return { id: p.id, slug: p.canonicalSlug, displayName: translation?.displayName ?? p.canonicalSlug };
     });
     return { items: page, nextCursor: hasMore ? people[limit].id : null, hasMore };
+  }
+
+  async getSources(slug: string) {
+    const person = await this.prisma.person.findUnique({ where: { canonicalSlug: slug } });
+    if (!person || person.publicationStatus !== PublicationStatus.PUBLISHED) {
+      throw new NotFoundException('Person not found.');
+    }
+    return getPublicSourcesForEntity(this.prisma, 'person', person.id);
+  }
+
+  /** Editorial Stories about this Person (spec section 42) - PUBLISHED only. */
+  async getStories(slug: string, locale: string) {
+    const person = await this.prisma.person.findUnique({ where: { canonicalSlug: slug } });
+    if (!person || person.publicationStatus !== PublicationStatus.PUBLISHED) {
+      throw new NotFoundException('Person not found.');
+    }
+    return this.stories.listForEntity('person', person.id, locale);
+  }
+
+  /** Chronological events for a Person (spec Phase 07 section 29) - same pattern as `PlacesService.getTimeline`, PUBLISHED events only. */
+  async getTimeline(slug: string, locale: string) {
+    const person = await this.prisma.person.findUnique({ where: { canonicalSlug: slug } });
+    if (!person || person.publicationStatus !== PublicationStatus.PUBLISHED) {
+      throw new NotFoundException('Person not found.');
+    }
+    const links = await this.prisma.eventPerson.findMany({
+      where: { personId: person.id },
+      include: { event: { include: { translations: true } } },
+      orderBy: { event: { dateSortStart: 'asc' } },
+    });
+    return links
+      .filter((l) => l.event.publicationStatus === PublicationStatus.PUBLISHED)
+      .map((l) => {
+        const { translation } = resolveTranslation(l.event.translations, locale);
+        return {
+          id: l.event.id,
+          slug: l.event.canonicalSlug,
+          title: translation?.title ?? l.event.canonicalSlug,
+          date: toHistoricalDateResponse(
+            {
+              year: l.event.dateYear,
+              month: l.event.dateMonth,
+              day: l.event.dateDay,
+              precision: l.event.datePrecision,
+              qualifier: l.event.dateQualifier,
+              endYear: l.event.dateEndYear,
+              endMonth: l.event.dateEndMonth,
+              endDay: l.event.dateEndDay,
+              label: l.event.dateLabel,
+              sortStart: l.event.dateSortStart,
+              sortEnd: l.event.dateSortEnd,
+            },
+            locale,
+          ),
+        };
+      });
   }
 
   async setPublicationStatus(id: string, status: PublicationStatus, actorId: string) {

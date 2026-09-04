@@ -1,17 +1,19 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class TimelineQueryDto {
-  @ApiPropertyOptional({ description: 'ISO date, inclusive lower bound' })
+  @ApiPropertyOptional({ description: 'Inclusive lower-bound year (spec section 26) - overlap semantics, not containment: an event spanning 1250-1310 matches fromYear=1200&toYear=1300.' })
   @IsOptional()
-  @IsDateString()
-  from?: string;
+  @Type(() => Number)
+  @IsInt()
+  fromYear?: number;
 
-  @ApiPropertyOptional({ description: 'ISO date, inclusive upper bound' })
+  @ApiPropertyOptional({ description: 'Inclusive upper-bound year.' })
   @IsOptional()
-  @IsDateString()
-  to?: string;
+  @Type(() => Number)
+  @IsInt()
+  toYear?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -28,10 +30,22 @@ export class TimelineQueryDto {
   @IsString()
   personId?: string;
 
+  @ApiPropertyOptional({ description: 'Theme slug (spec section 22) - filters HistoricalEvent items via EventTheme.' })
+  @IsOptional()
+  @IsString()
+  theme?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(0)
   minImportance?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit?: number;
 }

@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator';
-import { Role, UserStatus } from '@prisma/client';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
+import { IsArray, IsBoolean, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { BadgeType, Role, UserStatus } from '@prisma/client';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -15,6 +15,11 @@ class UpdateProfileDto {
   @IsOptional()
   @IsString()
   locale?: string;
+
+  @ApiPropertyOptional({ description: 'Spec section 27 - visited places are private unless the user opts in.' })
+  @IsOptional()
+  @IsBoolean()
+  visitedPlacesPublic?: boolean;
 }
 
 class SetRolesDto {
@@ -26,6 +31,16 @@ class SetRolesDto {
 class SetStatusDto {
   @IsEnum(UserStatus)
   status!: UserStatus;
+}
+
+class GrantBadgeDto {
+  @IsEnum(BadgeType)
+  type!: BadgeType;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
 }
 
 @ApiTags('users')
@@ -43,6 +58,12 @@ export class UsersController {
   @Patch('users/me')
   updateProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateProfileDto) {
     return this.users.updateProfile(user.id, dto);
+  }
+
+  @ApiBearerAuth()
+  @Get('users/me/visited-places')
+  myVisitedPlaces(@CurrentUser() user: AuthUser) {
+    return this.users.myVisitedPlaces(user.id);
   }
 
   @Public()
@@ -63,5 +84,19 @@ export class UsersController {
   @Patch('admin/users/:id/status')
   setStatus(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() dto: SetStatusDto) {
     return this.users.setStatus(actor.id, id, dto.status);
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN)
+  @Post('admin/users/:id/badges')
+  grantBadge(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() dto: GrantBadgeDto) {
+    return this.users.grantBadge(actor.id, id, dto.type, dto.reason);
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN)
+  @Delete('admin/users/:id/badges/:type')
+  revokeBadge(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Param('type') type: BadgeType) {
+    return this.users.revokeBadge(actor.id, id, type);
   }
 }

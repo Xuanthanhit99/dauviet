@@ -38,7 +38,7 @@ describe('EventsService.findBySlug', () => {
 
   beforeEach(() => {
     prisma = { historicalEvent: { findUnique: jest.fn() } };
-    service = new EventsService(prisma as unknown as PrismaService, { log: jest.fn() } as unknown as AuditService);
+    service = new EventsService(prisma as unknown as PrismaService, { log: jest.fn() } as unknown as AuditService, {} as any);
   });
 
   it('404s a DRAFT event on the public path', async () => {

@@ -6,11 +6,17 @@ import { resolveTranslation } from '../../common/translation/resolve-translation
 import { toSlug } from '../../common/util/slug.util';
 import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
 import { buildHistoricalDateColumns, toHistoricalDateResponse } from '../../common/historical-date/historical-date.util';
+import { getPublicSourcesForEntity } from '../facts/fact-sources.util';
+import { StoriesService } from '../stories/stories.service';
 import { CreateEventDto } from './dto/event.dto';
 
 @Injectable()
 export class EventsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+    private readonly stories: StoriesService,
+  ) {}
 
   private async ensureUniqueSlug(base: string): Promise<string> {
     let slug = base;
@@ -157,6 +163,23 @@ export class EventsService {
       };
     });
     return { items: page, nextCursor: hasMore ? events[limit].id : null, hasMore };
+  }
+
+  async getSources(slug: string) {
+    const event = await this.prisma.historicalEvent.findUnique({ where: { canonicalSlug: slug } });
+    if (!event || event.publicationStatus !== PublicationStatus.PUBLISHED) {
+      throw new NotFoundException('Event not found.');
+    }
+    return getPublicSourcesForEntity(this.prisma, 'event', event.id);
+  }
+
+  /** Editorial Stories about this Event (spec section 42) - PUBLISHED only. */
+  async getStories(slug: string, locale: string) {
+    const event = await this.prisma.historicalEvent.findUnique({ where: { canonicalSlug: slug } });
+    if (!event || event.publicationStatus !== PublicationStatus.PUBLISHED) {
+      throw new NotFoundException('Event not found.');
+    }
+    return this.stories.listForEntity('event', event.id, locale);
   }
 
   async setPublicationStatus(id: string, status: PublicationStatus, actorId: string) {

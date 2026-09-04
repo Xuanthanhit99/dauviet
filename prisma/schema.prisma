@@ -23,7 +23,11 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [postgis, pg_trgm]
+  // unaccent (Phase 07, spec section 33/73) - diacritic-insensitive search
+  // ("Tran Hung Dao" -> "Trần Hưng Đạo"). See the Phase 07 migration for the
+  // IMMUTABLE wrapper function required to index it, and
+  // docs/backend/DISCOVERY_ARCHITECTURE.md for the full rationale.
+  extensions = [postgis, pg_trgm, unaccent]
 }
 
 // =========================================================================
@@ -65,6 +69,49 @@ enum PublicationStatus {
   ARCHIVED
 }
 
+// Phase 06 (spec section 17) - Story needs a richer workflow than the flat
+// PublicationStatus every other entity uses: a SOURCE_CHECK stage (does the
+// narrative's factual support actually exist and hold up?) and SCHEDULED
+// (spec section 23), neither of which PublicationStatus models. Mirrors the
+// shape of FactEditorialStatus (same phase/stage vocabulary) rather than
+// inventing a third, incompatible workflow vocabulary.
+enum StoryEditorialStatus {
+  DRAFT
+  SOURCE_CHECK
+  EDITORIAL_REVIEW
+  READY
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+// Phase 06 (spec section 5) - deliberately small and not Vietnam-specific
+// (spec section 56 - Hoang Sa/Truong Sa content is just an ordinary Place-
+// linked STORY/PLACE_STORY, never a special-cased type or enum value).
+enum StoryType {
+  FEATURE
+  HISTORICAL_EXPLAINER
+  PLACE_STORY
+  PERSON_STORY
+  EVENT_STORY
+  ARCHIVE_STORY
+  THEN_AND_NOW
+  CULTURAL_STORY
+  EDITORIAL
+  OTHER
+}
+
+// Phase 06 (spec section 8/9) - distinguishes a Story's central subject from
+// merely-related/mentioned entities, so a client never has to guess primary
+// subject from insertion order.
+enum StoryLinkRole {
+  PRIMARY_SUBJECT
+  RELATED
+  MENTIONED
+  LOCATION
+  CONTEXT
+}
+
 enum FactEditorialStatus {
   DRAFT
   SOURCE_CHECK
@@ -72,6 +119,20 @@ enum FactEditorialStatus {
   EDITORIAL_REVIEW
   READY
   PUBLISHED
+  // A previously PUBLISHED fact that has been pulled from public output
+  // without destroying its history (spec section 37). Distinct from DRAFT:
+  // a retracted fact was once trusted and now explicitly is not, which is
+  // editorially different from "never finished review".
+  RETRACTED
+}
+
+// Outcome of a single FactReview record (spec section 22). Distinct from
+// FactEditorialStatus - a decision is what a reviewer concluded at one
+// stage; the editorial status is where the fact currently sits.
+enum ReviewDecision {
+  APPROVED
+  CHANGES_REQUESTED
+  REJECTED
 }
 
 enum PlaceType {
@@ -176,6 +237,10 @@ enum SourceCredibility {
 enum CitationVerificationState {
   UNVERIFIED
   VERIFIED
+  // The citation was reviewed and found not to support the claim (a bad
+  // source/misreading) - distinct from DISPUTED, where the source is
+  // legitimate but historians disagree about the claim (spec section 12).
+  REJECTED
   DISPUTED
 }
 
@@ -196,6 +261,54 @@ enum MediaType {
   AUDIO
   VIDEO
   MODEL_3D
+}
+
+// Phase 05: upload/processing lifecycle (spec section 13). A MediaAsset row
+// is created the moment an upload is requested - never only after the client
+// claims success - so the backend always has something to verify against.
+enum MediaAssetStatus {
+  PENDING_UPLOAD
+  UPLOADED
+  PROCESSING
+  READY
+  QUARANTINED
+  FAILED
+  ARCHIVED
+}
+
+// Phase 05 (spec section 6) - an editorial aid describing the DECLARED/
+// REVIEWED rights position, never an automatically-computed legal
+// conclusion. UNKNOWN is never treated as permission to publish.
+enum RightsStatus {
+  PUBLIC_DOMAIN
+  LICENSED
+  PERMISSION_GRANTED
+  COPYRIGHTED
+  UNKNOWN
+  RESTRICTED
+  COMMUNITY_OWNED
+}
+
+// Phase 05 (spec section 17) - which derived rendition a MediaAsset row
+// represents when `parentAssetId` is set. Reuses the existing self-relation
+// rather than a separate MediaVariant table (see TRUST_MODEL.md-equivalent
+// docs/backend/MEDIA_ARCHITECTURE.md for the reuse rationale).
+enum MediaVariantType {
+  THUMBNAIL
+  MEDIUM
+  LARGE
+  OPTIMIZED_WEB
+}
+
+// Phase 05 (spec section 23) - OCR is extraction assistance only; its output
+// never automatically becomes verified historical text (still requires the
+// normal Fact/Citation trust path to be cited as evidence).
+enum DocumentOcrStatus {
+  NOT_REQUESTED
+  REQUESTED
+  PROCESSING
+  COMPLETE
+  FAILED
 }
 
 enum TranslationStatus {
@@ -335,16 +448,21 @@ enum ContributionStatus {
 // =========================================================================
 
 model User {
-  id              String     @id @default(cuid())
-  email           String     @unique
-  emailVerifiedAt DateTime?
-  displayName     String
-  avatarMediaId   String?
-  status          UserStatus @default(ACTIVE)
-  roles           Role[]     @default([USER])
-  locale          String     @default("vi")
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  id                  String     @id @default(cuid())
+  email               String     @unique
+  emailVerifiedAt     DateTime?
+  displayName         String
+  avatarMediaId       String?
+  status              UserStatus @default(ACTIVE)
+  roles               Role[]     @default([USER])
+  locale              String     @default("vi")
+  // Privacy toggle (spec Phase 08 section 27) - visited places are a
+  // personal record and stay private on the public profile unless the user
+  // explicitly opts in. Saved items (Bookmark) have no public-read path at
+  // all, so they need no equivalent toggle - they are structurally private.
+  visitedPlacesPublic Boolean    @default(false)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
 
   authIdentities      AuthIdentity[]
   sessions            Session[]
@@ -357,10 +475,15 @@ model User {
   resolvedReports     Report[]                 @relation("ReportsResolved")
   placeVisits         PlaceVisit[]
   communityStories    CommunityStory[]
+  storyVotes          StoryVote[]
+  badges              UserBadge[]
+  badgesGranted       UserBadge[]              @relation("BadgesGranted")
   contributions       Contribution[]
   contributionReviews ContributionReviewNote[]
   auditLogs           AuditLog[]
   revisionsAuthored   Revision[]
+  factReviews         FactReview[]
+  thenNowComparisons  ThenNowComparison[]
 
   avatarMedia MediaAsset? @relation("UserAvatar", fields: [avatarMediaId], references: [id])
 
@@ -432,51 +555,102 @@ model Session {
 // =========================================================================
 
 model MediaAsset {
-  id               String        @id @default(cuid())
-  type             MediaType
-  storageKey       String
-  mimeType         String
-  sizeBytes        Int?
-  width            Int?
-  height           Int?
-  checksum         String?
-  title            String?
-  caption          String?
-  creatorName      String?
-  sourceId         String?
-  captureYear      Int?
-  captureMonth     Int?
-  captureDay       Int?
-  capturePrecision DatePrecision @default(UNKNOWN)
-  license          String?
-  rightsHolder     String?
-  provenanceNote   String?
-  isHistorical     Boolean       @default(false)
-  isAiGenerated    Boolean       @default(false)
-  aiDisclosure     String?
-  parentAssetId    String?
-  accessPolicy     AccessPolicy  @default(PUBLIC)
-  uploadedById     String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                 String            @id @default(cuid())
+  type               MediaType
+  status             MediaAssetStatus  @default(PENDING_UPLOAD)
+  storageKey         String
+  mimeType           String
+  sizeBytes          Int?
+  width              Int?
+  height             Int?
+  // SHA-256 hex digest, computed server-side on confirm - never trusted from
+  // the client (spec section 56). Used for integrity/dedup assistance only,
+  // never to infer ownership or licensing.
+  checksum           String?
+  title              String?
+  caption            String?
+  altText            String?
+  creatorName        String?
+  sourceId           String?
+  captureYear        Int?
+  captureMonth       Int?
+  captureDay         Int?
+  capturePrecision   DatePrecision     @default(UNKNOWN)
+  license            String?
+  rightsHolder       String?
+  rightsStatus       RightsStatus      @default(UNKNOWN)
+  attributionText    String?
+  // Set only by an EDITOR/HISTORIAN_REVIEWER/ADMIN action (never by the
+  // uploader) - an ordinary contributor cannot self-declare PUBLIC_DOMAIN
+  // (spec section 46). Plain audit-style pointer, no relation object, same
+  // convention as HistoricalFact.reviewedById.
+  rightsReviewedById String?
+  rightsReviewedAt   DateTime?
+  provenanceNote     String?
+  isHistorical       Boolean           @default(false)
+  isAiGenerated      Boolean           @default(false)
+  aiDisclosure       String?
+  parentAssetId      String?
+  // Only meaningful when parentAssetId is set - which derived rendition this
+  // row is (spec section 17).
+  variantType        MediaVariantType?
+  accessPolicy       AccessPolicy      @default(PUBLIC)
+  uploadedById       String?
+  uploadConfirmedAt  DateTime?
+  quarantinedAt      DateTime?
+  quarantinedById    String?
+  quarantineReason   String?
+  archivedAt         DateTime?
+  archivedById       String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   source      Source?      @relation(fields: [sourceId], references: [id])
   parentAsset MediaAsset?  @relation("MediaDerivatives", fields: [parentAssetId], references: [id])
   derivatives MediaAsset[] @relation("MediaDerivatives")
 
-  userAvatars          User[]              @relation("UserAvatar")
-  placesHero           Place[]             @relation("PlaceHeroMedia")
-  peopleHero           Person[]            @relation("PersonHeroMedia")
-  eventsHero           HistoricalEvent[]   @relation("EventHeroMedia")
-  storiesHero          Story[]             @relation("StoryHeroMedia")
-  journeysHero         Journey[]           @relation("JourneyHeroMedia")
-  communityStoriesHero CommunityStory[]    @relation("CommunityStoryHeroMedia")
+  userAvatars          User[]                  @relation("UserAvatar")
+  placesHero           Place[]                 @relation("PlaceHeroMedia")
+  peopleHero           Person[]                @relation("PersonHeroMedia")
+  eventsHero           HistoricalEvent[]       @relation("EventHeroMedia")
+  storiesHero          Story[]                 @relation("StoryHeroMedia")
+  journeysHero         Journey[]               @relation("JourneyHeroMedia")
+  communityStoriesHero CommunityStory[]        @relation("CommunityStoryHeroMedia")
   sourceDocuments      SourceDocument[]
   entityMedia          EntityMedia[]
   contributionMedia    ContributionMedia[]
+  translations         MediaAssetTranslation[]
+  thenNowBefore        ThenNowComparison[]     @relation("ThenNowBefore")
+  thenNowAfter         ThenNowComparison[]     @relation("ThenNowAfter")
 
+  // Phase 05.1 (spec section 10) - DB-level idempotency for derivative
+  // generation: re-running the processor for the same parent upserts the
+  // same (parentAssetId, variantType) row rather than creating a duplicate.
+  // Safe for original (non-derivative) rows too - Postgres treats each
+  // NULL/NULL pair as distinct, so it never collides them.
+  @@unique([parentAssetId, variantType])
   @@index([type])
   @@index([sourceId])
+  @@index([status])
+}
+
+// Optional locale-specific editorial caption/alt text (spec section 34) -
+// most uploads (community photos especially) never get one and fall back to
+// the flat `caption`/`altText`/`title` on MediaAsset itself, which is always
+// in whatever locale the uploader used ("Community caption should preserve
+// original locale separately" - spec section 34). Only curated editorial
+// media (hero images, gallery features) is expected to gain rows here.
+model MediaAssetTranslation {
+  id           String   @id @default(cuid())
+  mediaAssetId String
+  locale       String
+  caption      String?
+  altText      String?
+  createdAt    DateTime @default(now())
+
+  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@unique([mediaAssetId, locale])
 }
 
 // generic gallery attachment (lower-integrity per spec section 15/41)
@@ -540,14 +714,15 @@ model Place {
   childPlaces Place[]     @relation("PlaceHierarchy")
   heroMedia   MediaAsset? @relation("PlaceHeroMedia", fields: [heroMediaId], references: [id])
 
-  translations   PlaceTranslation[]
-  visits         PlaceVisit[]
-  factLinks      FactPlace[]
-  eventLinks     EventPlace[]
-  storyLinks     StoryPlace[]
-  journeyStops   JourneyStop[]
-  communityLinks CommunityStoryPlace[]
-  contributions  Contribution[]
+  translations       PlaceTranslation[]
+  visits             PlaceVisit[]
+  factLinks          FactPlace[]
+  eventLinks         EventPlace[]
+  storyLinks         StoryPlace[]
+  journeyStops       JourneyStop[]
+  communityLinks     CommunityStoryPlace[]
+  contributions      Contribution[]
+  thenNowComparisons ThenNowComparison[]
 
   @@index([type])
   @@index([parentPlaceId])
@@ -680,6 +855,7 @@ model HistoricalEvent {
   storyLinks     StoryEvent[]
   communityLinks CommunityStoryEvent[]
   themeLinks     EventTheme[]
+  journeyStops   JourneyStop[]                @relation("JourneyStopEvent")
 
   @@index([eraId])
   @@index([territoryId])
@@ -1004,9 +1180,34 @@ model HistoricalFact {
   eraLinks       FactEra[]
   territoryLinks FactTerritory[]
   revisions      Revision[]
+  reviews        FactReview[]
+  storyLinks     StoryFact[]
 
   @@index([editorialStatus])
   @@index([sensitivity])
+}
+
+// Per-stage review history (spec section 21) - deliberately not just a
+// `reviewedById`/`reviewedAt` pair on HistoricalFact, which would lose every
+// review but the most recent one. One row per review decision, append-only
+// from the API's point of view (no update/delete endpoint).
+model FactReview {
+  id         String              @id @default(cuid())
+  factId     String
+  reviewerId String
+  // The editorial stage this decision applies to (e.g. a FACT_REVIEW row
+  // records a historian's fact-check; a PUBLISHED row records the final
+  // publish approval; a RETRACTED row records a retraction and its reason).
+  stage      FactEditorialStatus
+  decision   ReviewDecision
+  notes      String?
+  createdAt  DateTime            @default(now())
+
+  fact     HistoricalFact @relation(fields: [factId], references: [id], onDelete: Cascade)
+  reviewer User           @relation(fields: [reviewerId], references: [id])
+
+  @@index([factId])
+  @@index([reviewerId])
 }
 
 model HistoricalFactTranslation {
@@ -1099,6 +1300,12 @@ model Source {
   credibilityLevel SourceCredibility @default(UNKNOWN)
   notes            String?
   createdById      String?
+  // Archive/deactivate, never hard-delete a Source once it can be cited
+  // (spec section 35). A non-null archivedAt means the source is no longer
+  // offered for new citations; existing Citations/history are untouched.
+  archivedAt       DateTime?
+  archivedById     String?
+  archiveReason    String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
@@ -1108,6 +1315,7 @@ model Source {
   mediaAssets     MediaAsset[]
 
   @@index([sourceType])
+  @@index([archivedAt])
 }
 
 // optional localized display title only - original bibliographic identity is
@@ -1150,16 +1358,23 @@ model Citation {
 }
 
 model SourceDocument {
-  id            String       @id @default(cuid())
-  sourceId      String
-  mediaAssetId  String
-  pageCount     Int?
-  extractedText String?
-  usageRights   String?
-  rightsHolder  String?
-  accessPolicy  AccessPolicy @default(METADATA_ONLY)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id              String            @id @default(cuid())
+  sourceId        String
+  mediaAssetId    String
+  pageCount       Int?
+  // OCR output (spec section 23) - extraction assistance only. Never treated
+  // as reviewed historical text; a Citation quoting this document still goes
+  // through the normal fact/citation trust path regardless of ocrStatus.
+  extractedText   String?
+  ocrStatus       DocumentOcrStatus @default(NOT_REQUESTED)
+  ocrConfidence   Float?
+  ocrReviewedById String?
+  ocrReviewedAt   DateTime?
+  usageRights     String?
+  rightsHolder    String?
+  accessPolicy    AccessPolicy      @default(METADATA_ONLY)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   source     Source     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id])
@@ -1177,11 +1392,13 @@ model Revision {
   changedById String?
   factId      String?
   storyId     String?
+  journeyId   String?
   createdAt   DateTime   @default(now())
 
   changedBy User?           @relation(fields: [changedById], references: [id])
   fact      HistoricalFact? @relation(fields: [factId], references: [id])
   story     Story?          @relation(fields: [storyId], references: [id])
+  journey   Journey?        @relation(fields: [journeyId], references: [id])
 
   @@index([entityType, entityId])
 }
@@ -1207,14 +1424,29 @@ model AuditLog {
 // =========================================================================
 
 model Story {
-  id              String            @id @default(cuid())
-  canonicalSlug   String            @unique
-  heroMediaId     String?
-  authorId        String?
-  editorialStatus PublicationStatus @default(DRAFT)
-  publishedAt     DateTime?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id               String               @id @default(cuid())
+  canonicalSlug    String               @unique
+  type             StoryType            @default(EDITORIAL)
+  heroMediaId      String?
+  authorId         String?
+  // Public-facing attribution, distinct from `authorId` (an internal User
+  // pointer that is never publicly exposed - spec section 47/48). May be a
+  // team byline ("Ban bien tap Dau Viet") rather than a named individual.
+  byline           String?
+  featured         Boolean              @default(false)
+  priority         Int                  @default(0)
+  editorialStatus  StoryEditorialStatus @default(DRAFT)
+  scheduledAt      DateTime?
+  publishedAt      DateTime?
+  archivedAt       DateTime?
+  lastReviewedById String?
+  lastReviewedAt   DateTime?
+  // Optimistic concurrency (spec section 60) - every update/transition must
+  // supply the version it read; a stale write is rejected rather than
+  // silently overwriting a concurrent editor's change.
+  version          Int                  @default(0)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
   heroMedia MediaAsset? @relation("StoryHeroMedia", fields: [heroMediaId], references: [id])
 
@@ -1222,10 +1454,13 @@ model Story {
   placeLinks    StoryPlace[]
   personLinks   StoryPerson[]
   eventLinks    StoryEvent[]
+  factLinks     StoryFact[]
   citationLinks StoryCitation[]
   revisions     Revision[]
+  journeyStops  JourneyStop[]      @relation("JourneyStopStory")
 
   @@index([editorialStatus])
+  @@index([featured, priority])
 }
 
 model StoryTranslation {
@@ -1234,8 +1469,14 @@ model StoryTranslation {
   locale         String
   title          String
   slug           String
+  // Optional subtitle/deck line (spec section 4) - distinct from `summary`
+  // (a longer plain-text teaser used in list views/SEO fallback).
+  subtitle       String?
   summary        String?
-  content        String?
+  // Structured block-array body (spec section 6/7), stored as Json rather
+  // than raw HTML - see StoryBody in story-body.util.ts for the validated
+  // block schema. Never rendered as trusted HTML server-side.
+  content        Json?
   seoTitle       String?
   seoDescription String?
   status         TranslationStatus @default(DRAFT)
@@ -1252,9 +1493,10 @@ model StoryTranslation {
 }
 
 model StoryPlace {
-  id      String @id @default(cuid())
+  id      String        @id @default(cuid())
   storyId String
   placeId String
+  role    StoryLinkRole @default(RELATED)
 
   story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
   place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
@@ -1263,9 +1505,10 @@ model StoryPlace {
 }
 
 model StoryPerson {
-  id       String @id @default(cuid())
+  id       String        @id @default(cuid())
   storyId  String
   personId String
+  role     StoryLinkRole @default(RELATED)
 
   story  Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
   person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
@@ -1274,9 +1517,10 @@ model StoryPerson {
 }
 
 model StoryEvent {
-  id      String @id @default(cuid())
+  id      String        @id @default(cuid())
   storyId String
   eventId String
+  role    StoryLinkRole @default(RELATED)
 
   story Story           @relation(fields: [storyId], references: [id], onDelete: Cascade)
   event HistoricalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -1284,10 +1528,34 @@ model StoryEvent {
   @@unique([storyId, eventId])
 }
 
+// Explicit editorial-provenance layer (spec section 10) - which verified
+// HistoricalFact rows this Story's narrative is built on. Never duplicates
+// the fact's statement text; just the relation. A Story is not required to
+// back every sentence with a Fact, but any fact it does cite as support
+// must be PUBLISHED to satisfy the publication validator (see
+// StoriesService.validateForPublication) - a DRAFT/unverified Fact can
+// never be laundered into "supported by verified history" via a Story.
+model StoryFact {
+  id      String @id @default(cuid())
+  storyId String
+  factId  String
+
+  story Story          @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  fact  HistoricalFact @relation(fields: [factId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, factId])
+}
+
 model StoryCitation {
-  id         String @id @default(cuid())
+  id         String  @id @default(cuid())
   storyId    String
   citationId String
+  // Locator/context for this editorial citation (spec section 11/12) -
+  // distinct from HistoricalFact<->Citation, which remains the only path
+  // for citing factual support. This is for broader interpretation/
+  // quotation context a Story adds on top of verified facts.
+  locator    String?
+  quoteNote  String?
 
   story    Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
   citation Citation @relation(fields: [citationId], references: [id], onDelete: Cascade)
@@ -1296,39 +1564,48 @@ model StoryCitation {
 }
 
 model Journey {
-  id              String                                     @id @default(cuid())
-  canonicalSlug   String                                     @unique
-  heroMediaId     String?
-  durationMinutes Int?
-  distanceMeters  Int?
-  difficulty      String?
-  region          String?
-  routeGeometry   Unsupported("geometry(LineString, 4326)")?
-  editorialStatus PublicationStatus                          @default(DRAFT)
-  publishedAt     DateTime?
-  createdAt       DateTime                                   @default(now())
-  updatedAt       DateTime                                   @updatedAt
+  id                  String                                     @id @default(cuid())
+  canonicalSlug       String                                     @unique
+  heroMediaId         String?
+  durationMinutes     Int?
+  distanceMeters      Int?
+  difficulty          String?
+  region              String?
+  routeGeometry       Unsupported("geometry(LineString, 4326)")?
+  // Provenance of routeGeometry when present (spec section 30) - never
+  // presented as a real road route unless it actually is one.
+  routeGeometrySource String?
+  editorialStatus     PublicationStatus                          @default(DRAFT)
+  scheduledAt         DateTime?
+  publishedAt         DateTime?
+  archivedAt          DateTime?
+  version             Int                                        @default(0)
+  createdAt           DateTime                                   @default(now())
+  updatedAt           DateTime                                   @updatedAt
 
   heroMedia MediaAsset? @relation("JourneyHeroMedia", fields: [heroMediaId], references: [id])
 
   translations JourneyTranslation[]
   stops        JourneyStop[]
+  revisions    Revision[]
 
   @@index([editorialStatus])
 }
 
 model JourneyTranslation {
-  id          String            @id @default(cuid())
-  journeyId   String
-  locale      String
-  title       String
-  slug        String
-  summary     String?
-  description String?
-  status      TranslationStatus @default(DRAFT)
-  method      TranslationMethod @default(ORIGINAL)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id             String            @id @default(cuid())
+  journeyId      String
+  locale         String
+  title          String
+  slug           String
+  summary        String?
+  description    String?
+  seoTitle       String?
+  seoDescription String?
+  status         TranslationStatus @default(DRAFT)
+  method         TranslationMethod @default(ORIGINAL)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
   journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 
@@ -1341,14 +1618,49 @@ model JourneyStop {
   journeyId                  String
   placeId                    String
   order                      Int
+  // Optional override of the Place's own display name for this stop's
+  // context (spec section 26) - e.g. referring to one wing/gate of a larger
+  // site. Free-text, uploader/editor locale only (spec section 28 - no
+  // JourneyStopTranslation was added; see docs/backend/EDITORIAL_CONTENT.md
+  // for the reasoning).
+  stopTitle                  String?
   recommendedDurationMinutes Int?
   notes                      String?
+  // Optional links to why this stop matters historically (spec section 31) -
+  // never a place to restate a factual claim; the claim itself still lives
+  // on a HistoricalFact/Story, this is just a pointer.
+  storyId                    String?
+  eventId                    String?
 
-  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
-  place   Place   @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  journey Journey          @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  place   Place            @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  story   Story?           @relation("JourneyStopStory", fields: [storyId], references: [id])
+  event   HistoricalEvent? @relation("JourneyStopEvent", fields: [eventId], references: [id])
 
   @@unique([journeyId, placeId])
-  @@index([journeyId, order])
+  @@unique([journeyId, order])
+}
+
+// Lightweight home/editorial curation (spec section 35-37) - deliberately
+// not a general CMS layout builder. One row = one piece of content in one
+// named slot at one position; the public `GET /v1/editorial/home` endpoint
+// groups by slotKey and resolves each entity through its own normal
+// publication-status filtering, so a stale slot pointing at an since-
+// unpublished entity never leaks a draft.
+model EditorialSlot {
+  id          String     @id @default(cuid())
+  slotKey     String
+  order       Int        @default(0)
+  entityKind  EntityKind
+  entityId    String
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdById String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([slotKey, order])
+  @@index([slotKey])
 }
 
 // =========================================================================
@@ -1356,34 +1668,66 @@ model JourneyStop {
 // =========================================================================
 
 model CommunityStory {
-  id                 String                     @id @default(cuid())
-  canonicalSlug      String                     @unique
-  type               CommunityStoryType
-  authorId           String
-  heroMediaId        String?
-  verificationState  CommunityVerificationState @default(PERSONAL_MEMORY)
-  moderationStatus   ModerationStatus           @default(VISIBLE)
+  id                  String                     @id @default(cuid())
+  canonicalSlug       String                     @unique
+  type                CommunityStoryType
+  authorId            String
+  heroMediaId         String?
+  // The locale the author actually wrote in (spec Phase 08 section 5) - never
+  // silently overwritten by a later translation. Defaults to the locale of
+  // the first translation supplied at creation.
+  originalLocale      String                     @default("vi")
+  verificationState   CommunityVerificationState @default(PERSONAL_MEMORY)
+  moderationStatus    ModerationStatus           @default(VISIBLE)
   // Simplified point date (no qualifier/BETWEEN-range needed for a personal
   // memory) - still never fabricates a month/day for a year-only memory.
-  eventDateYear      Int?
-  eventDateMonth     Int?
-  eventDateDay       Int?
-  eventDatePrecision DatePrecision              @default(UNKNOWN)
-  eventDateLabel     String?
-  createdAt          DateTime                   @default(now())
-  updatedAt          DateTime                   @updatedAt
+  eventDateYear       Int?
+  eventDateMonth      Int?
+  eventDateDay        Int?
+  eventDatePrecision  DatePrecision              @default(UNKNOWN)
+  eventDateLabel      String?
+  // Denormalized "helpful" tally (spec section 63/64) - the `StoryVote`
+  // unique constraint is the source of truth; this column exists only so the
+  // HELPFUL feed sort and profile "helpful received" total don't require a
+  // full-table aggregate on every read. Updated transactionally alongside
+  // every StoryVote create/delete, never trusted from client input.
+  helpfulCount        Int                        @default(0)
+  // Set only when type = THEN_AND_NOW (spec section 18) - links to the
+  // existing Phase 05 ThenNowComparison rather than duplicating the
+  // before/after media model.
+  thenNowComparisonId String?                    @unique
+  editedAt            DateTime?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
 
-  author    User        @relation(fields: [authorId], references: [id])
-  heroMedia MediaAsset? @relation("CommunityStoryHeroMedia", fields: [heroMediaId], references: [id])
+  author            User               @relation(fields: [authorId], references: [id])
+  heroMedia         MediaAsset?        @relation("CommunityStoryHeroMedia", fields: [heroMediaId], references: [id])
+  thenNowComparison ThenNowComparison? @relation(fields: [thenNowComparisonId], references: [id])
 
   translations CommunityStoryTranslation[]
   placeLinks   CommunityStoryPlace[]
   personLinks  CommunityStoryPerson[]
   eventLinks   CommunityStoryEvent[]
   eraLinks     CommunityStoryEra[]
+  votes        StoryVote[]
 
   @@index([authorId])
   @@index([moderationStatus])
+}
+
+// Single positive "helpful" signal (spec section 22) - deliberately not a
+// +1/-1 palette like CommentVote; existence of a row IS the helpful vote, so
+// "un-helpful-ing" is a delete, not a value flip.
+model StoryVote {
+  id        String   @id @default(cuid())
+  storyId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  story CommunityStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, userId])
 }
 
 model CommunityStoryTranslation {
@@ -1448,6 +1792,52 @@ model CommunityStoryEra {
   @@unique([storyId, eraId])
 }
 
+// "Xua & Nay" (Then & Now) - a before/after image pair anchored to a Place
+// (spec section 27). Can originate from an editor OR a community member;
+// `publicationStatus` is the editorial-promotion gate (same DRAFT/PUBLISHED
+// meaning as every other entity - see HISTORICAL_DOMAIN.md section 7) and
+// `moderationStatus` is the same community-visibility gate CommunityStory
+// uses, so a community-submitted pair can be hidden without deleting it.
+// A community pair being VISIBLE/moderated is not the same as it being
+// editorially PUBLISHED - identical distinction to CommunityStory vs Story.
+model ThenNowComparison {
+  id                String            @id @default(cuid())
+  placeId           String
+  beforeMediaId     String
+  afterMediaId      String
+  historicalPeriod  String?
+  viewpointNote     String?
+  publicationStatus PublicationStatus @default(DRAFT)
+  moderationStatus  ModerationStatus  @default(VISIBLE)
+  createdById       String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  place       Place      @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  beforeMedia MediaAsset @relation("ThenNowBefore", fields: [beforeMediaId], references: [id])
+  afterMedia  MediaAsset @relation("ThenNowAfter", fields: [afterMediaId], references: [id])
+  createdBy   User       @relation(fields: [createdById], references: [id])
+
+  translations   ThenNowComparisonTranslation[]
+  communityStory CommunityStory?
+
+  @@index([placeId])
+}
+
+model ThenNowComparisonTranslation {
+  id           String            @id @default(cuid())
+  comparisonId String
+  locale       String
+  description  String?
+  status       TranslationStatus @default(DRAFT)
+  method       TranslationMethod @default(ORIGINAL)
+  createdAt    DateTime          @default(now())
+
+  comparison ThenNowComparison @relation(fields: [comparisonId], references: [id], onDelete: Cascade)
+
+  @@unique([comparisonId, locale])
+}
+
 model Comment {
   id         String           @id @default(cuid())
   targetType EntityKind
@@ -1457,6 +1847,12 @@ model Comment {
   body       String
   status     ModerationStatus @default(VISIBLE)
   score      Int              @default(0)
+  // 0 for a top-level comment, parent.depth+1 for a reply (spec Phase 08
+  // section 31) - a stored counter rather than walking `parentId` ancestry on
+  // every write, so `CommentsService.create` can reject a reply past
+  // MAX_DEPTH with one read instead of a recursive query.
+  depth      Int              @default(0)
+  editedAt   DateTime?
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
@@ -1526,6 +1922,32 @@ model PlaceVisit {
 
   @@index([userId])
   @@index([placeId])
+}
+
+// Tasteful, rule/editorial-based recognition (spec Phase 08 section 28) -
+// deliberately not an XP/level/streak system. Grantable only via an
+// ADMIN-gated endpoint (`UsersService.grantBadge`); no code path lets a user
+// award their own badge.
+enum BadgeType {
+  MEMORY_KEEPER // "Nguoi gin giu ky uc"
+  EXPLORER // "Nguoi kham pha"
+  ARCHIVIST // "Nguoi luu giu"
+  STORYTELLER // "Nguoi ke chuyen"
+  RESEARCHER // "Nguoi nghien cuu"
+}
+
+model UserBadge {
+  id          String    @id @default(cuid())
+  userId      String
+  type        BadgeType
+  grantedById String?
+  reason      String?
+  createdAt   DateTime  @default(now())
+
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy User? @relation("BadgesGranted", fields: [grantedById], references: [id])
+
+  @@unique([userId, type])
 }
 
 // =========================================================================

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { EntityKind, ReportCategory, ReportStatus, Role } from '@prisma/client';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
@@ -38,6 +39,7 @@ class ResolveReportDto {
 export class ReportsController {
   constructor(private readonly reports: ReportsService) {}
 
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post()
   file(@CurrentUser() user: AuthUser, @Body() dto: FileReportDto) {
     return this.reports.file(user.id, dto.targetType, dto.targetId, dto.category, dto.notes);
@@ -45,8 +47,12 @@ export class ReportsController {
 
   @Roles(Role.MODERATOR, Role.ADMIN)
   @Get('admin')
-  list(@Query('status') status?: ReportStatus) {
-    return this.reports.list(status);
+  list(
+    @Query('status') status?: ReportStatus,
+    @Query('targetType') targetType?: EntityKind,
+    @Query('category') category?: ReportCategory,
+  ) {
+    return this.reports.queue({ status, targetType, category });
   }
 
   @Roles(Role.MODERATOR, Role.ADMIN)

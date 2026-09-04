@@ -21,6 +21,10 @@ export interface AppConfig {
     bucket: string;
     forcePathStyle: boolean;
     publicBaseUrl: string;
+    uploadUrlTtlSeconds: number;
+    downloadUrlTtlSeconds: number;
+    restrictedDownloadUrlTtlSeconds: number;
+    pendingUploadExpiryMinutes: number;
   };
   smtp: { host: string; port: number; secure: boolean; from: string };
   rateLimit: { ttl: number; max: number };
@@ -54,6 +58,15 @@ export default (): AppConfig => ({
     bucket: process.env.S3_BUCKET ?? 'dauviet-media',
     forcePathStyle: (process.env.S3_FORCE_PATH_STYLE ?? 'true') === 'true',
     publicBaseUrl: process.env.S3_PUBLIC_BASE_URL ?? '',
+    // Signed URL TTLs (spec section 37) - short-lived by design, never a
+    // hardcoded one-week lifetime. Restricted/reviewer access intentionally
+    // gets a shorter window than a routine upload PUT.
+    uploadUrlTtlSeconds: parseInt(process.env.S3_UPLOAD_URL_TTL_SECONDS ?? '900', 10),
+    downloadUrlTtlSeconds: parseInt(process.env.S3_DOWNLOAD_URL_TTL_SECONDS ?? '3600', 10),
+    restrictedDownloadUrlTtlSeconds: parseInt(process.env.S3_RESTRICTED_DOWNLOAD_URL_TTL_SECONDS ?? '300', 10),
+    // How long a PENDING_UPLOAD MediaAsset row may sit unconfirmed before an
+    // orphan-cleanup pass may mark it FAILED (spec section 40).
+    pendingUploadExpiryMinutes: parseInt(process.env.MEDIA_PENDING_UPLOAD_EXPIRY_MINUTES ?? '60', 10),
   },
   smtp: {
     host: process.env.SMTP_HOST ?? 'localhost',

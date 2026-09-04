@@ -21,6 +21,8 @@ import { FactsModule } from './modules/facts/facts.module';
 import { SourcesModule } from './modules/sources/sources.module';
 import { CitationsModule } from './modules/citations/citations.module';
 import { MediaModule } from './modules/media/media.module';
+import { ThenNowModule } from './modules/then-now/then-now.module';
+import { EditorialModule } from './modules/editorial/editorial.module';
 import { StoriesModule } from './modules/stories/stories.module';
 import { JourneysModule } from './modules/journeys/journeys.module';
 import { MapModule } from './modules/map/map.module';
@@ -30,6 +32,7 @@ import { CommentsModule } from './modules/comments/comments.module';
 import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { CommunityModule } from './modules/community/community.module';
+import { ModerationModule } from './modules/moderation/moderation.module';
 import { ContributionsModule } from './modules/contributions/contributions.module';
 import { AliasesModule } from './modules/aliases/aliases.module';
 import { ThemesModule } from './modules/themes/themes.module';
@@ -69,6 +72,8 @@ import { ThemesModule } from './modules/themes/themes.module';
     SourcesModule,
     CitationsModule,
     MediaModule,
+    ThenNowModule,
+    EditorialModule,
     StoriesModule,
     JourneysModule,
     MapModule,
@@ -78,6 +83,7 @@ import { ThemesModule } from './modules/themes/themes.module';
     BookmarksModule,
     ReportsModule,
     CommunityModule,
+    ModerationModule,
     ContributionsModule,
     AliasesModule,
     ThemesModule,

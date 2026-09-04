@@ -14,7 +14,7 @@ export class ContributionsController {
 
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateContributionDto) {
-    return this.contributions.create(dto, user.id);
+    return this.contributions.create(dto, user);
   }
 
   @Get('mine')

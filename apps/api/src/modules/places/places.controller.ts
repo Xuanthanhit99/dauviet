@@ -9,6 +9,7 @@ import { Locale } from '../../common/decorators/locale.decorator';
 import { CursorPaginationQuery } from '../../common/dto/pagination.dto';
 import { PlacesService } from './places.service';
 import { CreatePlaceDto, UpdatePlaceDto } from './dto/place.dto';
+import { NearbyPlacesQueryDto } from './dto/nearby-query.dto';
 import { CommentsService } from '../comments/comments.service';
 
 class SetPublicationStatusDto {
@@ -33,6 +34,13 @@ export class PlacesController {
     return this.places.list({ type, locale, cursor: query.cursor, limit: query.limit });
   }
 
+  // Registered before `:slug` - otherwise "nearby" would be captured as a slug.
+  @Public()
+  @Get('nearby')
+  getNearby(@Query() query: NearbyPlacesQueryDto, @Locale() locale: string) {
+    return this.places.findNearby(query, locale);
+  }
+
   @Public()
   @Get(':slug')
   getBySlug(@Param('slug') slug: string, @Locale() locale: string) {
@@ -55,6 +63,18 @@ export class PlacesController {
   @Get(':slug/media')
   getMedia(@Param('slug') slug: string) {
     return this.places.getMedia(slug);
+  }
+
+  @Public()
+  @Get(':slug/stories')
+  getStories(@Param('slug') slug: string, @Locale() locale: string) {
+    return this.places.getStories(slug, locale);
+  }
+
+  @Public()
+  @Get(':slug/journeys')
+  getJourneys(@Param('slug') slug: string, @Locale() locale: string) {
+    return this.places.getJourneys(slug, locale);
   }
 
   @Public()

@@ -1,14 +1,15 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { IsEnum, IsString } from 'class-validator';
-import { CommunityVerificationState, ModerationStatus, Role } from '@prisma/client';
+import { Throttle } from '@nestjs/throttler';
+import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { CommunityStoryType, CommunityVerificationState, ModerationStatus, Role } from '@prisma/client';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 import { Locale } from '../../common/decorators/locale.decorator';
 import { CursorPaginationQuery } from '../../common/dto/pagination.dto';
 import { CommunityService } from './community.service';
-import { CreateCommunityStoryDto } from './dto/community-story.dto';
+import { CreateCommunityStoryDto, UpdateCommunityStoryDto } from './dto/community-story.dto';
 import { CommentsService } from '../comments/comments.service';
 
 class LinkEntityDto {
@@ -29,6 +30,11 @@ class SetReviewVerificationStateDto {
 class SetModerationStatusDto {
   @IsEnum(ModerationStatus)
   status!: ModerationStatus;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  reason?: string;
 }
 
 @ApiTags('community')
@@ -38,8 +44,21 @@ export class CommunityController {
 
   @Public()
   @Get()
-  list(@Query() query: CursorPaginationQuery, @Locale() locale: string, @Query('type') type?: string) {
-    return this.community.list({ locale, type, cursor: query.cursor, limit: query.limit });
+  list(
+    @Query() query: CursorPaginationQuery,
+    @Locale() locale: string,
+    @Query('type') type?: CommunityStoryType,
+    @Query('placeId') placeId?: string,
+    @Query('sort') sort?: 'NEW' | 'HELPFUL',
+  ) {
+    return this.community.list({ locale, type, placeId, sort, cursor: query.cursor, limit: query.limit });
+  }
+
+  // Registered before `:slug` - otherwise "mine" would be captured as a slug.
+  @ApiBearerAuth()
+  @Get('mine')
+  listMine(@CurrentUser() user: AuthUser) {
+    return this.community.listMine(user.id);
   }
 
   @Public()
@@ -56,33 +75,60 @@ export class CommunityController {
   }
 
   @ApiBearerAuth()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateCommunityStoryDto) {
-    return this.community.create(dto, user.id);
+    return this.community.create(dto, user);
+  }
+
+  @ApiBearerAuth()
+  @Patch(':id')
+  update(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateCommunityStoryDto) {
+    return this.community.update(id, user, dto);
+  }
+
+  @ApiBearerAuth()
+  @Delete(':id')
+  withdraw(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.community.withdraw(id, user.id);
   }
 
   @ApiBearerAuth()
   @Post(':id/places')
-  linkPlace(@Param('id') id: string, @Body() dto: LinkEntityDto) {
-    return this.community.linkPlace(id, dto.entityId);
+  linkPlace(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: LinkEntityDto) {
+    return this.community.linkPlace(id, dto.entityId, user);
   }
 
   @ApiBearerAuth()
   @Post(':id/people')
-  linkPerson(@Param('id') id: string, @Body() dto: LinkEntityDto) {
-    return this.community.linkPerson(id, dto.entityId);
+  linkPerson(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: LinkEntityDto) {
+    return this.community.linkPerson(id, dto.entityId, user);
   }
 
   @ApiBearerAuth()
   @Post(':id/events')
-  linkEvent(@Param('id') id: string, @Body() dto: LinkEntityDto) {
-    return this.community.linkEvent(id, dto.entityId);
+  linkEvent(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: LinkEntityDto) {
+    return this.community.linkEvent(id, dto.entityId, user);
   }
 
   @ApiBearerAuth()
   @Post(':id/eras')
-  linkEra(@Param('id') id: string, @Body() dto: LinkEntityDto) {
-    return this.community.linkEra(id, dto.entityId);
+  linkEra(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: LinkEntityDto) {
+    return this.community.linkEra(id, dto.entityId, user);
+  }
+
+  @ApiBearerAuth()
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @Post(':id/vote')
+  vote(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.community.vote(user.id, id);
+  }
+
+  @ApiBearerAuth()
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @Delete(':id/vote')
+  unvote(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.community.unvote(user.id, id);
   }
 
   @ApiBearerAuth()
@@ -102,6 +148,6 @@ export class CommunityController {
   @Roles(Role.MODERATOR, Role.ADMIN)
   @Patch(':id/moderation-status')
   setModerationStatus(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: SetModerationStatusDto) {
-    return this.community.setModerationStatus(user.id, id, dto.status);
+    return this.community.setModerationStatus(user.id, id, dto.status, dto.reason);
   }
 }

@@ -204,10 +204,13 @@ flag is passed (admin paths only, role-gated at the controller via `@Roles`). Th
 left to frontend filtering (tested in `places.service.spec.ts`/`events.service.spec.ts`).
 
 `HistoricalFact` has its own, stricter `FactEditorialStatus` workflow (`DRAFT` ->
-`SOURCE_CHECK` -> `FACT_REVIEW` -> `EDITORIAL_REVIEW` -> `READY` -> `PUBLISHED`) enforced in
-`FactsService.setEditorialStatus` - a fact cannot reach `PUBLISHED` without a `VERIFIED`
-citation, and a `sensitivity != NORMAL` fact requires a `HISTORIAN_REVIEWER`/`ADMIN` who is
-not its own creator (separation of duties). This predates Phase 03 and is unchanged by it.
+`SOURCE_CHECK` -> `FACT_REVIEW` -> `EDITORIAL_REVIEW` -> `READY` -> `PUBLISHED`, plus a
+Phase 04 `RETRACTED` branch off `PUBLISHED`) enforced in `FactsService.setEditorialStatus` -
+a fact cannot reach `PUBLISHED` without a `VERIFIED` citation, and a `sensitivity != NORMAL`
+fact requires a `HISTORIAN_REVIEWER`/`ADMIN` who is not its own creator (separation of
+duties). This predates Phase 03 and is unchanged by it. Full trust-layer contract, including
+review history (`FactReview`), retraction, and `Source`/`Citation`/`SourceDocument` policy:
+**`docs/backend/TRUST_MODEL.md`** (Phase 04).
 
 `Territory.geometryStatus` is a separate `PublicationStatus` from the territory row's own
 translations - see section 9.

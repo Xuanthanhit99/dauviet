@@ -71,6 +71,7 @@ async function upsertPlace(params: {
   lat?: number;
   lng?: number;
   aliases?: string[];
+  importance?: number;
 }) {
   const canonicalSlug = slug(params.vi.name);
   const place = await prisma.place.upsert({
@@ -79,6 +80,7 @@ async function upsertPlace(params: {
     create: {
       type: params.type,
       canonicalSlug,
+      historicalImportance: params.importance ?? 0,
       publicationStatus: PublicationStatus.PUBLISHED,
       translations: {
         create: [
