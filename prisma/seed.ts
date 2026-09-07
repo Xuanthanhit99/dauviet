@@ -1,269 +1,76 @@
 /**
- * Golden Dataset seed (spec sections 37-38).
+ * Golden Dataset seed (Phase 10 - docs/backend/GOLDEN_DATASET.md).
  *
- * Trust-model discipline followed here, deliberately:
- * - Every Place/Person/Event/Era/Dynasty gets a short, uncontroversial,
- *   widely-known one-line `summary` (name, dates, basic classification) -
- *   the kind of statement that would appear in a gazetteer entry, not a
- *   contestable historical claim.
- * - The long-form `description` field is left EMPTY for every entity. Full
- *   narrative content must be authored editorially against real sources
- *   after this seed runs - it is not generated here.
- * - A handful of HistoricalFact rows are seeded to exercise the trust-layer
- *   schema end-to-end, but every one is left in DRAFT editorialStatus with
- *   NO citations attached. No source/citation metadata is fabricated. They
- *   cannot reach PUBLISHED until a real editor attaches and verifies a
- *   real citation (enforced by FactsService.setEditorialStatus).
- * - Hoang Sa and Truong Sa are seeded as real Place rows (type ARCHIPELAGO)
- *   with approximate real-world coordinates (public geographic knowledge,
- *   not a contested historical/territorial claim) - never hard-coded map
- *   labels (spec section 7).
- * - No Territory geometry is seeded - historical boundary polygons require
- *   real GIS/source material this seed does not fabricate (spec section 17).
+ * Trust-model discipline followed here, deliberately (spec section 3):
+ * - Every HistoricalFact this seed marks PUBLISHED carries >=1 VERIFIED
+ *   Citation to a real Source (see prisma/golden/facts.ts / sources.ts) -
+ *   the exact same gate `FactsService.setEditorialStatus` enforces for a
+ *   real API-driven publish, replicated here rather than bypassed.
+ * - Sensitive facts (`sensitivity !== NORMAL`) get `reviewedById` set to a
+ *   DIFFERENT dev account than `createdById`, mirroring the real
+ *   separation-of-duties invariant (see `upsertFact` below), plus a real
+ *   `FactReview` row - not just a status flag flip.
+ * - Every Story/Journey this seed marks PUBLISHED was manually checked
+ *   against its real service-layer publication validator's actual rules
+ *   (StoriesService.validateForPublication / the Journey equivalent) before
+ *   being written directly - no hero/inline media is referenced (so the
+ *   MEDIA_NOT_READY checks are vacuously satisfied), every StoryFact link
+ *   points only at a fact this same seed run marks PUBLISHED, and every
+ *   Journey stop's Place is itself PUBLISHED (see docs/backend/
+ *   GOLDEN_DATASET.md "Seed architecture" for the full reasoning).
+ * - English translations authored in this phase are honestly classified
+ *   `method: AI_ASSISTED` / `status: AI_ASSISTED` (spec section 25) - they
+ *   were drafted by Claude as implementation assistance and have not been
+ *   reviewed by a human editor. Vietnamese stays `method: ORIGINAL` (the
+ *   canonical/source-language text, consistent with the existing
+ *   established convention across every prior phase's seed data).
  * - Historical dates use year/month/day + precision/qualifier, never a
- *   fabricated "YYYY-01-01" ISO string (spec section 3, CRITICAL) - see
- *   `HistoricalDateSeed` below and docs/backend/HISTORICAL_DOMAIN.md.
+ *   fabricated "YYYY-01-01" ISO string (spec section 17, CRITICAL).
+ * - No Territory geometry is seeded - historical boundary polygons require
+ *   real GIS/source material this seed does not fabricate.
+ * - Hoang Sa and Truong Sa are seeded as real Place rows (type ARCHIPELAGO);
+ *   their dossier content lives in individually-cited HistoricalFact rows
+ *   with `sensitivity: TERRITORIAL`, never an unqualified statement.
+ * - No fake CommunityStory/Contribution rows are seeded (spec sections
+ *   59/60) - those are covered by their own phases' unit-test fixtures.
  */
-import { PrismaClient, PlaceType, DatePrecision, DateQualifier, Role, AuthProvider, FactType, FactCertainty, PublicationStatus, ThemeCategory } from '@prisma/client';
+import {
+  PrismaClient,
+  Role,
+  AuthProvider,
+  PublicationStatus,
+  StoryEditorialStatus,
+  StoryLinkRole,
+  FactEditorialStatus,
+  CitationVerificationState,
+  EntityKind,
+} from '@prisma/client';
 import * as argon2 from 'argon2';
-import slugify from 'slugify';
-import { GOLDEN_PLACES } from './golden-dataset';
+import {
+  GOLDEN_CITIES,
+  GOLDEN_COUNTRIES,
+  GOLDEN_DATASET_REVIEWED_AT,
+  GOLDEN_DATASET_VERSION,
+  GOLDEN_DESTINATIONS,
+  GOLDEN_DYNASTIES,
+  GOLDEN_EDITORIAL_SLOTS,
+  GOLDEN_ERAS,
+  GOLDEN_EVENTS,
+  GOLDEN_FACTS,
+  GOLDEN_JOURNEYS,
+  GOLDEN_PEOPLE,
+  GOLDEN_PLACES,
+  GOLDEN_REGIONS,
+  GOLDEN_SOURCES,
+  GOLDEN_STORIES,
+  GOLDEN_THEMES,
+  HistoricalDateSeed,
+  slug,
+  sortBounds,
+} from './golden';
+import type { StoryBlockSeed } from './golden/stories';
 
 const prisma = new PrismaClient();
-
-function slug(input: string) {
-  return slugify(input, { lower: true, strict: true, locale: 'vi' });
-}
-
-/** Mirrors HistoricalDateInput (apps/api/src/common/historical-date) without importing across the package boundary. */
-interface HistoricalDateSeed {
-  year?: number;
-  month?: number;
-  day?: number;
-  precision: DatePrecision;
-  qualifier?: DateQualifier;
-}
-
-function yearOnly(year: number, qualifier: DateQualifier = DateQualifier.EXACT): HistoricalDateSeed {
-  return { year, precision: DatePrecision.YEAR, qualifier };
-}
-
-function exactDate(year: number, month: number, day: number): HistoricalDateSeed {
-  return { year, month, day, precision: DatePrecision.DAY, qualifier: DateQualifier.EXACT };
-}
-
-const UNKNOWN_DATE: HistoricalDateSeed = { precision: DatePrecision.UNKNOWN, qualifier: DateQualifier.UNCERTAIN };
-
-/** Deterministic sort-only bounds - see apps/api's historical-date.util.ts for the authoritative (validated) version this mirrors. */
-function sortBounds(d: HistoricalDateSeed): { start: Date | null; end: Date | null } {
-  if (d.precision === DatePrecision.UNKNOWN || d.year == null) return { start: null, end: null };
-  if (d.precision === DatePrecision.DAY) {
-    const dt = new Date(Date.UTC(d.year, (d.month ?? 1) - 1, d.day ?? 1));
-    return { start: dt, end: dt };
-  }
-  return { start: new Date(Date.UTC(d.year, 0, 1)), end: new Date(Date.UTC(d.year, 11, 31)) };
-}
-
-async function upsertPlace(params: {
-  type: PlaceType;
-  vi: { name: string; summary?: string };
-  en?: { name: string; summary?: string };
-  lat?: number;
-  lng?: number;
-  aliases?: string[];
-  importance?: number;
-}) {
-  const canonicalSlug = slug(params.vi.name);
-  const place = await prisma.place.upsert({
-    where: { canonicalSlug },
-    update: {},
-    create: {
-      type: params.type,
-      canonicalSlug,
-      historicalImportance: params.importance ?? 0,
-      publicationStatus: PublicationStatus.PUBLISHED,
-      translations: {
-        create: [
-          { locale: 'vi', name: params.vi.name, slug: slug(params.vi.name), summary: params.vi.summary, method: 'ORIGINAL' },
-          ...(params.en
-            ? [{ locale: 'en', name: params.en.name, slug: slug(params.en.name), summary: params.en.summary, method: 'HUMAN' as const }]
-            : []),
-        ],
-      },
-    },
-  });
-
-  if (params.lat !== undefined && params.lng !== undefined) {
-    await prisma.$executeRaw`UPDATE "Place" SET "location" = ST_SetSRID(ST_MakePoint(${params.lng}, ${params.lat}), 4326) WHERE "id" = ${place.id}`;
-  }
-
-  if (params.aliases) {
-    for (const alias of params.aliases) {
-      await prisma.entityAlias.upsert({
-        where: { entityType_entityId_locale_alias: { entityType: 'PLACE', entityId: place.id, locale: '', alias } },
-        update: {},
-        create: { entityType: 'PLACE', entityId: place.id, alias, aliasType: 'ROMANIZATION' },
-      });
-    }
-  }
-
-  return place;
-}
-
-async function upsertPerson(params: {
-  vi: { name: string; summary?: string };
-  en?: { name: string };
-  birth?: HistoricalDateSeed;
-  death?: HistoricalDateSeed;
-  aliases?: { alias: string; type: 'REGNAL_NAME' | 'TEMPLE_NAME' | 'BIRTH_NAME' | 'TITLE' | 'EPITHET' }[];
-}) {
-  const canonicalSlug = slug(params.vi.name);
-  const birth = params.birth ?? UNKNOWN_DATE;
-  const death = params.death ?? UNKNOWN_DATE;
-  const birthSort = sortBounds(birth);
-  const deathSort = sortBounds(death);
-
-  const person = await prisma.person.upsert({
-    where: { canonicalSlug },
-    update: {},
-    create: {
-      canonicalSlug,
-      publicationStatus: PublicationStatus.PUBLISHED,
-      birthYear: birth.year,
-      birthMonth: birth.month,
-      birthDay: birth.day,
-      birthPrecision: birth.precision,
-      birthQualifier: birth.qualifier ?? DateQualifier.EXACT,
-      birthSortStart: birthSort.start,
-      birthSortEnd: birthSort.end,
-      deathYear: death.year,
-      deathMonth: death.month,
-      deathDay: death.day,
-      deathPrecision: death.precision,
-      deathQualifier: death.qualifier ?? DateQualifier.EXACT,
-      deathSortStart: deathSort.start,
-      deathSortEnd: deathSort.end,
-      translations: {
-        create: [
-          { locale: 'vi', displayName: params.vi.name, slug: slug(params.vi.name), summary: params.vi.summary, method: 'ORIGINAL' },
-          ...(params.en ? [{ locale: 'en', displayName: params.en.name, slug: slug(params.en.name), method: 'HUMAN' as const }] : []),
-        ],
-      },
-    },
-  });
-
-  for (const a of params.aliases ?? []) {
-    await prisma.entityAlias.upsert({
-      where: { entityType_entityId_locale_alias: { entityType: 'PERSON', entityId: person.id, locale: '', alias: a.alias } },
-      update: {},
-      create: { entityType: 'PERSON', entityId: person.id, alias: a.alias, aliasType: a.type },
-    });
-  }
-
-  return person;
-}
-
-async function upsertEvent(params: {
-  vi: { title: string; summary?: string };
-  date: HistoricalDateSeed;
-  rangeEndYear?: number;
-  importance?: number;
-}) {
-  const canonicalSlug = slug(params.vi.title);
-  const qualifier = params.rangeEndYear ? DateQualifier.BETWEEN : params.date.qualifier ?? DateQualifier.EXACT;
-  const sort = sortBounds(params.date);
-  const sortEnd = params.rangeEndYear ? new Date(Date.UTC(params.rangeEndYear, 11, 31)) : sort.end;
-
-  return prisma.historicalEvent.upsert({
-    where: { canonicalSlug },
-    update: {},
-    create: {
-      canonicalSlug,
-      publicationStatus: PublicationStatus.PUBLISHED,
-      dateYear: params.date.year,
-      dateMonth: params.date.month,
-      dateDay: params.date.day,
-      datePrecision: params.date.precision,
-      dateQualifier: qualifier,
-      dateEndYear: params.rangeEndYear,
-      dateSortStart: sort.start,
-      dateSortEnd: sortEnd,
-      importance: params.importance ?? 5,
-      translations: { create: [{ locale: 'vi', title: params.vi.title, slug: slug(params.vi.title), summary: params.vi.summary, method: 'ORIGINAL' }] },
-    },
-  });
-}
-
-async function upsertEra(params: { vi: { name: string; summary?: string }; start: HistoricalDateSeed; end?: HistoricalDateSeed }) {
-  const canonicalSlug = slug(params.vi.name);
-  const startSort = sortBounds(params.start);
-  const endSort = params.end ? sortBounds(params.end) : null;
-
-  return prisma.historicalEra.upsert({
-    where: { canonicalSlug },
-    update: {},
-    create: {
-      canonicalSlug,
-      startYear: params.start.year,
-      startMonth: params.start.month,
-      startDay: params.start.day,
-      startPrecision: params.start.precision,
-      startQualifier: params.start.qualifier ?? DateQualifier.EXACT,
-      endYear: params.end?.year,
-      endMonth: params.end?.month,
-      endDay: params.end?.day,
-      endPrecision: params.end?.precision,
-      endQualifier: params.end?.qualifier ?? (params.end ? DateQualifier.EXACT : undefined),
-      sortStart: startSort.start,
-      sortEnd: endSort ? endSort.end : new Date(Date.UTC(9999, 11, 31)),
-      translations: { create: [{ locale: 'vi', name: params.vi.name, slug: slug(params.vi.name), summary: params.vi.summary }] },
-    },
-  });
-}
-
-async function upsertDynasty(params: { vi: { name: string; summary?: string }; start: HistoricalDateSeed; end?: HistoricalDateSeed }) {
-  const canonicalSlug = slug(params.vi.name);
-  const startSort = sortBounds(params.start);
-  const endSort = params.end ? sortBounds(params.end) : null;
-
-  return prisma.dynasty.upsert({
-    where: { canonicalSlug },
-    update: {},
-    create: {
-      canonicalSlug,
-      startYear: params.start.year,
-      startMonth: params.start.month,
-      startDay: params.start.day,
-      startPrecision: params.start.precision,
-      startQualifier: params.start.qualifier ?? DateQualifier.EXACT,
-      endYear: params.end?.year,
-      endMonth: params.end?.month,
-      endDay: params.end?.day,
-      endPrecision: params.end?.precision,
-      endQualifier: params.end?.qualifier ?? (params.end ? DateQualifier.EXACT : undefined),
-      sortStart: startSort.start,
-      sortEnd: endSort ? endSort.end : new Date(Date.UTC(9999, 11, 31)),
-      translations: { create: [{ locale: 'vi', name: params.vi.name, slug: slug(params.vi.name), summary: params.vi.summary }] },
-    },
-  });
-}
-
-async function upsertTheme(params: { slug: string; category: ThemeCategory; vi: string; en?: string }) {
-  return prisma.theme.upsert({
-    where: { slug: params.slug },
-    update: {},
-    create: {
-      slug: params.slug,
-      category: params.category,
-      translations: {
-        create: [
-          { locale: 'vi', name: params.vi },
-          ...(params.en ? [{ locale: 'en', name: params.en }] : []),
-        ],
-      },
-    },
-  });
-}
 
 async function upsertDevUser(email: string, displayName: string, roles: Role[]) {
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -281,7 +88,7 @@ async function upsertDevUser(email: string, displayName: string, roles: Role[]) 
 }
 
 async function main() {
-  console.log('Seeding dev/test accounts...');
+  console.log(`Seeding dev/test accounts (Golden Dataset ${GOLDEN_DATASET_VERSION})...`);
   await upsertDevUser('admin@dauviet.vn', 'Dau Viet Admin', [Role.ADMIN]);
   const editor = await upsertDevUser('editor@dauviet.vn', 'Dau Viet Editor', [Role.EDITOR]);
   const historian = await upsertDevUser('historian@dauviet.vn', 'Dau Viet Historian Reviewer', [Role.HISTORIAN_REVIEWER]);
@@ -289,250 +96,719 @@ async function main() {
   await upsertDevUser('contributor@dauviet.vn', 'Dau Viet Contributor', [Role.CONTRIBUTOR]);
   await upsertDevUser('user@dauviet.vn', 'Dau Viet Reader', [Role.USER]);
 
-  console.log('Seeding eras and dynasties...');
-  const eraLy = await upsertEra({ vi: { name: 'Thoi Ly', summary: 'Trieu dai phong kien Viet Nam, kinh do tai Thang Long.' }, start: yearOnly(1009), end: yearOnly(1225) });
-  const eraTran = await upsertEra({ vi: { name: 'Thoi Tran' }, start: yearOnly(1225), end: yearOnly(1400) });
-  const eraLeSo = await upsertEra({ vi: { name: 'Thoi Le So' }, start: yearOnly(1428), end: yearOnly(1527) });
-  const eraTaySon = await upsertEra({ vi: { name: 'Thoi Tay Son' }, start: yearOnly(1778), end: yearOnly(1802) });
-  const eraNguyen = await upsertEra({ vi: { name: 'Thoi Nguyen' }, start: yearOnly(1802), end: yearOnly(1945) });
-  const eraModern = await upsertEra({ vi: { name: 'Thoi ky hien dai' }, start: yearOnly(1945) }); // no `end`: still ongoing, not an unknown end
-
-  await upsertDynasty({ vi: { name: 'Nha Ly' }, start: yearOnly(1009), end: yearOnly(1225) });
-  await upsertDynasty({ vi: { name: 'Nha Tran' }, start: yearOnly(1225), end: yearOnly(1400) });
-  await upsertDynasty({ vi: { name: 'Nha Nguyen' }, start: yearOnly(1802), end: yearOnly(1945) });
-
-  console.log('Seeding places from the golden dataset (see prisma/golden-dataset.ts)...');
-  const placesBySlug = new Map<string, Awaited<ReturnType<typeof upsertPlace>>>();
-  for (const spec of GOLDEN_PLACES) {
-    const place = await upsertPlace(spec);
-    placesBySlug.set(slug(spec.vi.name), place);
-  }
-  const hoangThanh = placesBySlug.get(slug('Hoang thanh Thang Long'))!;
-  const coDoHue = placesBySlug.get(slug('Co do Hue'))!;
-  const dienBienPhu = placesBySlug.get(slug('Dien Bien Phu'))!;
-  const dinhDocLap = placesBySlug.get(slug('Dinh Doc Lap'))!;
-
-  console.log('Seeding people...');
-  const lyCongUan = await upsertPerson({
-    vi: { name: 'Ly Cong Uan', summary: 'Vi vua sang lap nha Ly, nguoi doi do ve Thang Long nam 1010.' },
-    birth: yearOnly(974),
-    death: yearOnly(1028),
-  });
-  const tranHungDao = await upsertPerson({
-    vi: { name: 'Tran Hung Dao', summary: 'Thong linh quan doi nha Tran trong khang chien chong Nguyen Mong.' },
-    death: yearOnly(1300),
-    aliases: [{ alias: 'Hung Dao Dai Vuong', type: 'TITLE' }],
-  });
-  const leLoi = await upsertPerson({
-    vi: { name: 'Le Loi', summary: 'Nguoi lanh dao khoi nghia Lam Son, vi vua sang lap nha Le so.' },
-    birth: yearOnly(1385),
-    death: yearOnly(1433),
-  });
-  const quangTrung = await upsertPerson({
-    vi: { name: 'Quang Trung', summary: 'Hoang de nha Tay Son, lanh dao chien thang Ngoc Hoi Dong Da.' },
-    en: { name: 'Emperor Quang Trung' },
-    birth: yearOnly(1753),
-    death: yearOnly(1792),
-    aliases: [{ alias: 'Nguyen Hue', type: 'BIRTH_NAME' }],
-  });
-  const giaLong = await upsertPerson({
-    vi: { name: 'Gia Long', summary: 'Vi vua sang lap nha Nguyen.' },
-    birth: yearOnly(1762),
-    death: yearOnly(1820),
-    aliases: [{ alias: 'Nguyen Anh', type: 'BIRTH_NAME' }],
-  });
-  const minhMang = await upsertPerson({
-    vi: { name: 'Minh Mang', summary: 'Hoang de thu hai nha Nguyen.' },
-    birth: yearOnly(1791),
-    death: yearOnly(1841),
-  });
-  const hoChiMinh = await upsertPerson({
-    vi: { name: 'Ho Chi Minh', summary: 'Nguoi sang lap nuoc Viet Nam Dan chu Cong hoa, doc Tuyen ngon Doc lap ngay 2/9/1945.' },
-    birth: exactDate(1890, 5, 19),
-    death: exactDate(1969, 9, 2),
-  });
-  const voNguyenGiap = await upsertPerson({
-    vi: { name: 'Vo Nguyen Giap', summary: 'Dai tuong, tong tu lenh Quan doi nhan dan Viet Nam trong chien dich Dien Bien Phu.' },
-    birth: exactDate(1911, 8, 25),
-    death: exactDate(2013, 10, 4),
-  });
-
-  console.log('Seeding events...');
-  const doiDo1010 = await upsertEvent({
-    vi: { title: 'Doi do ve Thang Long nam 1010', summary: 'Ly Cong Uan doi kinh do tu Hoa Lu ve Dai La, doi ten thanh Thang Long.' },
-    date: yearOnly(1010), importance: 9,
-  });
-  const bachDang1288 = await upsertEvent({
-    vi: { title: 'Chien thang Bach Dang 1288', summary: 'Chien thang cua quan doi nha Tran truoc quan Nguyen Mong tren song Bach Dang.' },
-    date: yearOnly(1288), importance: 9,
-  });
-  const lamSon = await upsertEvent({
-    vi: { title: 'Khoi nghia Lam Son', summary: 'Cuoc khoi nghia do Le Loi lanh dao chong quan Minh, 1418-1427.' },
-    date: yearOnly(1418), rangeEndYear: 1427, importance: 8,
-  });
-  const ngocHoiDongDa = await upsertEvent({
-    vi: { title: 'Ngoc Hoi Dong Da 1789', summary: 'Chien thang cua nghia quan Tay Son do Quang Trung lanh dao truoc quan Thanh.' },
-    date: yearOnly(1789), importance: 9,
-  });
-  const nguyenFounding = await upsertEvent({
-    vi: { title: 'Thanh lap nha Nguyen', summary: 'Gia Long len ngoi, thanh lap trieu Nguyen nam 1802.' },
-    date: yearOnly(1802), importance: 7,
-  });
-  const tuyenNgon1945 = await upsertEvent({
-    vi: { title: 'Tuyen ngon Doc lap 1945', summary: 'Ho Chi Minh doc Tuyen ngon Doc lap tai Quang truong Ba Dinh ngay 2/9/1945.' },
-    date: exactDate(1945, 9, 2), importance: 10,
-  });
-  const dienBienPhu1954 = await upsertEvent({
-    vi: { title: 'Chien thang Dien Bien Phu 1954', summary: 'Chien dich quyet dinh cham dut chien tranh Dong Duong lan thu nhat.' },
-    date: exactDate(1954, 5, 7), importance: 10,
-  });
-  const ngay30thang4 = await upsertEvent({
-    vi: { title: '30 thang 4 nam 1975', summary: 'Ngay thong nhat dat nuoc Viet Nam.' },
-    date: exactDate(1975, 4, 30), importance: 10,
-  });
-
-  console.log('Linking events to eras/places/people...');
-  await prisma.historicalEvent.update({ where: { id: doiDo1010.id }, data: { eraId: eraLy.id } });
-  await prisma.historicalEvent.update({ where: { id: bachDang1288.id }, data: { eraId: eraTran.id } });
-  await prisma.historicalEvent.update({ where: { id: lamSon.id }, data: { eraId: eraLeSo.id } });
-  await prisma.historicalEvent.update({ where: { id: ngocHoiDongDa.id }, data: { eraId: eraTaySon.id } });
-  await prisma.historicalEvent.update({ where: { id: nguyenFounding.id }, data: { eraId: eraNguyen.id } });
-  await prisma.historicalEvent.update({ where: { id: tuyenNgon1945.id }, data: { eraId: eraModern.id } });
-  await prisma.historicalEvent.update({ where: { id: dienBienPhu1954.id }, data: { eraId: eraModern.id } });
-  await prisma.historicalEvent.update({ where: { id: ngay30thang4.id }, data: { eraId: eraModern.id } });
-
-  const linkEventPlace = (eventId: string, placeId: string) =>
-    prisma.eventPlace.upsert({ where: { eventId_placeId: { eventId, placeId } }, update: {}, create: { eventId, placeId } });
-  const linkEventPerson = (eventId: string, personId: string) =>
-    prisma.eventPerson.upsert({ where: { eventId_personId: { eventId, personId } }, update: {}, create: { eventId, personId } });
-
-  await linkEventPlace(doiDo1010.id, hoangThanh.id);
-  await linkEventPerson(doiDo1010.id, lyCongUan.id);
-  await linkEventPerson(bachDang1288.id, tranHungDao.id);
-  await linkEventPerson(lamSon.id, leLoi.id);
-  await linkEventPerson(ngocHoiDongDa.id, quangTrung.id);
-  await linkEventPerson(nguyenFounding.id, giaLong.id);
-  await linkEventPlace(nguyenFounding.id, coDoHue.id);
-  await linkEventPerson(tuyenNgon1945.id, hoChiMinh.id);
-  await linkEventPlace(dienBienPhu1954.id, dienBienPhu.id);
-  await linkEventPerson(dienBienPhu1954.id, voNguyenGiap.id);
-  await linkEventPlace(ngay30thang4.id, dinhDocLap.id);
-
-  console.log('Seeding event themes (spec section 11)...');
-  const themePolitical = await upsertTheme({ slug: 'political', category: ThemeCategory.POLITICAL, vi: 'Chinh tri', en: 'Political' });
-  const themeMilitary = await upsertTheme({ slug: 'military', category: ThemeCategory.MILITARY, vi: 'Quan su', en: 'Military' });
-  const themeTerritorial = await upsertTheme({ slug: 'territorial', category: ThemeCategory.TERRITORIAL, vi: 'Lanh tho', en: 'Territorial' });
-  const themeHeritage = await upsertTheme({ slug: 'heritage', category: ThemeCategory.HERITAGE, vi: 'Di san', en: 'Heritage' });
-
-  const linkEventTheme = (eventId: string, themeId: string) =>
-    prisma.eventTheme.upsert({ where: { eventId_themeId: { eventId, themeId } }, update: {}, create: { eventId, themeId } });
-
-  await linkEventTheme(doiDo1010.id, themePolitical.id);
-  await linkEventTheme(doiDo1010.id, themeHeritage.id);
-  await linkEventTheme(bachDang1288.id, themeMilitary.id);
-  await linkEventTheme(bachDang1288.id, themeTerritorial.id);
-  await linkEventTheme(lamSon.id, themeMilitary.id);
-  await linkEventTheme(ngocHoiDongDa.id, themeMilitary.id);
-  await linkEventTheme(nguyenFounding.id, themePolitical.id);
-  await linkEventTheme(tuyenNgon1945.id, themePolitical.id);
-  await linkEventTheme(dienBienPhu1954.id, themeMilitary.id);
-  await linkEventTheme(dienBienPhu1954.id, themeTerritorial.id);
-  await linkEventTheme(ngay30thang4.id, themePolitical.id);
-
-  const linkPersonDynasty = async (personId: string, dynastyName: string) => {
-    const dynasty = await prisma.dynasty.findUnique({ where: { canonicalSlug: slug(dynastyName) } });
-    if (!dynasty) return;
-    await prisma.personDynasty.upsert({
-      where: { personId_dynastyId: { personId, dynastyId: dynasty.id } },
+  // -----------------------------------------------------------------------
+  // Eras / Dynasties / Themes
+  // -----------------------------------------------------------------------
+  console.log('Seeding eras...');
+  const erasByKey = new Map<string, { id: string }>();
+  for (const spec of GOLDEN_ERAS) {
+    const canonicalSlug = slug(spec.vi.name);
+    const startSort = sortBounds(spec.start);
+    const endSort = spec.end ? sortBounds(spec.end) : null;
+    const era = await prisma.historicalEra.upsert({
+      where: { canonicalSlug },
       update: {},
-      create: { personId, dynastyId: dynasty.id },
+      create: {
+        canonicalSlug,
+        startYear: spec.start.year,
+        startMonth: spec.start.month,
+        startDay: spec.start.day,
+        startPrecision: spec.start.precision,
+        startQualifier: spec.start.qualifier ?? 'EXACT',
+        endYear: spec.end?.year,
+        endMonth: spec.end?.month,
+        endDay: spec.end?.day,
+        endPrecision: spec.end?.precision,
+        endQualifier: spec.end?.qualifier ?? (spec.end ? 'EXACT' : undefined),
+        sortStart: startSort.start,
+        sortEnd: endSort ? endSort.end : new Date(Date.UTC(9999, 11, 31)),
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.vi.name, slug: canonicalSlug, summary: spec.vi.summary, method: 'ORIGINAL' },
+            ...(spec.en ? [{ locale: 'en', name: spec.en.name, slug: slug(spec.en.name), method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const }] : []),
+          ],
+        },
+      },
     });
+    erasByKey.set(spec.key, era);
+  }
+
+  console.log('Seeding dynasties...');
+  const dynastiesByKey = new Map<string, { id: string }>();
+  for (const spec of GOLDEN_DYNASTIES) {
+    const canonicalSlug = slug(spec.vi.name);
+    const startSort = sortBounds(spec.start);
+    const endSort = spec.end ? sortBounds(spec.end) : null;
+    const dynasty = await prisma.dynasty.upsert({
+      where: { canonicalSlug },
+      update: {},
+      create: {
+        canonicalSlug,
+        startYear: spec.start.year,
+        startMonth: spec.start.month,
+        startDay: spec.start.day,
+        startPrecision: spec.start.precision,
+        startQualifier: spec.start.qualifier ?? 'EXACT',
+        endYear: spec.end?.year,
+        endMonth: spec.end?.month,
+        endDay: spec.end?.day,
+        endPrecision: spec.end?.precision,
+        endQualifier: spec.end?.qualifier ?? (spec.end ? 'EXACT' : undefined),
+        sortStart: startSort.start,
+        sortEnd: endSort ? endSort.end : new Date(Date.UTC(9999, 11, 31)),
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.vi.name, slug: canonicalSlug, summary: spec.vi.summary, method: 'ORIGINAL' },
+            ...(spec.en ? [{ locale: 'en', name: spec.en.name, slug: slug(spec.en.name), method: 'AI_ASSISTED' as const }] : []),
+          ],
+        },
+      },
+    });
+    dynastiesByKey.set(spec.key, dynasty);
+  }
+
+  console.log('Seeding themes...');
+  const themesByKey = new Map<string, { id: string }>();
+  for (const spec of GOLDEN_THEMES) {
+    const theme = await prisma.theme.upsert({
+      where: { slug: spec.slug },
+      update: {},
+      create: {
+        slug: spec.slug,
+        category: spec.category,
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.vi },
+            ...(spec.en ? [{ locale: 'en', name: spec.en }] : []),
+          ],
+        },
+      },
+    });
+    themesByKey.set(spec.slug, theme);
+  }
+
+  // -----------------------------------------------------------------------
+  // Places
+  // -----------------------------------------------------------------------
+  console.log('Seeding places from the golden dataset (see prisma/golden/places.ts)...');
+  const placesByKey = new Map<string, { id: string }>();
+  for (const spec of GOLDEN_PLACES) {
+    const canonicalSlug = slug(spec.vi.name);
+    const place = await prisma.place.upsert({
+      where: { canonicalSlug },
+      update: {},
+      create: {
+        type: spec.type,
+        canonicalSlug,
+        historicalImportance: spec.importance ?? 0,
+        publicationStatus: PublicationStatus.PUBLISHED,
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.vi.name, slug: canonicalSlug, summary: spec.vi.summary, method: 'ORIGINAL' },
+            ...(spec.en
+              ? [{ locale: 'en', name: spec.en.name, slug: slug(spec.en.name), summary: spec.en.summary, method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const }]
+              : []),
+          ],
+        },
+      },
+    });
+    if (spec.lat !== undefined && spec.lng !== undefined) {
+      await prisma.$executeRaw`UPDATE "Place" SET "location" = ST_SetSRID(ST_MakePoint(${spec.lng}, ${spec.lat}), 4326) WHERE "id" = ${place.id}`;
+    }
+    for (const alias of spec.aliases ?? []) {
+      await prisma.entityAlias.upsert({
+        where: { entityType_entityId_locale_alias: { entityType: 'PLACE', entityId: place.id, locale: '', alias } },
+        update: {},
+        create: { entityType: 'PLACE', entityId: place.id, alias, aliasType: 'ROMANIZATION' },
+      });
+    }
+    placesByKey.set(spec.key, place);
+  }
+
+  // -----------------------------------------------------------------------
+  // People
+  // -----------------------------------------------------------------------
+  console.log('Seeding people from the golden dataset (see prisma/golden/people.ts)...');
+  const peopleByKey = new Map<string, { id: string }>();
+  // Dynasty membership (spec section 27) - kept as a small explicit list here
+  // rather than a field on PersonSeedSpec, since it is a relationship, not
+  // an intrinsic person attribute.
+  const PERSON_DYNASTY_LINKS: Record<string, string> = {
+    PERSON_LY_CONG_UAN: 'DYNASTY_LY',
+    PERSON_TRAN_HUNG_DAO: 'DYNASTY_TRAN',
+    PERSON_GIA_LONG: 'DYNASTY_NGUYEN',
+    PERSON_MINH_MANG: 'DYNASTY_NGUYEN',
   };
-  await linkPersonDynasty(lyCongUan.id, 'Nha Ly');
-  await linkPersonDynasty(tranHungDao.id, 'Nha Tran');
-  await linkPersonDynasty(giaLong.id, 'Nha Nguyen');
-  await linkPersonDynasty(minhMang.id, 'Nha Nguyen');
+  for (const spec of GOLDEN_PEOPLE) {
+    const canonicalSlug = slug(spec.vi.name);
+    const birth = spec.birth ?? { precision: 'UNKNOWN' as const, qualifier: 'UNCERTAIN' as const };
+    const death = spec.death ?? { precision: 'UNKNOWN' as const, qualifier: 'UNCERTAIN' as const };
+    const birthSort = sortBounds(birth as HistoricalDateSeed);
+    const deathSort = sortBounds(death as HistoricalDateSeed);
 
-  console.log('Seeding draft (unverified, uncited) historical facts to exercise the trust layer...');
-  const doiDo1010Date = yearOnly(1010);
-  const doiDo1010Sort = sortBounds(doiDo1010Date);
-  const draftFact1 = await prisma.historicalFact.upsert({
-    where: { id: 'seed-fact-doi-do-1010' },
-    update: {},
-    create: {
-      id: 'seed-fact-doi-do-1010',
-      factType: FactType.EVENT_DETAIL,
-      dateYear: doiDo1010Date.year,
-      datePrecision: doiDo1010Date.precision,
-      dateQualifier: doiDo1010Date.qualifier,
-      dateSortStart: doiDo1010Sort.start,
-      dateSortEnd: doiDo1010Sort.end,
-      certainty: FactCertainty.HIGH_CONFIDENCE,
-      createdById: editor.id,
-      translations: {
-        create: [{ locale: 'vi', statement: 'Ly Cong Uan ban "Chieu doi do", chuyen kinh do tu Hoa Lu ve thanh Dai La.', method: 'ORIGINAL' }],
+    const person = await prisma.person.upsert({
+      where: { canonicalSlug },
+      update: {},
+      create: {
+        canonicalSlug,
+        publicationStatus: PublicationStatus.PUBLISHED,
+        birthYear: birth.year,
+        birthMonth: birth.month,
+        birthDay: birth.day,
+        birthPrecision: birth.precision,
+        birthQualifier: birth.qualifier ?? 'EXACT',
+        birthSortStart: birthSort.start,
+        birthSortEnd: birthSort.end,
+        deathYear: death.year,
+        deathMonth: death.month,
+        deathDay: death.day,
+        deathPrecision: death.precision,
+        deathQualifier: death.qualifier ?? 'EXACT',
+        deathSortStart: deathSort.start,
+        deathSortEnd: deathSort.end,
+        translations: {
+          create: [
+            { locale: 'vi', displayName: spec.vi.name, slug: canonicalSlug, summary: spec.vi.summary, method: 'ORIGINAL' },
+            ...(spec.en ? [{ locale: 'en', displayName: spec.en.name, slug: slug(spec.en.name), summary: spec.en.summary, method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const }] : []),
+          ],
+        },
       },
-    },
-  });
-  await prisma.factEvent.upsert({ where: { factId_eventId: { factId: draftFact1.id, eventId: doiDo1010.id } }, update: {}, create: { factId: draftFact1.id, eventId: doiDo1010.id } });
-  await prisma.factPerson.upsert({ where: { factId_personId: { factId: draftFact1.id, personId: lyCongUan.id } }, update: {}, create: { factId: draftFact1.id, personId: lyCongUan.id } });
+    });
+    for (const a of spec.aliases ?? []) {
+      await prisma.entityAlias.upsert({
+        where: { entityType_entityId_locale_alias: { entityType: 'PERSON', entityId: person.id, locale: '', alias: a.alias } },
+        update: {},
+        create: { entityType: 'PERSON', entityId: person.id, alias: a.alias, aliasType: a.type },
+      });
+    }
+    const dynastyKey = PERSON_DYNASTY_LINKS[spec.key];
+    if (dynastyKey) {
+      const dynasty = dynastiesByKey.get(dynastyKey);
+      if (dynasty) {
+        await prisma.personDynasty.upsert({
+          where: { personId_dynastyId: { personId: person.id, dynastyId: dynasty.id } },
+          update: {},
+          create: { personId: person.id, dynastyId: dynasty.id },
+        });
+      }
+    }
+    peopleByKey.set(spec.key, person);
+  }
 
-  const dbp1954Date = exactDate(1954, 5, 7);
-  const dbp1954Sort = sortBounds(dbp1954Date);
-  const draftFact2 = await prisma.historicalFact.upsert({
-    where: { id: 'seed-fact-dbp-1954' },
-    update: {},
-    create: {
-      id: 'seed-fact-dbp-1954',
-      factType: FactType.MILITARY,
-      dateYear: dbp1954Date.year,
-      dateMonth: dbp1954Date.month,
-      dateDay: dbp1954Date.day,
-      datePrecision: dbp1954Date.precision,
-      dateQualifier: dbp1954Date.qualifier,
-      dateSortStart: dbp1954Sort.start,
-      dateSortEnd: dbp1954Sort.end,
-      certainty: FactCertainty.CONFIRMED,
-      createdById: historian.id,
-      translations: {
-        create: [{ locale: 'vi', statement: 'Chien dich Dien Bien Phu ket thuc ngay 7/5/1954 voi thang loi cua Quan doi nhan dan Viet Nam.', method: 'ORIGINAL' }],
+  // -----------------------------------------------------------------------
+  // Events
+  // -----------------------------------------------------------------------
+  console.log('Seeding events from the golden dataset (see prisma/golden/events.ts)...');
+  const eventsByKey = new Map<string, { id: string }>();
+  for (const spec of GOLDEN_EVENTS) {
+    const canonicalSlug = slug(spec.vi.title);
+    const qualifier = spec.rangeEndYear ? 'BETWEEN' : spec.date.qualifier ?? 'EXACT';
+    const sort = sortBounds(spec.date);
+    const sortEnd = spec.rangeEndYear ? new Date(Date.UTC(spec.rangeEndYear, 11, 31)) : sort.end;
+    const era = erasByKey.get(spec.eraKey);
+
+    const event = await prisma.historicalEvent.upsert({
+      where: { canonicalSlug },
+      update: {},
+      create: {
+        canonicalSlug,
+        publicationStatus: PublicationStatus.PUBLISHED,
+        dateYear: spec.date.year,
+        dateMonth: spec.date.month,
+        dateDay: spec.date.day,
+        datePrecision: spec.date.precision,
+        dateQualifier: qualifier,
+        dateEndYear: spec.rangeEndYear,
+        dateSortStart: sort.start,
+        dateSortEnd: sortEnd,
+        importance: spec.importance ?? 5,
+        eraId: era?.id,
+        translations: {
+          create: [
+            { locale: 'vi', title: spec.vi.title, slug: canonicalSlug, summary: spec.vi.summary, method: 'ORIGINAL' },
+            ...(spec.en ? [{ locale: 'en', title: spec.en.title, slug: slug(spec.en.title), summary: spec.en.summary, method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const }] : []),
+          ],
+        },
       },
-    },
-  });
-  await prisma.factEvent.upsert({ where: { factId_eventId: { factId: draftFact2.id, eventId: dienBienPhu1954.id } }, update: {}, create: { factId: draftFact2.id, eventId: dienBienPhu1954.id } });
+    });
 
-  console.log('Seeding one editorial Story (product content, not a historical claim) to exercise the editorial pipeline...');
-  const welcomeStory = await prisma.story.upsert({
-    where: { canonicalSlug: 'chao-mung-den-voi-dau-viet' },
-    update: {},
-    create: {
-      canonicalSlug: 'chao-mung-den-voi-dau-viet',
-      authorId: editor.id,
-      editorialStatus: PublicationStatus.PUBLISHED,
-      publishedAt: new Date(),
-      translations: {
-        create: [
-          {
-            locale: 'vi',
-            title: 'Chao mung den voi Dau Viet',
-            slug: 'chao-mung-den-voi-dau-viet',
-            summary: 'Theo dau Viet Nam qua thoi gian - ban do song dong ve lich su, con nguoi va vung dat Viet Nam.',
-            status: 'PUBLISHED',
-            method: 'ORIGINAL',
-          },
-        ],
+    for (const placeKey of spec.placeKeys ?? []) {
+      const place = placesByKey.get(placeKey);
+      if (place) await prisma.eventPlace.upsert({ where: { eventId_placeId: { eventId: event.id, placeId: place.id } }, update: {}, create: { eventId: event.id, placeId: place.id } });
+    }
+    for (const personKey of spec.personKeys ?? []) {
+      const person = peopleByKey.get(personKey);
+      if (person) await prisma.eventPerson.upsert({ where: { eventId_personId: { eventId: event.id, personId: person.id } }, update: {}, create: { eventId: event.id, personId: person.id } });
+    }
+    for (const themeSlugKey of spec.themeKeys) {
+      const theme = themesByKey.get(themeSlugKey);
+      if (theme) await prisma.eventTheme.upsert({ where: { eventId_themeId: { eventId: event.id, themeId: theme.id } }, update: {}, create: { eventId: event.id, themeId: theme.id } });
+    }
+    eventsByKey.set(spec.key, event);
+  }
+
+  // -----------------------------------------------------------------------
+  // Sources (spec sections 7-9) - stable custom `id` per source, so
+  // relationships in facts.ts/stories.ts stay readable and reproducible.
+  // -----------------------------------------------------------------------
+  console.log('Seeding sources from the golden dataset (see prisma/golden/sources.ts)...');
+  const sourcesByKey = new Map<string, { id: string }>();
+  for (const spec of GOLDEN_SOURCES) {
+    const source = await prisma.source.upsert({
+      where: { id: spec.key },
+      update: {},
+      create: {
+        id: spec.key,
+        sourceType: spec.sourceType,
+        title: spec.title,
+        author: spec.author,
+        organization: spec.organization,
+        publisher: spec.publisher,
+        publicationYear: spec.publicationYear,
+        url: spec.url,
+        originalLanguage: spec.originalLanguage,
+        credibilityLevel: spec.credibilityLevel,
+        notes: spec.notes,
+        createdById: editor.id,
       },
-    },
-  });
-  await prisma.storyPlace.upsert({
-    where: { storyId_placeId: { storyId: welcomeStory.id, placeId: hoangThanh.id } },
-    update: {},
-    create: { storyId: welcomeStory.id, placeId: hoangThanh.id },
-  });
+    });
+    sourcesByKey.set(spec.key, source);
+  }
 
-  console.log('Golden dataset seed complete.');
-  console.log('NOTE: HistoricalFact rows seed_fact_doi_do_1010 and seed_fact_dbp_1954 are DRAFT with no citations.');
-  console.log('They cannot be published until a real Source + verified Citation is attached by an editor.');
+  // -----------------------------------------------------------------------
+  // HistoricalFacts + Citations (+ FactReview for every published fact -
+  // spec section 3: prove the trust workflow, don't bypass it)
+  // -----------------------------------------------------------------------
+  console.log('Seeding source-backed historical facts from the golden dataset (see prisma/golden/facts.ts)...');
+  const citationIdByFactAndSource = new Map<string, string>();
+  const factIdByKey = new Map<string, string>();
+  const publishedFactKeys = new Set<string>();
+
+  for (const spec of GOLDEN_FACTS) {
+    const sensitivity = spec.sensitivity ?? 'NORMAL';
+    // Separation of duties (docs/backend/TRUST_MODEL.md section 7): a
+    // sensitive fact's reviewer must be a DIFFERENT account than its
+    // creator, never merely a status flip.
+    const createdById = editor.id;
+    const reviewedById = sensitivity !== 'NORMAL' ? historian.id : undefined;
+
+    const sort = sortBounds(spec.date);
+    const fact = await prisma.historicalFact.upsert({
+      where: { id: spec.key },
+      update: {},
+      create: {
+        id: spec.key,
+        factType: spec.factType,
+        dateYear: spec.date.year,
+        dateMonth: spec.date.month,
+        dateDay: spec.date.day,
+        datePrecision: spec.date.precision,
+        dateQualifier: spec.date.qualifier ?? 'EXACT',
+        dateSortStart: sort.start,
+        dateSortEnd: sort.end,
+        certainty: spec.certainty,
+        sensitivity,
+        createdById,
+        translations: {
+          create: [
+            { locale: 'vi', statement: spec.vi, method: 'ORIGINAL' },
+            ...(spec.en ? [{ locale: 'en', statement: spec.en, method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const }] : []),
+          ],
+        },
+      },
+    });
+    factIdByKey.set(spec.key, fact.id);
+
+    for (const eventKey of spec.eventKeys ?? []) {
+      const event = eventsByKey.get(eventKey);
+      if (event) await prisma.factEvent.upsert({ where: { factId_eventId: { factId: fact.id, eventId: event.id } }, update: {}, create: { factId: fact.id, eventId: event.id } });
+    }
+    for (const personKey of spec.personKeys ?? []) {
+      const person = peopleByKey.get(personKey);
+      if (person) await prisma.factPerson.upsert({ where: { factId_personId: { factId: fact.id, personId: person.id } }, update: {}, create: { factId: fact.id, personId: person.id } });
+    }
+    for (const placeKey of spec.placeKeys ?? []) {
+      const place = placesByKey.get(placeKey);
+      if (place) await prisma.factPlace.upsert({ where: { factId_placeId: { factId: fact.id, placeId: place.id } }, update: {}, create: { factId: fact.id, placeId: place.id } });
+    }
+    for (const eraKey of spec.eraKeys ?? []) {
+      const era = erasByKey.get(eraKey);
+      if (era) await prisma.factEra.upsert({ where: { factId_eraId: { factId: fact.id, eraId: era.id } }, update: {}, create: { factId: fact.id, eraId: era.id } });
+    }
+
+    let allVerified = spec.citations.length > 0;
+    for (const c of spec.citations) {
+      const source = sourcesByKey.get(c.sourceKey);
+      if (!source) throw new Error(`Fact ${spec.key} cites unknown source ${c.sourceKey}`);
+      const citationId = `${spec.key}::${c.sourceKey}`;
+      const isVerified = c.verificationState === CitationVerificationState.VERIFIED;
+      if (!isVerified) allVerified = false;
+      const citation = await prisma.citation.upsert({
+        where: { id: citationId },
+        update: {},
+        create: {
+          id: citationId,
+          factId: fact.id,
+          sourceId: source.id,
+          pageFrom: c.pageFrom,
+          pageTo: c.pageTo,
+          volume: c.volume,
+          chapter: c.chapter,
+          excerpt: c.excerpt,
+          editorNote: c.editorNote,
+          verificationState: c.verificationState,
+          verifiedById: isVerified ? historian.id : undefined,
+          verifiedAt: isVerified ? new Date() : undefined,
+        },
+      });
+      citationIdByFactAndSource.set(citationId, citation.id);
+    }
+
+    // Faithful publish gate (spec section 3/20) - mirrors
+    // FactsService.setEditorialStatus: >=1 citation, all intended
+    // VERIFIED, and (for sensitive facts) a reviewer distinct from the
+    // creator. A fact whose evidence didn't clear this bar stays DRAFT.
+    if (spec.publish && allVerified) {
+      await prisma.historicalFact.update({
+        where: { id: fact.id },
+        data: { editorialStatus: FactEditorialStatus.PUBLISHED, reviewedById: reviewedById ?? createdById, reviewedAt: new Date() },
+      });
+      await prisma.factReview.upsert({
+        where: { id: `${spec.key}::review` },
+        update: {},
+        create: {
+          id: `${spec.key}::review`,
+          factId: fact.id,
+          reviewerId: reviewedById ?? createdById,
+          stage: FactEditorialStatus.PUBLISHED,
+          decision: 'APPROVED',
+          notes: 'Golden Dataset seed: source-backed fact reviewed and published (see docs/backend/golden-data/sources-manifest.md).',
+        },
+      });
+      publishedFactKeys.add(spec.key);
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Stories (spec sections 31-34) - every StoryFact link below points only
+  // at a fact this same run just marked PUBLISHED (checked explicitly,
+  // never assumed).
+  // -----------------------------------------------------------------------
+  console.log('Seeding editorial stories from the golden dataset (see prisma/golden/stories.ts)...');
+  const storiesByKey = new Map<string, { id: string }>();
+  function resolveStoryBody(blocks: StoryBlockSeed[]): unknown[] {
+    return blocks.map((block) => {
+      if (block.type === 'source_reference' && typeof block.citationId === 'string') {
+        const resolved = citationIdByFactAndSource.get(block.citationId);
+        if (!resolved) throw new Error(`Story body references unknown citation key ${block.citationId as string}`);
+        return { ...block, citationId: resolved };
+      }
+      return block;
+    });
+  }
+  for (const spec of GOLDEN_STORIES) {
+    for (const factKey of spec.factKeys) {
+      if (!publishedFactKeys.has(factKey)) {
+        throw new Error(`Story ${spec.key} links Fact ${factKey}, which this seed did not mark PUBLISHED - refusing to seed (mirrors STORY_FACT_NOT_PUBLISHABLE).`);
+      }
+    }
+
+    const story = await prisma.story.upsert({
+      where: { canonicalSlug: spec.slug },
+      update: {},
+      create: {
+        canonicalSlug: spec.slug,
+        authorId: editor.id,
+        featured: spec.featured ?? false,
+        editorialStatus: StoryEditorialStatus.PUBLISHED,
+        publishedAt: new Date(),
+        translations: {
+          create: [
+            {
+              locale: 'vi',
+              title: spec.vi.title,
+              slug: spec.slug,
+              subtitle: spec.vi.subtitle,
+              summary: spec.vi.summary,
+              content: resolveStoryBody(spec.vi.body) as any,
+              status: 'PUBLISHED',
+              method: 'ORIGINAL',
+            },
+            {
+              locale: 'en',
+              title: spec.en.title,
+              slug: slug(spec.en.title),
+              summary: spec.en.summary,
+              content: spec.en.body ? (resolveStoryBody(spec.en.body) as any) : undefined,
+              status: 'AI_ASSISTED',
+              method: 'AI_ASSISTED',
+            },
+          ],
+        },
+      },
+    });
+    storiesByKey.set(spec.key, story);
+
+    for (const link of spec.placeLinks ?? []) {
+      const place = placesByKey.get(link.key);
+      if (place) await prisma.storyPlace.upsert({ where: { storyId_placeId: { storyId: story.id, placeId: place.id } }, update: {}, create: { storyId: story.id, placeId: place.id, role: link.role } });
+    }
+    for (const link of spec.personLinks ?? []) {
+      const person = peopleByKey.get(link.key);
+      if (person) await prisma.storyPerson.upsert({ where: { storyId_personId: { storyId: story.id, personId: person.id } }, update: {}, create: { storyId: story.id, personId: person.id, role: link.role } });
+    }
+    for (const link of spec.eventLinks ?? []) {
+      const event = eventsByKey.get(link.key);
+      if (event) await prisma.storyEvent.upsert({ where: { storyId_eventId: { storyId: story.id, eventId: event.id } }, update: {}, create: { storyId: story.id, eventId: event.id, role: link.role } });
+    }
+    for (const factKey of spec.factKeys) {
+      const factId = factIdByKey.get(factKey)!;
+      await prisma.storyFact.upsert({ where: { storyId_factId: { storyId: story.id, factId } }, update: {}, create: { storyId: story.id, factId } });
+    }
+    for (const ref of spec.citationRefs) {
+      const citationId = citationIdByFactAndSource.get(`${ref.factKey}::${ref.sourceKey}`);
+      if (!citationId) throw new Error(`Story ${spec.key} citationRef resolves to no known Citation (${ref.factKey}::${ref.sourceKey})`);
+      await prisma.storyCitation.upsert({
+        where: { storyId_citationId: { storyId: story.id, citationId } },
+        update: {},
+        create: { storyId: story.id, citationId, locator: ref.locator },
+      });
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Journeys (spec sections 35-37) - only real, PUBLISHED golden Places as
+  // stops, no fabricated route geometry/distance.
+  // -----------------------------------------------------------------------
+  console.log('Seeding journeys from the golden dataset (see prisma/golden/journeys.ts)...');
+  const journeysByKey = new Map<string, { id: string }>();
+  for (const spec of GOLDEN_JOURNEYS) {
+    if (spec.stops.length === 0) throw new Error(`Journey ${spec.key} has zero stops - refusing to seed (mirrors the zero-stop publication block).`);
+
+    const journey = await prisma.journey.upsert({
+      where: { canonicalSlug: spec.slug },
+      update: {},
+      create: {
+        canonicalSlug: spec.slug,
+        region: spec.region,
+        editorialStatus: PublicationStatus.PUBLISHED,
+        publishedAt: new Date(),
+        translations: {
+          create: [
+            { locale: 'vi', title: spec.vi.title, slug: spec.slug, summary: spec.vi.summary, description: spec.vi.description, status: 'PUBLISHED', method: 'ORIGINAL' },
+            { locale: 'en', title: spec.en.title, slug: slug(spec.en.title), summary: spec.en.summary, status: 'AI_ASSISTED', method: 'AI_ASSISTED' },
+          ],
+        },
+      },
+    });
+    journeysByKey.set(spec.key, journey);
+
+    for (const stop of spec.stops) {
+      const place = placesByKey.get(stop.placeKey);
+      if (!place) throw new Error(`Journey ${spec.key} references unknown place key ${stop.placeKey}`);
+      await prisma.journeyStop.upsert({
+        where: { journeyId_placeId: { journeyId: journey.id, placeId: place.id } },
+        update: {},
+        create: {
+          journeyId: journey.id,
+          placeId: place.id,
+          order: stop.order,
+          stopTitle: stop.stopTitle,
+          recommendedDurationMinutes: stop.recommendedDurationMinutes,
+          notes: stop.notes,
+        },
+      });
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Editorial slots (spec section 38) - only real, published targets.
+  // -----------------------------------------------------------------------
+  console.log('Seeding editorial home slots from the golden dataset (see prisma/golden/editorial.ts)...');
+  for (const spec of GOLDEN_EDITORIAL_SLOTS) {
+    const targetMap = spec.entityKind === EntityKind.STORY ? storiesByKey : spec.entityKind === EntityKind.JOURNEY ? journeysByKey : placesByKey;
+    const target = targetMap.get(spec.targetKey);
+    if (!target) throw new Error(`Editorial slot ${spec.slotKey}#${spec.order} references unknown target ${spec.targetKey}`);
+    await prisma.editorialSlot.upsert({
+      where: { slotKey_order: { slotKey: spec.slotKey, order: spec.order } },
+      update: { entityKind: spec.entityKind, entityId: target.id },
+      create: { slotKey: spec.slotKey, order: spec.order, entityKind: spec.entityKind, entityId: target.id, createdById: editor.id },
+    });
+  }
+
+  // -----------------------------------------------------------------------
+  // Global Geography (G01 - Global Backend V2 Extension, additive to the
+  // Vietnam-only historical domain above). See docs/backend/
+  // GLOBAL_GEOGRAPHY.md and prisma/golden/geography.ts. `where: {
+  // canonicalSlug }, update: {}` is the same idempotent-upsert convention
+  // every prior golden-dataset entity above already uses - a second run
+  // upserts the parent row as a no-op and never re-creates nested
+  // translations/aliases.
+  // -----------------------------------------------------------------------
+  console.log('Seeding global geography from the golden dataset (see prisma/golden/geography.ts)...');
+
+  const countriesByKey = new Map<string, { id: string }>();
+  for (const spec of GOLDEN_COUNTRIES) {
+    const canonicalSlug = slug(spec.vi.name);
+    const country = await prisma.country.upsert({
+      where: { canonicalSlug },
+      update: {},
+      create: {
+        iso2: spec.iso2,
+        iso3: spec.iso3,
+        defaultLocale: spec.defaultLocale,
+        defaultCurrency: spec.defaultCurrency,
+        latitude: spec.lat,
+        longitude: spec.lng,
+        canonicalSlug,
+        status: PublicationStatus.PUBLISHED,
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.vi.name, slug: canonicalSlug, shortDescription: spec.vi.shortDescription, method: 'ORIGINAL' },
+            {
+              locale: 'en',
+              name: spec.en.name,
+              slug: slug(spec.en.name),
+              shortDescription: spec.en.shortDescription,
+              method: 'AI_ASSISTED' as const,
+              status: 'AI_ASSISTED' as const,
+            },
+          ],
+        },
+      },
+    });
+    countriesByKey.set(spec.key, country);
+
+    for (const alias of spec.aliases ?? []) {
+      await prisma.entityAlias.upsert({
+        where: { entityType_entityId_locale_alias: { entityType: 'COUNTRY', entityId: country.id, locale: '', alias } },
+        update: {},
+        create: { entityType: 'COUNTRY', entityId: country.id, alias, aliasType: 'ROMANIZATION' },
+      });
+    }
+    for (const la of spec.localizedAliases ?? []) {
+      await prisma.entityAlias.upsert({
+        where: { entityType_entityId_locale_alias: { entityType: 'COUNTRY', entityId: country.id, locale: la.locale, alias: la.alias } },
+        update: {},
+        create: { entityType: 'COUNTRY', entityId: country.id, locale: la.locale, alias: la.alias, aliasType: 'ALTERNATE_NAME' },
+      });
+    }
+  }
+
+  const regionsByKey = new Map<string, { id: string }>();
+  for (const spec of GOLDEN_REGIONS) {
+    const country = countriesByKey.get(spec.countryKey);
+    if (!country) throw new Error(`Region ${spec.key} references unknown country ${spec.countryKey}`);
+    const canonicalSlug = slug(spec.vi.name);
+    const region = await prisma.region.upsert({
+      where: { canonicalSlug },
+      update: {},
+      create: {
+        countryId: country.id,
+        type: spec.type,
+        latitude: spec.lat,
+        longitude: spec.lng,
+        canonicalSlug,
+        status: PublicationStatus.PUBLISHED,
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.vi.name, slug: canonicalSlug, method: 'ORIGINAL' },
+            { locale: 'en', name: spec.en.name, slug: slug(spec.en.name), method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const },
+          ],
+        },
+      },
+    });
+    regionsByKey.set(spec.key, region);
+  }
+
+  const citiesByKey = new Map<string, { id: string }>();
+  for (const spec of GOLDEN_CITIES) {
+    const country = countriesByKey.get(spec.countryKey);
+    if (!country) throw new Error(`City ${spec.key} references unknown country ${spec.countryKey}`);
+    const region = spec.regionKey ? regionsByKey.get(spec.regionKey) : undefined;
+    if (spec.regionKey && !region) throw new Error(`City ${spec.key} references unknown region ${spec.regionKey}`);
+    const canonicalSlug = slug(spec.vi.name);
+    const city = await prisma.city.upsert({
+      where: { canonicalSlug },
+      update: {},
+      create: {
+        countryId: country.id,
+        regionId: region?.id,
+        timezone: spec.timezone,
+        latitude: spec.lat,
+        longitude: spec.lng,
+        importance: spec.importance,
+        canonicalSlug,
+        status: PublicationStatus.PUBLISHED,
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.vi.name, slug: canonicalSlug, summary: spec.vi.summary, method: 'ORIGINAL' },
+            {
+              locale: 'en',
+              name: spec.en.name,
+              slug: slug(spec.en.name),
+              summary: spec.en.summary,
+              method: 'AI_ASSISTED' as const,
+              status: 'AI_ASSISTED' as const,
+            },
+          ],
+        },
+      },
+    });
+    citiesByKey.set(spec.key, city);
+
+    for (const alias of spec.aliases ?? []) {
+      await prisma.entityAlias.upsert({
+        where: { entityType_entityId_locale_alias: { entityType: 'CITY', entityId: city.id, locale: '', alias } },
+        update: {},
+        create: { entityType: 'CITY', entityId: city.id, alias, aliasType: 'ROMANIZATION' },
+      });
+    }
+  }
+
+  for (const spec of GOLDEN_DESTINATIONS) {
+    const country = countriesByKey.get(spec.countryKey);
+    if (!country) throw new Error(`Destination ${spec.key} references unknown country ${spec.countryKey}`);
+    const region = spec.regionKey ? regionsByKey.get(spec.regionKey) : undefined;
+    if (spec.regionKey && !region) throw new Error(`Destination ${spec.key} references unknown region ${spec.regionKey}`);
+    const city = spec.cityKey ? citiesByKey.get(spec.cityKey) : undefined;
+    if (spec.cityKey && !city) throw new Error(`Destination ${spec.key} references unknown city ${spec.cityKey}`);
+    const canonicalSlug = slug(spec.vi.name);
+    await prisma.destination.upsert({
+      where: { canonicalSlug },
+      update: {},
+      create: {
+        countryId: country.id,
+        regionId: region?.id,
+        cityId: city?.id,
+        type: spec.type,
+        latitude: spec.lat,
+        longitude: spec.lng,
+        importance: spec.importance,
+        canonicalSlug,
+        status: PublicationStatus.PUBLISHED,
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.vi.name, slug: canonicalSlug, summary: spec.vi.summary, method: 'ORIGINAL' },
+            {
+              locale: 'en',
+              name: spec.en.name,
+              slug: slug(spec.en.name),
+              summary: spec.en.summary,
+              method: 'AI_ASSISTED' as const,
+              status: 'AI_ASSISTED' as const,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  console.log(`Golden dataset seed complete (version ${GOLDEN_DATASET_VERSION}, reviewed ${GOLDEN_DATASET_REVIEWED_AT}).`);
+  console.log(`Published ${publishedFactKeys.size}/${GOLDEN_FACTS.length} golden historical facts (100% of published facts carry >=1 VERIFIED citation - see docs/backend/GOLDEN_DATASET.md).`);
+  console.log(
+    `G01 Global Geography: ${GOLDEN_COUNTRIES.length} countries, ${GOLDEN_REGIONS.length} regions, ${GOLDEN_CITIES.length} cities, ${GOLDEN_DESTINATIONS.length} destinations.`,
+  );
 }
 
 main()

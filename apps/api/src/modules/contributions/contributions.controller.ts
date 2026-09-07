@@ -1,11 +1,20 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { ContributionStatus, Role } from '@prisma/client';
-import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 import { ContributionsService } from './contributions.service';
-import { AdvanceContributionDto, CreateContributionDto } from './dto/contribution.dto';
+import {
+  AddProvenanceSourceDto,
+  CreateContributionDto,
+  UpdateContributionDto,
+  WithdrawContributionDto,
+} from './dto/contribution.dto';
 
+/**
+ * Submitter-facing surface only (spec section 44/45/74) - a contributor's
+ * own submission and its status. Never exposes another user's contribution,
+ * internal review notes, or the admin queue - see `ContributionsAdminController`
+ * for the reviewer/admin surface.
+ */
 @ApiTags('contributions')
 @ApiBearerAuth()
 @Controller('contributions')
@@ -22,20 +31,23 @@ export class ContributionsController {
     return this.contributions.listMine(user.id);
   }
 
-  @Get(':id')
-  getById(@Param('id') id: string) {
-    return this.contributions.findById(id);
+  @Get('mine/:id')
+  getMineById(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.contributions.findMineById(id, user);
   }
 
-  @Roles(Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN)
-  @Get()
-  listForReview(@Query('status') status?: ContributionStatus) {
-    return this.contributions.listForReview(status);
+  @Patch('mine/:id')
+  update(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateContributionDto) {
+    return this.contributions.update(id, dto, user);
   }
 
-  @Roles(Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN)
-  @Patch(':id/advance')
-  advance(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: AdvanceContributionDto) {
-    return this.contributions.advance(id, user.id, dto);
+  @Post('mine/:id/withdraw')
+  withdraw(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: WithdrawContributionDto) {
+    return this.contributions.withdraw(id, dto, user);
+  }
+
+  @Post(':id/provenance-sources')
+  addProvenanceSource(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: AddProvenanceSourceDto) {
+    return this.contributions.addProvenanceSource(id, dto, user);
   }
 }

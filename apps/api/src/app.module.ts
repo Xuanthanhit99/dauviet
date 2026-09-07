@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bullmq';
@@ -36,6 +37,11 @@ import { ModerationModule } from './modules/moderation/moderation.module';
 import { ContributionsModule } from './modules/contributions/contributions.module';
 import { AliasesModule } from './modules/aliases/aliases.module';
 import { ThemesModule } from './modules/themes/themes.module';
+import { CountriesModule } from './modules/countries/countries.module';
+import { RegionsModule } from './modules/regions/regions.module';
+import { CitiesModule } from './modules/cities/cities.module';
+import { DestinationsModule } from './modules/destinations/destinations.module';
+import { ProvidersModule } from './modules/providers/providers.module';
 
 @Module({
   imports: [
@@ -87,7 +93,24 @@ import { ThemesModule } from './modules/themes/themes.module';
     ContributionsModule,
     AliasesModule,
     ThemesModule,
+    // G01 - Global Backend V2 Extension, Global Geography Foundation.
+    // DestinationsModule/RegionsModule are self-contained (no cross-module
+    // imports); CitiesModule imports DestinationsModule for the
+    // `/cities/:slug/destinations` scoped route; CountriesModule imports
+    // all three for its own scoped routes. One-directional, no cycles.
+    CountriesModule,
+    RegionsModule,
+    CitiesModule,
+    DestinationsModule,
+    // G02 - Global Backend V2 Extension, Provider + Licensing Foundation.
+    // Entirely geography-independent (spec section 37) - no import
+    // relationship to the geography modules above.
+    ProvidersModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

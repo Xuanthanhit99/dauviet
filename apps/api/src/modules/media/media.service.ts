@@ -2,7 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { AccessPolicy, MediaAssetStatus, Role } from '@prisma/client';
+import { AccessPolicy, MediaAssetStatus, MediaType, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { buildHistoricalDateColumns } from '../../common/historical-date/historical-date.util';
@@ -251,6 +251,39 @@ export class MediaService {
   }
 
   /**
+   * Reviewer-only promotion of a contributed MediaAsset's type/source link
+   * (spec Phase 09 sections 34-36) - e.g. a plain PHOTO promoted to
+   * ARCHIVAL_PHOTO/MAP once provenance/rights have been reviewed, and/or
+   * linked to the canonical Source a contribution was catalogued into.
+   * Never touches Territory/geometry regardless of target type -
+   * `MediaType.MAP` has no schema-level relation to Territory at all (see
+   * `schema-graph.spec.ts`), so promoting to MAP here can never create
+   * reviewed spatial geometry by itself. Callers (ContributionsService) are
+   * responsible for the role/self-review gate; this method trusts its caller
+   * the same way `updateRights`/`updateAccessPolicy` do.
+   */
+  async promote(mediaAssetId: string, changes: { type?: MediaType; sourceId?: string }, actorId: string, db: PrismaService | Prisma.TransactionClient = this.prisma) {
+    const media = await db.mediaAsset.findUnique({ where: { id: mediaAssetId } });
+    if (!media) throw new NotFoundException('Media asset not found.');
+
+    const updated = await db.mediaAsset.update({
+      where: { id: mediaAssetId },
+      data: { type: changes.type, sourceId: changes.sourceId },
+    });
+    await this.audit.log(
+      {
+        actorId,
+        action: 'media.promoted',
+        entityType: 'MEDIA_ASSET',
+        entityId: mediaAssetId,
+        metadata: { before: { type: media.type, sourceId: media.sourceId }, after: changes },
+      },
+      db,
+    );
+    return updated;
+  }
+
+  /**
    * Optional locale-specific editorial caption/alt text (spec section 34) -
    * only curated editorial media is expected to gain rows here; most
    * uploads keep only the flat, uploader-locale caption/altText.
@@ -357,10 +390,26 @@ export class MediaService {
    * is a privileged, role-gated read elsewhere (see
    * `SourcesService.getDocumentForViewer` for the SourceDocument case).
    */
+  /**
+   * Resolves the public `url` AND strips internal/private fields before a
+   * MediaAsset reaches a public response (spec Phase 11 section 6/33) -
+   * found during the Phase 11 private-field-leak audit: this previously
+   * spread the *entire* raw Prisma row (including the raw S3 `storageKey`
+   * object path, `uploadedById`, `rightsReviewedById`, and quarantine/
+   * archive workflow fields) into `GET /media/:id`'s public response. Only
+   * used by `findPublicById`; every other privileged caller in this file
+   * still reads the full row directly, unaffected.
+   */
   private withPublicUrl<T extends { storageKey: string; accessPolicy: AccessPolicy }>(media: T) {
-    if (media.accessPolicy !== AccessPolicy.PUBLIC) {
-      return { ...media, url: null };
-    }
-    return { ...media, url: this.s3.publicUrl(media.storageKey) };
+    const publicFields = omitKeys(media, ['storageKey', 'checksum', 'uploadedById', 'rightsReviewedById', 'quarantinedById', 'quarantineReason', 'archivedById']);
+    const url = media.accessPolicy === AccessPolicy.PUBLIC ? this.s3.publicUrl(media.storageKey) : null;
+    return { ...publicFields, url };
   }
+}
+
+/** Shallow-omits the given keys without ever binding an unused local (avoids the `_prefixed`-destructure lint noise this codebase's eslint config doesn't suppress). */
+function omitKeys<T extends object, K extends string>(obj: T, keys: readonly K[]): Omit<T, K> {
+  const result = { ...obj } as Record<string, unknown>;
+  for (const key of keys) delete result[key];
+  return result as Omit<T, K>;
 }

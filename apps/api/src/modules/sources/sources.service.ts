@@ -1,11 +1,14 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { AccessPolicy, FactEditorialStatus, Role } from '@prisma/client';
+import { AccessPolicy, FactEditorialStatus, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TRUST_ERROR_CODES } from '../../common/errors/trust-error-codes';
 import { CreateSourceDocumentDto, CreateSourceDto } from './dto/source.dto';
 
 const REVIEWER_OR_EDITOR_ROLES: Role[] = [Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN];
+
+/** Either the ambient PrismaService or an in-flight `$transaction` callback client - lets a caller (e.g. ContributionsService's catalogue actions, spec Phase 09 section 51) fold source creation into its own atomic transaction. */
+type Db = PrismaService | Prisma.TransactionClient;
 
 @Injectable()
 export class SourcesService {
@@ -19,32 +22,33 @@ export class SourcesService {
    * share a title, so only an exact identifier collision is blocked, and
    * only against active (non-archived) sources.
    */
-  private async assertNoDuplicateIdentifier(dto: CreateSourceDto) {
+  private async assertNoDuplicateIdentifier(dto: CreateSourceDto, db: Db) {
     if (dto.isbn) {
-      const existing = await this.prisma.source.findFirst({ where: { isbn: dto.isbn, archivedAt: null } });
+      const existing = await db.source.findFirst({ where: { isbn: dto.isbn, archivedAt: null } });
       if (existing) {
         throw new BadRequestException(`A source with ISBN ${dto.isbn} already exists (id: ${existing.id}).`);
       }
     }
     if (dto.issn) {
-      const existing = await this.prisma.source.findFirst({ where: { issn: dto.issn, archivedAt: null } });
+      const existing = await db.source.findFirst({ where: { issn: dto.issn, archivedAt: null } });
       if (existing) {
         throw new BadRequestException(`A source with ISSN ${dto.issn} already exists (id: ${existing.id}).`);
       }
     }
   }
 
-  async create(dto: CreateSourceDto, actorId: string) {
-    await this.assertNoDuplicateIdentifier(dto);
+  /** `db` defaults to the ambient PrismaService; pass an in-flight `Prisma.TransactionClient` to make this insert part of a larger atomic transaction (e.g. Contribution cataloguing). */
+  async create(dto: CreateSourceDto, actorId: string, db: Db = this.prisma) {
+    await this.assertNoDuplicateIdentifier(dto, db);
 
-    const source = await this.prisma.source.create({
+    const source = await db.source.create({
       data: {
         ...dto,
         accessedAt: dto.accessedAt ? new Date(dto.accessedAt) : undefined,
         createdById: actorId,
       },
     });
-    await this.audit.log({ actorId, action: 'source.created', entityType: 'SOURCE', entityId: source.id });
+    await this.audit.log({ actorId, action: 'source.created', entityType: 'SOURCE', entityId: source.id }, db);
     return source;
   }
 
@@ -62,13 +66,14 @@ export class SourcesService {
    * 18) governs what the public API is allowed to expose - full scans are
    * never returned just because they exist in object storage.
    */
-  async addDocument(sourceId: string, dto: CreateSourceDocumentDto, actorId: string) {
-    const source = await this.prisma.source.findUnique({ where: { id: sourceId } });
+  /** `db` defaults to the ambient PrismaService (opens its own transaction); pass an in-flight `Prisma.TransactionClient` to fold this into a larger atomic transaction (e.g. Contribution cataloguing) instead of nesting a second one. */
+  async addDocument(sourceId: string, dto: CreateSourceDocumentDto, actorId: string, db: Db = this.prisma) {
+    const source = await db.source.findUnique({ where: { id: sourceId } });
     if (!source) throw new NotFoundException('Source not found.');
 
     const accessPolicy = dto.accessPolicy ?? AccessPolicy.METADATA_ONLY;
 
-    const doc = await this.prisma.$transaction(async (tx) => {
+    const runOps = async (tx: Db) => {
       const created = await tx.sourceDocument.create({
         data: {
           sourceId,
@@ -99,10 +104,30 @@ export class SourcesService {
         });
       }
       return created;
-    });
+    };
 
-    await this.audit.log({ actorId, action: 'sourceDocument.created', entityType: 'SOURCE', entityId: sourceId, metadata: { accessPolicy } });
+    const doc = db === this.prisma ? await this.prisma.$transaction((tx) => runOps(tx)) : await runOps(db);
+
+    await this.audit.log({ actorId, action: 'sourceDocument.created', entityType: 'SOURCE', entityId: sourceId, metadata: { accessPolicy } }, db);
     return doc;
+  }
+
+  /**
+   * Strips internal workflow metadata before a Source reaches a public
+   * response (spec Phase 11 section 6/49) - `createdById`/`archivedById`
+   * are internal user-id pointers, and `archiveReason` is an editorial
+   * workflow note, never bibliographic content a public reader needs.
+   * Found during the Phase 11 private-field-leak audit: `GET /sources` and
+   * `GET /sources/:id` previously returned the full Prisma row verbatim.
+   */
+  redactSourceForPublic<T extends { createdById?: string | null; archivedById?: string | null; archiveReason?: string | null }>(
+    source: T,
+  ): Omit<T, 'createdById' | 'archivedById' | 'archiveReason'> {
+    const rest = { ...source } as Record<string, unknown>;
+    delete rest.createdById;
+    delete rest.archivedById;
+    delete rest.archiveReason;
+    return rest as Omit<T, 'createdById' | 'archivedById' | 'archiveReason'>;
   }
 
   /** Redacts extractedText/full asset details unless the document is PUBLIC. */

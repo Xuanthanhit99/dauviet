@@ -18,19 +18,19 @@ describe('Golden Dataset - Hoang Sa / Truong Sa regression (spec section 7)', ()
   }
 
   it('includes Hoang Sa as an ARCHIPELAGO', () => {
-    const hoangSa = findBySlugName('Hoang Sa');
+    const hoangSa = findBySlugName('Hoàng Sa');
     expect(hoangSa).toBeDefined();
     expect(hoangSa!.type).toBe(PlaceType.ARCHIPELAGO);
   });
 
   it('includes Truong Sa as an ARCHIPELAGO', () => {
-    const truongSa = findBySlugName('Truong Sa');
+    const truongSa = findBySlugName('Trường Sa');
     expect(truongSa).toBeDefined();
     expect(truongSa!.type).toBe(PlaceType.ARCHIPELAGO);
   });
 
   it('gives both archipelagos coordinates and an English alias, without asserting any territorial claim', () => {
-    for (const name of ['Hoang Sa', 'Truong Sa']) {
+    for (const name of ['Hoàng Sa', 'Trường Sa']) {
       const place = findBySlugName(name)!;
       expect(place.lat).toBeDefined();
       expect(place.lng).toBeDefined();
@@ -47,18 +47,18 @@ describe('Golden Dataset - Hoang Sa / Truong Sa regression (spec section 7)', ()
 
   it('covers the required-core place list from spec section 38', () => {
     const requiredNames = [
-      'Hoang thanh Thang Long',
-      'Van Mieu Quoc Tu Giam',
-      'Co Loa',
-      'Hoa Lu',
-      'Co do Hue',
-      'My Son',
-      'Hoi An',
-      'Dien Bien Phu',
-      'Dia dao Cu Chi',
-      'Dinh Doc Lap',
-      'Hoang Sa',
-      'Truong Sa',
+      'Hoàng thành Thăng Long',
+      'Văn Miếu – Quốc Tử Giám',
+      'Cổ Loa',
+      'Hoa Lư',
+      'Cố đô Huế',
+      'Mỹ Sơn',
+      'Hội An',
+      'Điện Biên Phủ',
+      'Địa đạo Củ Chi',
+      'Dinh Độc Lập',
+      'Hoàng Sa',
+      'Trường Sa',
     ];
     const seededNames = GOLDEN_PLACES.map((p) => p.vi.name);
     for (const name of requiredNames) {

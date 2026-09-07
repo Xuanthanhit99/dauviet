@@ -1,22 +1,22 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { bootstrapTestApp } from './bootstrap-test-app';
 
 /**
  * Requires a reachable DATABASE_URL and REDIS_URL (see /.env.example - run
- * `pnpm infra:up && pnpm db:migrate` first). Not executed in the sandbox
- * this repo was bootstrapped in - see docs/backend/BACKEND_FREEZE_REPORT.md.
+ * `pnpm infra:up && pnpm db:migrate` first). First actually executed in
+ * Phase 12.1 - see docs/backend/LIVE_QA_REPORT.md's "Phase 12.1" section.
+ * Bootstraps through the shared `bootstrapTestApp()` helper (not a hand-rolled
+ * subset) so this test runs with the real global guards/filters/interceptor,
+ * not a stripped-down unguarded app - see that helper's own comment for why
+ * that distinction matters (a real, previously-undetected gap found this
+ * phase).
  */
 describe('Health (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('v1');
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-    await app.init();
+    app = await bootstrapTestApp();
   });
 
   afterAll(async () => {
@@ -28,9 +28,9 @@ describe('Health (e2e)', () => {
       .get('/v1/health')
       .expect(200)
       .expect((res) => {
-        expect(res.body).toHaveProperty('status');
-        expect(res.body).toHaveProperty('checks.database');
-        expect(res.body).toHaveProperty('checks.redis');
+        expect(res.body).toHaveProperty('data.status');
+        expect(res.body).toHaveProperty('data.checks.database');
+        expect(res.body).toHaveProperty('data.checks.redis');
       });
   });
 });

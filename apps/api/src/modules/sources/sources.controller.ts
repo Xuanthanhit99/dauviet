@@ -23,18 +23,19 @@ export class SourcesController {
 
   @Public()
   @Get()
-  list(@Query('sourceType') sourceType?: string, @Query('q') q?: string) {
-    return this.sources.list({ sourceType, q });
+  async list(@Query('sourceType') sourceType?: string, @Query('q') q?: string) {
+    const sources = await this.sources.list({ sourceType, q });
+    return sources.map((s) => this.sources.redactSourceForPublic(s));
   }
 
   @Public()
   @Get(':id')
   async getById(@Param('id') id: string) {
     const source = await this.sources.findById(id);
-    return {
+    return this.sources.redactSourceForPublic({
       ...source,
       sourceDocuments: source.sourceDocuments.map((d) => this.sources.redactDocumentForPublic(d)),
-    };
+    });
   }
 
   @Public()

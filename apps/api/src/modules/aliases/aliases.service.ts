@@ -25,7 +25,25 @@ export class AliasesService {
       ERA: () => this.prisma.historicalEra.findUnique({ where: { id: entityId }, select: { id: true } }),
       DYNASTY: () => this.prisma.dynasty.findUnique({ where: { id: entityId }, select: { id: true } }),
       TERRITORY: () => this.prisma.territory.findUnique({ where: { id: entityId }, select: { id: true } }),
-    }[entityType as 'PLACE' | 'PERSON' | 'EVENT' | 'ERA' | 'DYNASTY' | 'TERRITORY']?.();
+      // Added G01 (Global Backend V2 Extension, Global Geography Foundation)
+      // - additive-only: reuses the existing generic alias architecture for
+      // the new global geography entities rather than four bespoke alias
+      // tables (spec section 13). Every pre-existing key above is untouched.
+      COUNTRY: () => this.prisma.country.findUnique({ where: { id: entityId }, select: { id: true } }),
+      REGION: () => this.prisma.region.findUnique({ where: { id: entityId }, select: { id: true } }),
+      CITY: () => this.prisma.city.findUnique({ where: { id: entityId }, select: { id: true } }),
+      DESTINATION: () => this.prisma.destination.findUnique({ where: { id: entityId }, select: { id: true } }),
+    }[entityType as
+      | 'PLACE'
+      | 'PERSON'
+      | 'EVENT'
+      | 'ERA'
+      | 'DYNASTY'
+      | 'TERRITORY'
+      | 'COUNTRY'
+      | 'REGION'
+      | 'CITY'
+      | 'DESTINATION']?.();
 
     if (exists === undefined) {
       throw new BadRequestException(`Aliases are not supported for entityType ${entityType}.`);

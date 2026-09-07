@@ -4,6 +4,27 @@ import { SourcesService } from './sources.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 
+/** Phase 11 private-field-leak audit (spec section 6/49): the public GET /sources routes previously returned the raw Prisma row verbatim. */
+describe('SourcesService.redactSourceForPublic', () => {
+  it('strips createdById/archivedById/archiveReason and keeps every bibliographic field', () => {
+    const service = new SourcesService({} as unknown as PrismaService, {} as unknown as AuditService);
+    const raw = {
+      id: 's1',
+      title: 'A Book',
+      sourceType: SourceType.BOOK,
+      createdById: 'editor-1',
+      archivedById: 'historian-1',
+      archiveReason: 'duplicate record',
+    };
+    const result = service.redactSourceForPublic(raw);
+    expect(result).not.toHaveProperty('createdById');
+    expect(result).not.toHaveProperty('archivedById');
+    expect(result).not.toHaveProperty('archiveReason');
+    expect(result.title).toBe('A Book');
+    expect(result.sourceType).toBe(SourceType.BOOK);
+  });
+});
+
 /** Covers spec sections 40/41: an ISBN/ISSN collision is blocked before insert. */
 describe('SourcesService.create duplicate-identifier guard', () => {
   let prisma: { source: { findFirst: jest.Mock; create: jest.Mock } };
@@ -75,6 +96,33 @@ describe('SourcesService.addDocument access-policy cascade', () => {
   it('does not touch MediaAsset rows when the document is PUBLIC', async () => {
     await service.addDocument('source-1', { mediaAssetId: 'media-1', accessPolicy: AccessPolicy.PUBLIC } as any, 'editor-1');
     expect(tx.mediaAsset.updateMany).not.toHaveBeenCalled();
+  });
+});
+
+/** Covers spec Phase 09 section 51: SourcesService.create/addDocument can fold into a caller's own transaction (e.g. Contribution cataloguing) instead of only ever using the ambient PrismaService. */
+describe('SourcesService transaction passthrough', () => {
+  it('create() writes through a caller-supplied transaction client when one is passed', async () => {
+    const audit = { log: jest.fn() };
+    const service = new SourcesService({} as unknown as PrismaService, audit as unknown as AuditService);
+    const tx: any = { source: { findFirst: jest.fn(), create: jest.fn().mockResolvedValue({ id: 'source-1' }) } };
+
+    const result = await service.create({ sourceType: SourceType.BOOK, title: 'A Book' } as any, 'reviewer-1', tx);
+    expect(result.id).toBe('source-1');
+    expect(tx.source.create).toHaveBeenCalled();
+  });
+
+  it('addDocument() runs its ops directly against a caller-supplied transaction client, not a second nested transaction', async () => {
+    const audit = { log: jest.fn() };
+    const service = new SourcesService({} as unknown as PrismaService, audit as unknown as AuditService);
+    const tx: any = {
+      source: { findUnique: jest.fn().mockResolvedValue({ id: 'source-1' }) },
+      sourceDocument: { create: jest.fn().mockResolvedValue({ id: 'doc-1' }) },
+      mediaAsset: { updateMany: jest.fn() },
+    };
+
+    const result = await service.addDocument('source-1', { mediaAssetId: 'm1', accessPolicy: AccessPolicy.PUBLIC } as any, 'reviewer-1', tx);
+    expect(result.id).toBe('doc-1');
+    expect(tx.sourceDocument.create).toHaveBeenCalled();
   });
 });
 

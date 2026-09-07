@@ -37,7 +37,7 @@ describe('Hoang Sa / Truong Sa trust regression (spec section 54)', () => {
   });
 
   it('gives Hoang Sa/Truong Sa Place rows no territorial/administrative claim fields beyond geography', () => {
-    const archipelagos = GOLDEN_PLACES.filter((p) => p.vi.name === 'Hoang Sa' || p.vi.name === 'Truong Sa');
+    const archipelagos = GOLDEN_PLACES.filter((p) => p.vi.name === 'Hoàng Sa' || p.vi.name === 'Trường Sa');
     expect(archipelagos).toHaveLength(2);
     for (const place of archipelagos) {
       // PlaceSeedSpec has no field for a legal/administrative claim - this
@@ -114,7 +114,7 @@ describe('No unsafe raw SQL (spec section 64)', () => {
  */
 describe('Hoang Sa / Truong Sa discovery regression (spec section 11)', () => {
   it('the golden dataset gives both archipelagos a real, non-zero historicalImportance value - the only signal map density uses', () => {
-    const archipelagos = GOLDEN_PLACES.filter((p) => p.vi.name === 'Hoang Sa' || p.vi.name === 'Truong Sa');
+    const archipelagos = GOLDEN_PLACES.filter((p) => p.vi.name === 'Hoàng Sa' || p.vi.name === 'Trường Sa');
     expect(archipelagos).toHaveLength(2);
     for (const place of archipelagos) {
       expect(place.importance).toBeGreaterThan(0);
@@ -195,7 +195,7 @@ describe('Phase 08 community trust-boundary regression (spec section 75)', () =>
   });
 
   it('Hoang Sa / Truong Sa community regression: a CommunityStory can link to either archipelago via the ordinary CommunityStoryPlace join - no dedicated code path, no automatic verification, no territorial-claim field exists on the link table', () => {
-    const archipelagos = GOLDEN_PLACES.filter((p) => p.vi.name === 'Hoang Sa' || p.vi.name === 'Truong Sa');
+    const archipelagos = GOLDEN_PLACES.filter((p) => p.vi.name === 'Hoàng Sa' || p.vi.name === 'Trường Sa');
     expect(archipelagos).toHaveLength(2);
     const linkFields = model('CommunityStoryPlace').fields.map((f) => f.name);
     expect(linkFields).not.toEqual(expect.arrayContaining(['claimant', 'legalStatus', 'sovereignty', 'territorialClaim']));
@@ -203,5 +203,80 @@ describe('Phase 08 community trust-boundary regression (spec section 75)', () =>
     // takes no verification-state parameter at all (asserted structurally:
     // no such field exists on the join table for it to even flow into).
     expect(linkFields).not.toContain('verificationState');
+  });
+});
+
+/**
+ * Phase 09 spec sections 2/69/70/71: the contribution intake pipeline must
+ * never become a shortcut into verified historical knowledge, public search,
+ * or editorial curation - no matter how far a Contribution advances through
+ * its own workflow. Structural/static checks only; the behavioral half
+ * (self-review refusal, role gates, idempotent cataloguing) is unit-tested
+ * directly in contributions.service.spec.ts.
+ */
+describe('Phase 09 contribution trust-boundary regression (spec sections 2/69-71)', () => {
+  const models = Prisma.dmmf.datamodel.models;
+
+  function model(name: string) {
+    const m = models.find((mm) => mm.name === name);
+    if (!m) throw new Error(`Model ${name} not found in DMMF`);
+    return m;
+  }
+
+  it('raw Contribution search-indexing is impossible - Contribution has no entry in the search service\'s searcher list', () => {
+    const searchServiceSource = fs.readFileSync(path.resolve(__dirname, '../../modules/search/search.service.ts'), 'utf8');
+    // The searchers array lists each indexed EntityKind by name (e.g.
+    // `searchPlace`/`searchCommunityStory`) - a `searchContribution` runner
+    // would be the only way Contribution could ever appear here.
+    expect(searchServiceSource).not.toMatch(/searchContribution/i);
+  });
+
+  it('EditorialSlot cannot reference a Contribution - RESOLVABLE_KINDS stays STORY/JOURNEY/PLACE only (same regression style as the Phase 08 CommunityStory check above)', () => {
+    const editorialServiceSource = fs.readFileSync(path.resolve(__dirname, '../../modules/editorial/editorial.service.ts'), 'utf8');
+    const allowListLine = editorialServiceSource.match(/RESOLVABLE_KINDS[^\n]*/)?.[0] ?? '';
+    expect(allowListLine).not.toMatch(/CONTRIBUTION/);
+  });
+
+  it('cataloguing (promotion into Source/SourceDocument/MediaAsset) requires HISTORIAN_REVIEWER/ADMIN, never a plain EDITOR or MODERATOR alone (spec section 30/50/71)', () => {
+    const adminControllerSource = fs.readFileSync(path.resolve(__dirname, '../../modules/contributions/contributions-admin.controller.ts'), 'utf8');
+    expect(adminControllerSource).toMatch(/const CATALOGUE_ROLES = \[Role\.HISTORIAN_REVIEWER, Role\.ADMIN\]/);
+    // Every catalogue/* route is immediately preceded by the stricter
+    // @Roles(...CATALOGUE_ROLES) override, not just the controller's
+    // class-level EDITOR/HISTORIAN_REVIEWER/ADMIN default.
+    for (const route of ['source', 'document', 'media']) {
+      const pattern = new RegExp(`@Roles\\(\\.\\.\\.CATALOGUE_ROLES\\)\\s*\\n\\s*@Post\\(':id/catalogue/${route}'\\)`);
+      expect(adminControllerSource).toMatch(pattern);
+    }
+  });
+
+  it('ContributionCatalogueResult is a distinct model from Contribution itself - "ACCEPTED" and "CATALOGUED" are never the same signal (spec section 28/29)', () => {
+    const resultModel = model('ContributionCatalogueResult');
+    expect(resultModel.fields.some((f) => f.name === 'resultType')).toBe(true);
+    expect(resultModel.fields.some((f) => f.name === 'source')).toBe(true);
+    expect(resultModel.fields.some((f) => f.name === 'sourceDocument')).toBe(true);
+    expect(resultModel.fields.some((f) => f.name === 'mediaAsset')).toBe(true);
+  });
+
+  it('ContributionSource (provenance evidence) has no relation to Citation/HistoricalFact - a submitter\'s provenance claim can never itself become cited evidence without a reviewer explicitly cataloguing a real Source', () => {
+    const evidenceFields = model('ContributionSource').fields.map((f) => f.name);
+    expect(evidenceFields).not.toEqual(expect.arrayContaining(['citation', 'citations', 'fact', 'historicalFact']));
+  });
+
+  it('a MediaAsset promoted to MediaType MAP through contribution cataloguing still has no relation to Territory/geometry (same guarantee as Phase 05, re-verified for the Phase 09 promotion path)', () => {
+    const mediaFields = model('MediaAsset').fields.filter((f) => f.kind === 'object').map((f) => f.name);
+    expect(mediaFields).not.toEqual(expect.arrayContaining(['territory', 'territories', 'territoryGeometry']));
+  });
+
+  it('Hoang Sa / Truong Sa contribution regression: Contribution.placeId can reference either archipelago via the ordinary Place FK - no dedicated code path, and linking alone creates no Source/Fact/geometry (structural: Contribution has no relation field to HistoricalFact or Territory)', () => {
+    const archipelagos = GOLDEN_PLACES.filter((p) => p.vi.name === 'Hoàng Sa' || p.vi.name === 'Trường Sa');
+    expect(archipelagos).toHaveLength(2);
+    const contributionFields = model('Contribution').fields.filter((f) => f.kind === 'object').map((f) => f.name);
+    expect(contributionFields).toContain('place');
+    expect(contributionFields).not.toEqual(expect.arrayContaining(['fact', 'facts', 'historicalFact', 'territory', 'territories']));
+  });
+
+  it('a CORRECTION contribution\'s target is a validated EntityKind + id pair, not an arbitrary polymorphic column - correctionTargetType is the shared EntityKind enum', () => {
+    const field = model('Contribution').fields.find((f) => f.name === 'correctionTargetType');
+    expect(field?.type).toBe('EntityKind');
   });
 });

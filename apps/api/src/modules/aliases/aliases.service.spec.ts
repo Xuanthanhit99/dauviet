@@ -15,6 +15,10 @@ describe('AliasesService', () => {
   let prisma: {
     place: { findUnique: jest.Mock };
     person: { findUnique: jest.Mock };
+    country: { findUnique: jest.Mock };
+    region: { findUnique: jest.Mock };
+    city: { findUnique: jest.Mock };
+    destination: { findUnique: jest.Mock };
     entityAlias: { create: jest.Mock; findMany: jest.Mock; findUnique: jest.Mock; delete: jest.Mock };
   };
   let audit: { log: jest.Mock };
@@ -24,6 +28,10 @@ describe('AliasesService', () => {
     prisma = {
       place: { findUnique: jest.fn() },
       person: { findUnique: jest.fn() },
+      country: { findUnique: jest.fn() },
+      region: { findUnique: jest.fn() },
+      city: { findUnique: jest.fn() },
+      destination: { findUnique: jest.fn() },
       entityAlias: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), delete: jest.fn() },
     };
     audit = { log: jest.fn() };
@@ -74,5 +82,50 @@ describe('AliasesService', () => {
     prisma.entityAlias.delete.mockResolvedValue({});
     const result = await service.delete('alias-1', 'actor-1');
     expect(result).toEqual({ id: 'alias-1' });
+  });
+
+  /**
+   * G01 (Global Backend V2 Extension, Global Geography Foundation, spec
+   * section 13): the generic alias architecture was extended additively to
+   * support the new global geography entities (e.g. "Nhật Bản"/"日本" as
+   * aliases of the Country "Japan", "Kyōto" as an alias of the City
+   * "Kyoto") - every pre-existing case above continues to pass unmodified.
+   */
+  describe('G01 Global Geography entity types', () => {
+    it('creates an alias for a COUNTRY when it exists', async () => {
+      prisma.country.findUnique.mockResolvedValue({ id: 'country-jp' });
+      prisma.entityAlias.create.mockResolvedValue({ id: 'alias-jp', entityType: 'COUNTRY', entityId: 'country-jp', alias: 'Nhật Bản' });
+
+      const result = await service.create({ entityType: EntityKind.COUNTRY, entityId: 'country-jp', alias: 'Nhật Bản' }, 'actor-1');
+      expect(result.id).toBe('alias-jp');
+    });
+
+    it('404s a COUNTRY alias when the country does not exist', async () => {
+      prisma.country.findUnique.mockResolvedValue(null);
+      await expect(
+        service.create({ entityType: EntityKind.COUNTRY, entityId: 'missing', alias: 'Nhật Bản' }, 'actor-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('creates an alias for a REGION when it exists', async () => {
+      prisma.region.findUnique.mockResolvedValue({ id: 'region-1' });
+      prisma.entityAlias.create.mockResolvedValue({ id: 'alias-r1', entityType: 'REGION', entityId: 'region-1', alias: 'Tokyo-to' });
+      const result = await service.create({ entityType: EntityKind.REGION, entityId: 'region-1', alias: 'Tokyo-to' }, 'actor-1');
+      expect(result.id).toBe('alias-r1');
+    });
+
+    it('creates an alias for a CITY when it exists', async () => {
+      prisma.city.findUnique.mockResolvedValue({ id: 'city-kyoto' });
+      prisma.entityAlias.create.mockResolvedValue({ id: 'alias-c1', entityType: 'CITY', entityId: 'city-kyoto', alias: 'Kyōto' });
+      const result = await service.create({ entityType: EntityKind.CITY, entityId: 'city-kyoto', alias: 'Kyōto' }, 'actor-1');
+      expect(result.id).toBe('alias-c1');
+    });
+
+    it('creates an alias for a DESTINATION when it exists', async () => {
+      prisma.destination.findUnique.mockResolvedValue({ id: 'dest-gion' });
+      prisma.entityAlias.create.mockResolvedValue({ id: 'alias-d1', entityType: 'DESTINATION', entityId: 'dest-gion', alias: 'Gion Kobu' });
+      const result = await service.create({ entityType: EntityKind.DESTINATION, entityId: 'dest-gion', alias: 'Gion Kobu' }, 'actor-1');
+      expect(result.id).toBe('alias-d1');
+    });
   });
 });

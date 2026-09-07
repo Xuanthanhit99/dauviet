@@ -259,6 +259,30 @@ describe('MediaService.findPublicById', () => {
     expect(restricted.url).toBeNull();
     expect(result.variants.some((v: any) => v.id === 'v2')).toBe(false);
   });
+
+  /** Phase 11 private-field-leak audit (spec section 6/33): the public read path previously spread the entire raw Prisma row, leaking the S3 storageKey and other internal fields. */
+  it('never leaks storageKey/uploadedById/rightsReviewedById/quarantine or archive workflow fields in the public response', async () => {
+    const { service, prisma } = makeService();
+    prisma.mediaAsset.findUnique.mockResolvedValue({
+      id: 'm1',
+      status: MediaAssetStatus.READY,
+      accessPolicy: AccessPolicy.PUBLIC,
+      storageKey: 'private/internal-path/photo.jpg',
+      checksum: 'deadbeef',
+      uploadedById: 'user-1',
+      rightsReviewedById: 'editor-1',
+      quarantinedById: null,
+      quarantineReason: null,
+      archivedById: null,
+      derivatives: [],
+    });
+
+    const result = await service.findPublicById('m1');
+    for (const leaked of ['storageKey', 'checksum', 'uploadedById', 'rightsReviewedById', 'quarantinedById', 'quarantineReason', 'archivedById']) {
+      expect(result).not.toHaveProperty(leaked);
+    }
+    expect(result.url).toBe('https://cdn.example/private/internal-path/photo.jpg');
+  });
 });
 
 describe('MediaService.attachToEntity', () => {
@@ -310,6 +334,43 @@ describe('MediaService rights/access/quarantine/archive', () => {
     const result = await service.archive('m1', {}, 'editor-1');
     expect(result.status).toBe(MediaAssetStatus.ARCHIVED);
     expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'media.archived' }));
+  });
+});
+
+/** Covers spec Phase 09 sections 34-36: reviewer-only type/source promotion, usable standalone or folded into a caller's own transaction. */
+describe('MediaService.promote', () => {
+  it('updates only type/sourceId and records an audit entry', async () => {
+    const { service, prisma, audit } = makeService();
+    prisma.mediaAsset.findUnique.mockResolvedValue({ id: 'm1', type: 'PHOTO', sourceId: null });
+    prisma.mediaAsset.update.mockResolvedValue({ id: 'm1', type: 'ARCHIVAL_PHOTO', sourceId: 'source-1' });
+
+    const result = await service.promote('m1', { type: 'ARCHIVAL_PHOTO' as any, sourceId: 'source-1' }, 'reviewer-1');
+    expect(result.type).toBe('ARCHIVAL_PHOTO');
+    expect(prisma.mediaAsset.update).toHaveBeenCalledWith({ where: { id: 'm1' }, data: { type: 'ARCHIVAL_PHOTO', sourceId: 'source-1' } });
+    // Phase 12.1 fix: audit.log now also receives the same `db` promote() was
+    // given (here, the ambient mocked prisma, since no tx was passed), so the
+    // audit write can be threaded into a caller's own transaction too.
+    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'media.promoted' }), prisma);
+  });
+
+  it('runs against a caller-supplied transaction client instead of the ambient PrismaService when one is passed', async () => {
+    const { service, audit } = makeService();
+    const tx: any = {
+      mediaAsset: {
+        findUnique: jest.fn().mockResolvedValue({ id: 'm1', type: 'PHOTO', sourceId: null }),
+        update: jest.fn().mockResolvedValue({ id: 'm1', type: 'MAP' }),
+      },
+    };
+    const result = await service.promote('m1', { type: 'MAP' as any }, 'reviewer-1', tx);
+    expect(result.type).toBe('MAP');
+    expect(tx.mediaAsset.update).toHaveBeenCalled();
+    expect(audit.log).toHaveBeenCalled();
+  });
+
+  it('throws NotFoundException for an unknown media asset', async () => {
+    const { service, prisma } = makeService();
+    prisma.mediaAsset.findUnique.mockResolvedValue(null);
+    await expect(service.promote('missing', { type: 'MAP' as any }, 'reviewer-1')).rejects.toThrow(NotFoundException);
   });
 });
 

@@ -2,14 +2,14 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestj
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
-import { CommunityStoryType, CommunityVerificationState, ModerationStatus, Role } from '@prisma/client';
+import { CommunityVerificationState, ModerationStatus, Role } from '@prisma/client';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 import { Locale } from '../../common/decorators/locale.decorator';
 import { CursorPaginationQuery } from '../../common/dto/pagination.dto';
 import { CommunityService } from './community.service';
-import { CreateCommunityStoryDto, UpdateCommunityStoryDto } from './dto/community-story.dto';
+import { CreateCommunityStoryDto, ListCommunityStoriesQueryDto, UpdateCommunityStoryDto } from './dto/community-story.dto';
 import { CommentsService } from '../comments/comments.service';
 
 class LinkEntityDto {
@@ -44,14 +44,8 @@ export class CommunityController {
 
   @Public()
   @Get()
-  list(
-    @Query() query: CursorPaginationQuery,
-    @Locale() locale: string,
-    @Query('type') type?: CommunityStoryType,
-    @Query('placeId') placeId?: string,
-    @Query('sort') sort?: 'NEW' | 'HELPFUL',
-  ) {
-    return this.community.list({ locale, type, placeId, sort, cursor: query.cursor, limit: query.limit });
+  list(@Query() query: ListCommunityStoriesQueryDto, @Locale() locale: string) {
+    return this.community.list({ locale, type: query.type, placeId: query.placeId, sort: query.sort, cursor: query.cursor, limit: query.limit });
   }
 
   // Registered before `:slug` - otherwise "mine" would be captured as a slug.

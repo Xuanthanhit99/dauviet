@@ -191,4 +191,30 @@ describe('Schema graph integrity (static, no DB required)', () => {
       expect.arrayContaining(['DRAFT', 'SOURCE_CHECK', 'EDITORIAL_REVIEW', 'READY', 'SCHEDULED', 'PUBLISHED', 'ARCHIVED']),
     );
   });
+
+  it('Phase 09 spec section 26/27: ContributionReviewNote carries a decision, not just a note - full review history same as FactReview', () => {
+    expect(model('ContributionReviewNote').fields.some((f) => f.name === 'decision')).toBe(true);
+    expect(model('ContributionReviewNote').fields.some((f) => f.name === 'stage')).toBe(true);
+    expect(model('ContributionReviewNote').fields.some((f) => f.name === 'reviewer')).toBe(true);
+  });
+
+  it('Phase 09 spec section 53/54: Contribution carries an optimistic-concurrency version counter, defaulting to 0', () => {
+    const versionField = model('Contribution').fields.find((f) => f.name === 'version');
+    expect(versionField?.hasDefaultValue).toBe(true);
+    expect(versionField?.default).toBe(0);
+  });
+
+  it('Phase 09 spec section 28/29: ACCEPTED and CATALOGUED are distinct ContributionStatus values, and cataloguing produces a separate result row rather than a single nullable pointer', () => {
+    const values = Prisma.dmmf.datamodel.enums.find((e) => e.name === 'ContributionStatus')?.values.map((v) => v.name);
+    expect(values).toEqual(expect.arrayContaining(['ACCEPTED', 'CATALOGUED']));
+    expect(relationFieldNames('Contribution')).toContain('catalogueResults');
+  });
+
+  it('Phase 09 spec section 12/13: rights review (reviewer-controlled) and submitterDeclaration (submitter claim) are distinct fields with distinct enums', () => {
+    const rightsField = model('Contribution').fields.find((f) => f.name === 'rightsReviewState');
+    const declarationField = model('Contribution').fields.find((f) => f.name === 'submitterDeclaration');
+    expect(rightsField?.type).toBe('ContributionRightsReviewState');
+    expect(declarationField?.type).toBe('SubmitterRightsDeclaration');
+    expect(rightsField?.type).not.toBe(declarationField?.type);
+  });
 });

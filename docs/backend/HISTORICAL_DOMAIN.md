@@ -142,6 +142,13 @@ disputed area), it must go through `Territory` + `TerritoryGeometryRevision` wit
 source and `HISTORIAN_REVIEWER`/`ADMIN` sign-off (see section 6) - never fabricated from
 model memory.
 
+**Phase 10 update:** a real, source-backed dossier now exists as four individually-cited
+`HistoricalFact` rows (`sensitivity: TERRITORIAL`), never a single collapsed statement - historical
+documents cited by Vietnam's official MOFA position, the 1974 Paracels naval engagement, the
+existence of multiple international claimants, and Vietnam's own current domestic administrative
+organization. Still no `TerritoryGeometry` of any kind. Full contract, including the exact framing
+rationale for each fact: `docs/backend/GOLDEN_DATASET.md` section 9.
+
 ## 4. Person
 
 Birth/death are independent point-value date slots (see section 2) - a person can have a

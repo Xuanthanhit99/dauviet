@@ -44,16 +44,42 @@ ALTER TABLE "Dynasty" ALTER COLUMN "datePrecision" DROP DEFAULT;
 ALTER TABLE "Territory" ALTER COLUMN "datePrecision" DROP DEFAULT;
 ALTER TABLE "HistoricalFact" ALTER COLUMN "datePrecision" DROP DEFAULT;
 ALTER TABLE "CommunityStory" ALTER COLUMN "eventDatePrecision" DROP DEFAULT;
-ALTER TABLE "MediaAsset" ALTER COLUMN "capturePrecision" TYPE "DatePrecision_new" USING ("capturePrecision"::text::"DatePrecision_new");
-ALTER TABLE "Person" ALTER COLUMN "birthPrecision" TYPE "DatePrecision_new" USING ("birthPrecision"::text::"DatePrecision_new");
-ALTER TABLE "Person" ALTER COLUMN "deathPrecision" TYPE "DatePrecision_new" USING ("deathPrecision"::text::"DatePrecision_new");
+-- Phase 12 live-migration fix (found running this migration against a real
+-- Postgres for the first time - previously only PASS_STATIC_MIGRATION_REVIEW,
+-- never actually executed): the offline-generated diff referenced this
+-- column by its NEW name ("capturePrecision"), which does not exist until
+-- the ADD COLUMN below (~40 lines down) - it must convert the column under
+-- its CURRENT name at this point in migration history ("captureDatePrecision"),
+-- which is what actually gets DROPPED a few statements later. This migration
+-- has never been applied to any live database before now (every prior phase
+-- documented it as UNVERIFIED_LIVE_DB), so correcting the historical file
+-- directly is safe - see docs/backend/LIVE_QA_REPORT.md "Migration SQL defects".
+ALTER TABLE "MediaAsset" ALTER COLUMN "captureDatePrecision" TYPE "DatePrecision_new" USING ("captureDatePrecision"::text::"DatePrecision_new");
+-- Same bug class as MediaAsset above: "birthPrecision"/"deathPrecision" are
+-- the NEW names (created later in this migration via ADD COLUMN) - the
+-- existing columns at this point are still "birthDatePrecision"/
+-- "deathDatePrecision".
+ALTER TABLE "Person" ALTER COLUMN "birthDatePrecision" TYPE "DatePrecision_new" USING ("birthDatePrecision"::text::"DatePrecision_new");
+ALTER TABLE "Person" ALTER COLUMN "deathDatePrecision" TYPE "DatePrecision_new" USING ("deathDatePrecision"::text::"DatePrecision_new");
 ALTER TABLE "HistoricalEvent" ALTER COLUMN "datePrecision" TYPE "DatePrecision_new" USING ("datePrecision"::text::"DatePrecision_new");
-ALTER TABLE "HistoricalEra" ALTER COLUMN "startPrecision" TYPE "DatePrecision_new" USING ("startPrecision"::text::"DatePrecision_new");
-ALTER TABLE "HistoricalEra" ALTER COLUMN "endPrecision" TYPE "DatePrecision_new" USING ("endPrecision"::text::"DatePrecision_new");
-ALTER TABLE "Dynasty" ALTER COLUMN "startPrecision" TYPE "DatePrecision_new" USING ("startPrecision"::text::"DatePrecision_new");
-ALTER TABLE "Dynasty" ALTER COLUMN "endPrecision" TYPE "DatePrecision_new" USING ("endPrecision"::text::"DatePrecision_new");
-ALTER TABLE "Territory" ALTER COLUMN "startPrecision" TYPE "DatePrecision_new" USING ("startPrecision"::text::"DatePrecision_new");
-ALTER TABLE "Territory" ALTER COLUMN "endPrecision" TYPE "DatePrecision_new" USING ("endPrecision"::text::"DatePrecision_new");
+-- HistoricalEra/Dynasty/Territory previously had ONE "datePrecision" column
+-- (a single point-in-time date) which this migration replaces with TWO new
+-- columns, "startPrecision"/"endPrecision" (a real period) - there is no
+-- existing 1:1 column to convert here (unlike MediaAsset/Person above, this
+-- is a genuine shape change, not a rename), so the "startPrecision"/
+-- "endPrecision" TYPE-conversion statements the offline diff generated were
+-- simply invalid (referencing columns that do not exist until the ADD
+-- COLUMN statements later in this migration, each already defaulting to
+-- 'UNKNOWN') and were removed. The OLD singular "datePrecision" column on
+-- all three still needs converting here even though it is dropped later in
+-- this same migration - Postgres refuses to DROP TYPE "DatePrecision_old"
+-- below while any column still references it, and the DROP COLUMN
+-- statements for it come after this block, not before (found by actually
+-- running this migration - the first error above stopped short of this
+-- one).
+ALTER TABLE "HistoricalEra" ALTER COLUMN "datePrecision" TYPE "DatePrecision_new" USING ("datePrecision"::text::"DatePrecision_new");
+ALTER TABLE "Dynasty" ALTER COLUMN "datePrecision" TYPE "DatePrecision_new" USING ("datePrecision"::text::"DatePrecision_new");
+ALTER TABLE "Territory" ALTER COLUMN "datePrecision" TYPE "DatePrecision_new" USING ("datePrecision"::text::"DatePrecision_new");
 ALTER TABLE "HistoricalFact" ALTER COLUMN "datePrecision" TYPE "DatePrecision_new" USING ("datePrecision"::text::"DatePrecision_new");
 ALTER TABLE "CommunityStory" ALTER COLUMN "eventDatePrecision" TYPE "DatePrecision_new" USING ("eventDatePrecision"::text::"DatePrecision_new");
 ALTER TYPE "DatePrecision" RENAME TO "DatePrecision_old";

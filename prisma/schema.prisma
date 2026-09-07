@@ -383,9 +383,30 @@ enum EntityKind {
   JOURNEY
   COMMUNITY_STORY
   SOURCE
+  // Added Phase 09 - lets AuditLog/Contribution catalogue-result rows point
+  // precisely at a SourceDocument rather than overloading SOURCE for both.
+  SOURCE_DOCUMENT
   CONTRIBUTION
   MEDIA_ASSET
   COMMENT
+  // Added G01 (Global Backend V2 Extension, Global Geography Foundation) -
+  // additive-only extension of this V1 enum so EntityAlias/AuditLog can
+  // point at the new global geography entities without a parallel alias
+  // table (see docs/backend/GLOBAL_GEOGRAPHY.md section "Aliases"). No
+  // existing value was renamed/removed/reordered.
+  COUNTRY
+  REGION
+  CITY
+  DESTINATION
+  // Added G02 (Global Backend V2 Extension, Provider + Licensing
+  // Foundation) - additive-only, lets AuditLog/Revision point precisely at
+  // a Provider/ProviderLicense/ProviderIntegration row. Reuses the existing
+  // generic Revision model for license/integration policy history rather
+  // than a parallel revision table (spec section 17) - no existing value
+  // was renamed/removed/reordered.
+  PROVIDER
+  PROVIDER_LICENSE
+  PROVIDER_INTEGRATION
 }
 
 enum CommunityStoryType {
@@ -441,6 +462,108 @@ enum ContributionStatus {
   ACCEPTED
   CATALOGUED
   REJECTED
+}
+
+// Phase 09 (spec section 5) - meaningful submission classes without an
+// over-narrow taxonomy. CORRECTION is its own type rather than reusing e.g.
+// PERSONAL_MEMORY, since a correction targets an existing canonical record
+// (see `correctionTargetType`/`correctionTargetId` on Contribution) rather
+// than contributing new material.
+enum ContributionType {
+  DOCUMENT
+  PHOTO
+  ARCHIVAL_PHOTO
+  MAP
+  ORAL_HISTORY
+  PERSONAL_MEMORY
+  FAMILY_ARCHIVE
+  BOOK_REFERENCE
+  LOCAL_HISTORY
+  CORRECTION
+  OTHER
+}
+
+// Phase 09 (spec section 9) - the kind of provenance evidence a submitter is
+// pointing at, distinct from `SourceType` on the canonical `Source` model.
+// A ContributionSource is a claim about where material came from; it never
+// becomes a real Source row just by existing (spec section 9/30).
+enum ContributionSourceType {
+  BOOK
+  ARCHIVE
+  WEBSITE
+  FAMILY_RECORD
+  ORIGINAL_DOCUMENT
+  ORAL_TESTIMONY
+  INSTITUTIONAL
+  OTHER
+}
+
+// Phase 09 (spec section 11) - a reviewer's internal assessment of how
+// well-supported a contribution's claimed provenance is. Never historical
+// certainty (that is `FactCertainty`, only reachable via the real
+// HistoricalFact workflow) and never shown publicly as a trust label
+// without context (spec section 11).
+enum ProvenanceConfidence {
+  UNASSESSED
+  LOW
+  MEDIUM
+  HIGH
+  CONFIRMED
+  DISPUTED
+}
+
+// Phase 09 (spec section 12) - reviewer-controlled rights assessment for a
+// contribution, entirely separate from `submitterDeclaration` below (a
+// submitter's own unadjudicated claim). Reuses the Phase 05 rights-review
+// philosophy (never self-approved) rather than inventing new semantics.
+enum ContributionRightsReviewState {
+  UNREVIEWED
+  NEEDS_INFORMATION
+  APPROVED_FOR_CATALOGUE
+  RESTRICTED
+  REJECTED
+}
+
+// Phase 09 (spec section 13) - the submitter's own claim about their right
+// to share the material. A claim, never an adjudicated rights state -
+// `ContributionRightsReviewState` above is the only field a reviewer acts on.
+enum SubmitterRightsDeclaration {
+  OWN_MATERIAL
+  HAVE_PERMISSION
+  PUBLICLY_AVAILABLE
+  UNKNOWN
+}
+
+// Phase 09 (spec section 64) - how (or whether) a contributor wants public
+// credit if their material is ever catalogued. Never inferred from upload
+// alone (spec section 65).
+enum ContributionAttribution {
+  NAMED
+  ANONYMOUS
+  INSTITUTIONAL
+}
+
+// Phase 09 (spec section 27) - the decision recorded by a single
+// ContributionReviewNote row. Distinct from ContributionStatus - a decision
+// is what a reviewer concluded at one stage, the status is where the
+// contribution currently sits (same distinction as HistoricalFact's
+// ReviewDecision vs FactEditorialStatus).
+enum ContributionReviewDecision {
+  APPROVE
+  REJECT
+  REQUEST_INFO
+  RETURN_TO_PREVIOUS_STAGE
+}
+
+// Phase 09 (spec section 29) - what kind of canonical record a
+// ContributionCatalogueResult row points at. A single ACCEPTED contribution
+// may produce more than one of these (e.g. a Source and its SourceDocument),
+// so this is a set of result rows, never a single nullable pointer.
+enum ContributionCatalogueResultType {
+  SOURCE
+  SOURCE_DOCUMENT
+  MEDIA_ASSET
+  FACT_DRAFT
 }
 
 // =========================================================================
@@ -609,19 +732,21 @@ model MediaAsset {
   parentAsset MediaAsset?  @relation("MediaDerivatives", fields: [parentAssetId], references: [id])
   derivatives MediaAsset[] @relation("MediaDerivatives")
 
-  userAvatars          User[]                  @relation("UserAvatar")
-  placesHero           Place[]                 @relation("PlaceHeroMedia")
-  peopleHero           Person[]                @relation("PersonHeroMedia")
-  eventsHero           HistoricalEvent[]       @relation("EventHeroMedia")
-  storiesHero          Story[]                 @relation("StoryHeroMedia")
-  journeysHero         Journey[]               @relation("JourneyHeroMedia")
-  communityStoriesHero CommunityStory[]        @relation("CommunityStoryHeroMedia")
-  sourceDocuments      SourceDocument[]
-  entityMedia          EntityMedia[]
-  contributionMedia    ContributionMedia[]
-  translations         MediaAssetTranslation[]
-  thenNowBefore        ThenNowComparison[]     @relation("ThenNowBefore")
-  thenNowAfter         ThenNowComparison[]     @relation("ThenNowAfter")
+  userAvatars                  User[]                        @relation("UserAvatar")
+  placesHero                   Place[]                       @relation("PlaceHeroMedia")
+  peopleHero                   Person[]                      @relation("PersonHeroMedia")
+  eventsHero                   HistoricalEvent[]             @relation("EventHeroMedia")
+  storiesHero                  Story[]                       @relation("StoryHeroMedia")
+  journeysHero                 Journey[]                     @relation("JourneyHeroMedia")
+  communityStoriesHero         CommunityStory[]              @relation("CommunityStoryHeroMedia")
+  sourceDocuments              SourceDocument[]
+  entityMedia                  EntityMedia[]
+  contributionMedia            ContributionMedia[]
+  translations                 MediaAssetTranslation[]
+  thenNowBefore                ThenNowComparison[]           @relation("ThenNowBefore")
+  thenNowAfter                 ThenNowComparison[]           @relation("ThenNowAfter")
+  contributionSourceEvidence   ContributionSource[]
+  contributionCatalogueResults ContributionCatalogueResult[]
 
   // Phase 05.1 (spec section 10) - DB-level idempotency for derivative
   // generation: re-running the processor for the same parent upserts the
@@ -688,6 +813,641 @@ model EntityAlias {
   @@unique([entityType, entityId, locale, alias])
   @@index([entityType, entityId])
   @@index([alias])
+}
+
+// =========================================================================
+// GLOBAL GEOGRAPHY  (G01 - Global Backend V2 Extension, Global Geography
+// Foundation)
+//
+// Design notes (see docs/backend/GLOBAL_GEOGRAPHY.md for full rationale):
+// - New, additive domain. Does not rename/replace/repurpose any Phase
+//   00-12.1 model. Place/Person/HistoricalEvent/etc. remain the frozen V1
+//   historical-knowledge entities; Country/Region/City/Destination below are
+//   a separate, global, travel/discovery geography layer per the G00
+//   Product Constitution ("Destination != Place").
+// - Reuses PublicationStatus/TranslationStatus/TranslationMethod (no new
+//   editorial-workflow enums) and the existing EntityAlias/AuditLog
+//   architecture (EntityKind gained COUNTRY/REGION/CITY/DESTINATION above,
+//   additive-only) rather than inventing parallel mechanisms.
+// - Representative point only: plain latitude/longitude Float columns, not
+//   PostGIS geometry. No bbox/ST_DWithin query is needed for these entities
+//   in G01 (Place already owns that for historical sites) - G11 (Global
+//   Search + Map) can add PostGIS geometry additively later if a real
+//   proximity/bbox query requirement emerges.
+// - Hierarchy is deliberately NOT a rigid Country->Region->City->Destination
+//   chain: Region is optional on City and on Destination, City is optional
+//   on Destination, so "Country -> City" and "Country -> Destination" and
+//   "Region -> Destination" all remain valid shapes (spec section 4) - e.g.
+//   an island or heritage area with no containing City.
+// - Slug strategy deliberately differs from every other V1 translation
+//   table: Country keeps the V1 `@@unique([locale, slug])` global
+//   constraint (real-world country-name collisions are not a real risk),
+//   but Region/City/Destination translations do NOT get that global
+//   constraint - common city/region names legitimately collide worldwide
+//   (Springfield, Victoria, San Jose - spec section 14), so it would be
+//   unsafe to promise global per-locale slug uniqueness for those. The
+//   stable, always-unique lookup key for all four is `canonicalSlug` on the
+//   parent model itself (auto-suffixed on collision, same mechanism as
+//   `Place.canonicalSlug`); the scoped routes (`/v1/countries/:c/cities`)
+//   give callers country/region/city context to disambiguate a common name.
+// - No delete endpoint is provided anywhere in this domain (archive via
+//   `status` only) - the same convention Place/Person already use (spec
+//   section 31).
+// =========================================================================
+
+// Broad enough for the known G00 administrative shapes (province, state,
+// prefecture, a centrally-governed "direct administration" municipality
+// such as Hanoi or Tokyo Metropolis) without assuming every country's
+// administrative system resembles Vietnam's (spec section 7). Deliberately
+// does not attempt to model administrative-vs-tourism-region distinctions
+// in G01 - no concrete requirement for a separate TravelRegion model exists
+// yet (spec section 7).
+enum RegionType {
+  PROVINCE
+  STATE
+  PREFECTURE
+  AUTONOMOUS_REGION
+  METROPOLITAN_CITY
+  TERRITORY
+  OTHER
+}
+
+// Broad enough for G00's known use cases (spec section 11) without being
+// excessively speculative - audited against PlaceType/existing enums first;
+// none of them model this "broader than a historical site" travel-discovery
+// concept, so a new enum is genuinely needed here (Destination != Place).
+enum DestinationType {
+  CITY_AREA
+  NEIGHBORHOOD
+  HISTORIC_DISTRICT
+  HERITAGE_AREA
+  ISLAND
+  ARCHIPELAGO
+  NATURAL_AREA
+  NATIONAL_PARK
+  COAST
+  BAY
+  TOURISM_AREA
+  OTHER
+}
+
+model Country {
+  id              String            @id @default(cuid())
+  canonicalSlug   String            @unique
+  // ISO 3166-1 alpha-2/alpha-3, normalized uppercase and validated in the
+  // DTO layer (spec section 5) - never invented/guessed.
+  iso2            String            @unique
+  iso3            String            @unique
+  // Geographical defaults only (spec section 18) - never used to infer a
+  // user's own UI language, and not restricted to this platform's currently
+  // supported translation locales (vi/en): Japan's defaultLocale is "ja"
+  // even though no ja translation exists yet.
+  defaultLocale   String
+  // ISO 4217, normalized uppercase.
+  defaultCurrency String
+  latitude        Float?
+  longitude       Float?
+  status          PublicationStatus @default(DRAFT)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  translations CountryTranslation[]
+  regions      Region[]
+  cities       City[]
+  destinations Destination[]
+
+  @@index([status])
+}
+
+model CountryTranslation {
+  id               String            @id @default(cuid())
+  countryId        String
+  locale           String
+  name             String
+  slug             String
+  shortDescription String?
+  description      String?
+  seoTitle         String?
+  seoDescription   String?
+  status           TranslationStatus @default(DRAFT)
+  method           TranslationMethod @default(ORIGINAL)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  country Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
+  @@unique([countryId, locale])
+  @@unique([locale, slug])
+}
+
+model Region {
+  id             String            @id @default(cuid())
+  canonicalSlug  String            @unique
+  countryId      String
+  parentRegionId String?
+  type           RegionType
+  code           String?
+  latitude       Float?
+  longitude      Float?
+  status         PublicationStatus @default(DRAFT)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  country      Country  @relation(fields: [countryId], references: [id])
+  parentRegion Region?  @relation("RegionHierarchy", fields: [parentRegionId], references: [id])
+  childRegions Region[] @relation("RegionHierarchy")
+
+  translations RegionTranslation[]
+  cities       City[]
+  destinations Destination[]
+
+  @@index([countryId])
+  @@index([parentRegionId])
+  @@index([type])
+  @@index([status])
+}
+
+// No global `@@unique([locale, slug])` - see the domain-level design note
+// above. `slug` is still generated and stored for future localized-route
+// use, just not promised globally unique.
+model RegionTranslation {
+  id             String            @id @default(cuid())
+  regionId       String
+  locale         String
+  name           String
+  slug           String
+  summary        String?
+  description    String?
+  seoTitle       String?
+  seoDescription String?
+  status         TranslationStatus @default(DRAFT)
+  method         TranslationMethod @default(ORIGINAL)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  region Region @relation(fields: [regionId], references: [id], onDelete: Cascade)
+
+  @@unique([regionId, locale])
+}
+
+model City {
+  id            String            @id @default(cuid())
+  canonicalSlug String            @unique
+  countryId     String
+  // Optional (spec section 9) - Country is authoritative; not every city
+  // needs a Region parent.
+  regionId      String?
+  // IANA timezone identifier (e.g. "Asia/Tokyo"), validated against
+  // Intl.supportedValuesOf('timeZone') in the service layer - never just a
+  // fixed UTC offset (spec section 17 - DST exists).
+  timezone      String
+  latitude      Float?
+  longitude     Float?
+  importance    Int               @default(0)
+  status        PublicationStatus @default(DRAFT)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  country Country @relation(fields: [countryId], references: [id])
+  region  Region? @relation(fields: [regionId], references: [id])
+
+  translations CityTranslation[]
+  destinations Destination[]
+
+  @@index([countryId])
+  @@index([regionId])
+  @@index([status])
+}
+
+// No global `@@unique([locale, slug])` - see the domain-level design note
+// above (Springfield/Victoria/San Jose collision risk across countries).
+model CityTranslation {
+  id             String            @id @default(cuid())
+  cityId         String
+  locale         String
+  name           String
+  slug           String
+  summary        String?
+  description    String?
+  seoTitle       String?
+  seoDescription String?
+  status         TranslationStatus @default(DRAFT)
+  method         TranslationMethod @default(ORIGINAL)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@unique([cityId, locale])
+}
+
+model Destination {
+  id            String            @id @default(cuid())
+  canonicalSlug String            @unique
+  countryId     String
+  // Both optional (spec section 11) - Country is required and authoritative;
+  // Region/City are additional, validated-consistent context, not a
+  // mandatory chain.
+  regionId      String?
+  cityId        String?
+  type          DestinationType
+  latitude      Float?
+  longitude     Float?
+  importance    Int               @default(0)
+  status        PublicationStatus @default(DRAFT)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  country Country @relation(fields: [countryId], references: [id])
+  region  Region? @relation(fields: [regionId], references: [id])
+  city    City?   @relation(fields: [cityId], references: [id])
+
+  translations DestinationTranslation[]
+
+  @@index([countryId])
+  @@index([regionId])
+  @@index([cityId])
+  @@index([type])
+  @@index([status])
+}
+
+// No global `@@unique([locale, slug])` - see the domain-level design note
+// above.
+model DestinationTranslation {
+  id             String            @id @default(cuid())
+  destinationId  String
+  locale         String
+  name           String
+  slug           String
+  summary        String?
+  description    String?
+  seoTitle       String?
+  seoDescription String?
+  status         TranslationStatus @default(DRAFT)
+  method         TranslationMethod @default(ORIGINAL)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, locale])
+}
+
+// =========================================================================
+// PROVIDER + LICENSING FOUNDATION  (G02 - Global Backend V2 Extension)
+//
+// Design notes (see docs/backend/PROVIDER_LICENSING.md for full rationale):
+// - "No external dataset can become active unless the platform knows what
+//   it is legally and technically allowed to do with that data." This
+//   domain is pure infrastructure/governance - it does not integrate any
+//   real provider API (that is G05's job) and is entirely geography-
+//   independent (no relation to Country/Region/City/Destination - spec
+//   section 37) and entirely separate from the V1 historical Source/
+//   Citation trust chain (spec section 38/39 - an ExternalProvider record
+//   NEVER becomes historical evidence).
+// - Named `ExternalProvider`, not `TravelProvider` (spec section 5) -
+//   future providers may include maps/currency/weather, not just travel.
+// - Rights are tri/four-state (`ProviderRightState`: UNKNOWN/ALLOWED/
+//   PROHIBITED/CONDITIONAL), never a plain Boolean (spec section 11) - a
+//   `false` must never be allowed to mean both "explicitly forbidden" and
+//   "not yet reviewed" at once.
+// - `ProviderLicense.status` alone drives the review lifecycle (DRAFT ->
+//   TERMS_REVIEW -> LEGAL_REVIEW -> APPROVED -> {EXPIRED, REVOKED,
+//   REJECTED}) - no separate, potentially-contradicting `reviewStatus`
+//   field was added; `reviewedAt`/`reviewedById` remain as audit pointers,
+//   same convention as `HistoricalFact.reviewedById`.
+// - History/provenance reuses the EXISTING generic `Revision` model
+//   (EntityKind gained PROVIDER/PROVIDER_LICENSE/PROVIDER_INTEGRATION,
+//   additive) rather than a parallel `ProviderLicenseRevision` table (spec
+//   section 17 explicitly calls for auditing existing mechanisms first).
+// - `ProviderDataPolicy` (operational retention/cache numbers) is
+//   deliberately kept separate from `ProviderLicense` (the legal rights
+//   grant) even though both are scoped per capability: a License's rights
+//   review has a different approval cadence/authority (legal review) than
+//   tuning an operational cache-TTL number, and every DataPolicy still
+//   traces back to the License that authorizes it (`licenseId`, required).
+// - `ProviderPolicyEvidence` attaches to a License only (not a separate
+//   polymorphic "policy" pointer) - every DataPolicy/AttributionRule
+//   already links back to a License, so evidence-for-a-License covers them
+//   transitively without a messier polymorphic evidence table.
+// - Activation is never a cached decision: `ProviderIntegrationCapability`
+//   existence is a write-time admin record, but the real serving gate
+//   (`ProviderRegistryService.getExecutionContext`, application code, not
+//   schema) re-evaluates provider/integration/capability/license state
+//   fresh from the database on every call, so a license revocation or
+//   expiry takes effect immediately with nothing to invalidate (spec
+//   sections 20/42/43).
+// =========================================================================
+
+enum ProviderStatus {
+  DRAFT
+  UNDER_REVIEW
+  ACTIVE
+  SUSPENDED
+  DISABLED
+  EXPIRED
+}
+
+enum ProviderEnvironment {
+  SANDBOX
+  PRODUCTION
+}
+
+// How our own integration authenticates with this provider - metadata
+// only, never a secret value (spec section 9).
+enum ProviderCredentialMode {
+  NONE
+  API_KEY
+  OAUTH2
+  PARTNER_CONTRACT
+  OTHER
+}
+
+// A disciplined initial taxonomy (spec section 7), not an enum entry per
+// hypothetical API action. Extend additively as a genuine G05+ need
+// arises - do not pre-populate speculative values.
+enum ProviderCapabilityType {
+  PLACE_SEARCH
+  PLACE_DETAIL
+  NEARBY_SEARCH
+  TEXT_SEARCH
+  ACCOMMODATION_SEARCH
+  ACCOMMODATION_DETAIL
+  LIVE_PRICE
+  AVAILABILITY
+  RESTAURANT_SEARCH
+  RESTAURANT_DETAIL
+  ACTIVITY_SEARCH
+  ACTIVITY_DETAIL
+  FLIGHT_SEARCH
+  CAR_RENTAL_SEARCH
+  REVIEWS
+  PHOTOS
+  BOOKING_REDIRECT
+  BOOKING_API
+  AFFILIATE_LINK
+  WEBHOOK
+  CONVERSION_REPORTING
+}
+
+enum ProviderIntegrationStatus {
+  NOT_CONFIGURED
+  PENDING_APPROVAL
+  CONFIGURED
+  ACTIVE
+  SUSPENDED
+  FAILED
+  REVOKED
+}
+
+// The tri/four-state rights representation (spec section 11). CONDITIONAL
+// carries its constraint in the sibling `*Notes`/`conditionalNotes` field -
+// never collapsed into a bare boolean.
+enum ProviderRightState {
+  UNKNOWN
+  ALLOWED
+  PROHIBITED
+  CONDITIONAL
+}
+
+enum ProviderLicenseStatus {
+  DRAFT
+  TERMS_REVIEW
+  LEGAL_REVIEW
+  APPROVED
+  EXPIRED
+  REVOKED
+  REJECTED
+}
+
+enum ProviderAttributionRequirement {
+  UNKNOWN
+  REQUIRED
+  NOT_REQUIRED
+  CONDITIONAL
+}
+
+enum ProviderPolicyEvidenceSourceType {
+  OFFICIAL_TERMS
+  OFFICIAL_DEVELOPER_DOC
+  OFFICIAL_PARTNER_DOC
+  OFFICIAL_PRICING_DOC
+  CONTRACT
+  LEGAL_REVIEW
+  OTHER
+}
+
+model ExternalProvider {
+  id                    String                 @id @default(cuid())
+  // Stable, machine-readable, unique (spec section 6) - e.g. GOOGLE_PLACES.
+  // No provider-specific business logic is ever hardcoded against this
+  // string outside of test fixtures; real adapters register by code.
+  code                  String                 @unique
+  name                  String
+  status                ProviderStatus         @default(DRAFT)
+  websiteUrl            String?
+  developerUrl          String?
+  partnerPortalUrl      String?
+  credentialMode        ProviderCredentialMode @default(NONE)
+  // Which environments this provider generally offers (e.g. some providers
+  // have no sandbox) - a plain scalar list, same convention as
+  // `User.roles: Role[]`.
+  supportedEnvironments ProviderEnvironment[]  @default([])
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  capabilities     ProviderCapability[]
+  integrations     ProviderIntegration[]
+  licenses         ProviderLicense[]
+  dataPolicies     ProviderDataPolicy[]
+  attributionRules ProviderAttributionRule[]
+
+  @@index([status])
+}
+
+// What the provider TECHNICALLY supports (spec section 7) - independent of
+// whether OUR account is approved/enabled for it (see
+// ProviderIntegrationCapability below).
+model ProviderCapability {
+  id         String                 @id @default(cuid())
+  providerId String
+  capability ProviderCapabilityType
+  notes      String?
+  createdAt  DateTime               @default(now())
+
+  provider ExternalProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, capability])
+  @@index([providerId])
+}
+
+// Our own account/environment-specific integration state (spec section 8) -
+// distinct from the provider's mere existence. `credentialReference` is an
+// env-var/secret-manager KEY NAME only, never a secret value (spec
+// section 9).
+model ProviderIntegration {
+  id                  String                    @id @default(cuid())
+  providerId          String
+  environment         ProviderEnvironment
+  status              ProviderIntegrationStatus @default(NOT_CONFIGURED)
+  credentialReference String?
+  configuredAt        DateTime?
+  lastVerifiedAt      DateTime?
+  notes               String?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  provider ExternalProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  enabledCapabilities ProviderIntegrationCapability[]
+
+  @@unique([providerId, environment])
+  @@index([providerId])
+  @@index([status])
+}
+
+// Capability ENABLED_FOR_OUR_ACCOUNT (spec section 7's "a provider may
+// technically support BOOKING_API, but our account may only be approved
+// for BOOKING_REDIRECT"). Existence of this row (written only through the
+// gated activation path, never a bare upsert) is the enablement signal;
+// the real serving gate still re-checks the underlying license live on
+// every use (see design note above) - this row is a write-time record, not
+// a cached "safe to serve" flag.
+model ProviderIntegrationCapability {
+  id            String                 @id @default(cuid())
+  integrationId String
+  capability    ProviderCapabilityType
+  approvedAt    DateTime?
+  notes         String?
+  createdAt     DateTime               @default(now())
+
+  integration ProviderIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@unique([integrationId, capability])
+  @@index([integrationId])
+}
+
+// The legal/contractual rights grant (spec sections 10-13). Scoped to a
+// specific product/dataset and, where meaningful, a specific capability -
+// spec section 13's "do NOT assume one provider = one license" (e.g.
+// Google Places data vs Google Places photos can carry different rights).
+model ProviderLicense {
+  id               String                  @id @default(cuid())
+  providerId       String
+  // Human label for the licensed product/dataset (e.g. "Places API core
+  // data", "Place Photos") - always required, independent of `capability`.
+  datasetOrProduct String
+  // Optional narrower scope when this license maps cleanly onto one
+  // capability; null means it applies at the datasetOrProduct level only.
+  capability       ProviderCapabilityType?
+  licenseType      String?
+  status           ProviderLicenseStatus   @default(DRAFT)
+
+  rightsDisplay       ProviderRightState @default(UNKNOWN)
+  rightsCache         ProviderRightState @default(UNKNOWN)
+  rightsStore         ProviderRightState @default(UNKNOWN)
+  rightsModify        ProviderRightState @default(UNKNOWN)
+  rightsRedistribute  ProviderRightState @default(UNKNOWN)
+  rightsCommercialUse ProviderRightState @default(UNKNOWN)
+  // Required whenever any right above is CONDITIONAL (service-enforced,
+  // not a DB constraint - see ProviderLicensesService).
+  conditionalNotes    String?
+
+  attributionRequirement ProviderAttributionRequirement @default(UNKNOWN)
+
+  termsUrl          String
+  privacyUrl        String?
+  developerTermsUrl String?
+
+  effectiveFrom  DateTime?
+  effectiveUntil DateTime?
+
+  reviewedAt   DateTime?
+  reviewedById String?
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  provider         ExternalProvider          @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  dataPolicies     ProviderDataPolicy[]
+  attributionRules ProviderAttributionRule[]
+  evidence         ProviderPolicyEvidence[]
+
+  @@index([providerId])
+  @@index([status])
+  @@index([providerId, capability])
+}
+
+// Operational retention/cache configuration (spec section 16) - always
+// traces back to the License that authorizes it. Deliberately separate
+// from ProviderLicense - see the domain design note above.
+model ProviderDataPolicy {
+  id         String                 @id @default(cuid())
+  providerId String
+  licenseId  String
+  capability ProviderCapabilityType
+
+  cacheAllowed                ProviderRightState @default(UNKNOWN)
+  maxCacheSeconds             Int?
+  storeIdentityAllowed        ProviderRightState @default(UNKNOWN)
+  storeContentAllowed         ProviderRightState @default(UNKNOWN)
+  refreshRequiredAfterSeconds Int?
+  deleteAfterSeconds          Int?
+  persistentIdentifierAllowed ProviderRightState @default(UNKNOWN)
+
+  policySourceUrl String?
+  reviewedAt      DateTime?
+  reviewedById    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  provider ExternalProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  license  ProviderLicense  @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  @@unique([licenseId, capability])
+  @@index([providerId])
+}
+
+// First-class attribution requirement (spec section 14) - never left to
+// frontend conditionals. `licenseId` optional (a provider-wide default
+// attribution rule not tied to one license is representable).
+model ProviderAttributionRule {
+  id             String                         @id @default(cuid())
+  providerId     String
+  licenseId      String?
+  capability     ProviderCapabilityType?
+  requirement    ProviderAttributionRequirement @default(UNKNOWN)
+  displayText    String?
+  logoRequired   Boolean                        @default(false)
+  linkUrl        String?
+  placementNotes String?
+  expiresAt      DateTime?
+  createdAt      DateTime                       @default(now())
+  updatedAt      DateTime                       @updatedAt
+
+  provider ExternalProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  license  ProviderLicense? @relation(fields: [licenseId], references: [id])
+
+  @@index([providerId])
+}
+
+// Provenance for a License's rights determination (spec section 18) - only
+// metadata/URL/short internal summary, never full copyrighted terms text.
+model ProviderPolicyEvidence {
+  id          String                           @id @default(cuid())
+  licenseId   String
+  title       String
+  sourceUrl   String
+  accessedAt  DateTime
+  sourceType  ProviderPolicyEvidenceSourceType
+  notes       String?
+  createdById String?
+  createdAt   DateTime                         @default(now())
+
+  license ProviderLicense @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  @@index([licenseId])
 }
 
 // =========================================================================
@@ -1309,10 +2069,11 @@ model Source {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
-  translations    SourceTranslation[]
-  citations       Citation[]
-  sourceDocuments SourceDocument[]
-  mediaAssets     MediaAsset[]
+  translations                 SourceTranslation[]
+  citations                    Citation[]
+  sourceDocuments              SourceDocument[]
+  mediaAssets                  MediaAsset[]
+  contributionCatalogueResults ContributionCatalogueResult[]
 
   @@index([sourceType])
   @@index([archivedAt])
@@ -1376,8 +2137,9 @@ model SourceDocument {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
-  source     Source     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id])
+  source                       Source                        @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  mediaAsset                   MediaAsset                    @relation(fields: [mediaAssetId], references: [id])
+  contributionCatalogueResults ContributionCatalogueResult[]
 
   @@index([sourceId])
 }
@@ -1955,30 +2717,84 @@ model UserBadge {
 // =========================================================================
 
 model Contribution {
-  id              String             @id @default(cuid())
-  contributorId   String
-  status          ContributionStatus @default(SUBMITTED)
-  title           String
-  description     String?
-  originSource    String?
-  currentOwner    String?
-  sharingRights   String?
-  approxDateLabel String?
-  approxDateStart DateTime?
-  approxDateEnd   DateTime?
-  peopleShown     String[]           @default([])
-  placeId         String?
-  contextNote     String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  id                   String                        @id @default(cuid())
+  contributorId        String
+  type                 ContributionType              @default(OTHER)
+  status               ContributionStatus            @default(SUBMITTED)
+  title                String
+  description          String?
+  originSource         String?
+  currentOwner         String?
+  sharingRights        String?
+  approxDateLabel      String?
+  approxDateStart      DateTime?
+  approxDateEnd        DateTime?
+  peopleShown          String[]                      @default([])
+  placeId              String?
+  contextNote          String?
+  // Original submission language, preserved verbatim (spec section 7) - AI-
+  // assisted translation is a separate, disclosed concern layered on later,
+  // never applied silently here.
+  originalLocale       String                        @default("vi")
+  // Contextual-only entity tag beyond `placeId` (spec section 8) - e.g. a
+  // Person/HistoricalEvent/HistoricalEra/Territory this material relates
+  // to. Plain polymorphic scalar pair, same convention as Comment/Bookmark/
+  // Report (`targetType`/`targetId`) rather than four separate nullable
+  // FKs - linking never implies verification of the material itself.
+  linkedEntityType     EntityKind?
+  linkedEntityId       String?
+  // CORRECTION contributions point at the canonical record they propose to
+  // fix (spec section 20) - validated against a closed allow-list and
+  // existence-checked in ContributionsService (never a trusted arbitrary
+  // targetType/targetId).
+  correctionTargetType EntityKind?
+  correctionTargetId   String?
+  // Submitter's own rights claim (spec section 13) - a claim, never an
+  // adjudicated rights state. Kept structurally separate from
+  // `rightsReviewState` below, which only a reviewer can set.
+  submitterDeclaration SubmitterRightsDeclaration?
+  attribution          ContributionAttribution?
+  // Reviewer-only assessments (spec sections 11/12) - never derived from,
+  // or overwritten by, any submitter-supplied field above.
+  provenanceConfidence ProvenanceConfidence          @default(UNASSESSED)
+  rightsReviewState    ContributionRightsReviewState @default(UNREVIEWED)
+  // Workflow-control sensitivity, the same enum/semantics as
+  // HistoricalFact.sensitivity (spec section 40) - never a special-cased
+  // place/topic check.
+  sensitivity          FactSensitivity               @default(NORMAL)
+  // Set true by a REQUEST_INFO review decision, cleared the moment the
+  // submitter edits the contribution again (spec sections 23/58) - avoids
+  // fragile "check the latest review note" log-diffing to answer "is this
+  // waiting on the submitter right now".
+  needsInfo            Boolean                       @default(false)
+  rejectionReason      String?
+  rejectedById         String?
+  rejectedAt           DateTime?
+  withdrawnAt          DateTime?
+  // Denormalized "latest reviewer touched this" pointer (spec section 6) -
+  // ContributionReviewNote (below) remains the append-only source of truth
+  // for full review history, same convention as HistoricalFact.reviewedById.
+  lastReviewedById     String?
+  lastReviewedAt       DateTime?
+  // Optimistic-concurrency guard (spec section 53/54) - every review/
+  // transition/catalogue action must pass the version it last read; the
+  // update increments it, so two reviewers finalizing at once cannot both
+  // silently win. True concurrent-write races remain UNVERIFIED_LIVE_DB.
+  version              Int                           @default(0)
+  createdAt            DateTime                      @default(now())
+  updatedAt            DateTime                      @updatedAt
 
   contributor User   @relation(fields: [contributorId], references: [id])
   place       Place? @relation(fields: [placeId], references: [id])
 
-  media       ContributionMedia[]
-  reviewNotes ContributionReviewNote[]
+  media              ContributionMedia[]
+  reviewNotes        ContributionReviewNote[]
+  provenanceEvidence ContributionSource[]
+  catalogueResults   ContributionCatalogueResult[]
 
   @@index([status])
+  @@index([contributorId])
+  @@index([type])
 }
 
 model ContributionMedia {
@@ -1993,15 +2809,76 @@ model ContributionMedia {
 }
 
 model ContributionReviewNote {
-  id             String             @id @default(cuid())
+  id             String                      @id @default(cuid())
   contributionId String
   reviewerId     String
   stage          ContributionStatus
+  // Nullable for migration-safety on the pre-existing table (spec section
+  // 26/27) - every review action written by the current service always
+  // sets it; only historical rows from before this field existed can lack
+  // one.
+  decision       ContributionReviewDecision?
   note           String
-  createdAt      DateTime           @default(now())
+  createdAt      DateTime                    @default(now())
 
   contribution Contribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
   reviewer     User         @relation(fields: [reviewerId], references: [id])
 
   @@index([contributionId])
+}
+
+// Structured provenance evidence a submitter points to (spec sections 9/10)
+// - a book/archive/family-record/oral-testimony/etc. claim. Never becomes a
+// canonical Source automatically (spec section 9/30); it exists purely to
+// give a PROVENANCE_REVIEW reviewer something concrete to assess. Unknown
+// fields stay null - nothing here is ever fabricated to fill a gap.
+model ContributionSource {
+  id                   String                 @id @default(cuid())
+  contributionId       String
+  referenceType        ContributionSourceType
+  claimedCreator       String?
+  claimedOwner         String?
+  acquisitionMethod    String?
+  approxDateLabel      String?
+  sourceOrganization   String?
+  archiveCatalogRef    String?
+  publicationInfo      String?
+  url                  String?
+  notes                String?
+  // Optional attached evidence (e.g. a photo of a family record's cover) -
+  // still just a plain MediaAsset, still subject to the same ownership
+  // rules as every other contribution media reference.
+  evidenceMediaAssetId String?
+  createdAt            DateTime               @default(now())
+
+  contribution  Contribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  evidenceMedia MediaAsset?  @relation(fields: [evidenceMediaAssetId], references: [id])
+
+  @@index([contributionId])
+}
+
+// What a CATALOGUED contribution actually produced (spec sections 28/29/52)
+// - one row per canonical output. Deliberately a set of rows, not a single
+// nullable `createdSourceId` column, since one contribution can plausibly
+// produce a Source, a SourceDocument, and one or more MediaAsset promotions.
+// Also the idempotency anchor (spec section 52): ContributionsService checks
+// for an existing row of the relevant resultType before creating a second
+// canonical record for the same contribution.
+model ContributionCatalogueResult {
+  id               String                          @id @default(cuid())
+  contributionId   String
+  resultType       ContributionCatalogueResultType
+  sourceId         String?
+  sourceDocumentId String?
+  mediaAssetId     String?
+  createdById      String
+  createdAt        DateTime                        @default(now())
+
+  contribution   Contribution    @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  source         Source?         @relation(fields: [sourceId], references: [id])
+  sourceDocument SourceDocument? @relation(fields: [sourceDocumentId], references: [id])
+  mediaAsset     MediaAsset?     @relation(fields: [mediaAssetId], references: [id])
+
+  @@index([contributionId])
+  @@index([resultType])
 }

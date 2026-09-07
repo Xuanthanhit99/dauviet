@@ -1,7 +1,34 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsEnum, IsInt, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator';
+import { ArrayMinSize, IsArray, IsEnum, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator';
 import { CommunityStoryType, DatePrecision } from '@prisma/client';
+import { CursorPaginationQuery } from '../../../common/dto/pagination.dto';
+
+/**
+ * Phase 11 contract-hardening fix (spec section 13/14): `sort`/`type` were
+ * previously read via bare `@Query('sort')`/`@Query('type')` parameter
+ * bindings with no validation - an unrecognized `sort` value silently fell
+ * back to the default order instead of a predictable 400, and `type` was
+ * never checked against the real `CommunityStoryType` enum at all. Both
+ * are now validated the same way every other filter/query DTO in this
+ * codebase already is.
+ */
+export class ListCommunityStoriesQueryDto extends CursorPaginationQuery {
+  @ApiPropertyOptional({ enum: CommunityStoryType })
+  @IsOptional()
+  @IsEnum(CommunityStoryType)
+  type?: CommunityStoryType;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  placeId?: string;
+
+  @ApiPropertyOptional({ enum: ['NEW', 'HELPFUL'] })
+  @IsOptional()
+  @IsIn(['NEW', 'HELPFUL'])
+  sort?: 'NEW' | 'HELPFUL';
+}
 
 export class CommunityStoryTranslationInputDto {
   @ApiProperty({ example: 'vi' })

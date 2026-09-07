@@ -101,7 +101,14 @@ export class SearchService {
           slug: row.slug,
           title: row.title,
           matchedOn: row.aliasSimilarity > row.nameSimilarity ? 'alias' : 'name',
-          score: similarity + row.importanceBonus + (row.exactMatch ? EXACT_MATCH_BONUS : 0),
+          // Phase 12 live-QA fix: `historicalImportance * 0.01` is a Postgres
+          // `numeric` result, which node-postgres returns as a string (unlike
+          // `real`/`integer`, which come back as JS numbers) - `similarity +
+          // row.importanceBonus` was silently doing string concatenation
+          // (e.g. "0.31" + "0.09" => "0.310.09") instead of addition. Only
+          // visible against a real database - Prisma-mocked unit tests never
+          // exercised the pg driver's actual NUMERIC-to-string behavior.
+          score: similarity + Number(row.importanceBonus) + (row.exactMatch ? EXACT_MATCH_BONUS : 0),
           locale,
           actualLocale: row.matchedLocale,
           fallbackUsed: row.matchedLocale !== null && row.matchedLocale !== locale,

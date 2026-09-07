@@ -78,6 +78,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error: body,
       path: req.url,
       timestamp: new Date().toISOString(),
+      // Correlation id (spec Phase 11 section 8/86) - set by
+      // RequestIdMiddleware on every request; also echoed as the
+      // `X-Request-Id` response header on every response, success or error.
+      requestId: req.id,
     });
   }
 }
