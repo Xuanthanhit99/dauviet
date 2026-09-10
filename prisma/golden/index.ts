@@ -12,3 +12,7 @@ export * from './journeys';
 export * from './editorial';
 // G01 - Global Backend V2 Extension, Global Geography Foundation.
 export * from './geography';
+// G03 - Global Historical Knowledge Extension (small Japan fixture).
+export * from './japan';
+// G04 - Destination Discovery (small VN+JP composition fixture).
+export * from './destination-discovery';

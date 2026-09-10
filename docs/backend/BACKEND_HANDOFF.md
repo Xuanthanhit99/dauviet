@@ -16,7 +16,24 @@ pnpm db:seed                 # golden dataset + dev accounts
 pnpm api:dev                 # NestJS on :3000, prefix /v1, Swagger at /docs
 ```
 
-Env vars are documented in `/.env.example` (copied to `apps/api` implicitly - the API reads the same variables via `@nestjs/config`). Key ones: `DATABASE_URL`, `REDIS_URL`, `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` (min 32 chars, validated at boot), `S3_*` (MinIO locally), `SMTP_*` (Mailhog locally), `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (optional - Google auth degrades gracefully without them, see section 7).
+Env vars are documented in `/.env.example` (root) and `apps/api/.env.example` (a pointer to the root file). Key ones: `DATABASE_URL`, `REDIS_URL`, `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` (min 32 chars, validated at boot), `S3_*` (MinIO locally), `SMTP_*` (Mailhog locally), `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (optional - Google auth degrades gracefully without them, see section 7).
+
+### 1a. Environment variable resolution (post-G03 operational hardening)
+
+**Two separate `.env` files exist in this repo and they are consulted by two different process boundaries - never conflate them:**
+
+- **Repository-root `.env`** (`/.env`) - read by the **Prisma CLI only** (`prisma migrate`/`prisma generate`/`prisma db seed`, i.e. the `pnpm db:*` scripts in the root `package.json`), always invoked with the repo root as the working directory. This is also where any *other* project's tooling on the same machine keeps its own root `.env` - never assume this file's `DATABASE_URL`/`REDIS_URL` point at this project's own database.
+- **`apps/api/.env`** - read by the **compiled/dev API process itself** (`pnpm api:dev`, `nest start`, `node dist/main.js`, and the OpenAPI generation script). This is the only `.env` file the running server ever consults.
+
+**Why this distinction is load-bearing (real G03 live-QA defect, now closed):** `@prisma/client`'s own generated runtime does its own `.env` auto-discovery, resolved relative to the directory `prisma/schema.prisma` lives in - the **repository root** - as an import-time side effect the moment `PrismaModule` is imported. Because `AppModule` imports `PrismaModule` *before* the `@Module({ imports: [ConfigModule.forRoot(...), ...] })` decorator itself runs (which is what triggers `ConfigModule`'s own, separate, cwd-relative `.env` load), Prisma's root-`.env` read would win the race and silently set `DATABASE_URL`/`REDIS_URL` from the **wrong** file before `apps/api/.env` ever got a chance - neither loader overwrites an already-set `process.env` value, so whichever runs first wins for the life of the process. In one real session this pointed a real server boot at an unrelated project's Postgres instance with the wrong credentials.
+
+**The fix:** `apps/api/src/config/load-env.ts` is imported as the literal first line of every API entrypoint (`main.ts`, `generate-openapi.ts`) - before `AppModule` or anything that transitively imports `@prisma/client`. It reads **only** `apps/api/.env` and applies each value to `process.env` **without ever overwriting a key that is already set**. This gives one deterministic precedence contract, highest priority first:
+
+1. **A value already present in `process.env` when the Node process starts** - a real shell export, a Docker/Compose `environment:` entry, or a production/CI-injected secret. **Always authoritative, never overwritten by any file.**
+2. **`apps/api/.env`**, applied by `load-env.ts`, for whichever keys step 1 didn't already supply.
+3. Nothing else. The repository-root `.env` is never read by the running server (only by the Prisma CLI, a different process, as described above).
+
+This holds identically in every context: local `pnpm api:dev`/`node dist/main.js` (steps 1-2 as above, `apps/api/.env` copied from `apps/api/.env.example` → root `.env.example` per the setup command in section 1), Docker/Compose or any real container (nothing ever sets step-1 variables via a file inside the image - `environment:`/secret injection is step 1 and wins outright, matching the pre-existing, unchanged behavior of "an already-set var is never replaced"), and the Jest unit suite (`test-env-setup.ts`'s existing `setDefault(...)` pattern is the same one-way, non-overriding contract, just with safe fake defaults - unchanged by this hardening). `load-env.ts` never logs any variable's value, only (via its own unit tests) which *keys* it set.
 
 Migrations live in `prisma/migrations/`. The first (`20260903000000_init`) is the full schema DDL generated offline via `prisma migrate diff` (this repo's sandbox could not reach a live Postgres - see the freeze report). The second (`20260903000001_search_and_spatial_indexes`) adds hand-written PostGIS GiST indexes and pg_trgm GIN indexes that Prisma cannot express natively. Both are ordinary migrations - `prisma migrate deploy` applies them normally against a real database.
 
@@ -943,3 +960,66 @@ via the real `nest build` + `openapi:generate` path after every code change (nev
 credentials, or activation (G05), Trip/geography-provider linking (`ProviderEntityReference`,
 `AccommodationIdentity`, etc. - G05/G06), affiliate/monetization tracking (G10). No `Trip`,
 `Affiliate`, or hotel/restaurant/activity table exists anywhere in this codebase as of G02.
+
+## 16. GLOBAL BACKEND V2 EXTENSION - G03 status
+
+**G03 (Global Historical Knowledge Extension)**, built on the unchanged V1/G01/G02 baselines.
+**Verdict: COMPLETE.** Added `DateEra` (BCE/CE), pure-integer chronology ordinal columns
+(`*ChronologyStart`/`*ChronologyEnd`, authoritative over the legacy `Date`-based `sortStart`/
+`sortEnd` for ordering/range-filtering as of this phase), `Place.currentCountryId`/
+`currentRegionId`/`currentCityId`, `EventCountry`, `EraCountry`, `PersonPlace`. Full contract in
+the migration's own doc comment (`prisma/migrations/20260908000000_g03_global_historical_
+knowledge/migration.sql`) and `chronology-backfill-parity.spec.ts`.
+
+**What was proven live:** Migration Path A (fresh DB, all 15 migrations including G03) and Path B
+(a real pre-G03 seeded database - reconstructed from the git commit immediately before G03 was
+added - with the G03 migration applied on top, proving the legacy-year validation guard and the
+in-migration chronology backfill against genuine pre-existing rows, not synthetic ones); direct
+`psql` chronology verification for representative CE years (1010/1288/1789/1945/1954/1975),
+hand-matching the same formula `chronology-backfill-parity.spec.ts` already proves in TypeScript; a
+BCE/CE live query matrix (a disposable, cleaned-up BCE probe era, since no Golden Dataset content
+has an authoritative exact BCE date - see below); the small Japan historical fixture (3 eras, 5
+events, 2 people, 9 sources including 2 genuine `ja`-language government sources, 8 published
+facts) live-served correctly in vi/en; seed idempotency (exact before/after counts); RBAC/audit/a
+real PostgreSQL rollback proof; full V1/G01/G02 regression; OpenAPI regenerated with zero drift.
+
+**Post-G03 operational hardening** (a separate, immediately-following remediation): closed a real
+environment-precedence defect found during G03's own live QA - see section 1a above.
+
+**Deferred/explicitly out of scope:** Cổ Loa's traditional ~257 BCE founding date was **not**
+seeded (left as `UNKNOWN_DATE`/`TRADITIONAL_ACCOUNT`, unchanged) - no Tier A/B source was found
+with a defensible exact-date representation, the same reasoning that excluded Emperor Jimmu's
+legendary 660 BCE founding date from the Japan fixture. G11 global search/map BCE support remains
+G11 scope.
+
+## 17. GLOBAL BACKEND V2 EXTENSION - G04 status
+
+**G04 (Destination Discovery)**, built on the unchanged V1/G01/G02/G03 baselines. **Verdict:
+COMPLETE.** Full contract: `docs/backend/G04_DESTINATION_DISCOVERY.md`. Summary: additive-only
+`DestinationPlace`/`Theme`/`Story`/`Journey`/`Event` composition relations, `DestinationCollection`
+(+ translation/membership), `Destination.heroMediaId`, `DestinationTranslation.tagline`/
+`whyVisit`; a deterministic, documented discovery-ranking formula and a computed (never persisted)
+related-destinations feature; a real transactional "replace style" mutation pattern for every
+composition relation, proven atomic against real PostgreSQL.
+
+**What was proven live:** Migration Path A (fresh DB) and Path B (the real, already-seeded
+post-G03 database, with an explicit before/after row-count comparison across every V1/G01/G02/G03
+table proving zero data loss and zero Destination identity/slug change); seed idempotency; VI/EN
+Destination detail composition for both Vietnam (Hanoi Old Quarter - themes, curated Places, a
+published Story, the 1010 capital-move turning point) and Japan (Gion - themes, the G03 794 Kyoto/
+Heian-kyō founding event as a turning point); deterministic list ordering and pagination (including
+a tie-break unit test); draft-exclusion and unauthenticated-mutation live checks; RBAC/audit/a
+real PostgreSQL rollback proof; full V1/G01/G02/G03 regression; the post-G03 environment-precedence
+regression (a normal `node dist/main.js` boot with zero manually-injected env vars, TCP-level and
+content-level proof it connected to the intended database); OpenAPI regenerated with zero drift.
+
+**A real pre-existing G01 defect was found and fixed** by this phase's own live QA - `GET
+/v1/destinations`'s documented filter query params were silently rejected by a dual-`@Query()`
+binding collision. See `G04_DESTINATION_DISCOVERY.md` section 11 for the full root-cause/fix/
+regression detail.
+
+**Deferred to later Global phases (not scope creep into G04):** any provider/commercial/booking
+data (G05), `Trip`/itinerary/cost engine (G06), location sharing (G08), expense settlement (G09),
+affiliate/monetization (G10), any redesign of `/v1/search`/`/v1/map/features` (G11 - `Destination`
+is not yet integrated into either). No `Trip`, `TripDay`, `TripItem`, or booking/availability table
+exists anywhere in this codebase as of G04.

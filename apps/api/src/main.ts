@@ -1,3 +1,8 @@
+// MUST be the first import (post-G03 operational hardening) - see
+// config/load-env.ts for why: it has to win the race against
+// @prisma/client's own root-.env auto-load, which happens as an import-time
+// side effect the moment AppModule (below) pulls in PrismaModule.
+import './config/load-env';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';

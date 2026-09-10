@@ -2371,6 +2371,44 @@
         ]
       }
     },
+    "/v1/people/{id}/places": {
+      "patch": {
+        "operationId": "PeopleController_setPlaces",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPersonPlacesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "people"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/v1/events": {
       "get": {
         "operationId": "EventsController_list",
@@ -2581,6 +2619,44 @@
         ]
       }
     },
+    "/v1/events/{id}/countries": {
+      "patch": {
+        "operationId": "EventsController_setCountries",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetEventCountriesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "events"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/v1/eras": {
       "get": {
         "operationId": "ErasController_list",
@@ -2664,6 +2740,44 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SetEraParentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "eras"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/eras/{id}/countries": {
+      "patch": {
+        "operationId": "ErasController_setCountries",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetEraCountriesDto"
               }
             }
           }
@@ -4198,18 +4312,36 @@
             "name": "fromYear",
             "required": false,
             "in": "query",
-            "description": "Inclusive lower-bound year (spec section 26) - overlap semantics, not containment: an event spanning 1250-1310 matches fromYear=1200&toYear=1300.",
+            "description": "Inclusive lower-bound year (spec section 26) - overlap semantics, not containment: an event spanning 1250-1310 matches fromYear=1200&toYear=1300. Always a positive, 1-based, in-era number (G03) - pair with fromEra to query BCE (e.g. fromYear=300&fromEra=BCE for 300 BCE). No public astronomical/signed-year contract exists.",
             "schema": {
               "type": "number"
+            }
+          },
+          {
+            "name": "fromEra",
+            "required": false,
+            "in": "query",
+            "description": "Era for fromYear (G03). Defaults to CE - existing CE-only queries (e.g. fromYear=1945) are unaffected.",
+            "schema": {
+              "type": "string"
             }
           },
           {
             "name": "toYear",
             "required": false,
             "in": "query",
-            "description": "Inclusive upper-bound year.",
+            "description": "Inclusive upper-bound year (G03: positive, 1-based, in-era - pair with toEra for BCE).",
             "schema": {
               "type": "number"
+            }
+          },
+          {
+            "name": "toEra",
+            "required": false,
+            "in": "query",
+            "description": "Era for toYear (G03). Defaults to CE.",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -6961,7 +7093,7 @@
           },
           {
             "name": "country",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
@@ -6969,7 +7101,7 @@
           },
           {
             "name": "region",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
@@ -6977,7 +7109,7 @@
           },
           {
             "name": "city",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
@@ -6985,7 +7117,29 @@
           },
           {
             "name": "type",
-            "required": true,
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "CITY_AREA",
+                "NEIGHBORHOOD",
+                "HISTORIC_DISTRICT",
+                "HERITAGE_AREA",
+                "ISLAND",
+                "ARCHIPELAGO",
+                "NATURAL_AREA",
+                "NATIONAL_PARK",
+                "COAST",
+                "BAY",
+                "TOURISM_AREA",
+                "OTHER"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "theme",
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
@@ -7032,6 +7186,29 @@
     "/v1/destinations/{slug}": {
       "get": {
         "operationId": "DestinationsController_getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destinations"
+        ]
+      }
+    },
+    "/v1/destinations/{slug}/related": {
+      "get": {
+        "operationId": "DestinationsController_getRelated",
         "parameters": [
           {
             "name": "slug",
@@ -7166,6 +7343,382 @@
         },
         "tags": [
           "destinations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/destinations/{id}/places": {
+      "patch": {
+        "operationId": "DestinationsController_setPlaces",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDestinationPlacesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destinations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/destinations/{id}/themes": {
+      "patch": {
+        "operationId": "DestinationsController_setThemes",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDestinationThemesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destinations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/destinations/{id}/stories": {
+      "patch": {
+        "operationId": "DestinationsController_setStories",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDestinationStoriesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destinations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/destinations/{id}/journeys": {
+      "patch": {
+        "operationId": "DestinationsController_setJourneys",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDestinationJourneysDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destinations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/destinations/{id}/events": {
+      "patch": {
+        "operationId": "DestinationsController_setEvents",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDestinationEventsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destinations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/destination-collections": {
+      "get": {
+        "operationId": "DestinationCollectionsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-collections"
+        ]
+      },
+      "post": {
+        "operationId": "DestinationCollectionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDestinationCollectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-collections"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/destination-collections/{slug}": {
+      "get": {
+        "operationId": "DestinationCollectionsController_getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-collections"
+        ]
+      }
+    },
+    "/v1/destination-collections/{id}/translations/{locale}": {
+      "patch": {
+        "operationId": "DestinationCollectionsController_upsertTranslation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDestinationCollectionTranslationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-collections"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/destination-collections/{id}/status": {
+      "patch": {
+        "operationId": "DestinationCollectionsController_setStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDestinationCollectionStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-collections"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/destination-collections/{id}/members": {
+      "patch": {
+        "operationId": "DestinationCollectionsController_setMembers",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDestinationCollectionMembersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-collections"
         ],
         "security": [
           {
@@ -8274,6 +8827,18 @@
           "longitude": {
             "type": "number"
           },
+          "currentCountryId": {
+            "type": "string",
+            "description": "Current-geography link to G01 Country (G03). Required if currentRegionId/currentCityId is given."
+          },
+          "currentRegionId": {
+            "type": "string",
+            "description": "Current-geography link to G01 Region (G03). Must belong to currentCountryId."
+          },
+          "currentCityId": {
+            "type": "string",
+            "description": "Current-geography link to G01 City (G03). Must belong to currentCountryId."
+          },
           "translations": {
             "type": "array",
             "items": {
@@ -8318,6 +8883,18 @@
           },
           "longitude": {
             "type": "number"
+          },
+          "currentCountryId": {
+            "type": "string",
+            "description": "Current-geography link to G01 Country (G03). Required if currentRegionId/currentCityId is given."
+          },
+          "currentRegionId": {
+            "type": "string",
+            "description": "Current-geography link to G01 Region (G03). Must belong to currentCountryId."
+          },
+          "currentCityId": {
+            "type": "string",
+            "description": "Current-geography link to G01 City (G03). Must belong to currentCountryId."
           }
         }
       },
@@ -8713,6 +9290,14 @@
             ],
             "description": "Defaults to EXACT (or UNCERTAIN when precision is UNKNOWN)."
           },
+          "era": {
+            "type": "string",
+            "enum": [
+              "BCE",
+              "CE"
+            ],
+            "description": "Defaults to CE (G03). year is always a positive, 1-based, in-era number - there is no historical year zero."
+          },
           "rangeEndYear": {
             "type": "number",
             "description": "Only meaningful when qualifier is BETWEEN."
@@ -8785,6 +9370,67 @@
           "translations"
         ]
       },
+      "PersonPlaceLinkInputDto": {
+        "type": "object",
+        "properties": {
+          "placeId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "BIRTH",
+              "DEATH",
+              "RESIDENCE",
+              "ACTIVITY",
+              "RULE",
+              "EXILE",
+              "OTHER"
+            ],
+            "description": "Defaults to OTHER when omitted."
+          }
+        },
+        "required": [
+          "placeId"
+        ]
+      },
+      "SetPersonPlacesDto": {
+        "type": "object",
+        "properties": {
+          "places": {
+            "description": "Place associations for this person (G03). Replaces the full set of links.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonPlaceLinkInputDto"
+            }
+          }
+        },
+        "required": [
+          "places"
+        ]
+      },
+      "EventCountryLinkInputDto": {
+        "type": "object",
+        "properties": {
+          "countryId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "OCCURRED_IN",
+              "AFFECTED",
+              "ORIGIN",
+              "DESTINATION",
+              "RELATED"
+            ],
+            "description": "Defaults to RELATED (conservative) when omitted."
+          }
+        },
+        "required": [
+          "countryId"
+        ]
+      },
       "EventTranslationInputDto": {
         "type": "object",
         "properties": {
@@ -8827,6 +9473,13 @@
           "date": {
             "$ref": "#/components/schemas/HistoricalDateInputDto"
           },
+          "countries": {
+            "description": "Country links this event spans (G03) - an event can touch more than one modern country, each in its own explicit role.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventCountryLinkInputDto"
+            }
+          },
           "translations": {
             "type": "array",
             "items": {
@@ -8837,6 +9490,21 @@
         "required": [
           "date",
           "translations"
+        ]
+      },
+      "SetEventCountriesDto": {
+        "type": "object",
+        "properties": {
+          "countries": {
+            "description": "Country links this event spans (G03). Replaces the full set of links.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventCountryLinkInputDto"
+            }
+          }
+        },
+        "required": [
+          "countries"
         ]
       },
       "EraTranslationInputDto": {
@@ -8882,6 +9550,13 @@
             "type": "string",
             "description": "Overall period display override, e.g. \"1009-1225\"."
           },
+          "countryIds": {
+            "description": "Country ids this era's geographic scope spans (G03) - an era can cover more than one modern country.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "translations": {
             "type": "array",
             "items": {
@@ -8902,6 +9577,21 @@
             "description": "Omit/null to detach from any parent era."
           }
         }
+      },
+      "SetEraCountriesDto": {
+        "type": "object",
+        "properties": {
+          "countryIds": {
+            "description": "Country ids this era's geographic scope spans (G03). Replaces the full set of links.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "countryIds"
+        ]
       },
       "DynastyTranslationInputDto": {
         "type": "object",
@@ -10799,6 +11489,14 @@
           "description": {
             "type": "string"
           },
+          "tagline": {
+            "type": "string",
+            "description": "Short discovery-editorial hook (G04) - never operational (no price/hours/availability)."
+          },
+          "whyVisit": {
+            "type": "string",
+            "description": "Short \"why visit\" editorial copy (G04) - never operational."
+          },
           "seoTitle": {
             "type": "string"
           },
@@ -10856,6 +11554,10 @@
           "longitude": {
             "type": "number"
           },
+          "heroMediaId": {
+            "type": "string",
+            "description": "MediaAsset id for the cover image (G04) - subject to the same rights/access-policy/status gating as every other heroMedia relation."
+          },
           "translations": {
             "type": "array",
             "items": {
@@ -10902,6 +11604,10 @@
           },
           "longitude": {
             "type": "number"
+          },
+          "heroMediaId": {
+            "type": "object",
+            "description": "Set to null to remove the cover image."
           }
         }
       },
@@ -10916,6 +11622,14 @@
           },
           "description": {
             "type": "string"
+          },
+          "tagline": {
+            "type": "string",
+            "description": "Short discovery-editorial hook (G04) - never operational (no price/hours/availability)."
+          },
+          "whyVisit": {
+            "type": "string",
+            "description": "Short \"why visit\" editorial copy (G04) - never operational."
           },
           "seoTitle": {
             "type": "string"
@@ -10939,6 +11653,250 @@
       "SetDestinationStatusDto": {
         "type": "object",
         "properties": {}
+      },
+      "DestinationPlaceLinkInputDto": {
+        "type": "object",
+        "properties": {
+          "placeId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "CORE",
+              "LANDMARK",
+              "HISTORICAL",
+              "CULTURAL",
+              "NATURAL",
+              "CONTEXTUAL"
+            ],
+            "description": "Defaults to CONTEXTUAL when omitted."
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "isFeatured": {
+            "type": "boolean"
+          },
+          "editorialNote": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "placeId"
+        ]
+      },
+      "SetDestinationPlacesDto": {
+        "type": "object",
+        "properties": {
+          "places": {
+            "description": "Full desired set of Place links for this Destination (G04). Replaces the existing set.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DestinationPlaceLinkInputDto"
+            }
+          }
+        },
+        "required": [
+          "places"
+        ]
+      },
+      "SetDestinationThemesDto": {
+        "type": "object",
+        "properties": {
+          "themeIds": {
+            "description": "Full desired set of Theme ids for this Destination (G04). Replaces the existing set.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "themeIds"
+        ]
+      },
+      "DestinationOrderedLinkInputDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "SetDestinationStoriesDto": {
+        "type": "object",
+        "properties": {
+          "stories": {
+            "description": "Full desired set of published-or-draft Story ids/order for this Destination (G04). Replaces the existing set. Publication is enforced at read time, not link time.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DestinationOrderedLinkInputDto"
+            }
+          }
+        },
+        "required": [
+          "stories"
+        ]
+      },
+      "SetDestinationJourneysDto": {
+        "type": "object",
+        "properties": {
+          "journeys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DestinationOrderedLinkInputDto"
+            }
+          }
+        },
+        "required": [
+          "journeys"
+        ]
+      },
+      "DestinationEventLinkInputDto": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "role": {
+            "type": "string",
+            "description": "Free-text editorial label for this turning point's role (e.g. \"founding\", \"capital-move\") - not a claim, purely organizational."
+          }
+        },
+        "required": [
+          "eventId"
+        ]
+      },
+      "SetDestinationEventsDto": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "description": "Curated historical turning points for this Destination's \"how it became what it is\" composition (G04). Replaces the existing set.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DestinationEventLinkInputDto"
+            }
+          }
+        },
+        "required": [
+          "events"
+        ]
+      },
+      "DestinationCollectionTranslationInputDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "CreateDestinationCollectionDto": {
+        "type": "object",
+        "properties": {
+          "countryId": {
+            "type": "string",
+            "description": "Optional country scope - omit for a cross-country collection."
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DestinationCollectionTranslationInputDto"
+            }
+          }
+        },
+        "required": [
+          "translations"
+        ]
+      },
+      "UpsertDestinationCollectionTranslationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "SetDestinationCollectionStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DestinationCollectionMemberInputDto": {
+        "type": "object",
+        "properties": {
+          "destinationId": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "destinationId"
+        ]
+      },
+      "SetDestinationCollectionMembersDto": {
+        "type": "object",
+        "properties": {
+          "members": {
+            "description": "Full desired ordered membership (G04). Replaces the existing set.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DestinationCollectionMemberInputDto"
+            }
+          }
+        },
+        "required": [
+          "members"
+        ]
       },
       "CreateProviderDto": {
         "type": "object",

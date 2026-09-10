@@ -10,8 +10,8 @@ does not replace or amend any V1 document.
 | G00 | Product Constitution V2 | LOCKED | Product-level decisions only, no code. |
 | **G01** | **Global Geography Foundation** | **COMPLETE** | `Country`/`Region`/`City`/`Destination`, VI/EN translations, aliases, admin+public API, Vietnam+Japan seed. See `docs/backend/GLOBAL_GEOGRAPHY.md`. |
 | **G02** | **Provider + Licensing Foundation** | **COMPLETE** | `ExternalProvider`, `ProviderLicense` (tri-state rights), capability model, admin-only API. See `docs/backend/PROVIDER_LICENSING.md`. |
-| G03 | Global Historical Knowledge Extension | Not started | Historical content for non-Vietnam countries. |
-| G04 | Destination Discovery | Not started | Destination editorial experiences. |
+| **G03** | **Global Historical Knowledge Extension** | **COMPLETE** | `DateEra` BCE/CE, chronology ordinals, `EventCountry`/`EraCountry`/`PersonPlace`, small Japan historical fixture. See this file's G03 summary below. |
+| **G04** | **Destination Discovery** | **COMPLETE** | `DestinationPlace`/`Theme`/`Story`/`Journey`/`Event` composition, `DestinationCollection`, deterministic discovery ranking/related-destinations. See `docs/backend/G04_DESTINATION_DISCOVERY.md`. |
 | G05 | Stay + Food + Activities | Not started | Provider-backed accommodation/restaurant/activity data. |
 | G06 | Trip Planner + Cost Engine | Not started | `Trip`, itinerary, estimated/live cost. |
 | G07 | Trip Collaboration | Not started | Trip members, invitations, shared itinerary editing. |
@@ -68,3 +68,47 @@ does not replace or amend any V1 document.
 - Explicitly out of scope (see `PROVIDER_LICENSING.md` section 9 and this file's own G02 row):
   real provider API integration/credentials/activation, Trip/geography-provider linking,
   affiliate/monetization tracking, any public provider endpoint.
+
+## G03 summary
+
+- New: `DateEra` enum (BCE/CE), chronology ordinal columns (`*ChronologyStart`/`*ChronologyEnd`)
+  across `HistoricalEvent`/`HistoricalFact`/`Person`/`HistoricalEra`/`Dynasty`/`Territory`,
+  `Place.currentCountryId`/`currentRegionId`/`currentCityId`, `EventCountry`, `EraCountry`,
+  `PersonPlace`.
+- Migration: `prisma/migrations/20260908000000_g03_global_historical_knowledge/` - includes a
+  live-proven legacy-year validation guard and an in-migration chronology backfill for every
+  pre-existing row.
+- Seed: `prisma/golden/japan.ts` - 3 eras, 5 events, 2 people, 9 sources (2 genuine `ja`-language
+  government sources), 8 published facts.
+- Post-G03 operational hardening: closed a real environment-precedence defect (`@prisma/client`'s
+  own root-`.env` auto-load could win over `apps/api/.env`) via `apps/api/src/config/load-env.ts`.
+- Live-verified: Migration Path A (fresh DB) and Path B (real pre-G03 seeded DB + G03 migration on
+  top), direct-SQL chronology verification for representative CE years, BCE/CE live query matrix,
+  seed idempotency, RBAC/audit/real-Postgres-rollback, full V1/G01/G02 regression, OpenAPI
+  regenerated with zero drift.
+- Explicitly out of scope: BCE Cổ Loa dating (no authoritative exact-date source found - left as
+  `UNKNOWN_DATE`, unchanged), G11 global search/map BCE support.
+
+## G04 summary (see `docs/backend/G04_DESTINATION_DISCOVERY.md` for the full contract)
+
+- New: `DestinationPlace`, `DestinationTheme`, `DestinationStory`, `DestinationJourney`,
+  `DestinationEvent`, `DestinationCollection`, `DestinationCollectionTranslation`,
+  `DestinationCollectionMember`; `Destination.heroMediaId`; `DestinationTranslation.tagline`/
+  `whyVisit`.
+- Migration: `prisma/migrations/20260909000000_g04_destination_discovery/` - purely additive, zero
+  destructive changes, live-proven to leave every pre-existing V1/G01/G02/G03 row byte-identical.
+- Seed: `prisma/golden/destination-discovery.ts` - composes 2 already-existing G01 Destinations
+  (Hanoi Old Quarter, Gion) with already-existing Places/Themes/Stories/Events - no new historical
+  claim, no new Destination row.
+- A real pre-existing G01 defect was found and fixed during this phase's own live QA: `GET
+  /v1/destinations`'s documented filter query params (`country`/`region`/`city`/`type`) were
+  silently rejected by `ValidationPipe`'s `forbidNonWhitelisted` (a dual `@Query()` binding
+  collision) - fixed with one combined `ListDestinationsQueryDto`, permanent e2e regression added.
+- Live-verified: Migration Path A/B (with exact before/after data-preservation proof across every
+  V1/G01/G02/G03 table), seed idempotency, deterministic discovery ranking/pagination, VI/EN
+  detail composition (themes/places/stories/journeys/historical turning points/related
+  destinations), publication/draft exclusion, RBAC, audit, a real PostgreSQL rollback proof, full
+  V1/G01/G02/G03 regression, environment-precedence regression, OpenAPI regenerated with zero
+  drift.
+- Explicitly out of scope (per the G04 brief): any provider/commercial/booking data, personalized
+  ranking, community-signal-contaminated ranking, G11 global search/map redesign, G05+ scope.

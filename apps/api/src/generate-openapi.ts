@@ -16,6 +16,11 @@
  */
 process.env.SKIP_DB_CONNECT = 'true';
 
+// MUST come before the AppModule import below - see config/load-env.ts.
+// SKIP_DB_CONNECT means this script never actually opens a DB connection,
+// but a deterministic DATABASE_URL still keeps env.validation.ts happy and
+// keeps this script's behavior identical to every other entrypoint.
+import './config/load-env';
 import * as fs from 'fs';
 import * as path from 'path';
 import { NestFactory } from '@nestjs/core';

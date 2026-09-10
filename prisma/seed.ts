@@ -51,6 +51,7 @@ import {
   GOLDEN_COUNTRIES,
   GOLDEN_DATASET_REVIEWED_AT,
   GOLDEN_DATASET_VERSION,
+  GOLDEN_DESTINATION_DISCOVERY,
   GOLDEN_DESTINATIONS,
   GOLDEN_DYNASTIES,
   GOLDEN_EDITORIAL_SLOTS,
@@ -65,6 +66,13 @@ import {
   GOLDEN_STORIES,
   GOLDEN_THEMES,
   HistoricalDateSeed,
+  JAPAN_COUNTRY_KEY,
+  JAPAN_ERA_KEYS,
+  JAPAN_ERAS,
+  JAPAN_EVENTS,
+  JAPAN_FACTS,
+  JAPAN_PEOPLE,
+  JAPAN_SOURCES,
   slug,
   sortBounds,
 } from './golden';
@@ -101,7 +109,7 @@ async function main() {
   // -----------------------------------------------------------------------
   console.log('Seeding eras...');
   const erasByKey = new Map<string, { id: string }>();
-  for (const spec of GOLDEN_ERAS) {
+  for (const spec of [...GOLDEN_ERAS, ...JAPAN_ERAS]) {
     const canonicalSlug = slug(spec.vi.name);
     const startSort = sortBounds(spec.start);
     const endSort = spec.end ? sortBounds(spec.end) : null;
@@ -239,7 +247,7 @@ async function main() {
     PERSON_GIA_LONG: 'DYNASTY_NGUYEN',
     PERSON_MINH_MANG: 'DYNASTY_NGUYEN',
   };
-  for (const spec of GOLDEN_PEOPLE) {
+  for (const spec of [...GOLDEN_PEOPLE, ...JAPAN_PEOPLE]) {
     const canonicalSlug = slug(spec.vi.name);
     const birth = spec.birth ?? { precision: 'UNKNOWN' as const, qualifier: 'UNCERTAIN' as const };
     const death = spec.death ?? { precision: 'UNKNOWN' as const, qualifier: 'UNCERTAIN' as const };
@@ -348,12 +356,58 @@ async function main() {
   }
 
   // -----------------------------------------------------------------------
+  // G03 - Japan events (own loop: `eraKey` is optional here, unlike the
+  // Vietnam-only EventSeedSpec above, and each carries a `countryRole` for
+  // the EventCountry link created after Global Geography below, once a real
+  // Country id exists). Populates the same `eventsByKey` map.
+  // -----------------------------------------------------------------------
+  console.log('Seeding Japan historical events from the golden dataset (see prisma/golden/japan.ts)...');
+  for (const spec of JAPAN_EVENTS) {
+    const canonicalSlug = slug(spec.vi.title);
+    const sort = sortBounds(spec.date);
+    const era = spec.eraKey ? erasByKey.get(spec.eraKey) : undefined;
+
+    const event = await prisma.historicalEvent.upsert({
+      where: { canonicalSlug },
+      update: {},
+      create: {
+        canonicalSlug,
+        publicationStatus: PublicationStatus.PUBLISHED,
+        dateYear: spec.date.year,
+        dateMonth: spec.date.month,
+        dateDay: spec.date.day,
+        datePrecision: spec.date.precision,
+        dateQualifier: spec.date.qualifier ?? 'EXACT',
+        dateSortStart: sort.start,
+        dateSortEnd: sort.end,
+        importance: spec.importance ?? 5,
+        eraId: era?.id,
+        translations: {
+          create: [
+            { locale: 'vi', title: spec.vi.title, slug: canonicalSlug, summary: spec.vi.summary, method: 'ORIGINAL' },
+            { locale: 'en', title: spec.en.title, slug: slug(spec.en.title), summary: spec.en.summary, method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const },
+          ],
+        },
+      },
+    });
+    for (const personKey of spec.personKeys ?? []) {
+      const person = peopleByKey.get(personKey);
+      if (person) await prisma.eventPerson.upsert({ where: { eventId_personId: { eventId: event.id, personId: person.id } }, update: {}, create: { eventId: event.id, personId: person.id } });
+    }
+    for (const themeSlugKey of spec.themeKeys) {
+      const theme = themesByKey.get(themeSlugKey);
+      if (theme) await prisma.eventTheme.upsert({ where: { eventId_themeId: { eventId: event.id, themeId: theme.id } }, update: {}, create: { eventId: event.id, themeId: theme.id } });
+    }
+    eventsByKey.set(spec.key, event);
+  }
+
+  // -----------------------------------------------------------------------
   // Sources (spec sections 7-9) - stable custom `id` per source, so
   // relationships in facts.ts/stories.ts stay readable and reproducible.
   // -----------------------------------------------------------------------
   console.log('Seeding sources from the golden dataset (see prisma/golden/sources.ts)...');
   const sourcesByKey = new Map<string, { id: string }>();
-  for (const spec of GOLDEN_SOURCES) {
+  for (const spec of [...GOLDEN_SOURCES, ...JAPAN_SOURCES]) {
     const source = await prisma.source.upsert({
       where: { id: spec.key },
       update: {},
@@ -384,7 +438,7 @@ async function main() {
   const factIdByKey = new Map<string, string>();
   const publishedFactKeys = new Set<string>();
 
-  for (const spec of GOLDEN_FACTS) {
+  for (const spec of [...GOLDEN_FACTS, ...JAPAN_FACTS]) {
     const sensitivity = spec.sensitivity ?? 'NORMAL';
     // Separation of duties (docs/backend/TRUST_MODEL.md section 7): a
     // sensitive fact's reviewer must be a DIFFERENT account than its
@@ -766,6 +820,7 @@ async function main() {
     }
   }
 
+  const destinationsByKey = new Map<string, { id: string }>();
   for (const spec of GOLDEN_DESTINATIONS) {
     const country = countriesByKey.get(spec.countryKey);
     if (!country) throw new Error(`Destination ${spec.key} references unknown country ${spec.countryKey}`);
@@ -774,7 +829,7 @@ async function main() {
     const city = spec.cityKey ? citiesByKey.get(spec.cityKey) : undefined;
     if (spec.cityKey && !city) throw new Error(`Destination ${spec.key} references unknown city ${spec.cityKey}`);
     const canonicalSlug = slug(spec.vi.name);
-    await prisma.destination.upsert({
+    const destination = await prisma.destination.upsert({
       where: { canonicalSlug },
       update: {},
       create: {
@@ -802,13 +857,136 @@ async function main() {
         },
       },
     });
+    destinationsByKey.set(spec.key, destination);
+  }
+
+  // -----------------------------------------------------------------------
+  // G04 - Destination Discovery composition (spec section 49/50): links a
+  // handful of already-seeded Places/Themes/Stories/Events to two existing
+  // Destinations, and patches in discovery-editorial tagline/whyVisit copy.
+  // No new Destination row, no new historical claim - see
+  // prisma/golden/destination-discovery.ts for the full reasoning.
+  // -----------------------------------------------------------------------
+  console.log('Seeding G04 destination discovery composition (see prisma/golden/destination-discovery.ts)...');
+  for (const spec of GOLDEN_DESTINATION_DISCOVERY) {
+    const destination = destinationsByKey.get(spec.destinationKey);
+    if (!destination) throw new Error(`Destination discovery spec references unknown destination ${spec.destinationKey}`);
+
+    for (const patch of spec.translations) {
+      const existing = await prisma.destinationTranslation.findUnique({ where: { destinationId_locale: { destinationId: destination.id, locale: patch.locale } } });
+      if (existing) {
+        await prisma.destinationTranslation.update({ where: { id: existing.id }, data: { tagline: patch.tagline, whyVisit: patch.whyVisit } });
+      }
+    }
+
+    for (const themeSlug of spec.themeSlugs) {
+      const theme = themesByKey.get(themeSlug);
+      if (!theme) throw new Error(`Destination discovery spec ${spec.destinationKey} references unknown theme ${themeSlug}`);
+      await prisma.destinationTheme.upsert({
+        where: { destinationId_themeId: { destinationId: destination.id, themeId: theme.id } },
+        update: {},
+        create: { destinationId: destination.id, themeId: theme.id },
+      });
+    }
+
+    for (const link of spec.places) {
+      const place = placesByKey.get(link.placeKey);
+      if (!place) throw new Error(`Destination discovery spec ${spec.destinationKey} references unknown place ${link.placeKey}`);
+      await prisma.destinationPlace.upsert({
+        where: { destinationId_placeId: { destinationId: destination.id, placeId: place.id } },
+        update: {},
+        create: { destinationId: destination.id, placeId: place.id, role: link.role, sortOrder: link.sortOrder, isFeatured: link.isFeatured ?? false },
+      });
+    }
+
+    for (const storyKey of spec.storyKeys) {
+      const story = storiesByKey.get(storyKey);
+      if (!story) throw new Error(`Destination discovery spec ${spec.destinationKey} references unknown story ${storyKey}`);
+      await prisma.destinationStory.upsert({
+        where: { destinationId_storyId: { destinationId: destination.id, storyId: story.id } },
+        update: {},
+        create: { destinationId: destination.id, storyId: story.id, sortOrder: 0 },
+      });
+    }
+
+    for (const link of spec.eventLinks) {
+      const event = eventsByKey.get(link.eventKey);
+      if (!event) throw new Error(`Destination discovery spec ${spec.destinationKey} references unknown event ${link.eventKey}`);
+      await prisma.destinationEvent.upsert({
+        where: { destinationId_eventId: { destinationId: destination.id, eventId: event.id } },
+        update: {},
+        create: { destinationId: destination.id, eventId: event.id, sortOrder: link.sortOrder, role: link.role },
+      });
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // G03 - link Japan historical content to Country (EraCountry/EventCountry)
+  // now that a real Country id exists, and set current (modern-day)
+  // geography on a handful of well-established Vietnam Places (Place gains
+  // nullable currentCountryId/currentRegionId/currentCityId FKs in G03 -
+  // spec section 9/12; this is uncontroversial modern-geography context, not
+  // a new historical claim). Also seeds one real PersonPlace row using
+  // already-sourced Vietnam content (Ly Cong Uan ruled from Thang Long,
+  // directly established by EVENT_DOI_DO_1010 already in this dataset).
+  // -----------------------------------------------------------------------
+  console.log('Linking G03 current geography and Japan Country associations...');
+  const japanCountry = countriesByKey.get(JAPAN_COUNTRY_KEY);
+  if (japanCountry) {
+    for (const eraKey of JAPAN_ERA_KEYS) {
+      const era = erasByKey.get(eraKey);
+      if (era) await prisma.eraCountry.upsert({ where: { eraId_countryId: { eraId: era.id, countryId: japanCountry.id } }, update: {}, create: { eraId: era.id, countryId: japanCountry.id } });
+    }
+    for (const spec of JAPAN_EVENTS) {
+      const event = eventsByKey.get(spec.key);
+      if (event) {
+        await prisma.eventCountry.upsert({
+          where: { eventId_countryId: { eventId: event.id, countryId: japanCountry.id } },
+          update: {},
+          create: { eventId: event.id, countryId: japanCountry.id, role: spec.countryRole },
+        });
+      }
+    }
+  }
+
+  const vietnamCountry = countriesByKey.get('COUNTRY_VN');
+  const CURRENT_GEOGRAPHY_LINKS: { placeKey: string; cityKey: string; regionKey?: string }[] = [
+    { placeKey: 'PLACE_THANG_LONG', cityKey: 'CITY_HA_NOI', regionKey: 'REGION_HA_NOI' },
+    { placeKey: 'PLACE_VAN_MIEU', cityKey: 'CITY_HA_NOI', regionKey: 'REGION_HA_NOI' },
+    { placeKey: 'PLACE_CO_LOA', cityKey: 'CITY_HA_NOI', regionKey: 'REGION_HA_NOI' },
+    { placeKey: 'PLACE_HOI_AN', cityKey: 'CITY_HOI_AN' },
+  ];
+  if (vietnamCountry) {
+    for (const link of CURRENT_GEOGRAPHY_LINKS) {
+      const place = placesByKey.get(link.placeKey);
+      const city = citiesByKey.get(link.cityKey);
+      const region = link.regionKey ? regionsByKey.get(link.regionKey) : undefined;
+      if (place && city) {
+        await prisma.place.update({
+          where: { id: place.id },
+          data: { currentCountryId: vietnamCountry.id, currentCityId: city.id, currentRegionId: region?.id },
+        });
+      }
+    }
+  }
+
+  const lyCongUan = peopleByKey.get('PERSON_LY_CONG_UAN');
+  const thangLong = placesByKey.get('PLACE_THANG_LONG');
+  if (lyCongUan && thangLong) {
+    await prisma.personPlace.upsert({
+      where: { personId_placeId_role: { personId: lyCongUan.id, placeId: thangLong.id, role: 'RULE' } },
+      update: {},
+      create: { personId: lyCongUan.id, placeId: thangLong.id, role: 'RULE' },
+    });
   }
 
   console.log(`Golden dataset seed complete (version ${GOLDEN_DATASET_VERSION}, reviewed ${GOLDEN_DATASET_REVIEWED_AT}).`);
-  console.log(`Published ${publishedFactKeys.size}/${GOLDEN_FACTS.length} golden historical facts (100% of published facts carry >=1 VERIFIED citation - see docs/backend/GOLDEN_DATASET.md).`);
+  console.log(`Published ${publishedFactKeys.size}/${GOLDEN_FACTS.length + JAPAN_FACTS.length} golden historical facts (100% of published facts carry >=1 VERIFIED citation - see docs/backend/GOLDEN_DATASET.md).`);
   console.log(
     `G01 Global Geography: ${GOLDEN_COUNTRIES.length} countries, ${GOLDEN_REGIONS.length} regions, ${GOLDEN_CITIES.length} cities, ${GOLDEN_DESTINATIONS.length} destinations.`,
   );
+  console.log(`G03 Japan fixture: ${JAPAN_ERAS.length} eras, ${JAPAN_EVENTS.length} events, ${JAPAN_PEOPLE.length} people, ${JAPAN_SOURCES.length} sources, ${JAPAN_FACTS.length} facts.`);
+  console.log(`G04 Destination discovery: ${GOLDEN_DESTINATION_DISCOVERY.length} destinations composed.`);
 }
 
 main()

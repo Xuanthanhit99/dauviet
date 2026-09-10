@@ -783,6 +783,7 @@ model MediaAsset {
   storiesHero                  Story[]                       @relation("StoryHeroMedia")
   journeysHero                 Journey[]                     @relation("JourneyHeroMedia")
   communityStoriesHero         CommunityStory[]              @relation("CommunityStoryHeroMedia")
+  destinationsHero             Destination[]                 @relation("DestinationHeroMedia")
   sourceDocuments              SourceDocument[]
   entityMedia                  EntityMedia[]
   contributionMedia            ContributionMedia[]
@@ -955,16 +956,18 @@ model Country {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
-  translations  CountryTranslation[]
-  regions       Region[]
-  cities        City[]
-  destinations  Destination[]
+  translations           CountryTranslation[]
+  regions                Region[]
+  cities                 City[]
+  destinations           Destination[]
   // G03: reverse side of Place.currentCountryId/EventCountry/EraCountry -
   // this global geography domain (G01) stays otherwise unaware of the
   // historical domain; these are the only new back-relations added here.
-  currentPlaces Place[]
-  eventLinks    EventCountry[]
-  eraLinks      EraCountry[]
+  currentPlaces          Place[]
+  eventLinks             EventCountry[]
+  eraLinks               EraCountry[]
+  // G04: optional country-scoped editorial Destination collections.
+  destinationCollections DestinationCollection[]
 
   @@index([status])
 }
@@ -1109,20 +1112,46 @@ model Destination {
   longitude     Float?
   importance    Int               @default(0)
   status        PublicationStatus @default(DRAFT)
+  // G04: optional cover image - reuses the existing MediaAsset lifecycle/
+  // rights/access-policy machinery (spec "Media" section) exactly like
+  // Place.heroMediaId/Person.heroMediaId already do. No raw URL is ever
+  // stored here - the public composition layer resolves a URL through
+  // MediaAsset the same way every other hero-media relation in this schema
+  // already does, so accessPolicy/status gating is inherited for free.
+  heroMediaId   String?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
-  country Country @relation(fields: [countryId], references: [id])
-  region  Region? @relation(fields: [regionId], references: [id])
-  city    City?   @relation(fields: [cityId], references: [id])
+  country   Country     @relation(fields: [countryId], references: [id])
+  region    Region?     @relation(fields: [regionId], references: [id])
+  city      City?       @relation(fields: [cityId], references: [id])
+  heroMedia MediaAsset? @relation("DestinationHeroMedia", fields: [heroMediaId], references: [id])
 
-  translations DestinationTranslation[]
+  translations          DestinationTranslation[]
+  // G04 (Destination Discovery) - additive-only composition relations. Each
+  // is deliberately its own small typed join table (never a generic
+  // entityType+entityId polymorphic relation - spec "no unsafe generic
+  // polymorphic relation") so referential integrity is DB-enforced and each
+  // relation can carry its own curation-specific fields (role/sortOrder/
+  // featured) without contaminating the others.
+  placeLinks            DestinationPlace[]
+  themeLinks            DestinationTheme[]
+  storyLinks            DestinationStory[]
+  journeyLinks          DestinationJourney[]
+  // Curated historical turning points for the future "How X Became X"
+  // composition (spec section 101/102) - explicit and minimal, never a
+  // duplicate of HistoricalEvent content, never implying the relation
+  // itself is additional historical evidence (see DestinationPlace doc
+  // comment below for the identical trust-boundary reasoning).
+  eventLinks            DestinationEvent[]
+  collectionMemberships DestinationCollectionMember[]
 
   @@index([countryId])
   @@index([regionId])
   @@index([cityId])
   @@index([type])
   @@index([status])
+  @@index([heroMediaId])
 }
 
 // No global `@@unique([locale, slug])` - see the domain-level design note
@@ -1135,6 +1164,13 @@ model DestinationTranslation {
   slug           String
   summary        String?
   description    String?
+  // G04 discovery-editorial fields (spec section 16/17) - short, honest,
+  // non-operational copy only (no live price/hours/availability - see
+  // "Destination Discovery Profile"). Additive columns on the existing
+  // translation row, following the exact same per-locale pattern every
+  // other field here already uses - never a bare `taglineVi`/`taglineEn`.
+  tagline        String?
+  whyVisit       String?
   seoTitle       String?
   seoDescription String?
   status         TranslationStatus @default(DRAFT)
@@ -1145,6 +1181,188 @@ model DestinationTranslation {
   destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
 
   @@unique([destinationId, locale])
+}
+
+// =========================================================================
+// G04 - DESTINATION DISCOVERY (Global Backend V2 Extension)
+//
+// Design notes (docs/backend/G04_DESTINATION_DISCOVERY.md has the full
+// rationale):
+// - Destination is NOT replaced/duplicated - every model below is additive
+//   and hangs off the existing G01 `Destination`/`Country`/`Region`/`City`.
+// - Destination<->Place is a real many-to-many (a Place may be relevant to
+//   several Destinations, e.g. a temple belonging to both a neighborhood
+//   Destination and a broader city Destination) - never a
+//   `Place.destinationId` single FK.
+// - DestinationPlace/Theme/Story/Journey/Event are each their own small,
+//   typed join table - never one generic `entityType + entityId` relation -
+//   so referential integrity is enforced by real foreign keys, not
+//   application-layer trust, and each can carry its own curation fields.
+// - TRUST BOUNDARY (spec section 14/16, CRITICAL): none of these relations
+//   are themselves historical claims. `DestinationPlace` means "this Place
+//   is editorially associated with this Destination" - it does NOT mean
+//   the Destination historically governed the Place, that the Destination
+//   existed when the Place's history occurred, or that every HistoricalFact
+//   about the Place is a fact about the Destination. No new HistoricalFact/
+//   Citation/Source row is implied or required by any relation in this
+//   section.
+// =========================================================================
+
+enum DestinationPlaceRole {
+  CORE
+  LANDMARK
+  HISTORICAL
+  CULTURAL
+  NATURAL
+  CONTEXTUAL
+}
+
+// Destination<->Place composition (spec section 13) - the core G04 relation.
+model DestinationPlace {
+  id            String               @id @default(cuid())
+  destinationId String
+  placeId       String
+  role          DestinationPlaceRole @default(CONTEXTUAL)
+  sortOrder     Int                  @default(0)
+  isFeatured    Boolean              @default(false)
+  editorialNote String?
+  createdAt     DateTime             @default(now())
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  place       Place       @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, placeId])
+  @@index([placeId])
+  @@index([destinationId, sortOrder])
+}
+
+// Destination<->Theme (spec section 19) - reuses the existing V1 `Theme`
+// domain as-is (no duplicate taxonomy, no per-destination boolean columns).
+model DestinationTheme {
+  id            String   @id @default(cuid())
+  destinationId String
+  themeId       String
+  createdAt     DateTime @default(now())
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  theme       Theme       @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, themeId])
+  @@index([themeId])
+}
+
+// Destination<->Story curation (spec section 22/100) - explicit and minimal
+// so ordering is deterministic and editorially controllable; a Story that
+// merely links through a shared Place is NOT silently inferred as
+// "belonging" to a Destination (no arbitrary graph traversal).
+model DestinationStory {
+  id            String   @id @default(cuid())
+  destinationId String
+  storyId       String
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  story       Story       @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, storyId])
+  @@index([storyId])
+}
+
+// Destination<->Journey curation (spec section 23) - same reasoning as
+// DestinationStory above.
+model DestinationJourney {
+  id            String   @id @default(cuid())
+  destinationId String
+  journeyId     String
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  journey     Journey     @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, journeyId])
+  @@index([journeyId])
+}
+
+// Curated historical turning points for a Destination's future "How X
+// Became X" composition (spec section 101/102) - only added because no
+// existing relation can deterministically express "these specific N events,
+// in this order, are the Destination's editorial turning points" (EventCountry
+// links an Event to every country-wide occurrence, not to a specific
+// Destination). Does not duplicate HistoricalEvent content.
+model DestinationEvent {
+  id            String   @id @default(cuid())
+  destinationId String
+  eventId       String
+  sortOrder     Int      @default(0)
+  role          String?
+  createdAt     DateTime @default(now())
+
+  destination Destination     @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  event       HistoricalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, eventId])
+  @@index([eventId])
+}
+
+// Editorial Destination collections (spec section 24) - only introduced
+// because the existing `EditorialSlot` has no slug/translations/publication
+// status of its own (a positional homepage slot, not a browsable page) and
+// so cannot represent a page like "Ancient Capitals" with its own title/
+// summary. Deliberately NOT personalized (spec section 24: "no personalized
+// collections in G04").
+model DestinationCollection {
+  id            String            @id @default(cuid())
+  canonicalSlug String            @unique
+  // Optional scope - a collection may be country-specific ("Vietnam
+  // Heritage Trail") or cross-country ("Ancient Capitals"). Nullable, not a
+  // required chain.
+  countryId     String?
+  status        PublicationStatus @default(DRAFT)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  country Country? @relation(fields: [countryId], references: [id])
+
+  translations DestinationCollectionTranslation[]
+  members      DestinationCollectionMember[]
+
+  @@index([countryId])
+  @@index([status])
+}
+
+model DestinationCollectionTranslation {
+  id           String            @id @default(cuid())
+  collectionId String
+  locale       String
+  name         String
+  slug         String
+  summary      String?
+  description  String?
+  status       TranslationStatus @default(DRAFT)
+  method       TranslationMethod @default(ORIGINAL)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  collection DestinationCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, locale])
+  @@unique([locale, slug])
+}
+
+model DestinationCollectionMember {
+  id            String   @id @default(cuid())
+  collectionId  String
+  destinationId String
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  collection  DestinationCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  destination Destination           @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, destinationId])
+  @@index([destinationId])
 }
 
 // =========================================================================
@@ -1556,6 +1774,8 @@ model Place {
   thenNowComparisons ThenNowComparison[]
   // G03: back-relation for PersonPlace (see Person.placeLinks doc comment).
   personLinks        PersonPlace[]
+  // G04: back-relation for DestinationPlace (see Destination.placeLinks doc comment).
+  destinationLinks   DestinationPlace[]
 
   @@index([type])
   @@index([parentPlaceId])
@@ -1707,18 +1927,20 @@ model HistoricalEvent {
   territory Territory?     @relation(fields: [territoryId], references: [id])
   heroMedia MediaAsset?    @relation("EventHeroMedia", fields: [heroMediaId], references: [id])
 
-  translations   HistoricalEventTranslation[]
-  placeLinks     EventPlace[]
-  personLinks    EventPerson[]
-  factLinks      FactEvent[]
-  storyLinks     StoryEvent[]
-  communityLinks CommunityStoryEvent[]
-  themeLinks     EventTheme[]
-  journeyStops   JourneyStop[]                @relation("JourneyStopEvent")
+  translations     HistoricalEventTranslation[]
+  placeLinks       EventPlace[]
+  personLinks      EventPerson[]
+  factLinks        FactEvent[]
+  storyLinks       StoryEvent[]
+  communityLinks   CommunityStoryEvent[]
+  themeLinks       EventTheme[]
+  journeyStops     JourneyStop[]                @relation("JourneyStopEvent")
   // G03: an event may span multiple modern countries (spec section 15/16) -
   // a real many-to-many join, unlike Place's single current-country FKs
   // below, since plurality is a genuine requirement here.
-  countryLinks   EventCountry[]
+  countryLinks     EventCountry[]
+  // G04: back-relation for DestinationEvent (curated "how X became X" turning points).
+  destinationLinks DestinationEvent[]
 
   @@index([eraId])
   @@index([territoryId])
@@ -2081,8 +2303,10 @@ model Theme {
   category  ThemeCategory
   createdAt DateTime      @default(now())
 
-  translations ThemeTranslation[]
-  eventLinks   EventTheme[]
+  translations     ThemeTranslation[]
+  eventLinks       EventTheme[]
+  // G04: back-relation for DestinationTheme (see Destination.themeLinks doc comment).
+  destinationLinks DestinationTheme[]
 
   @@index([category])
 }
@@ -2419,14 +2643,16 @@ model Story {
 
   heroMedia MediaAsset? @relation("StoryHeroMedia", fields: [heroMediaId], references: [id])
 
-  translations  StoryTranslation[]
-  placeLinks    StoryPlace[]
-  personLinks   StoryPerson[]
-  eventLinks    StoryEvent[]
-  factLinks     StoryFact[]
-  citationLinks StoryCitation[]
-  revisions     Revision[]
-  journeyStops  JourneyStop[]      @relation("JourneyStopStory")
+  translations     StoryTranslation[]
+  placeLinks       StoryPlace[]
+  personLinks      StoryPerson[]
+  eventLinks       StoryEvent[]
+  factLinks        StoryFact[]
+  citationLinks    StoryCitation[]
+  revisions        Revision[]
+  journeyStops     JourneyStop[]      @relation("JourneyStopStory")
+  // G04: back-relation for DestinationStory (see Destination.storyLinks doc comment).
+  destinationLinks DestinationStory[]
 
   @@index([editorialStatus])
   @@index([featured, priority])
@@ -2554,9 +2780,11 @@ model Journey {
 
   heroMedia MediaAsset? @relation("JourneyHeroMedia", fields: [heroMediaId], references: [id])
 
-  translations JourneyTranslation[]
-  stops        JourneyStop[]
-  revisions    Revision[]
+  translations     JourneyTranslation[]
+  stops            JourneyStop[]
+  revisions        Revision[]
+  // G04: back-relation for DestinationJourney (see Destination.journeyLinks doc comment).
+  destinationLinks DestinationJourney[]
 
   @@index([editorialStatus])
 }
