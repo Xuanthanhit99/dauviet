@@ -1,14 +1,13 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
-import { PublicationStatus, RegionType, Role } from '@prisma/client';
+import { PublicationStatus, Role } from '@prisma/client';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 import { Locale } from '../../common/decorators/locale.decorator';
-import { OffsetPaginationQuery } from '../../common/dto/pagination.dto';
 import { RegionsService } from './regions.service';
-import { CreateRegionDto, UpdateRegionDto, UpsertRegionTranslationDto } from './dto/region.dto';
+import { CreateRegionDto, ListRegionsQueryDto, UpdateRegionDto, UpsertRegionTranslationDto } from './dto/region.dto';
 
 class SetRegionStatusDto {
   @IsEnum(PublicationStatus)
@@ -22,14 +21,15 @@ export class RegionsController {
 
   @Public()
   @Get()
-  list(
-    @Query() query: OffsetPaginationQuery,
-    @Locale() locale: string,
-    @Query('country') countryId?: string,
-    @Query('parentRegion') parentRegionId?: string,
-    @Query('type') type?: RegionType,
-  ) {
-    return this.regions.list({ countryId, parentRegionId, type, locale, page: query.page, pageSize: query.pageSize });
+  list(@Query() query: ListRegionsQueryDto, @Locale() locale: string) {
+    return this.regions.listPublic({
+      country: query.country,
+      parentRegion: query.parentRegion,
+      type: query.type,
+      locale,
+      page: query.page,
+      pageSize: query.pageSize,
+    });
   }
 
   @Public()

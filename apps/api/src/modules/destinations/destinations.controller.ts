@@ -29,12 +29,12 @@ export class DestinationsController {
   @Public()
   @Get()
   list(@Query() query: ListDestinationsQueryDto, @Locale() locale: string) {
-    return this.destinations.list({
-      countryId: query.country,
-      regionId: query.region,
-      cityId: query.city,
+    return this.destinations.listPublic({
+      country: query.country,
+      region: query.region,
+      city: query.city,
       type: query.type,
-      themeId: query.theme,
+      theme: query.theme,
       locale,
       page: query.page,
       pageSize: query.pageSize,

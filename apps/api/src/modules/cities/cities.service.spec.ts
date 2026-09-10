@@ -17,11 +17,11 @@ describe('CitiesService', () => {
 
   beforeEach(() => {
     prisma = {
-      country: { findUnique: jest.fn() },
-      region: { findUnique: jest.fn() },
-      city: { findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
+      country: { findUnique: jest.fn(), findFirst: jest.fn() },
+      region: { findUnique: jest.fn(), findFirst: jest.fn() },
+      city: { findUnique: jest.fn(), create: jest.fn(), update: jest.fn(), count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
       cityTranslation: { upsert: jest.fn() },
-      $transaction: jest.fn(),
+      $transaction: jest.fn((ops: any[]) => Promise.all(ops)),
     };
     audit = { log: jest.fn() };
     destinations = { list: jest.fn() };
@@ -113,6 +113,70 @@ describe('CitiesService', () => {
     it('404s if the city is not published', async () => {
       prisma.city.findUnique.mockResolvedValue({ id: 'city-1', status: PublicationStatus.DRAFT });
       await expect(service.getDestinations('ha-noi', 'vi', 1, 20)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  /**
+   * Post-G04 API consistency hardening regression (see
+   * docs/backend/POST_G04_API_CONSISTENCY_HARDENING.md): `CitiesController
+   * .list()` used to pass `?country=`/`?region=` straight through as
+   * `countryId`/`regionId`, so a real public slug silently matched nothing.
+   * `listPublic` is the fix.
+   */
+  describe('listPublic (post-G04 API consistency hardening)', () => {
+    const baseArgs = { locale: 'vi', page: 1, pageSize: 20 };
+
+    it('resolves a country canonicalSlug to countryId', async () => {
+      prisma.country.findFirst.mockResolvedValue({ id: 'country-vn' });
+      await service.listPublic({ country: 'viet-nam', ...baseArgs });
+      expect(prisma.city.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ countryId: 'country-vn' }) }));
+    });
+
+    it('resolves a country ISO2/ISO3 code to countryId', async () => {
+      prisma.country.findFirst.mockResolvedValue({ id: 'country-vn' });
+      await service.listPublic({ country: 'VN', ...baseArgs });
+      expect(prisma.city.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ countryId: 'country-vn' }) }));
+    });
+
+    it('resolves a region canonicalSlug to regionId', async () => {
+      prisma.region.findFirst.mockResolvedValue({ id: 'region-hanoi' });
+      await service.listPublic({ region: 'ha-noi', ...baseArgs });
+      expect(prisma.city.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ regionId: 'region-hanoi' }) }));
+    });
+
+    it('ID fallback: also accepts the raw internal id', async () => {
+      prisma.country.findFirst.mockResolvedValue({ id: 'country-vn' });
+      await service.listPublic({ country: 'country-vn', ...baseArgs });
+      expect(prisma.city.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ countryId: 'country-vn' }) }));
+    });
+
+    it('combined filters: country + region both resolve and both apply', async () => {
+      prisma.country.findFirst.mockResolvedValue({ id: 'country-vn' });
+      prisma.region.findFirst.mockResolvedValue({ id: 'region-hanoi' });
+      await service.listPublic({ country: 'viet-nam', region: 'ha-noi', ...baseArgs });
+      expect(prisma.city.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ countryId: 'country-vn', regionId: 'region-hanoi' }) }),
+      );
+    });
+
+    it('a country and a region that individually resolve but do not belong together still both apply (AND, not OR) - cross-scope safety by construction', async () => {
+      prisma.country.findFirst.mockResolvedValue({ id: 'country-vn' });
+      prisma.region.findFirst.mockResolvedValue({ id: 'region-kyoto' });
+      await service.listPublic({ country: 'viet-nam', region: 'tinh-kyoto', ...baseArgs });
+      expect(prisma.city.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ countryId: 'country-vn', regionId: 'region-kyoto' }) }),
+      );
+    });
+
+    it('an unresolvable country throws 404 COUNTRY_NOT_FOUND - never silently broadens or empties', async () => {
+      prisma.country.findFirst.mockResolvedValue(null);
+      await expect(service.listPublic({ country: 'not-a-real-country', ...baseArgs })).rejects.toThrow(NotFoundException);
+      expect(prisma.city.findMany).not.toHaveBeenCalled();
+    });
+
+    it('an unresolvable region throws 404 REGION_NOT_FOUND', async () => {
+      prisma.region.findFirst.mockResolvedValue(null);
+      await expect(service.listPublic({ region: 'not-a-real-region', ...baseArgs })).rejects.toThrow(NotFoundException);
     });
   });
 });

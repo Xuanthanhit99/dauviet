@@ -334,10 +334,15 @@ describe('Golden Dataset production-seed safety (spec sections 59/60)', () => {
  * bare `.create(` - the one documented, deliberate exception is
  * `prisma.user.create`, which is idempotent through its own explicit
  * find-then-create guard in `upsertDevUser` (see prisma/seed.ts), not
- * through `.upsert()`.
+ * through `.upsert()`. G05 added two more of the same documented exception:
+ * `ProviderAttributionRule` and `RestaurantOperationalSnapshot` have no
+ * natural unique key `.upsert()` could target (a provider can legitimately
+ * gain a second attribution rule or operational snapshot over time), so
+ * both use the identical explicit `findFirst` guard before `.create(` -
+ * never a bare, unguarded create.
  */
 describe('Golden Dataset idempotency (spec sections 45/76)', () => {
-  const ALLOWED_BARE_CREATE_MODELS = new Set(['user']);
+  const ALLOWED_BARE_CREATE_MODELS = new Set(['user', 'providerAttributionRule', 'restaurantOperationalSnapshot']);
 
   it('every prisma.<model>.create( call in the seed script is either an allowed documented exception or does not exist - upsert() is used everywhere else', () => {
     const matches = [...seedSource.matchAll(/prisma\.(\w+)\.create\(/g)].map((m) => m[1]);

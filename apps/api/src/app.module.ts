@@ -42,6 +42,12 @@ import { RegionsModule } from './modules/regions/regions.module';
 import { CitiesModule } from './modules/cities/cities.module';
 import { DestinationsModule } from './modules/destinations/destinations.module';
 import { ProvidersModule } from './modules/providers/providers.module';
+import { AccommodationsModule } from './modules/accommodations/accommodations.module';
+import { CuisinesModule } from './modules/cuisines/cuisines.module';
+import { DishesModule } from './modules/dishes/dishes.module';
+import { RestaurantsModule } from './modules/restaurants/restaurants.module';
+import { AttractionsModule } from './modules/attractions/attractions.module';
+import { ActivitiesModule } from './modules/activities/activities.module';
 
 @Module({
   imports: [
@@ -106,6 +112,17 @@ import { ProvidersModule } from './modules/providers/providers.module';
     // Entirely geography-independent (spec section 37) - no import
     // relationship to the geography modules above.
     ProvidersModule,
+    // G05 - Global Backend V2 Extension, Stay + Food + Activities. Each
+    // imports ProvidersModule directly where it needs
+    // ProviderRegistryService (Accommodations/Restaurants/Activities);
+    // Cuisines/Dishes/Attractions are pure first-party knowledge with no
+    // provider layer. One-directional (G05 -> G02/G01), no cycles.
+    AccommodationsModule,
+    CuisinesModule,
+    DishesModule,
+    RestaurantsModule,
+    AttractionsModule,
+    ActivitiesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

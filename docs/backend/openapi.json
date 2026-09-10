@@ -32,7 +32,13 @@
                 "DESTINATION",
                 "PROVIDER",
                 "PROVIDER_LICENSE",
-                "PROVIDER_INTEGRATION"
+                "PROVIDER_INTEGRATION",
+                "ACCOMMODATION",
+                "RESTAURANT",
+                "CUISINE",
+                "DISH",
+                "ATTRACTION",
+                "ACTIVITY"
               ],
               "type": "string"
             }
@@ -5633,7 +5639,13 @@
                 "DESTINATION",
                 "PROVIDER",
                 "PROVIDER_LICENSE",
-                "PROVIDER_INTEGRATION"
+                "PROVIDER_INTEGRATION",
+                "ACCOMMODATION",
+                "RESTAURANT",
+                "CUISINE",
+                "DISH",
+                "ATTRACTION",
+                "ACTIVITY"
               ],
               "type": "string"
             }
@@ -6319,9 +6331,18 @@
           },
           {
             "name": "type",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
+              "enum": [
+                "PROVINCE",
+                "STATE",
+                "PREFECTURE",
+                "AUTONOMOUS_REGION",
+                "METROPOLITAN_CITY",
+                "TERRITORY",
+                "OTHER"
+              ],
               "type": "string"
             }
           }
@@ -6369,8 +6390,9 @@
           },
           {
             "name": "region",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Region canonicalSlug, or the raw internal id. Unresolvable value -> 404 REGION_NOT_FOUND.",
             "schema": {
               "type": "string"
             }
@@ -6419,25 +6441,41 @@
           },
           {
             "name": "region",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Region canonicalSlug, or the raw internal id. Unresolvable value -> 404 REGION_NOT_FOUND.",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "city",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "City canonicalSlug, or the raw internal id. Unresolvable value -> 404 CITY_NOT_FOUND.",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "type",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
+              "enum": [
+                "CITY_AREA",
+                "NEIGHBORHOOD",
+                "HISTORIC_DISTRICT",
+                "HERITAGE_AREA",
+                "ISLAND",
+                "ARCHIPELAGO",
+                "NATURAL_AREA",
+                "NATIONAL_PARK",
+                "COAST",
+                "BAY",
+                "TOURISM_AREA",
+                "OTHER"
+              ],
               "type": "string"
             }
           }
@@ -6599,25 +6637,36 @@
           },
           {
             "name": "country",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Country canonicalSlug, ISO2, or ISO3 code (e.g. \"viet-nam\", \"VN\", \"VNM\") - the raw internal id also still resolves. Unresolvable value -> 404 COUNTRY_NOT_FOUND.",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "parentRegion",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Region canonicalSlug, or the raw internal id. Unresolvable value -> 404 REGION_NOT_FOUND.",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "type",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
+              "enum": [
+                "PROVINCE",
+                "STATE",
+                "PREFECTURE",
+                "AUTONOMOUS_REGION",
+                "METROPOLITAN_CITY",
+                "TERRITORY",
+                "OTHER"
+              ],
               "type": "string"
             }
           }
@@ -6829,16 +6878,18 @@
           },
           {
             "name": "country",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Country canonicalSlug, ISO2, or ISO3 code (e.g. \"viet-nam\", \"VN\", \"VNM\") - the raw internal id also still resolves. Unresolvable value -> 404 COUNTRY_NOT_FOUND.",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "region",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Region canonicalSlug, or the raw internal id. Unresolvable value -> 404 REGION_NOT_FOUND.",
             "schema": {
               "type": "string"
             }
@@ -7095,6 +7146,7 @@
             "name": "country",
             "required": false,
             "in": "query",
+            "description": "Country canonicalSlug (e.g. \"viet-nam\") - the raw internal id also still resolves, but is not a documented public shape. Unresolvable value -> 404 COUNTRY_NOT_FOUND, never a silently broadened/empty page.",
             "schema": {
               "type": "string"
             }
@@ -7103,6 +7155,7 @@
             "name": "region",
             "required": false,
             "in": "query",
+            "description": "Region canonicalSlug. Unresolvable value -> 404 REGION_NOT_FOUND.",
             "schema": {
               "type": "string"
             }
@@ -7111,6 +7164,7 @@
             "name": "city",
             "required": false,
             "in": "query",
+            "description": "City canonicalSlug. Unresolvable value -> 404 CITY_NOT_FOUND.",
             "schema": {
               "type": "string"
             }
@@ -7141,6 +7195,7 @@
             "name": "theme",
             "required": false,
             "in": "query",
+            "description": "Theme slug. Unresolvable value -> 404 DESTINATION_THEME_NOT_FOUND.",
             "schema": {
               "type": "string"
             }
@@ -8483,6 +8538,1865 @@
         },
         "tags": [
           "admin-providers"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/accommodations": {
+      "get": {
+        "operationId": "AccommodationsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "country",
+            "required": false,
+            "in": "query",
+            "description": "Country canonicalSlug, ISO2, or ISO3 code - the raw internal id also still resolves. Unresolvable value -> 404 COUNTRY_NOT_FOUND.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "region",
+            "required": false,
+            "in": "query",
+            "description": "Region canonicalSlug, or the raw internal id. Unresolvable value -> 404 REGION_NOT_FOUND.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "description": "City canonicalSlug, or the raw internal id. Unresolvable value -> 404 CITY_NOT_FOUND.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "destination",
+            "required": false,
+            "in": "query",
+            "description": "Destination canonicalSlug, or the raw internal id. Unresolvable value -> 404 DESTINATION_NOT_FOUND.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "HOTEL",
+                "HOSTEL",
+                "GUESTHOUSE",
+                "RESORT",
+                "APARTMENT",
+                "HOMESTAY",
+                "RYOKAN",
+                "VILLA",
+                "CAMPING",
+                "OTHER"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accommodations"
+        ]
+      },
+      "post": {
+        "operationId": "AccommodationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccommodationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accommodations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/accommodations/{slug}": {
+      "get": {
+        "operationId": "AccommodationsController_getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accommodations"
+        ]
+      }
+    },
+    "/v1/accommodations/{slug}/offers": {
+      "get": {
+        "operationId": "AccommodationsController_getOffers",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "checkIn",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-12-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "checkOut",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-12-03",
+              "type": "string"
+            }
+          },
+          {
+            "name": "guests",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "rooms",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "ISO 4217 currency code, uppercase.",
+            "schema": {
+              "example": "USD",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accommodations"
+        ]
+      }
+    },
+    "/v1/accommodations/{id}": {
+      "patch": {
+        "operationId": "AccommodationsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccommodationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accommodations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/accommodations/{id}/translations/{locale}": {
+      "patch": {
+        "operationId": "AccommodationsController_upsertTranslation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertAccommodationTranslationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accommodations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/accommodations/{id}/status": {
+      "patch": {
+        "operationId": "AccommodationsController_setStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAccommodationStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accommodations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/accommodations/{id}/destinations": {
+      "patch": {
+        "operationId": "AccommodationsController_setDestinations",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAccommodationDestinationsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accommodations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/accommodations/provider-references": {
+      "post": {
+        "operationId": "AccommodationsController_upsertProviderReference",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProviderAccommodationReferenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accommodations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/accommodations/provider-references/{referenceId}/map": {
+      "patch": {
+        "operationId": "AccommodationsController_mapProviderReference",
+        "parameters": [
+          {
+            "name": "referenceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MapProviderAccommodationReferenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accommodations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/cuisines": {
+      "get": {
+        "operationId": "CuisinesController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "country",
+            "required": false,
+            "in": "query",
+            "description": "Country canonicalSlug, ISO2, or ISO3 code - the raw internal id also still resolves.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "cuisines"
+        ]
+      },
+      "post": {
+        "operationId": "CuisinesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCuisineDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "cuisines"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/cuisines/{slug}": {
+      "get": {
+        "operationId": "CuisinesController_getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "cuisines"
+        ]
+      }
+    },
+    "/v1/cuisines/{id}/translations/{locale}": {
+      "patch": {
+        "operationId": "CuisinesController_upsertTranslation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertCuisineTranslationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "cuisines"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/cuisines/{id}/status": {
+      "patch": {
+        "operationId": "CuisinesController_setStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCuisineStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "cuisines"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/dishes": {
+      "get": {
+        "operationId": "DishesController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "cuisine",
+            "required": false,
+            "in": "query",
+            "description": "Cuisine canonicalSlug, or the raw internal id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "destination",
+            "required": false,
+            "in": "query",
+            "description": "Destination canonicalSlug, or the raw internal id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "dishes"
+        ]
+      },
+      "post": {
+        "operationId": "DishesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDishDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "dishes"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/dishes/{slug}": {
+      "get": {
+        "operationId": "DishesController_getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "dishes"
+        ]
+      }
+    },
+    "/v1/dishes/{id}/translations/{locale}": {
+      "patch": {
+        "operationId": "DishesController_upsertTranslation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDishTranslationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "dishes"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/dishes/{id}/status": {
+      "patch": {
+        "operationId": "DishesController_setStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDishStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "dishes"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/dishes/{id}/cuisines": {
+      "patch": {
+        "operationId": "DishesController_setCuisines",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDishCuisinesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "dishes"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/dishes/{id}/destinations": {
+      "patch": {
+        "operationId": "DishesController_setDestinations",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDishDestinationsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "dishes"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/restaurants": {
+      "get": {
+        "operationId": "RestaurantsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "country",
+            "required": false,
+            "in": "query",
+            "description": "Country canonicalSlug, ISO2, or ISO3 code - the raw internal id also still resolves.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "region",
+            "required": false,
+            "in": "query",
+            "description": "Region canonicalSlug, or the raw internal id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "description": "City canonicalSlug, or the raw internal id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cuisine",
+            "required": false,
+            "in": "query",
+            "description": "Cuisine canonicalSlug, or the raw internal id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "restaurants"
+        ]
+      },
+      "post": {
+        "operationId": "RestaurantsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRestaurantDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "restaurants"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/restaurants/{slug}": {
+      "get": {
+        "operationId": "RestaurantsController_getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "restaurants"
+        ]
+      }
+    },
+    "/v1/restaurants/{slug}/operational-snapshot": {
+      "get": {
+        "operationId": "RestaurantsController_getOperationalSnapshot",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "restaurants"
+        ]
+      }
+    },
+    "/v1/restaurants/{id}/translations/{locale}": {
+      "patch": {
+        "operationId": "RestaurantsController_upsertTranslation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertRestaurantTranslationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "restaurants"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/restaurants/{id}/status": {
+      "patch": {
+        "operationId": "RestaurantsController_setStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRestaurantStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "restaurants"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/restaurants/{id}/cuisines": {
+      "patch": {
+        "operationId": "RestaurantsController_setCuisines",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRestaurantCuisinesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "restaurants"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/restaurants/{id}/dishes": {
+      "patch": {
+        "operationId": "RestaurantsController_setDishes",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRestaurantDishesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "restaurants"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/restaurants/{id}/destinations": {
+      "patch": {
+        "operationId": "RestaurantsController_setDestinations",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRestaurantDestinationsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "restaurants"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/restaurants/provider-references": {
+      "post": {
+        "operationId": "RestaurantsController_upsertProviderReference",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProviderRestaurantReferenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "restaurants"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/restaurants/provider-references/{referenceId}/map": {
+      "patch": {
+        "operationId": "RestaurantsController_mapProviderReference",
+        "parameters": [
+          {
+            "name": "referenceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MapProviderRestaurantReferenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "restaurants"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/attractions": {
+      "get": {
+        "operationId": "AttractionsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "country",
+            "required": false,
+            "in": "query",
+            "description": "Country canonicalSlug, ISO2, or ISO3 code - the raw internal id also still resolves.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "region",
+            "required": false,
+            "in": "query",
+            "description": "Region canonicalSlug, or the raw internal id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "description": "City canonicalSlug, or the raw internal id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "attractions"
+        ]
+      },
+      "post": {
+        "operationId": "AttractionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAttractionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "attractions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/attractions/{slug}": {
+      "get": {
+        "operationId": "AttractionsController_getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "attractions"
+        ]
+      }
+    },
+    "/v1/attractions/{id}/translations/{locale}": {
+      "patch": {
+        "operationId": "AttractionsController_upsertTranslation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertAttractionTranslationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "attractions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/attractions/{id}/status": {
+      "patch": {
+        "operationId": "AttractionsController_setStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAttractionStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "attractions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/attractions/{id}/destinations": {
+      "patch": {
+        "operationId": "AttractionsController_setDestinations",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAttractionDestinationsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "attractions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/activities": {
+      "get": {
+        "operationId": "ActivitiesController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "country",
+            "required": false,
+            "in": "query",
+            "description": "Country canonicalSlug, ISO2, or ISO3 code - the raw internal id also still resolves.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "destination",
+            "required": false,
+            "in": "query",
+            "description": "Destination canonicalSlug, or the raw internal id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "activities"
+        ]
+      },
+      "post": {
+        "operationId": "ActivitiesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateActivityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "activities"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/activities/{slug}": {
+      "get": {
+        "operationId": "ActivitiesController_getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/{slug}/offers": {
+      "get": {
+        "operationId": "ActivitiesController_getOffers",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-12-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "participants",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "ISO 4217 currency code, uppercase.",
+            "schema": {
+              "example": "USD",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "activities"
+        ]
+      }
+    },
+    "/v1/activities/{id}/translations/{locale}": {
+      "patch": {
+        "operationId": "ActivitiesController_upsertTranslation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertActivityTranslationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "activities"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/activities/{id}/status": {
+      "patch": {
+        "operationId": "ActivitiesController_setStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActivityStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "activities"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/activities/{id}/destinations": {
+      "patch": {
+        "operationId": "ActivitiesController_setDestinations",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActivityDestinationsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "activities"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/activities/provider-references": {
+      "post": {
+        "operationId": "ActivitiesController_upsertProviderReference",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProviderActivityReferenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "activities"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/activities/provider-references/{referenceId}/map": {
+      "patch": {
+        "operationId": "ActivitiesController_mapProviderReference",
+        "parameters": [
+          {
+            "name": "referenceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MapProviderActivityReferenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "activities"
         ],
         "security": [
           {
@@ -10296,7 +12210,13 @@
               "DESTINATION",
               "PROVIDER",
               "PROVIDER_LICENSE",
-              "PROVIDER_INTEGRATION"
+              "PROVIDER_INTEGRATION",
+              "ACCOMMODATION",
+              "RESTAURANT",
+              "CUISINE",
+              "DISH",
+              "ATTRACTION",
+              "ACTIVITY"
             ]
           },
           "entityId": {
@@ -10988,7 +12908,13 @@
               "DESTINATION",
               "PROVIDER",
               "PROVIDER_LICENSE",
-              "PROVIDER_INTEGRATION"
+              "PROVIDER_INTEGRATION",
+              "ACCOMMODATION",
+              "RESTAURANT",
+              "CUISINE",
+              "DISH",
+              "ATTRACTION",
+              "ACTIVITY"
             ]
           },
           "entityId": {
@@ -12415,6 +14341,822 @@
           "storeIdentityAllowed",
           "storeContentAllowed",
           "persistentIdentifierAllowed"
+        ]
+      },
+      "AccommodationTranslationInputDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "seoTitle": {
+            "type": "string"
+          },
+          "seoDescription": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "CreateAccommodationDto": {
+        "type": "object",
+        "properties": {
+          "countryId": {
+            "type": "string"
+          },
+          "regionId": {
+            "type": "string",
+            "description": "Must belong to the same country when provided."
+          },
+          "cityId": {
+            "type": "string",
+            "description": "Must belong to the same country (and same region, if both are set) when provided."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "HOTEL",
+              "HOSTEL",
+              "GUESTHOUSE",
+              "RESORT",
+              "APARTMENT",
+              "HOMESTAY",
+              "RYOKAN",
+              "VILLA",
+              "CAMPING",
+              "OTHER"
+            ]
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "heroMediaId": {
+            "type": "string"
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccommodationTranslationInputDto"
+            }
+          }
+        },
+        "required": [
+          "countryId",
+          "type",
+          "translations"
+        ]
+      },
+      "UpdateAccommodationDto": {
+        "type": "object",
+        "properties": {
+          "regionId": {
+            "type": "string"
+          },
+          "cityId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "HOTEL",
+              "HOSTEL",
+              "GUESTHOUSE",
+              "RESORT",
+              "APARTMENT",
+              "HOMESTAY",
+              "RYOKAN",
+              "VILLA",
+              "CAMPING",
+              "OTHER"
+            ]
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "heroMediaId": {
+            "type": "string"
+          }
+        }
+      },
+      "UpsertAccommodationTranslationDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "seoTitle": {
+            "type": "string"
+          },
+          "seoDescription": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "SetAccommodationStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SetAccommodationDestinationsDto": {
+        "type": "object",
+        "properties": {
+          "destinationIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "destinationIds"
+        ]
+      },
+      "CreateProviderAccommodationReferenceDto": {
+        "type": "object",
+        "properties": {
+          "providerCode": {
+            "type": "string",
+            "description": "ExternalProvider.code - must already exist and be ACTIVE (spec section 9)."
+          },
+          "externalEntityId": {
+            "type": "string"
+          },
+          "externalUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "providerCode",
+          "externalEntityId"
+        ]
+      },
+      "MapProviderAccommodationReferenceDto": {
+        "type": "object",
+        "properties": {
+          "accommodationId": {
+            "type": "string",
+            "description": "Canonical Accommodation id to map this provider reference to. Never automatic/fuzzy (spec section 19)."
+          }
+        },
+        "required": [
+          "accommodationId"
+        ]
+      },
+      "CuisineTranslationInputDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "CreateCuisineDto": {
+        "type": "object",
+        "properties": {
+          "countryId": {
+            "type": "string",
+            "description": "Optional country scope - a Cuisine may be cross-country (e.g. no scope) or narrower (region-scoped)."
+          },
+          "regionId": {
+            "type": "string",
+            "description": "Must belong to countryId when both are provided."
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CuisineTranslationInputDto"
+            }
+          }
+        },
+        "required": [
+          "translations"
+        ]
+      },
+      "UpsertCuisineTranslationDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "SetCuisineStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DishTranslationInputDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "CreateDishDto": {
+        "type": "object",
+        "properties": {
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DishTranslationInputDto"
+            }
+          }
+        },
+        "required": [
+          "translations"
+        ]
+      },
+      "UpsertDishTranslationDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "SetDishStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SetDishCuisinesDto": {
+        "type": "object",
+        "properties": {
+          "cuisineIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "cuisineIds"
+        ]
+      },
+      "SetDishDestinationsDto": {
+        "type": "object",
+        "properties": {
+          "destinationIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "destinationIds"
+        ]
+      },
+      "RestaurantTranslationInputDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "CreateRestaurantDto": {
+        "type": "object",
+        "properties": {
+          "countryId": {
+            "type": "string"
+          },
+          "regionId": {
+            "type": "string"
+          },
+          "cityId": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RestaurantTranslationInputDto"
+            }
+          }
+        },
+        "required": [
+          "countryId",
+          "translations"
+        ]
+      },
+      "UpsertRestaurantTranslationDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "SetRestaurantStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SetRestaurantCuisinesDto": {
+        "type": "object",
+        "properties": {
+          "cuisineIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "cuisineIds"
+        ]
+      },
+      "SetRestaurantDishesDto": {
+        "type": "object",
+        "properties": {
+          "dishIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "dishIds"
+        ]
+      },
+      "SetRestaurantDestinationsDto": {
+        "type": "object",
+        "properties": {
+          "destinationIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "destinationIds"
+        ]
+      },
+      "CreateProviderRestaurantReferenceDto": {
+        "type": "object",
+        "properties": {
+          "providerCode": {
+            "type": "string",
+            "description": "ExternalProvider.code - must already exist and be ACTIVE."
+          },
+          "externalEntityId": {
+            "type": "string"
+          },
+          "externalUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "providerCode",
+          "externalEntityId"
+        ]
+      },
+      "MapProviderRestaurantReferenceDto": {
+        "type": "object",
+        "properties": {
+          "restaurantId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "restaurantId"
+        ]
+      },
+      "AttractionTranslationInputDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "CreateAttractionDto": {
+        "type": "object",
+        "properties": {
+          "countryId": {
+            "type": "string"
+          },
+          "regionId": {
+            "type": "string"
+          },
+          "cityId": {
+            "type": "string"
+          },
+          "placeId": {
+            "type": "string",
+            "description": "Optional typed mapping when this attraction is also a real historical Place (spec section 42) - never a merge."
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttractionTranslationInputDto"
+            }
+          }
+        },
+        "required": [
+          "countryId",
+          "translations"
+        ]
+      },
+      "UpsertAttractionTranslationDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "SetAttractionStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SetAttractionDestinationsDto": {
+        "type": "object",
+        "properties": {
+          "destinationIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "destinationIds"
+        ]
+      },
+      "ActivityTranslationInputDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "CreateActivityDto": {
+        "type": "object",
+        "properties": {
+          "countryId": {
+            "type": "string"
+          },
+          "regionId": {
+            "type": "string"
+          },
+          "cityId": {
+            "type": "string"
+          },
+          "attractionId": {
+            "type": "string",
+            "description": "Optional - not every Activity is tied to one Attraction (spec section 43)."
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityTranslationInputDto"
+            }
+          }
+        },
+        "required": [
+          "countryId",
+          "translations"
+        ]
+      },
+      "UpsertActivityTranslationDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "vi"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "HUMAN",
+              "AI_ASSISTED"
+            ]
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "SetActivityStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SetActivityDestinationsDto": {
+        "type": "object",
+        "properties": {
+          "destinationIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "destinationIds"
+        ]
+      },
+      "CreateProviderActivityReferenceDto": {
+        "type": "object",
+        "properties": {
+          "providerCode": {
+            "type": "string",
+            "description": "ExternalProvider.code - must already exist and be ACTIVE."
+          },
+          "externalEntityId": {
+            "type": "string"
+          },
+          "externalUrl": {
+            "type": "string"
+          },
+          "destinationId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "providerCode",
+          "externalEntityId"
+        ]
+      },
+      "MapProviderActivityReferenceDto": {
+        "type": "object",
+        "properties": {
+          "activityId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "activityId"
         ]
       }
     }

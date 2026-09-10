@@ -1,14 +1,21 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
-import { DestinationType, PublicationStatus, RegionType, Role } from '@prisma/client';
+import { PublicationStatus, Role } from '@prisma/client';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 import { Locale } from '../../common/decorators/locale.decorator';
 import { OffsetPaginationQuery } from '../../common/dto/pagination.dto';
 import { CountriesService } from './countries.service';
-import { CreateCountryDto, UpdateCountryDto, UpsertCountryTranslationDto } from './dto/country.dto';
+import {
+  CreateCountryDto,
+  ListCountryCitiesQueryDto,
+  ListCountryDestinationsQueryDto,
+  ListCountryRegionsQueryDto,
+  UpdateCountryDto,
+  UpsertCountryTranslationDto,
+} from './dto/country.dto';
 
 class SetCountryStatusDto {
   @IsEnum(PublicationStatus)
@@ -34,37 +41,20 @@ export class CountriesController {
 
   @Public()
   @Get(':slug/regions')
-  getRegions(
-    @Param('slug') slug: string,
-    @Locale() locale: string,
-    @Query() query: OffsetPaginationQuery,
-    @Query('type') type?: RegionType,
-  ) {
-    return this.countries.getRegions(slug, locale, query.page, query.pageSize, type);
+  getRegions(@Param('slug') slug: string, @Locale() locale: string, @Query() query: ListCountryRegionsQueryDto) {
+    return this.countries.getRegions(slug, locale, query.page, query.pageSize, query.type);
   }
 
   @Public()
   @Get(':slug/cities')
-  getCities(
-    @Param('slug') slug: string,
-    @Locale() locale: string,
-    @Query() query: OffsetPaginationQuery,
-    @Query('region') regionId?: string,
-  ) {
-    return this.countries.getCities(slug, locale, query.page, query.pageSize, regionId);
+  getCities(@Param('slug') slug: string, @Locale() locale: string, @Query() query: ListCountryCitiesQueryDto) {
+    return this.countries.getCities(slug, locale, query.page, query.pageSize, query.region);
   }
 
   @Public()
   @Get(':slug/destinations')
-  getDestinations(
-    @Param('slug') slug: string,
-    @Locale() locale: string,
-    @Query() query: OffsetPaginationQuery,
-    @Query('region') regionId?: string,
-    @Query('city') cityId?: string,
-    @Query('type') type?: DestinationType,
-  ) {
-    return this.countries.getDestinations(slug, locale, query.page, query.pageSize, regionId, cityId, type);
+  getDestinations(@Param('slug') slug: string, @Locale() locale: string, @Query() query: ListCountryDestinationsQueryDto) {
+    return this.countries.getDestinations(slug, locale, query.page, query.pageSize, query.region, query.city, query.type);
   }
 
   @ApiBearerAuth()

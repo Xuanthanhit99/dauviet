@@ -4,6 +4,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsEnum,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
@@ -12,7 +13,91 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { TranslationMethod } from '@prisma/client';
+import { DestinationType, RegionType, TranslationMethod } from '@prisma/client';
+
+/**
+ * Post-G04 API consistency hardening (see
+ * docs/backend/POST_G04_API_CONSISTENCY_HARDENING.md): same dual-`@Query()`
+ * binding collision G04 originally found on `GET /v1/destinations` (see
+ * docs/backend/G04_DESTINATION_DISCOVERY.md section 11), also present on
+ * `CountriesController`'s `:slug/regions`, `:slug/cities`, and
+ * `:slug/destinations` sub-routes. One combined DTO per route fixes it.
+ */
+export class ListCountryRegionsQueryDto {
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @ApiPropertyOptional({ default: 20, maximum: 100 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  pageSize: number = 20;
+
+  @ApiPropertyOptional({ enum: RegionType })
+  @IsOptional()
+  @IsEnum(RegionType)
+  type?: RegionType;
+}
+
+export class ListCountryCitiesQueryDto {
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @ApiPropertyOptional({ default: 20, maximum: 100 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  pageSize: number = 20;
+
+  @ApiPropertyOptional({ description: 'Region canonicalSlug, or the raw internal id. Unresolvable value -> 404 REGION_NOT_FOUND.' })
+  @IsOptional()
+  @IsString()
+  region?: string;
+}
+
+export class ListCountryDestinationsQueryDto {
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @ApiPropertyOptional({ default: 20, maximum: 100 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  pageSize: number = 20;
+
+  @ApiPropertyOptional({ description: 'Region canonicalSlug, or the raw internal id. Unresolvable value -> 404 REGION_NOT_FOUND.' })
+  @IsOptional()
+  @IsString()
+  region?: string;
+
+  @ApiPropertyOptional({ description: 'City canonicalSlug, or the raw internal id. Unresolvable value -> 404 CITY_NOT_FOUND.' })
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @ApiPropertyOptional({ enum: DestinationType })
+  @IsOptional()
+  @IsEnum(DestinationType)
+  type?: DestinationType;
+}
 
 const upper = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim().toUpperCase() : value);
 

@@ -7,6 +7,7 @@ import { DISCOVERY_ERROR_CODES } from './discovery-error-codes';
 import { CONTRIBUTION_ERROR_CODES } from './contribution-error-codes';
 import { GEOGRAPHY_ERROR_CODES } from './geography-error-codes';
 import { PROVIDER_ERROR_CODES } from './provider-error-codes';
+import { STAY_FOOD_ACTIVITY_ERROR_CODES } from './stay-food-activity-error-codes';
 
 /**
  * Phase 11 error-code inventory (spec section 9) - every domain error-code
@@ -30,6 +31,8 @@ const REGISTRIES: Record<string, Record<string, string>> = {
   // cleanup unrelated to either phase's own error-code work.
   GEOGRAPHY: GEOGRAPHY_ERROR_CODES,
   PROVIDER: PROVIDER_ERROR_CODES,
+  // Added G05 (Stay + Food + Activities).
+  STAY_FOOD_ACTIVITY: STAY_FOOD_ACTIVITY_ERROR_CODES,
 };
 
 // Generic per-HTTP-status codes AllExceptionsFilter falls back to when a

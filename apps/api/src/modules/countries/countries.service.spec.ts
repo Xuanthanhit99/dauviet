@@ -12,6 +12,9 @@ import { AuditService } from '../audit/audit.service';
 describe('CountriesService', () => {
   let prisma: any;
   let audit: { log: jest.Mock };
+  let regions: { list: jest.Mock; listPublic: jest.Mock };
+  let cities: { list: jest.Mock; listPublic: jest.Mock };
+  let destinations: { list: jest.Mock; listPublic: jest.Mock };
   let service: CountriesService;
 
   beforeEach(() => {
@@ -21,12 +24,15 @@ describe('CountriesService', () => {
       $transaction: jest.fn(),
     };
     audit = { log: jest.fn() };
+    regions = { list: jest.fn(), listPublic: jest.fn() };
+    cities = { list: jest.fn(), listPublic: jest.fn() };
+    destinations = { list: jest.fn(), listPublic: jest.fn() };
     service = new CountriesService(
       prisma as unknown as PrismaService,
       audit as unknown as AuditService,
-      {} as any,
-      {} as any,
-      {} as any,
+      regions as any,
+      cities as any,
+      destinations as any,
     );
   });
 
@@ -125,6 +131,54 @@ describe('CountriesService', () => {
       prisma.$transaction.mockResolvedValue([0, []]);
       await service.list({ locale: 'vi', page: 1, pageSize: 20 });
       expect(prisma.country.count).toHaveBeenCalledWith({ where: { status: PublicationStatus.PUBLISHED } });
+    });
+  });
+
+  /**
+   * Post-G04 API consistency hardening (see
+   * docs/backend/POST_G04_API_CONSISTENCY_HARDENING.md): `getCities`/
+   * `getDestinations`' `region`/`city` query params used to be forwarded
+   * straight through as `regionId`/`cityId` to the id-based `cities.list()`/
+   * `destinations.list()` - a real public slug silently matched nothing.
+   * Fixed by delegating to `cities.listPublic()`/`destinations.listPublic()`
+   * instead, passing the already-resolved `country.id` through the same
+   * resolver's id-fallback branch (one resolution boundary, not two
+   * different calling conventions for the same method).
+   */
+  describe('getRegions/getCities/getDestinations (post-G04 API consistency hardening)', () => {
+    beforeEach(() => {
+      prisma.country.findUnique.mockResolvedValue({ id: 'country-vn', status: PublicationStatus.PUBLISHED });
+    });
+
+    it('getRegions resolves the country by slug and delegates to the id-based regions.list()', async () => {
+      await service.getRegions('viet-nam', 'vi', 1, 20, 'PROVINCE' as any);
+      expect(regions.list).toHaveBeenCalledWith({ countryId: 'country-vn', type: 'PROVINCE', locale: 'vi', page: 1, pageSize: 20 });
+    });
+
+    it('getCities delegates to cities.listPublic() (not the id-based list()) so a real region slug resolves', async () => {
+      await service.getCities('viet-nam', 'vi', 1, 20, 'ha-noi');
+      expect(cities.listPublic).toHaveBeenCalledWith({ country: 'country-vn', region: 'ha-noi', locale: 'vi', page: 1, pageSize: 20 });
+      expect(cities.list).not.toHaveBeenCalled();
+    });
+
+    it('getDestinations delegates to destinations.listPublic() (not the id-based list()) so real region/city slugs resolve', async () => {
+      await service.getDestinations('viet-nam', 'vi', 1, 20, 'ha-noi', 'ha-noi', 'HISTORIC_DISTRICT' as any);
+      expect(destinations.listPublic).toHaveBeenCalledWith({
+        country: 'country-vn',
+        region: 'ha-noi',
+        city: 'ha-noi',
+        type: 'HISTORIC_DISTRICT',
+        locale: 'vi',
+        page: 1,
+        pageSize: 20,
+      });
+      expect(destinations.list).not.toHaveBeenCalled();
+    });
+
+    it('404s before delegating if the country slug itself does not resolve', async () => {
+      prisma.country.findUnique.mockResolvedValue(null);
+      await expect(service.getCities('not-a-real-country', 'vi', 1, 20)).rejects.toThrow(NotFoundException);
+      expect(cities.listPublic).not.toHaveBeenCalled();
     });
   });
 });

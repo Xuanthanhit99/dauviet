@@ -41,6 +41,12 @@ A `User.roles` is a Postgres array (`Role[]`) - one account can hold several rol
 | Destinations (G01/G04) | `POST /destinations`, `PATCH /destinations/:id`, `.../translations/:locale`, `.../status`, `.../places`, `.../themes`, `.../stories`, `.../journeys`, `.../events` | `EDITOR`, `ADMIN` |
 | Destination Collections (G04) | `POST /destination-collections`, `PATCH /destination-collections/:id/translations/:locale`, `.../status`, `.../members` | `EDITOR`, `ADMIN` |
 | Providers (G02) | every `/admin/providers/**`, `/admin/provider-integrations/**`, `/admin/provider-licenses/**` route (create, update, status, capabilities, integrations, licenses, rights, data-policy, evidence, attribution-rules, activate/enable/revoke capability, check-access) | `ADMIN` only - deliberately no `EDITOR` carve-out (spec G02 section 23: provider configuration affects commercial agreements/legal rights/external secrets/monetization, a stricter boundary than ordinary content editing; `HISTORIAN_REVIEWER`/`MODERATOR`/`USER` have no provider authority at all) |
+| Accommodations (G05) | `POST /accommodations`, `PATCH /accommodations/:id`, `.../translations/:locale`, `.../status`, `.../destinations`, `POST /accommodations/provider-references`, `PATCH /accommodations/provider-references/:id/map` | `EDITOR`, `ADMIN` (same tier as Destinations - discovery/geography-shaped content, not G02's own provider-configuration boundary above) |
+| Cuisines (G05) | `POST /cuisines`, `PATCH /cuisines/:id/translations/:locale`, `.../status` | `EDITOR`, `ADMIN` |
+| Dishes (G05) | `POST /dishes`, `PATCH /dishes/:id/translations/:locale`, `.../status`, `.../cuisines`, `.../destinations` | `EDITOR`, `ADMIN` |
+| Restaurants (G05) | `POST /restaurants`, `PATCH /restaurants/:id/translations/:locale`, `.../status`, `.../cuisines`, `.../dishes`, `.../destinations`, `POST /restaurants/provider-references`, `PATCH /restaurants/provider-references/:id/map` | `EDITOR`, `ADMIN` |
+| Attractions (G05) | `POST /attractions`, `PATCH /attractions/:id/translations/:locale`, `.../status`, `.../destinations` | `EDITOR`, `ADMIN` |
+| Activities (G05) | `POST /activities`, `PATCH /activities/:id/translations/:locale`, `.../status`, `.../destinations`, `POST /activities/provider-references`, `PATCH /activities/provider-references/:id/map` | `EDITOR`, `ADMIN` |
 | Facts | every `/facts/**` route (create, link, editorial-status) | `CONTRIBUTOR`, `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` (module-level guard; see separation-of-duties note for the extra in-service checks on publishing, completing FACT_REVIEW, and retracting) |
 | Sources | `POST /sources` | `CONTRIBUTOR`, `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` |
 | Sources | `POST /sources/:id/documents` | `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` |
@@ -78,7 +84,10 @@ A `User.roles` is a Postgres array (`Role[]`) - one account can hold several rol
 | Admin/Audit | `GET /admin/audit` | `ADMIN`, `MODERATOR`, `HISTORIAN_REVIEWER` |
 
 Every route not listed above that still requires `@ApiBearerAuth()` (e.g. `GET /auth/sessions`, `POST /comments`, `POST /bookmarks`, `POST /places/:slug/visits`, `POST /community/stories`, `PATCH/DELETE /community/stories/:id`, `POST/DELETE /community/stories/:id/vote`, `PATCH /comments/:id`, `POST /comments/:id/vote`, `POST /reports`) requires only a valid session - any authenticated role (suspended/disabled accounts are already rejected at the `JwtStrategy` layer before reaching any controller - see `docs/backend/COMMUNITY_ARCHITECTURE.md` section 15). Every route not listed and marked `@Public()` (all `GET` list/detail endpoints for Places/People/Events/Eras/Dynasties/Territories/Stories/Journeys/Sources/Community, `/map/features`, `/timeline`, `/search`, `/health`, and, as of G01, Countries/Regions/Cities/Destinations - `GET /countries`, `.../:slug`, `.../:slug/regions`, `.../:slug/cities`, `.../:slug/destinations`, `GET /regions`, `.../:slug`, `GET /cities`, `.../:slug`, `.../:slug/destinations`, `GET /destinations`, `.../:slug`, `.../:slug/related` (G04), `GET /destination-collections`,
-`.../:slug` (G04)) requires no authentication at all.
+`.../:slug` (G04), and, as of G05, `GET /accommodations`, `.../:slug`, `.../:slug/offers`, `GET
+/cuisines`, `.../:slug`, `GET /dishes`, `.../:slug`, `GET /restaurants`, `.../:slug`,
+`.../:slug/operational-snapshot`, `GET /attractions`, `.../:slug`, `GET /activities`, `.../:slug`,
+`.../:slug/offers`) requires no authentication at all.
 
 ## Separation of duties (spec Phase 02 section 20)
 

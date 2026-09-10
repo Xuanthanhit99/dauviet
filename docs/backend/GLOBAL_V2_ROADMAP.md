@@ -12,7 +12,7 @@ does not replace or amend any V1 document.
 | **G02** | **Provider + Licensing Foundation** | **COMPLETE** | `ExternalProvider`, `ProviderLicense` (tri-state rights), capability model, admin-only API. See `docs/backend/PROVIDER_LICENSING.md`. |
 | **G03** | **Global Historical Knowledge Extension** | **COMPLETE** | `DateEra` BCE/CE, chronology ordinals, `EventCountry`/`EraCountry`/`PersonPlace`, small Japan historical fixture. See this file's G03 summary below. |
 | **G04** | **Destination Discovery** | **COMPLETE** | `DestinationPlace`/`Theme`/`Story`/`Journey`/`Event` composition, `DestinationCollection`, deterministic discovery ranking/related-destinations. See `docs/backend/G04_DESTINATION_DISCOVERY.md`. |
-| G05 | Stay + Food + Activities | Not started | Provider-backed accommodation/restaurant/activity data. |
+| **G05** | **Stay + Food + Activities** | **COMPLETE** | `Accommodation`/`Cuisine`/`Dish`/`Restaurant`/`Attraction`/`Activity` canonical identities, `Provider*Reference` + `*Offer`/`OperationalSnapshot` provider layer (reuses G02's `ProviderRegistryService` gate unchanged), Vietnam+Japan seed. See `docs/backend/G05_STAY_FOOD_ACTIVITIES.md`. |
 | G06 | Trip Planner + Cost Engine | Not started | `Trip`, itinerary, estimated/live cost. |
 | G07 | Trip Collaboration | Not started | Trip members, invitations, shared itinerary editing. |
 | G08 | Location Sharing | Not started | Opt-in, trip-scoped, time-limited location sessions. |
@@ -112,3 +112,34 @@ does not replace or amend any V1 document.
   drift.
 - Explicitly out of scope (per the G04 brief): any provider/commercial/booking data, personalized
   ranking, community-signal-contaminated ranking, G11 global search/map redesign, G05+ scope.
+
+## G05 summary (see `docs/backend/G05_STAY_FOOD_ACTIVITIES.md` for the full contract)
+
+- New: `Accommodation`(+`Translation`), `DestinationAccommodation`, `ProviderAccommodationReference`,
+  `AccommodationOffer`; `Cuisine`(+`Translation`), `Dish`(+`Translation`), `DishCuisine`,
+  `DestinationDish`, `Restaurant`(+`Translation`), `DestinationRestaurant`, `RestaurantCuisine`,
+  `RestaurantDish`, `ProviderRestaurantReference`, `RestaurantOperationalSnapshot`;
+  `Attraction`(+`Translation`), `DestinationAttraction`, `Activity`(+`Translation`),
+  `DestinationActivity`, `ProviderActivityReference`, `ActivityOffer`. 3 new enums
+  (`AccommodationType`, `AvailabilityStatus`, `ProviderReferenceStatus`); 6 new `EntityKind` values.
+- Migration: `prisma/migrations/20260910164143_g05_stay_food_activities/` +
+  `20260910164912_g05_entity_kind_values/` - both purely additive, zero destructive changes. Both
+  had an unrelated pre-existing drift artifact (`EntityKind.FACT` + 17 trigram/GIST index drops)
+  manually stripped before applying - see each migration file's own note; flagged separately, not a
+  G05 change.
+- Reuses G02's `ProviderCapabilityType` (already declared `ACCOMMODATION_SEARCH`/
+  `RESTAURANT_SEARCH`/`ACTIVITY_SEARCH`/etc before G05) and `ProviderRegistryService
+  .getExecutionContext()` gate completely unchanged - no G02 model, enum, or service logic modified.
+- Seed: `prisma/golden/stay-food-activities.ts` - 1 accommodation/cuisine/2 dishes/restaurant/
+  attraction/activity per country (Hanoi Old Quarter, Gion), plus a dedicated, unmistakably
+  non-production `TEST_PROVIDER_G05_FIXTURE` (distinct from G02's e2e-only fixture) configured
+  `ACTIVE`/`APPROVED` end-to-end so the seeded offers/snapshot are live-servable through the real
+  gate for QA/demo. No real commercial provider (Google/Booking/Agoda/Viator/Amadeus) is activated.
+- Live-verified: canonical VI/EN discovery+detail for both countries, stay/activity offer freshness
+  (an expired offer is never presented as current), restaurant operational snapshot with
+  attribution, DTO rejection of invalid dates/occupancy/currency, publication safety, provider
+  ingestion idempotency, a real PostgreSQL rollback proof, and a live provider-suspension proof
+  (suspending the fixture provider's integration immediately empties offers/snapshot responses with
+  zero restart and zero caching, while the canonical entity routes stay fully reachable throughout).
+- Explicitly out of scope (per the G05 brief): `Trip`/booking/payment/wallet, affiliate/commission
+  ranking, G11 global search/map redesign, G06+ scope.

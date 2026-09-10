@@ -17,12 +17,13 @@ describe('DestinationsService', () => {
 
   beforeEach(() => {
     prisma = {
-      country: { findUnique: jest.fn() },
-      region: { findUnique: jest.fn() },
-      city: { findUnique: jest.fn() },
-      destination: { findUnique: jest.fn(), findMany: jest.fn().mockResolvedValue([]), create: jest.fn(), update: jest.fn() },
+      country: { findUnique: jest.fn(), findFirst: jest.fn() },
+      region: { findUnique: jest.fn(), findFirst: jest.fn() },
+      city: { findUnique: jest.fn(), findFirst: jest.fn() },
+      theme: { findFirst: jest.fn() },
+      destination: { findUnique: jest.fn(), findMany: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0), create: jest.fn(), update: jest.fn() },
       destinationTranslation: { upsert: jest.fn() },
-      $transaction: jest.fn(),
+      $transaction: jest.fn((ops: any[]) => Promise.all(ops)),
     };
     audit = { log: jest.fn() };
     media = { findPublicById: jest.fn() };
@@ -188,6 +189,120 @@ describe('DestinationsService', () => {
       const second = await service.getRelated('d1', 'vi');
       expect(first.map((r) => r.slug)).toEqual(['aaa', 'zzz']);
       expect(first.map((r) => r.slug)).toEqual(second.map((r) => r.slug));
+    });
+  });
+
+  /**
+   * Live QA defect regression (see docs/backend/G04_DESTINATION_DISCOVERY.md
+   * section 11 sibling bug): the controller used to pass the raw
+   * `?country=`/`?region=`/`?city=`/`?theme=` query string straight through
+   * as `countryId` etc, so every documented public filter silently matched
+   * nothing for any real slug. `listPublic` is the fix - it resolves each
+   * filter to an internal id before delegating to the existing id-based
+   * `list()`.
+   */
+  describe('listPublic (G04 live QA defect fix - slug resolution)', () => {
+    const baseArgs = { locale: 'vi', page: 1, pageSize: 20 };
+
+    it('resolves a country canonicalSlug to countryId and delegates to list()', async () => {
+      prisma.country.findFirst.mockResolvedValue({ id: 'country-vn' });
+      await service.listPublic({ country: 'viet-nam', ...baseArgs });
+      expect(prisma.country.findFirst).toHaveBeenCalledWith({
+        where: { status: PublicationStatus.PUBLISHED, OR: [{ canonicalSlug: 'viet-nam' }, { id: 'viet-nam' }] },
+      });
+      expect(prisma.destination.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ countryId: 'country-vn' }) }));
+    });
+
+    it('resolves a region canonicalSlug to regionId', async () => {
+      prisma.region.findFirst.mockResolvedValue({ id: 'region-hanoi' });
+      await service.listPublic({ region: 'ha-noi', ...baseArgs });
+      expect(prisma.destination.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ regionId: 'region-hanoi' }) }));
+    });
+
+    it('resolves a city canonicalSlug to cityId', async () => {
+      prisma.city.findFirst.mockResolvedValue({ id: 'city-hanoi' });
+      await service.listPublic({ city: 'ha-noi', ...baseArgs });
+      expect(prisma.destination.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ cityId: 'city-hanoi' }) }));
+    });
+
+    it('resolves a theme slug to themeId', async () => {
+      prisma.theme.findFirst.mockResolvedValue({ id: 'theme-heritage' });
+      await service.listPublic({ theme: 'heritage', ...baseArgs });
+      expect(prisma.destination.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ themeLinks: { some: { themeId: 'theme-heritage' } } }) }),
+      );
+    });
+
+    it('ID fallback: also accepts the raw internal id for backward compatibility', async () => {
+      prisma.country.findFirst.mockResolvedValue({ id: 'country-vn' });
+      await service.listPublic({ country: 'country-vn', ...baseArgs });
+      expect(prisma.country.findFirst).toHaveBeenCalledWith({
+        where: { status: PublicationStatus.PUBLISHED, OR: [{ canonicalSlug: 'country-vn' }, { id: 'country-vn' }] },
+      });
+      expect(prisma.destination.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ countryId: 'country-vn' }) }));
+    });
+
+    it('combined filters: country + theme both resolve and both apply to the same query', async () => {
+      prisma.country.findFirst.mockResolvedValue({ id: 'country-vn' });
+      prisma.theme.findFirst.mockResolvedValue({ id: 'theme-heritage' });
+      await service.listPublic({ country: 'viet-nam', theme: 'heritage', ...baseArgs });
+      expect(prisma.destination.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ countryId: 'country-vn', themeLinks: { some: { themeId: 'theme-heritage' } } }) }),
+      );
+    });
+
+    it('combined filters: country + city both resolve and both apply', async () => {
+      prisma.country.findFirst.mockResolvedValue({ id: 'country-vn' });
+      prisma.city.findFirst.mockResolvedValue({ id: 'city-hanoi' });
+      await service.listPublic({ country: 'viet-nam', city: 'ha-noi', ...baseArgs });
+      expect(prisma.destination.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ countryId: 'country-vn', cityId: 'city-hanoi' }) }),
+      );
+    });
+
+    it('combined filters: region + theme both resolve and both apply', async () => {
+      prisma.region.findFirst.mockResolvedValue({ id: 'region-hanoi' });
+      prisma.theme.findFirst.mockResolvedValue({ id: 'theme-political' });
+      await service.listPublic({ region: 'ha-noi', theme: 'political', ...baseArgs });
+      expect(prisma.destination.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ regionId: 'region-hanoi', themeLinks: { some: { themeId: 'theme-political' } } }) }),
+      );
+    });
+
+    it('an unresolvable country throws 404 COUNTRY_NOT_FOUND - never silently broadens or empties the page', async () => {
+      prisma.country.findFirst.mockResolvedValue(null);
+      await expect(service.listPublic({ country: 'not-a-real-country', ...baseArgs })).rejects.toThrow(NotFoundException);
+      expect(prisma.destination.findMany).not.toHaveBeenCalled();
+    });
+
+    it('an unresolvable region throws 404 REGION_NOT_FOUND', async () => {
+      prisma.region.findFirst.mockResolvedValue(null);
+      await expect(service.listPublic({ region: 'not-a-real-region', ...baseArgs })).rejects.toThrow(NotFoundException);
+    });
+
+    it('an unresolvable city throws 404 CITY_NOT_FOUND', async () => {
+      prisma.city.findFirst.mockResolvedValue(null);
+      await expect(service.listPublic({ city: 'not-a-real-city', ...baseArgs })).rejects.toThrow(NotFoundException);
+    });
+
+    it('an unresolvable theme throws 404 DESTINATION_THEME_NOT_FOUND', async () => {
+      prisma.theme.findFirst.mockResolvedValue(null);
+      await expect(service.listPublic({ theme: 'not-a-real-theme', ...baseArgs })).rejects.toThrow(NotFoundException);
+    });
+
+    it('a valid country combined with an unresolvable theme still throws - does not fall back to the country-only match', async () => {
+      prisma.country.findFirst.mockResolvedValue({ id: 'country-vn' });
+      prisma.theme.findFirst.mockResolvedValue(null);
+      await expect(service.listPublic({ country: 'viet-nam', theme: 'not-a-real-theme', ...baseArgs })).rejects.toThrow(NotFoundException);
+      expect(prisma.destination.findMany).not.toHaveBeenCalled();
+    });
+
+    it('no filters at all: queries with no geography/theme constraint (bare list)', async () => {
+      await service.listPublic({ ...baseArgs });
+      expect(prisma.country.findFirst).not.toHaveBeenCalled();
+      expect(prisma.destination.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ countryId: undefined, regionId: undefined, cityId: undefined }) }),
+      );
     });
   });
 });

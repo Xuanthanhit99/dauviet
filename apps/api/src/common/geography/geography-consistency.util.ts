@@ -1,5 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { PublicationStatus } from '@prisma/client';
 import { GEOGRAPHY_ERROR_CODES } from '../errors/geography-error-codes';
+import { PrismaService } from '../../prisma/prisma.service';
 
 /**
  * Shared hierarchy-consistency checks for the G01 Global Geography domain
@@ -58,4 +60,56 @@ export async function assertNoRegionParentCycle(
     code: GEOGRAPHY_ERROR_CODES.REGION_PARENT_CYCLE,
     message: 'Region parent chain exceeds the maximum supported depth.',
   });
+}
+
+/**
+ * Post-G04 API consistency hardening: sentinel distinguishing "no filter
+ * value was supplied" (`undefined`) from "a filter value was supplied but
+ * did not resolve to anything" - the caller must 404, never silently drop
+ * the filter (which would broaden the query) or silently return an empty
+ * page (indistinguishable from a merely-empty result).
+ */
+export const GEOGRAPHY_FILTER_UNRESOLVED = Symbol('geography-filter-unresolved');
+
+/**
+ * Resolves a public `?country=` filter value to a real, PUBLISHED Country
+ * id. Same defect class as G04's `DestinationsService.listPublic()` (see
+ * docs/backend/POST_G04_API_CONSISTENCY_HARDENING.md): `RegionsController`/
+ * `CitiesController`/`CountriesController`'s sibling routes used to pass
+ * this raw query string straight through as `countryId`. Country gets a
+ * wider accepted-form set than Region/City because `iso2`/`iso3` are
+ * already real, unique, always-populated G01 identity columns (not a new
+ * key system) - `canonicalSlug`, `iso2`, `iso3`, and the raw internal id
+ * (compatibility fallback) all resolve. No case-folding: every other
+ * slug/id lookup in this API is exact-match, and `iso2`/`iso3` are only
+ * ever stored uppercase (`CreateCountryDto`'s `@Matches(/^[A-Z]{2}$/)` /
+ * `/^[A-Z]{3}$/`) - adding case-insensitivity here would be a new,
+ * un-requested normalization rule, not a preserved existing one.
+ */
+export async function resolvePublicCountryId(
+  prisma: PrismaService,
+  value: string | undefined,
+): Promise<string | undefined | typeof GEOGRAPHY_FILTER_UNRESOLVED> {
+  if (!value) return undefined;
+  const country = await prisma.country.findFirst({
+    where: { status: PublicationStatus.PUBLISHED, OR: [{ canonicalSlug: value }, { iso2: value }, { iso3: value }, { id: value }] },
+  });
+  return country ? country.id : GEOGRAPHY_FILTER_UNRESOLVED;
+}
+
+/**
+ * Resolves a public `?region=`/`?parentRegion=` filter value to a real,
+ * PUBLISHED Region id (`canonicalSlug` or the raw internal id fallback -
+ * Region has no ISO-code equivalent). Same rationale as
+ * `resolvePublicCountryId` above.
+ */
+export async function resolvePublicRegionId(
+  prisma: PrismaService,
+  value: string | undefined,
+): Promise<string | undefined | typeof GEOGRAPHY_FILTER_UNRESOLVED> {
+  if (!value) return undefined;
+  const region = await prisma.region.findFirst({
+    where: { status: PublicationStatus.PUBLISHED, OR: [{ canonicalSlug: value }, { id: value }] },
+  });
+  return region ? region.id : GEOGRAPHY_FILTER_UNRESOLVED;
 }

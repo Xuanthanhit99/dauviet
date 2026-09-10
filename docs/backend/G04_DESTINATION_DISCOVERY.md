@@ -207,3 +207,69 @@ scope - `Destination` is not yet integrated into either, matching the brief's ex
 not to redesign global search/map in this phase). The completeness-weighted composite ranking
 score described in section 7 above is a documented, not-yet-built extension point for a future
 phase, not a silent omission.
+
+## 14. Defects found and fixed by re-verification live QA (new machine, post-"COMPLETE")
+
+This phase's original sign-off above (section 11) was re-verified live on a separate machine
+rather than trusted from this document alone, per the explicit instruction that live gates are
+never marked PASS from prior-machine documentation. That re-verification found two more real,
+previously-uncaught defects in this exact area - both fixed, both covered by permanent regression
+tests, neither a redesign of the internal Destination query API.
+
+**Defect: `GET /v1/destinations?country=&region=&city=&theme=` accepted only a raw internal id,
+never the documented public slug.** Root cause: `DestinationsController.list()` passed
+`query.country`/`query.region`/`query.city`/`query.theme` straight through as
+`countryId`/`regionId`/`cityId`/`themeId` to `DestinationsService.list()` - the exact same class of
+bug as section 11's `VALIDATION_ERROR` defect (nobody had ever actually called this route with a
+real filter value), just one layer deeper: the whitelist-binding fix in section 11 let the filter
+keys through, but nothing ever resolved them from their public `canonicalSlug`/`slug` shape to the
+id the WHERE clause needs. Live reproduction: `GET /v1/destinations?country=viet-nam` (the real,
+correct Vietnam slug) silently returned `{items: [], total: 0}` - no error, indistinguishable from
+"no destinations match" - while only the raw cuid ever worked. **Fixed** by adding
+`DestinationsService.listPublic()` as the one new public entry point the controller now calls:
+it resolves `country`/`region`/`city` (`canonicalSlug`, requiring `status: PUBLISHED`, matching
+every other public geography lookup) and `theme` (`slug`) to their internal ids - accepting the raw
+id too, as a compatibility fallback, since the pre-fix behavior technically depended on it - then
+delegates to the original, unchanged, id-based `list()`. `list()` itself was deliberately left
+untouched: `CountriesService.getDestinations` and `CitiesService.getDestinations` both already call
+it directly with ids they resolved themselves, and forcing them through slug resolution too would
+have been an unrequested redesign of a working internal contract, not a bug fix. An explicitly
+supplied filter that fails to resolve now throws the same `*_NOT_FOUND` 404 convention every other
+slug-keyed public route in this API already uses (`COUNTRY_NOT_FOUND` / `REGION_NOT_FOUND` /
+`CITY_NOT_FOUND` / `DESTINATION_THEME_NOT_FOUND`) - deliberately never a silently emptied page
+(which would be indistinguishable from a merely-empty result) and never a silently broadened query
+(dropping the filter entirely). Combined filters (e.g. `country` + `theme`) were verified to narrow
+the same query, not just resolve independently. Regression coverage: 13 new unit tests
+(`destinations.service.spec.ts` - single-filter resolution for all four filters, the id-compat
+fallback, three combined-filter combinations, four "unresolvable -> 404" cases including a valid
+filter combined with an invalid one) plus a new real-Postgres e2e test
+(`test/destination-composition.e2e-spec.ts`) that creates a real published Country/Region/City/
+Theme/Destination, exercises every filter (single, combined, id-fallback) against the live database,
+and asserts the 404 behavior for an unresolvable slug.
+
+**Separately noted, not fixed (out of scope):** the same raw-query-value-as-id pattern also exists
+in `CitiesController`/`RegionsController`/`CountriesController`'s own `?country=`/`?region=`/
+`?city=` filters (pre-existing G01 code, not part of this phase's Destination Discovery contract).
+Left untouched per explicit instruction not to redesign beyond the proven defect's actual scope -
+flagged here for whoever next touches those controllers.
+
+**Unrelated defect found while re-running this phase's own e2e suite:** both pre-existing tests in
+`test/destination-composition.e2e-spec.ts` (the RBAC/audit test and the real-rollback-proof test)
+created their fixture `Place` with `type: 'LANDMARK'`, which is not a member of the `PlaceType`
+enum - `POST /v1/places` had always 400'd on this payload. Never caught because (per
+`test/bootstrap-test-app.ts`'s own header comment) no `.e2e-spec.ts` file in this repo had ever
+actually been executed before Phase 12.1, and apparently not run live again since. **Fixed** by
+changing the fixture to `type: 'MONUMENT'`, a real enum value - a one-line test-data correction,
+not a behavior change.
+
+**Second unrelated defect found running the full e2e suite twice in a row (the actual bar this
+phase's live QA holds every other idempotency claim to):** this same file's `Country` fixtures use
+fixed `iso2`/`iso3` codes (`ZZ`/`ZZZ`, `YY`/`YYY`, `XX`/`XXX`, `QF`/`QFI`) - they cannot carry a
+per-run `stamp` suffix like every other fixture name in this file does, because
+`CreateCountryDto` enforces real ISO 3166-1 alpha-2/alpha-3 shape (`@Matches(/^[A-Z]{2}$/)` /
+`/^[A-Z]{3}$/`). With no cleanup, a second run 409-conflicted on the unique `iso2`/`iso3` index -
+i.e. this suite had never actually been proven re-runnable, only runnable-once. **Fixed** by adding
+a `cleanupFixtureCountries()` helper (deletes the fixture countries and everything that hangs off
+them - destinations, regions, cities, and their translations, in FK order) called from both
+`beforeAll` and `afterAll`. Verified live: the full suite was run twice back to back after the fix,
+both green.

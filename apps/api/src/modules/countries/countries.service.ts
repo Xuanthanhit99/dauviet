@@ -202,21 +202,32 @@ export class CountriesService {
     return this.regions.list({ countryId: country.id, type, locale, page, pageSize });
   }
 
-  async getCities(countrySlug: string, locale: string, page: number, pageSize: number, regionId?: string) {
+  /**
+   * `region` here is a public canonicalSlug/id (post-G04 API consistency
+   * hardening - see docs/backend/POST_G04_API_CONSISTENCY_HARDENING.md) -
+   * this used to be forwarded straight through as `CityListFilter.regionId`
+   * to the id-based `cities.list()`, so a real region slug silently matched
+   * nothing. `country.id` is already known-good (resolved from the path
+   * `:slug` above via `getPublishedIdBySlug`) and is passed through
+   * `cities.listPublic()`'s id-fallback branch - one resolution boundary,
+   * not two different calling conventions for the same method.
+   */
+  async getCities(countrySlug: string, locale: string, page: number, pageSize: number, region?: string) {
     const country = await this.getPublishedIdBySlug(countrySlug);
-    return this.cities.list({ countryId: country.id, regionId, locale, page, pageSize });
+    return this.cities.listPublic({ country: country.id, region, locale, page, pageSize });
   }
 
+  /** Same rationale as `getCities` above, for `region`/`city` via `destinations.listPublic()` (G04's already-fixed public boundary). */
   async getDestinations(
     countrySlug: string,
     locale: string,
     page: number,
     pageSize: number,
-    regionId?: string,
-    cityId?: string,
+    region?: string,
+    city?: string,
     type?: DestinationType,
   ) {
     const country = await this.getPublishedIdBySlug(countrySlug);
-    return this.destinations.list({ countryId: country.id, regionId, cityId, type, locale, page, pageSize });
+    return this.destinations.listPublic({ country: country.id, region, city, type, locale, page, pageSize });
   }
 }

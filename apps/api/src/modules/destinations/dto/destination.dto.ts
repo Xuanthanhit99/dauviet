@@ -49,17 +49,17 @@ export class ListDestinationsQueryDto {
   @Max(100)
   pageSize: number = 20;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: "Country canonicalSlug (e.g. \"viet-nam\") - the raw internal id also still resolves, but is not a documented public shape. Unresolvable value -> 404 COUNTRY_NOT_FOUND, never a silently broadened/empty page." })
   @IsOptional()
   @IsString()
   country?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Region canonicalSlug. Unresolvable value -> 404 REGION_NOT_FOUND.' })
   @IsOptional()
   @IsString()
   region?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'City canonicalSlug. Unresolvable value -> 404 CITY_NOT_FOUND.' })
   @IsOptional()
   @IsString()
   city?: string;
@@ -69,7 +69,7 @@ export class ListDestinationsQueryDto {
   @IsEnum(DestinationType)
   type?: DestinationType;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Theme slug. Unresolvable value -> 404 DESTINATION_THEME_NOT_FOUND.' })
   @IsOptional()
   @IsString()
   theme?: string;

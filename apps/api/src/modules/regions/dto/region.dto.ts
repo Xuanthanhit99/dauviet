@@ -4,6 +4,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsEnum,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
@@ -12,6 +13,50 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { RegionType, TranslationMethod } from '@prisma/client';
+
+/**
+ * Post-G04 API consistency hardening (see
+ * docs/backend/POST_G04_API_CONSISTENCY_HARDENING.md): `RegionsController
+ * .list()` used to bind BOTH a whole-object `@Query() query:
+ * OffsetPaginationQuery` (global `ValidationPipe` with `whitelist: true` +
+ * `forbidNonWhitelisted: true`) AND separate `@Query('country')`-style
+ * individual params over the exact same `req.query` object - the same
+ * `VALIDATION_ERROR: "property X should not exist"` defect class G04
+ * originally found and fixed on `GET /v1/destinations` (see
+ * docs/backend/G04_DESTINATION_DISCOVERY.md section 11). One combined DTO
+ * (pagination + every filter field) fixes it the same way.
+ */
+export class ListRegionsQueryDto {
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @ApiPropertyOptional({ default: 20, maximum: 100 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  pageSize: number = 20;
+
+  @ApiPropertyOptional({ description: 'Country canonicalSlug, ISO2, or ISO3 code (e.g. "viet-nam", "VN", "VNM") - the raw internal id also still resolves. Unresolvable value -> 404 COUNTRY_NOT_FOUND.' })
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @ApiPropertyOptional({ description: 'Region canonicalSlug, or the raw internal id. Unresolvable value -> 404 REGION_NOT_FOUND.' })
+  @IsOptional()
+  @IsString()
+  parentRegion?: string;
+
+  @ApiPropertyOptional({ enum: RegionType })
+  @IsOptional()
+  @IsEnum(RegionType)
+  type?: RegionType;
+}
 
 export class RegionTranslationInputDto {
   @ApiProperty({ example: 'vi' })

@@ -63,6 +63,7 @@ import {
   GOLDEN_PLACES,
   GOLDEN_REGIONS,
   GOLDEN_SOURCES,
+  GOLDEN_STAY_FOOD_ACTIVITIES,
   GOLDEN_STORIES,
   GOLDEN_THEMES,
   HistoricalDateSeed,
@@ -73,6 +74,7 @@ import {
   JAPAN_FACTS,
   JAPAN_PEOPLE,
   JAPAN_SOURCES,
+  STAY_FOOD_ACTIVITY_FIXTURE_PROVIDER_CODE,
   slug,
   sortBounds,
 } from './golden';
@@ -930,6 +932,284 @@ async function main() {
   // already-sourced Vietnam content (Ly Cong Uan ruled from Thang Long,
   // directly established by EVENT_DOI_DO_1010 already in this dataset).
   // -----------------------------------------------------------------------
+  // -----------------------------------------------------------------------
+  // G05 - Stay + Food + Activities (spec section 84-87): one Accommodation/
+  // Cuisine/Dish(x2)/Restaurant/Attraction/Activity per country, hung off
+  // the already-existing Hanoi Old Quarter / Gion Destinations. Every
+  // provider-backed row (offers, operational snapshot) is gated through the
+  // exact same G02 ProviderRegistryService.getExecutionContext() path a
+  // real adapter would use - see prisma/golden/stay-food-activities.ts for
+  // the full trust-boundary reasoning.
+  // -----------------------------------------------------------------------
+  console.log('Seeding G05 Stay + Food + Activities provider fixture (see prisma/golden/stay-food-activities.ts)...');
+  const g05Provider = await prisma.externalProvider.upsert({
+    where: { code: STAY_FOOD_ACTIVITY_FIXTURE_PROVIDER_CODE },
+    update: {},
+    create: { code: STAY_FOOD_ACTIVITY_FIXTURE_PROVIDER_CODE, name: 'G05 Fixture Provider (internal test only, never a real vendor)', status: 'ACTIVE', credentialMode: 'NONE', supportedEnvironments: ['SANDBOX'] },
+  });
+  const G05_CAPABILITIES = ['ACCOMMODATION_SEARCH', 'ACCOMMODATION_DETAIL', 'LIVE_PRICE', 'AVAILABILITY', 'RESTAURANT_SEARCH', 'RESTAURANT_DETAIL', 'ACTIVITY_SEARCH', 'ACTIVITY_DETAIL'] as const;
+  for (const capability of G05_CAPABILITIES) {
+    await prisma.providerCapability.upsert({ where: { providerId_capability: { providerId: g05Provider.id, capability } }, update: {}, create: { providerId: g05Provider.id, capability } });
+  }
+  const g05Integration = await prisma.providerIntegration.upsert({
+    where: { providerId_environment: { providerId: g05Provider.id, environment: 'SANDBOX' } },
+    update: {},
+    create: { providerId: g05Provider.id, environment: 'SANDBOX', status: 'ACTIVE', credentialReference: 'G05_FIXTURE_KEY_REF', lastVerifiedAt: new Date() },
+  });
+  for (const capability of G05_CAPABILITIES) {
+    await prisma.providerIntegrationCapability.upsert({
+      where: { integrationId_capability: { integrationId: g05Integration.id, capability } },
+      update: {},
+      create: { integrationId: g05Integration.id, capability, approvedAt: new Date() },
+    });
+  }
+  const g05License = await prisma.providerLicense.upsert({
+    where: { id: (await prisma.providerLicense.findFirst({ where: { providerId: g05Provider.id, datasetOrProduct: 'G05 fixture dataset' }, select: { id: true } }))?.id ?? '__none__' },
+    update: {},
+    create: {
+      providerId: g05Provider.id,
+      datasetOrProduct: 'G05 fixture dataset',
+      capability: null,
+      status: 'APPROVED',
+      rightsDisplay: 'ALLOWED',
+      rightsCache: 'ALLOWED',
+      rightsStore: 'PROHIBITED',
+      rightsModify: 'PROHIBITED',
+      rightsRedistribute: 'PROHIBITED',
+      rightsCommercialUse: 'ALLOWED',
+      attributionRequirement: 'REQUIRED',
+      termsUrl: 'https://example.test/g05-fixture-terms',
+    },
+  });
+  for (const capability of G05_CAPABILITIES) {
+    await prisma.providerDataPolicy.upsert({
+      where: { licenseId_capability: { licenseId: g05License.id, capability } },
+      update: {},
+      create: { providerId: g05Provider.id, licenseId: g05License.id, capability, cacheAllowed: 'ALLOWED', maxCacheSeconds: 3600, storeContentAllowed: 'PROHIBITED', persistentIdentifierAllowed: 'ALLOWED' },
+    });
+  }
+  const existingAttributionRule = await prisma.providerAttributionRule.findFirst({ where: { providerId: g05Provider.id, licenseId: g05License.id } });
+  if (!existingAttributionRule) {
+    await prisma.providerAttributionRule.create({
+      data: { providerId: g05Provider.id, licenseId: g05License.id, requirement: 'REQUIRED', displayText: `Data (c) ${STAY_FOOD_ACTIVITY_FIXTURE_PROVIDER_CODE} (internal test fixture)`, logoRequired: false },
+    });
+  }
+
+  const FRESH_EXPIRES_AT = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const EXPIRED_EXPIRES_AT = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  for (const spec of GOLDEN_STAY_FOOD_ACTIVITIES) {
+    const country = countriesByKey.get(spec.countryKey);
+    const region = regionsByKey.get(spec.regionKey);
+    const city = citiesByKey.get(spec.cityKey);
+    const destination = destinationsByKey.get(spec.destinationKey);
+    if (!country || !region || !city || !destination) throw new Error(`G05 fixture spec references an unknown geography/destination key (${spec.countryKey})`);
+
+    // Accommodation.
+    const accommodationSlug = slug(spec.accommodation.vi.name);
+    const accommodation = await prisma.accommodation.upsert({
+      where: { canonicalSlug: accommodationSlug },
+      update: {},
+      create: {
+        countryId: country.id,
+        regionId: region.id,
+        cityId: city.id,
+        type: spec.accommodation.type as never,
+        canonicalSlug: accommodationSlug,
+        status: PublicationStatus.PUBLISHED,
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.accommodation.vi.name, slug: accommodationSlug, summary: spec.accommodation.vi.summary, method: 'ORIGINAL' },
+            { locale: 'en', name: spec.accommodation.en.name, slug: slug(spec.accommodation.en.name), summary: spec.accommodation.en.summary, method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const },
+          ],
+        },
+      },
+    });
+    await prisma.destinationAccommodation.upsert({
+      where: { destinationId_accommodationId: { destinationId: destination.id, accommodationId: accommodation.id } },
+      update: {},
+      create: { destinationId: destination.id, accommodationId: accommodation.id, isFeatured: true },
+    });
+    const accommodationReference = await prisma.providerAccommodationReference.upsert({
+      where: { providerId_externalEntityId: { providerId: g05Provider.id, externalEntityId: `FIXTURE-STAY-${spec.accommodation.key}` } },
+      update: {},
+      create: { providerId: g05Provider.id, accommodationId: accommodation.id, externalEntityId: `FIXTURE-STAY-${spec.accommodation.key}`, status: 'ACTIVE', lastVerifiedAt: new Date() },
+    });
+    const stayOfferBase = { providerReferenceId: accommodationReference.id, checkInDate: new Date('2026-12-01T00:00:00.000Z'), checkOutDate: new Date('2026-12-03T00:00:00.000Z'), guests: 2, rooms: 1, currency: 'USD' };
+    await prisma.accommodationOffer.upsert({
+      where: { id: (await prisma.accommodationOffer.findFirst({ where: { providerReferenceId: accommodationReference.id, expiresAt: { gt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
+      update: {},
+      create: { ...stayOfferBase, amount: 120, totalAmount: 132, taxAmount: 12, availability: 'AVAILABLE', fetchedAt: new Date(), expiresAt: FRESH_EXPIRES_AT },
+    });
+    await prisma.accommodationOffer.upsert({
+      where: { id: (await prisma.accommodationOffer.findFirst({ where: { providerReferenceId: accommodationReference.id, expiresAt: { lt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
+      update: {},
+      create: { ...stayOfferBase, amount: 99, availability: 'UNAVAILABLE', fetchedAt: new Date(Date.now() - 48 * 60 * 60 * 1000), expiresAt: EXPIRED_EXPIRES_AT },
+    });
+
+    // Cuisine + Dishes.
+    const cuisineSlug = slug(spec.cuisine.vi.name);
+    const cuisine = await prisma.cuisine.upsert({
+      where: { canonicalSlug: cuisineSlug },
+      update: {},
+      create: {
+        countryId: country.id,
+        canonicalSlug: cuisineSlug,
+        status: PublicationStatus.PUBLISHED,
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.cuisine.vi.name, slug: cuisineSlug, summary: spec.cuisine.vi.summary, method: 'ORIGINAL' },
+            { locale: 'en', name: spec.cuisine.en.name, slug: slug(spec.cuisine.en.name), summary: spec.cuisine.en.summary, method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const },
+          ],
+        },
+      },
+    });
+    const dishIds: string[] = [];
+    for (const dishSpec of spec.dishes) {
+      const dishSlug = slug(dishSpec.vi.name);
+      const dish = await prisma.dish.upsert({
+        where: { canonicalSlug: dishSlug },
+        update: {},
+        create: {
+          canonicalSlug: dishSlug,
+          status: PublicationStatus.PUBLISHED,
+          translations: {
+            create: [
+              { locale: 'vi', name: dishSpec.vi.name, slug: dishSlug, summary: dishSpec.vi.summary, method: 'ORIGINAL' },
+              { locale: 'en', name: dishSpec.en.name, slug: slug(dishSpec.en.name), summary: dishSpec.en.summary, method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const },
+            ],
+          },
+        },
+      });
+      await prisma.dishCuisine.upsert({ where: { dishId_cuisineId: { dishId: dish.id, cuisineId: cuisine.id } }, update: {}, create: { dishId: dish.id, cuisineId: cuisine.id } });
+      await prisma.destinationDish.upsert({
+        where: { destinationId_dishId: { destinationId: destination.id, dishId: dish.id } },
+        update: {},
+        create: { destinationId: destination.id, dishId: dish.id },
+      });
+      dishIds.push(dish.id);
+    }
+
+    // Restaurant.
+    const restaurantSlug = slug(spec.restaurant.vi.name);
+    const restaurant = await prisma.restaurant.upsert({
+      where: { canonicalSlug: restaurantSlug },
+      update: {},
+      create: {
+        countryId: country.id,
+        regionId: region.id,
+        cityId: city.id,
+        canonicalSlug: restaurantSlug,
+        status: PublicationStatus.PUBLISHED,
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.restaurant.vi.name, slug: restaurantSlug, summary: spec.restaurant.vi.summary, method: 'ORIGINAL' },
+            { locale: 'en', name: spec.restaurant.en.name, slug: slug(spec.restaurant.en.name), summary: spec.restaurant.en.summary, method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const },
+          ],
+        },
+      },
+    });
+    await prisma.restaurantCuisine.upsert({ where: { restaurantId_cuisineId: { restaurantId: restaurant.id, cuisineId: cuisine.id } }, update: {}, create: { restaurantId: restaurant.id, cuisineId: cuisine.id } });
+    for (const dishId of dishIds) {
+      await prisma.restaurantDish.upsert({ where: { restaurantId_dishId: { restaurantId: restaurant.id, dishId } }, update: {}, create: { restaurantId: restaurant.id, dishId } });
+    }
+    await prisma.destinationRestaurant.upsert({
+      where: { destinationId_restaurantId: { destinationId: destination.id, restaurantId: restaurant.id } },
+      update: {},
+      create: { destinationId: destination.id, restaurantId: restaurant.id, isFeatured: true },
+    });
+    const restaurantReference = await prisma.providerRestaurantReference.upsert({
+      where: { providerId_externalEntityId: { providerId: g05Provider.id, externalEntityId: `FIXTURE-FOOD-${spec.restaurant.key}` } },
+      update: {},
+      create: { providerId: g05Provider.id, restaurantId: restaurant.id, externalEntityId: `FIXTURE-FOOD-${spec.restaurant.key}`, status: 'ACTIVE', lastVerifiedAt: new Date() },
+    });
+    const existingSnapshot = await prisma.restaurantOperationalSnapshot.findFirst({ where: { providerReferenceId: restaurantReference.id } });
+    if (!existingSnapshot) {
+      await prisma.restaurantOperationalSnapshot.create({
+        data: {
+          providerReferenceId: restaurantReference.id,
+          address: `123 ${spec.restaurant.en.name} Street`,
+          openingHours: [
+            { day: 'MON-FRI', open: '11:00', close: '21:00' },
+            { day: 'SAT-SUN', open: '10:00', close: '22:00' },
+          ],
+          timezone: spec.countryKey === 'COUNTRY_VN' ? 'Asia/Ho_Chi_Minh' : 'Asia/Tokyo',
+          providerRating: 4.5,
+          providerRatingCount: 128,
+          fetchedAt: new Date(),
+          expiresAt: FRESH_EXPIRES_AT,
+        },
+      });
+    }
+
+    // Attraction + Activity.
+    const attractionSlug = slug(spec.attraction.vi.name);
+    const attraction = await prisma.attraction.upsert({
+      where: { canonicalSlug: attractionSlug },
+      update: {},
+      create: {
+        countryId: country.id,
+        regionId: region.id,
+        cityId: city.id,
+        canonicalSlug: attractionSlug,
+        status: PublicationStatus.PUBLISHED,
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.attraction.vi.name, slug: attractionSlug, summary: spec.attraction.vi.summary, method: 'ORIGINAL' },
+            { locale: 'en', name: spec.attraction.en.name, slug: slug(spec.attraction.en.name), summary: spec.attraction.en.summary, method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const },
+          ],
+        },
+      },
+    });
+    await prisma.destinationAttraction.upsert({
+      where: { destinationId_attractionId: { destinationId: destination.id, attractionId: attraction.id } },
+      update: {},
+      create: { destinationId: destination.id, attractionId: attraction.id, isFeatured: true },
+    });
+
+    const activitySlug = slug(spec.activity.vi.name);
+    const activity = await prisma.activity.upsert({
+      where: { canonicalSlug: activitySlug },
+      update: {},
+      create: {
+        countryId: country.id,
+        regionId: region.id,
+        cityId: city.id,
+        attractionId: attraction.id,
+        canonicalSlug: activitySlug,
+        status: PublicationStatus.PUBLISHED,
+        translations: {
+          create: [
+            { locale: 'vi', name: spec.activity.vi.name, slug: activitySlug, summary: spec.activity.vi.summary, method: 'ORIGINAL' },
+            { locale: 'en', name: spec.activity.en.name, slug: slug(spec.activity.en.name), summary: spec.activity.en.summary, method: 'AI_ASSISTED' as const, status: 'AI_ASSISTED' as const },
+          ],
+        },
+      },
+    });
+    await prisma.destinationActivity.upsert({
+      where: { destinationId_activityId: { destinationId: destination.id, activityId: activity.id } },
+      update: {},
+      create: { destinationId: destination.id, activityId: activity.id, isFeatured: true },
+    });
+    const activityReference = await prisma.providerActivityReference.upsert({
+      where: { providerId_externalEntityId: { providerId: g05Provider.id, externalEntityId: `FIXTURE-ACTIVITY-${spec.activity.key}` } },
+      update: {},
+      create: { providerId: g05Provider.id, activityId: activity.id, destinationId: destination.id, externalEntityId: `FIXTURE-ACTIVITY-${spec.activity.key}`, status: 'ACTIVE', lastVerifiedAt: new Date() },
+    });
+    const activityOfferBase = { providerReferenceId: activityReference.id, activityDate: new Date('2026-12-05T00:00:00.000Z'), participants: 2, currency: 'USD' };
+    await prisma.activityOffer.upsert({
+      where: { id: (await prisma.activityOffer.findFirst({ where: { providerReferenceId: activityReference.id, expiresAt: { gt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
+      update: {},
+      create: { ...activityOfferBase, amount: 35, durationMinutes: 180, availability: 'AVAILABLE', fetchedAt: new Date(), expiresAt: FRESH_EXPIRES_AT },
+    });
+    await prisma.activityOffer.upsert({
+      where: { id: (await prisma.activityOffer.findFirst({ where: { providerReferenceId: activityReference.id, expiresAt: { lt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
+      update: {},
+      create: { ...activityOfferBase, amount: 30, durationMinutes: 180, availability: 'AVAILABLE', fetchedAt: new Date(Date.now() - 48 * 60 * 60 * 1000), expiresAt: EXPIRED_EXPIRES_AT },
+    });
+  }
+  console.log(`G05 Stay + Food + Activities: ${GOLDEN_STAY_FOOD_ACTIVITIES.length} countries fixtured (1 accommodation, 1 cuisine, 2 dishes, 1 restaurant, 1 attraction, 1 activity each).`);
+
   console.log('Linking G03 current geography and Japan Country associations...');
   const japanCountry = countriesByKey.get(JAPAN_COUNTRY_KEY);
   if (japanCountry) {

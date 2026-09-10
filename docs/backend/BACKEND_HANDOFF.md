@@ -1018,8 +1018,84 @@ content-level proof it connected to the intended database); OpenAPI regenerated 
 binding collision. See `G04_DESTINATION_DISCOVERY.md` section 11 for the full root-cause/fix/
 regression detail.
 
+**A second, deeper defect in the same route was found and fixed by a later live re-verification
+on a separate machine** (never trusted from this document's prior "COMPLETE" claim alone -
+re-proven live from scratch): section 11's fix let the filter keys through validation, but nothing
+ever resolved `?country=`/`?region=`/`?city=`/`?theme=` from their public `canonicalSlug`/`slug`
+shape to the internal id the query needs - every real public slug silently matched zero
+destinations. Fixed via `DestinationsService.listPublic()` (id-based `list()` left untouched for
+`CountriesService`/`CitiesService`, which already call it with pre-resolved ids). Two incidental
+test-hygiene defects (an invalid `PlaceType` fixture value, and non-re-runnable fixed-ISO-code
+fixtures with no cleanup) were also found and fixed while re-running this phase's own e2e suite -
+neither is a product/domain defect. Full root-cause/fix/regression detail in
+`G04_DESTINATION_DISCOVERY.md` section 14.
+
+**Post-G04 API consistency hardening (CLOSED):** the identical raw-query-value-as-id pattern
+flagged above as a known deferred issue in `CitiesController`/`RegionsController`/
+`CountriesController`'s own `?country=`/`?region=`/`?city=` filters has since been fixed in a
+dedicated hardening pass. It also turned out to carry the exact same dual-`@Query()` whitelist-
+binding collision as the original G04 defect (never caught for the same reason: these filters had
+never actually been called live with a real value before). Both are now fixed - `RegionsService
+.listPublic()`/`CitiesService.listPublic()` (new, mirroring `DestinationsService.listPublic()`)
+resolve `country` (canonicalSlug, ISO2, or ISO3 - all three are real, pre-existing, unique G01
+identity columns) and `region`/`parentRegion` (canonicalSlug) to ids, with the raw internal id
+still accepted as a compatibility fallback, and a proper `*_NOT_FOUND` 404 on an unresolvable
+value. `CountriesService.getCities`/`getDestinations` now delegate to `cities.listPublic()`/
+`destinations.listPublic()` instead of the id-based `list()`. Full detail:
+`docs/backend/POST_G04_API_CONSISTENCY_HARDENING.md`.
+
 **Deferred to later Global phases (not scope creep into G04):** any provider/commercial/booking
 data (G05), `Trip`/itinerary/cost engine (G06), location sharing (G08), expense settlement (G09),
 affiliate/monetization (G10), any redesign of `/v1/search`/`/v1/map/features` (G11 - `Destination`
 is not yet integrated into either). No `Trip`, `TripDay`, `TripItem`, or booking/availability table
 exists anywhere in this codebase as of G04.
+
+## 18. GLOBAL BACKEND V2 EXTENSION - G05 status
+
+**G05 (Stay + Food + Activities)**, built on the unchanged V1/G01/G02/G03/G04 baselines and both
+hardening passes. **Verdict: COMPLETE.** Full contract: `docs/backend/G05_STAY_FOOD_ACTIVITIES.md`.
+21 new models across three domains (`Accommodation`/`Cuisine`/`Dish`/`Restaurant`/`Attraction`/
+`Activity` canonical identities, a `Provider*Reference` per provider-backed domain, `*Offer`/
+`OperationalSnapshot` for time-boxed provider data), 3 new enums, 6 new `EntityKind` values - zero
+column/enum-value change to any existing G00-G04 model. Fully reuses G02's
+`ProviderRegistryService.getExecutionContext()` gate and `ProviderCapabilityType` (which already
+declared every G05-relevant capability before this phase started) unchanged - no G02 model or
+service logic was touched.
+
+**What was proven live:** Migration Path A (fresh DB, all 17 migrations, seeded twice); Migration
+Path B (the real pre-G05 database reconstructed by temporarily swapping `schema.prisma`/`seed.ts`
+back to their last-committed HEAD versions and the two G05 migrations out - not a git worktree this
+time, since neither file had any uncommitted non-G05 diff to preserve - with an explicit
+before/after row-count comparison across every V1/G01/G02/G03/G04 table proving zero data loss and
+zero Destination identity/slug change); Vietnam/Japan canonical discovery+detail (VI/EN); a real
+Decimal-precision stay offer with correct freshness (an expired offer is never presented as
+current); a restaurant operational snapshot with opening hours/timezone/provider-scoped rating; DTO
+rejection of invalid dates/occupancy/non-ISO currency; publication safety; RBAC/audit; a real
+PostgreSQL rollback proof; provider-reference ingestion idempotency; and a **live provider-
+suspension proof** - suspending the seeded fixture provider's integration directly in Postgres
+immediately empties the stay-offer and restaurant-snapshot responses (200 with an empty list, not a
+500) while the canonical `Accommodation`/`Restaurant` detail routes stay fully reachable throughout,
+with the offers/snapshot immediately restored once the integration is reactivated - nothing cached,
+no restart needed.
+
+**Fixture provider:** `TEST_PROVIDER_G05_FIXTURE` (`prisma/golden/stay-food-activities.ts`), seeded
+into the Golden Dataset (distinct from G02's own `TEST_PROVIDER_G02_FIXTURE`, which stays
+e2e-test-only) specifically because this phase's brief asked for a demonstrable, seeded
+fixture-backed offer/snapshot. Unmistakably non-production by naming and by its `name` field's
+explicit disclosure. No real commercial provider (Google Places, Booking.com, Agoda, Viator,
+Amadeus) is activated - all remain exactly as G02's own research (`docs/backend/PROVIDER_RESEARCH
+.md`, reused and spot-checked, not re-derived) left them.
+
+**Known deferred (not fixed, out of scope for G05):** `prisma migrate dev`'s auto-diff, generating
+both G05 migrations, proposed an unrelated `ALTER TYPE "EntityKind" ADD VALUE 'FACT'` and `DROP
+INDEX` for 17 pre-existing trigram/PostGIS GIST search indexes - live-confirmed pre-existing drift
+between `schema.prisma` and migration history that predates G05 entirely (the database already
+lacked `EntityKind.FACT` and already had all 17 indexes before any G05 work started). Both were
+manually stripped from both migration files before either was applied. A separate background task
+was flagged for a dedicated fix; not part of G05.
+
+**Deferred to later Global phases (not scope creep into G05):** `Trip`/`TripDay`/`TripItem`/
+`TripMember`/cost engine (G06), location sharing (G08), expense settlement (G09), any booking
+transaction/payment/wallet/affiliate conversion tracking (G10), any redesign of `/v1/search`/
+`/v1/map/features` (G11 - none of G05's new entities are integrated into either). No `Booking`,
+`Trip`, `TripItem`, or payment-processing table exists anywhere in this codebase as of G05.

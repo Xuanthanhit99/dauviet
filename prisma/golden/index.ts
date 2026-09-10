@@ -16,3 +16,5 @@ export * from './geography';
 export * from './japan';
 // G04 - Destination Discovery (small VN+JP composition fixture).
 export * from './destination-discovery';
+// G05 - Stay + Food + Activities (small VN+JP fixture).
+export * from './stay-food-activities';

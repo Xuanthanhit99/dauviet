@@ -6,13 +6,28 @@ import { resolveTranslation } from '../../common/translation/resolve-translation
 import { toSlug } from '../../common/util/slug.util';
 import { isValidIanaTimezone } from '../../common/util/timezone.util';
 import { GEOGRAPHY_ERROR_CODES } from '../../common/errors/geography-error-codes';
-import { assertSameCountry } from '../../common/geography/geography-consistency.util';
+import {
+  assertSameCountry,
+  GEOGRAPHY_FILTER_UNRESOLVED,
+  resolvePublicCountryId,
+  resolvePublicRegionId,
+} from '../../common/geography/geography-consistency.util';
 import { DestinationsService } from '../destinations/destinations.service';
 import { CreateCityDto, UpdateCityDto, UpsertCityTranslationDto } from './dto/city.dto';
 
 export interface CityListFilter {
   countryId?: string;
   regionId?: string;
+  locale: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface PublicCityListFilter {
+  /** Country canonicalSlug/iso2/iso3, or the raw internal id (compatibility fallback). */
+  country?: string;
+  /** Region canonicalSlug, or the raw internal id (compatibility fallback). */
+  region?: string;
   locale: string;
   page: number;
   pageSize: number;
@@ -201,6 +216,31 @@ export class CitiesService {
     return city;
   }
 
+  /**
+   * Public entry point for `GET /v1/cities` (post-G04 API consistency
+   * hardening - see docs/backend/POST_G04_API_CONSISTENCY_HARDENING.md).
+   * `CitiesController.list()` used to pass `?country=`/`?region=` straight
+   * through as `countryId`/`regionId` to `list()` below - the same defect
+   * class G04 already fixed on `/v1/destinations`. Resolves each filter to
+   * a real id (or 404s - never silently broadens/empties), then delegates
+   * to the unchanged, id-based `list()`.
+   */
+  async listPublic(filter: PublicCityListFilter) {
+    const { country, region, locale, page, pageSize } = filter;
+    const [countryId, regionId] = await Promise.all([
+      resolvePublicCountryId(this.prisma, country),
+      resolvePublicRegionId(this.prisma, region),
+    ]);
+    if (countryId === GEOGRAPHY_FILTER_UNRESOLVED) {
+      throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.COUNTRY_NOT_FOUND, message: 'Country not found.' });
+    }
+    if (regionId === GEOGRAPHY_FILTER_UNRESOLVED) {
+      throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.REGION_NOT_FOUND, message: 'Region not found.' });
+    }
+    return this.list({ countryId, regionId, locale, page, pageSize });
+  }
+
+  /** Id-based filter contract for trusted internal callers - public slug/code/id resolution lives in `listPublic` above, never here. */
   async list(filter: CityListFilter) {
     const { countryId, regionId, locale, page, pageSize } = filter;
     const where: Prisma.CityWhereInput = { status: PublicationStatus.PUBLISHED, countryId, regionId };

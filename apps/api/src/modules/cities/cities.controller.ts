@@ -8,7 +8,7 @@ import { CurrentUser, AuthUser } from '../../common/decorators/current-user.deco
 import { Locale } from '../../common/decorators/locale.decorator';
 import { OffsetPaginationQuery } from '../../common/dto/pagination.dto';
 import { CitiesService } from './cities.service';
-import { CreateCityDto, UpdateCityDto, UpsertCityTranslationDto } from './dto/city.dto';
+import { CreateCityDto, ListCitiesQueryDto, UpdateCityDto, UpsertCityTranslationDto } from './dto/city.dto';
 
 class SetCityStatusDto {
   @IsEnum(PublicationStatus)
@@ -22,13 +22,8 @@ export class CitiesController {
 
   @Public()
   @Get()
-  list(
-    @Query() query: OffsetPaginationQuery,
-    @Locale() locale: string,
-    @Query('country') countryId?: string,
-    @Query('region') regionId?: string,
-  ) {
-    return this.cities.list({ countryId, regionId, locale, page: query.page, pageSize: query.pageSize });
+  list(@Query() query: ListCitiesQueryDto, @Locale() locale: string) {
+    return this.cities.listPublic({ country: query.country, region: query.region, locale, page: query.page, pageSize: query.pageSize });
   }
 
   @Public()

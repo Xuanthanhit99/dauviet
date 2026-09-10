@@ -451,6 +451,15 @@ enum EntityKind {
   PROVIDER
   PROVIDER_LICENSE
   PROVIDER_INTEGRATION
+  // Added G05 (Global Backend V2 Extension, Stay + Food + Activities) -
+  // additive-only, lets AuditLog point precisely at the new canonical
+  // identity kinds. No existing value renamed/removed/reordered.
+  ACCOMMODATION
+  RESTAURANT
+  CUISINE
+  DISH
+  ATTRACTION
+  ACTIVITY
 }
 
 enum CommunityStoryType {
@@ -784,6 +793,9 @@ model MediaAsset {
   journeysHero                 Journey[]                     @relation("JourneyHeroMedia")
   communityStoriesHero         CommunityStory[]              @relation("CommunityStoryHeroMedia")
   destinationsHero             Destination[]                 @relation("DestinationHeroMedia")
+  accommodationsHero           Accommodation[]               @relation("AccommodationHeroMedia")
+  restaurantsHero              Restaurant[]                  @relation("RestaurantHeroMedia")
+  attractionsHero              Attraction[]                  @relation("AttractionHeroMedia")
   sourceDocuments              SourceDocument[]
   entityMedia                  EntityMedia[]
   contributionMedia            ContributionMedia[]
@@ -968,6 +980,12 @@ model Country {
   eraLinks               EraCountry[]
   // G04: optional country-scoped editorial Destination collections.
   destinationCollections DestinationCollection[]
+  // G05 (Stay + Food + Activities) - additive-only reverse relations.
+  accommodations         Accommodation[]
+  restaurants            Restaurant[]
+  attractions            Attraction[]
+  activities             Activity[]
+  cuisines               Cuisine[]
 
   @@index([status])
 }
@@ -1010,11 +1028,17 @@ model Region {
   parentRegion Region?  @relation("RegionHierarchy", fields: [parentRegionId], references: [id])
   childRegions Region[] @relation("RegionHierarchy")
 
-  translations  RegionTranslation[]
-  cities        City[]
-  destinations  Destination[]
+  translations   RegionTranslation[]
+  cities         City[]
+  destinations   Destination[]
   // G03: reverse side of Place.currentRegionId.
-  currentPlaces Place[]
+  currentPlaces  Place[]
+  // G05 (Stay + Food + Activities) - additive-only reverse relations.
+  accommodations Accommodation[]
+  restaurants    Restaurant[]
+  attractions    Attraction[]
+  activities     Activity[]
+  cuisines       Cuisine[]
 
   @@index([countryId])
   @@index([parentRegionId])
@@ -1066,10 +1090,15 @@ model City {
   country Country @relation(fields: [countryId], references: [id])
   region  Region? @relation(fields: [regionId], references: [id])
 
-  translations  CityTranslation[]
-  destinations  Destination[]
+  translations   CityTranslation[]
+  destinations   Destination[]
   // G03: reverse side of Place.currentCityId.
-  currentPlaces Place[]
+  currentPlaces  Place[]
+  // G05 (Stay + Food + Activities) - additive-only reverse relations.
+  accommodations Accommodation[]
+  restaurants    Restaurant[]
+  attractions    Attraction[]
+  activities     Activity[]
 
   @@index([countryId])
   @@index([regionId])
@@ -1145,6 +1174,13 @@ model Destination {
   // comment below for the identical trust-boundary reasoning).
   eventLinks            DestinationEvent[]
   collectionMemberships DestinationCollectionMember[]
+  // G05 (Stay + Food + Activities) - additive-only, same small-typed-join-
+  // table pattern as the G04 links above.
+  accommodationLinks    DestinationAccommodation[]
+  restaurantLinks       DestinationRestaurant[]
+  attractionLinks       DestinationAttraction[]
+  activityLinks         DestinationActivity[]
+  dishLinks             DestinationDish[]
 
   @@index([countryId])
   @@index([regionId])
@@ -1528,11 +1564,15 @@ model ExternalProvider {
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
 
-  capabilities     ProviderCapability[]
-  integrations     ProviderIntegration[]
-  licenses         ProviderLicense[]
-  dataPolicies     ProviderDataPolicy[]
-  attributionRules ProviderAttributionRule[]
+  capabilities            ProviderCapability[]
+  integrations            ProviderIntegration[]
+  licenses                ProviderLicense[]
+  dataPolicies            ProviderDataPolicy[]
+  attributionRules        ProviderAttributionRule[]
+  // G05 (Stay + Food + Activities) - additive-only reverse relations.
+  accommodationReferences ProviderAccommodationReference[]
+  restaurantReferences    ProviderRestaurantReference[]
+  activityReferences      ProviderActivityReference[]
 
   @@index([status])
 }
@@ -1776,6 +1816,10 @@ model Place {
   personLinks        PersonPlace[]
   // G04: back-relation for DestinationPlace (see Destination.placeLinks doc comment).
   destinationLinks   DestinationPlace[]
+  // G05: back-relation for Attraction.placeId (see Attraction doc comment) -
+  // optional typed mapping when a historical Place is also a visitor
+  // attraction, never a merge.
+  attractions        Attraction[]
 
   @@index([type])
   @@index([parentPlaceId])
@@ -3316,4 +3360,699 @@ model ContributionCatalogueResult {
 
   @@index([contributionId])
   @@index([resultType])
+}
+
+// =========================================================================
+// STAY + FOOD + ACTIVITIES  (G05, Global Backend V2 Extension)
+// =========================================================================
+// See docs/backend/G05_STAY_FOOD_ACTIVITIES.md for the full contract. Every
+// model below follows the exact layering G00 locked and G04 already proved
+// out for Destination: a first-party CANONICAL IDENTITY (this platform's own
+// opinion of what exists in the real world), completely separate from a
+// PROVIDER REFERENCE (one external vendor's record of the same real-world
+// thing - never the canonical PK, never auto-matched by fuzzy name/photo/
+// coordinates), completely separate again from a time-boxed OFFER/SNAPSHOT
+// (provider + context + currency + fetchedAt + freshness - never a
+// permanent `entity.price` column). No G00-G04 table, column, or enum value
+// is modified by this phase - every FK below points outward at an existing
+// G01 geography row, an existing G02 ExternalProvider, or an existing
+// MediaAsset/PublicationStatus, and every back-relation added to those
+// existing models above is purely additive (a new Prisma-side array field,
+// zero new column on the existing table itself).
+
+enum AccommodationType {
+  HOTEL
+  HOSTEL
+  GUESTHOUSE
+  RESORT
+  APARTMENT
+  HOMESTAY
+  RYOKAN
+  VILLA
+  CAMPING
+  OTHER
+}
+
+// Shared by AccommodationOffer and ActivityOffer (spec section 24/60) -
+// explicit, never inferred. Missing/absent provider data must resolve to
+// UNKNOWN, never silently treated as AVAILABLE (spec section 24/32).
+enum AvailabilityStatus {
+  UNKNOWN
+  AVAILABLE
+  UNAVAILABLE
+  LIMITED
+}
+
+// Lifecycle of one Provider*Reference row (spec section 73) - independent of
+// the canonical entity's own PublicationStatus and of the ProviderIntegration
+// status above it. UNMAPPED means the provider record exists but has not
+// (yet, or no longer) been linked to a canonical entity - it is never
+// resurrected into a public canonical response while UNMAPPED (spec section
+// 82/101).
+enum ProviderReferenceStatus {
+  ACTIVE
+  STALE
+  DISABLED
+  UNMAPPED
+}
+
+// -------------------------------------------------------------------------
+// STAY
+// -------------------------------------------------------------------------
+
+// First-party canonical lodging-property identity (spec section 13) - never
+// a provider listing, never keyed by a provider's external ID. Country is
+// required/authoritative; Region/City optional, exactly like Destination's
+// own G01 geography shape (spec section 16).
+model Accommodation {
+  id            String            @id @default(cuid())
+  canonicalSlug String            @unique
+  countryId     String
+  regionId      String?
+  cityId        String?
+  type          AccommodationType
+  latitude      Float?
+  longitude     Float?
+  importance    Int               @default(0)
+  status        PublicationStatus @default(DRAFT)
+  // Reuses the exact same rights/access-policy/status-gated MediaAsset
+  // resolution every other heroMediaId relation in this schema already has
+  // (spec section 20/69) - no raw URL ever stored here.
+  heroMediaId   String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  country   Country     @relation(fields: [countryId], references: [id])
+  region    Region?     @relation(fields: [regionId], references: [id])
+  city      City?       @relation(fields: [cityId], references: [id])
+  heroMedia MediaAsset? @relation("AccommodationHeroMedia", fields: [heroMediaId], references: [id])
+
+  translations       AccommodationTranslation[]
+  destinationLinks   DestinationAccommodation[]
+  providerReferences ProviderAccommodationReference[]
+
+  @@index([countryId])
+  @@index([regionId])
+  @@index([cityId])
+  @@index([type])
+  @@index([status])
+  @@index([heroMediaId])
+}
+
+model AccommodationTranslation {
+  id              String            @id @default(cuid())
+  accommodationId String
+  locale          String
+  name            String
+  slug            String
+  summary         String?
+  description     String?
+  seoTitle        String?
+  seoDescription  String?
+  status          TranslationStatus @default(DRAFT)
+  method          TranslationMethod @default(ORIGINAL)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  accommodation Accommodation @relation(fields: [accommodationId], references: [id], onDelete: Cascade)
+
+  @@unique([accommodationId, locale])
+}
+
+// Destination <-> Accommodation (spec section 16/52) - a real many-to-many
+// join, never a single-sided `Accommodation.destinationId`, mirroring
+// DestinationPlace exactly: one property may legitimately be discoverable
+// from more than one Destination page (e.g. a hotel between two adjacent
+// neighborhood Destinations).
+model DestinationAccommodation {
+  id              String   @id @default(cuid())
+  destinationId   String
+  accommodationId String
+  sortOrder       Int      @default(0)
+  isFeatured      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  destination   Destination   @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  accommodation Accommodation @relation(fields: [accommodationId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, accommodationId])
+  @@index([accommodationId])
+  @@index([destinationId, sortOrder])
+}
+
+// One external provider's record of a real-world property (spec section
+// 18) - NEVER the canonical identity. `accommodationId` is nullable: a
+// provider reference can exist unmapped (spec section 43/102 - "unmapped
+// provider entities must not be silently auto-created as canonical").
+// Matching to a canonical Accommodation is always an explicit admin action
+// (spec section 19 - no fuzzy name/photo/coordinate auto-matching).
+model ProviderAccommodationReference {
+  id               String                  @id @default(cuid())
+  providerId       String
+  accommodationId  String?
+  // The provider's own identifier for this listing - unique only WITHIN
+  // that provider's namespace (spec section 18 - "do not make
+  // externalEntityId globally unique across providers").
+  externalEntityId String
+  externalUrl      String?
+  status           ProviderReferenceStatus @default(UNMAPPED)
+  firstSeenAt      DateTime                @default(now())
+  lastSeenAt       DateTime                @default(now())
+  lastVerifiedAt   DateTime?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  provider      ExternalProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  accommodation Accommodation?   @relation(fields: [accommodationId], references: [id])
+
+  offers AccommodationOffer[]
+
+  @@unique([providerId, externalEntityId])
+  @@index([accommodationId])
+  @@index([status])
+}
+
+// Provider + property + context + currency + timestamp + freshness (spec
+// section 20/21) - never a permanent `accommodation.price` column. Every
+// field a real price needs to mean anything is mandatory context, not an
+// afterthought (spec section 21).
+model AccommodationOffer {
+  id                  String             @id @default(cuid())
+  providerReferenceId String
+  // Local calendar dates (spec section 98 - a hotel stay is never an
+  // arbitrary UTC timestamp), stored date-only.
+  checkInDate         DateTime           @db.Date
+  checkOutDate        DateTime           @db.Date
+  guests              Int
+  rooms               Int                @default(1)
+  // ISO 4217, normalized uppercase, validated at the DTO layer exactly like
+  // Country.iso3 already is (spec section 22/100) - never assumed USD.
+  currency            String
+  amount              Decimal            @db.Decimal(12, 2)
+  taxAmount           Decimal?           @db.Decimal(12, 2)
+  feeAmount           Decimal?           @db.Decimal(12, 2)
+  totalAmount         Decimal?           @db.Decimal(12, 2)
+  taxesIncluded       Boolean?
+  feesIncluded        Boolean?
+  availability        AvailabilityStatus @default(UNKNOWN)
+  bookingUrl          String?
+  fetchedAt           DateTime           @default(now())
+  expiresAt           DateTime?
+  refreshAfter        DateTime?
+  createdAt           DateTime           @default(now())
+
+  providerReference ProviderAccommodationReference @relation(fields: [providerReferenceId], references: [id], onDelete: Cascade)
+
+  @@index([providerReferenceId, checkInDate, checkOutDate])
+  @@index([expiresAt])
+}
+
+// -------------------------------------------------------------------------
+// FOOD
+// -------------------------------------------------------------------------
+
+// Culinary tradition/category (spec section 30) - deliberately NOT a rigid
+// nationality-only hierarchy (a Cuisine may be country-scoped, like
+// "Vietnamese", or narrower, like "Kyoto cuisine" / "Kaiseki") - so
+// country/region/city scope is optional context, never a mandatory chain,
+// and never a provider restaurant category promoted automatically (spec
+// section 43).
+model Cuisine {
+  id            String            @id @default(cuid())
+  canonicalSlug String            @unique
+  countryId     String?
+  regionId      String?
+  status        PublicationStatus @default(DRAFT)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  country Country? @relation(fields: [countryId], references: [id])
+  region  Region?  @relation(fields: [regionId], references: [id])
+
+  translations    CuisineTranslation[]
+  dishLinks       DishCuisine[]
+  restaurantLinks RestaurantCuisine[]
+
+  @@index([countryId])
+  @@index([status])
+}
+
+model CuisineTranslation {
+  id          String            @id @default(cuid())
+  cuisineId   String
+  locale      String
+  name        String
+  slug        String
+  summary     String?
+  description String?
+  status      TranslationStatus @default(DRAFT)
+  method      TranslationMethod @default(ORIGINAL)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  cuisine Cuisine @relation(fields: [cuisineId], references: [id], onDelete: Cascade)
+
+  @@unique([cuisineId, locale])
+}
+
+// Canonical food identity (spec section 31) - never embeds a restaurant
+// listing or a live price. A substantive historical/origin claim about a
+// Dish ("invented in year Y", "originated in region Z") is never stored as
+// unverified marketing prose (spec section 32) - editorial summary/
+// description text must be original synthesis grounded in already-sourced
+// V1/G03 content, the exact same discipline G04's Destination tagline/
+// whyVisit copy already follows (see docs/backend/G04_DESTINATION_
+// DISCOVERY.md section 12) - a service-layer/editorial discipline, not a
+// new hard FK to HistoricalFact (no FactDish table is introduced; adding
+// one with zero real sourced Dish-origin claims in this phase's Golden
+// Dataset would be schema for its own sake).
+model Dish {
+  id            String            @id @default(cuid())
+  canonicalSlug String            @unique
+  status        PublicationStatus @default(DRAFT)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  translations     DishTranslation[]
+  cuisineLinks     DishCuisine[]
+  destinationLinks DestinationDish[]
+  restaurantLinks  RestaurantDish[]
+
+  @@index([status])
+}
+
+model DishTranslation {
+  id          String            @id @default(cuid())
+  dishId      String
+  locale      String
+  name        String
+  slug        String
+  summary     String?
+  description String?
+  status      TranslationStatus @default(DRAFT)
+  method      TranslationMethod @default(ORIGINAL)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  dish Dish @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@unique([dishId, locale])
+}
+
+model DishCuisine {
+  id        String   @id @default(cuid())
+  dishId    String
+  cuisineId String
+  createdAt DateTime @default(now())
+
+  dish    Dish    @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  cuisine Cuisine @relation(fields: [cuisineId], references: [id], onDelete: Cascade)
+
+  @@unique([dishId, cuisineId])
+  @@index([cuisineId])
+}
+
+// Destination <-> Dish (spec section 33) - many-to-many, since a Dish may be
+// culturally associated with multiple Destinations; deliberately carries no
+// "origin" semantics (that is a HistoricalFact-backed claim, not a curation
+// link).
+model DestinationDish {
+  id            String   @id @default(cuid())
+  destinationId String
+  dishId        String
+  sortOrder     Int      @default(0)
+  isFeatured    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  dish        Dish        @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, dishId])
+  @@index([dishId])
+  @@index([destinationId, sortOrder])
+}
+
+// First-party canonical restaurant/venue identity (spec section 34) - never
+// a provider listing, never keyed by a Google Place ID or any other
+// provider's external ID.
+model Restaurant {
+  id            String            @id @default(cuid())
+  canonicalSlug String            @unique
+  countryId     String
+  regionId      String?
+  cityId        String?
+  latitude      Float?
+  longitude     Float?
+  status        PublicationStatus @default(DRAFT)
+  heroMediaId   String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  country   Country     @relation(fields: [countryId], references: [id])
+  region    Region?     @relation(fields: [regionId], references: [id])
+  city      City?       @relation(fields: [cityId], references: [id])
+  heroMedia MediaAsset? @relation("RestaurantHeroMedia", fields: [heroMediaId], references: [id])
+
+  translations       RestaurantTranslation[]
+  destinationLinks   DestinationRestaurant[]
+  cuisineLinks       RestaurantCuisine[]
+  dishLinks          RestaurantDish[]
+  providerReferences ProviderRestaurantReference[]
+
+  @@index([countryId])
+  @@index([regionId])
+  @@index([cityId])
+  @@index([status])
+  @@index([heroMediaId])
+}
+
+model RestaurantTranslation {
+  id             String            @id @default(cuid())
+  restaurantId   String
+  locale         String
+  name           String
+  slug           String
+  summary        String?
+  description    String?
+  seoTitle       String?
+  seoDescription String?
+  status         TranslationStatus @default(DRAFT)
+  method         TranslationMethod @default(ORIGINAL)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, locale])
+}
+
+model DestinationRestaurant {
+  id            String   @id @default(cuid())
+  destinationId String
+  restaurantId  String
+  sortOrder     Int      @default(0)
+  isFeatured    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  restaurant  Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, restaurantId])
+  @@index([restaurantId])
+  @@index([destinationId, sortOrder])
+}
+
+// First-party curated relation (spec section 40) - editorial, never
+// auto-derived from a provider's own category list (which stays provider
+// operational metadata on RestaurantOperationalSnapshot instead).
+model RestaurantCuisine {
+  id           String   @id @default(cuid())
+  restaurantId String
+  cuisineId    String
+  createdAt    DateTime @default(now())
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  cuisine    Cuisine    @relation(fields: [cuisineId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, cuisineId])
+  @@index([cuisineId])
+}
+
+model RestaurantDish {
+  id           String   @id @default(cuid())
+  restaurantId String
+  dishId       String
+  createdAt    DateTime @default(now())
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  dish       Dish       @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, dishId])
+  @@index([dishId])
+}
+
+model ProviderRestaurantReference {
+  id               String                  @id @default(cuid())
+  providerId       String
+  restaurantId     String?
+  externalEntityId String
+  externalUrl      String?
+  status           ProviderReferenceStatus @default(UNMAPPED)
+  firstSeenAt      DateTime                @default(now())
+  lastSeenAt       DateTime                @default(now())
+  lastVerifiedAt   DateTime?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  provider   ExternalProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  restaurant Restaurant?      @relation(fields: [restaurantId], references: [id])
+
+  operationalSnapshots RestaurantOperationalSnapshot[]
+
+  @@unique([providerId, externalEntityId])
+  @@index([restaurantId])
+  @@index([status])
+}
+
+// Operational provider data (spec section 36/37/38/39) - address/phone/
+// hours/price-level/rating are all provider-scoped snapshots, never
+// promoted into a canonical cross-provider truth. `openingHours` is a
+// small, non-sensitive structured JSON array of the provider's own
+// day/open/close entries (never raw provider payload - spec section 27 -
+// just the minimal operational fields this domain actually needs, with
+// their own `timezone` alongside so section 37's "do not assume UTC means
+// local time" is representable). `providerRating`/`providerRatingCount`
+// are explicitly PROVIDER-SCOPED (never merged across providers into one
+// fake score - spec section 38/50).
+model RestaurantOperationalSnapshot {
+  id                  String    @id @default(cuid())
+  providerReferenceId String
+  address             String?
+  phone               String?
+  website             String?
+  priceLevel          Int?
+  reservationUrl      String?
+  openingHours        Json?
+  timezone            String?
+  temporaryClosure    Boolean   @default(false)
+  permanentlyClosed   Boolean   @default(false)
+  providerRating      Float?
+  providerRatingCount Int?
+  // Reference/URL only, never the binary (spec section 39/52/103) - subject
+  // to the same provider policy gate as every other field class here.
+  providerPhotoRef    String?
+  fetchedAt           DateTime  @default(now())
+  expiresAt           DateTime?
+  refreshAfter        DateTime?
+  createdAt           DateTime  @default(now())
+
+  providerReference ProviderRestaurantReference @relation(fields: [providerReferenceId], references: [id], onDelete: Cascade)
+
+  @@index([providerReferenceId])
+  @@index([expiresAt])
+}
+
+// -------------------------------------------------------------------------
+// ACTIVITY
+// -------------------------------------------------------------------------
+
+// Visitor-facing attraction identity (spec section 41/42) - explicitly
+// separate from the knowledge/trust-domain `Place`. `placeId` is an
+// optional, additive, nullable typed mapping when a historical Place is
+// ALSO a visitor attraction (e.g. a museum) - never a merge, never implying
+// every Place is automatically an Attraction.
+model Attraction {
+  id            String            @id @default(cuid())
+  canonicalSlug String            @unique
+  countryId     String
+  regionId      String?
+  cityId        String?
+  placeId       String?
+  latitude      Float?
+  longitude     Float?
+  status        PublicationStatus @default(DRAFT)
+  heroMediaId   String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  country   Country     @relation(fields: [countryId], references: [id])
+  region    Region?     @relation(fields: [regionId], references: [id])
+  city      City?       @relation(fields: [cityId], references: [id])
+  place     Place?      @relation(fields: [placeId], references: [id])
+  heroMedia MediaAsset? @relation("AttractionHeroMedia", fields: [heroMediaId], references: [id])
+
+  translations     AttractionTranslation[]
+  destinationLinks DestinationAttraction[]
+  activities       Activity[]
+
+  @@index([countryId])
+  @@index([regionId])
+  @@index([cityId])
+  @@index([placeId])
+  @@index([status])
+  @@index([heroMediaId])
+}
+
+model AttractionTranslation {
+  id             String            @id @default(cuid())
+  attractionId   String
+  locale         String
+  name           String
+  slug           String
+  summary        String?
+  description    String?
+  seoTitle       String?
+  seoDescription String?
+  status         TranslationStatus @default(DRAFT)
+  method         TranslationMethod @default(ORIGINAL)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  attraction Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+
+  @@unique([attractionId, locale])
+}
+
+model DestinationAttraction {
+  id            String   @id @default(cuid())
+  destinationId String
+  attractionId  String
+  sortOrder     Int      @default(0)
+  isFeatured    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  attraction  Attraction  @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, attractionId])
+  @@index([attractionId])
+  @@index([destinationId, sortOrder])
+}
+
+// Canonical visitor EXPERIENCE identity (spec section 43) - deliberately
+// OPTIONAL to map: a `ProviderActivityReference` may exist with no
+// canonical Activity at all (never "one canonical Activity per provider
+// tour product" - that would create thousands of near-duplicate rows from
+// provider catalog noise). `attractionId` is optional context (a cooking
+// class has no Attraction; a guided museum tour might reference one).
+model Activity {
+  id            String            @id @default(cuid())
+  canonicalSlug String            @unique
+  countryId     String
+  regionId      String?
+  cityId        String?
+  attractionId  String?
+  status        PublicationStatus @default(DRAFT)
+  heroMediaId   String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  country    Country     @relation(fields: [countryId], references: [id])
+  region     Region?     @relation(fields: [regionId], references: [id])
+  city       City?       @relation(fields: [cityId], references: [id])
+  attraction Attraction? @relation(fields: [attractionId], references: [id])
+
+  translations       ActivityTranslation[]
+  destinationLinks   DestinationActivity[]
+  providerReferences ProviderActivityReference[]
+
+  @@index([countryId])
+  @@index([regionId])
+  @@index([cityId])
+  @@index([attractionId])
+  @@index([status])
+}
+
+model ActivityTranslation {
+  id          String            @id @default(cuid())
+  activityId  String
+  locale      String
+  name        String
+  slug        String
+  summary     String?
+  description String?
+  status      TranslationStatus @default(DRAFT)
+  method      TranslationMethod @default(ORIGINAL)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, locale])
+}
+
+model DestinationActivity {
+  id            String   @id @default(cuid())
+  destinationId String
+  activityId    String
+  sortOrder     Int      @default(0)
+  isFeatured    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  activity    Activity    @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, activityId])
+  @@index([activityId])
+  @@index([destinationId, sortOrder])
+}
+
+// A commercial ticket/tour product from one external provider (spec section
+// 44/46) - e.g. "Viator product XYZ" - NEVER the canonical Activity id.
+// `activityId` optional (spec section 43); `destinationId` optional direct
+// context for provider catalog browsing when no canonical Activity mapping
+// exists yet (spec section 44's field list).
+model ProviderActivityReference {
+  id               String                  @id @default(cuid())
+  providerId       String
+  activityId       String?
+  destinationId    String?
+  externalEntityId String
+  externalUrl      String?
+  status           ProviderReferenceStatus @default(UNMAPPED)
+  firstSeenAt      DateTime                @default(now())
+  lastSeenAt       DateTime                @default(now())
+  lastVerifiedAt   DateTime?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  provider ExternalProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  activity Activity?        @relation(fields: [activityId], references: [id])
+
+  offers ActivityOffer[]
+
+  @@unique([providerId, externalEntityId])
+  @@index([activityId])
+  @@index([destinationId])
+  @@index([status])
+}
+
+// Provider + product + date/participants + currency + timestamp +
+// freshness (spec section 45/47) - never a permanent `activity.price`.
+model ActivityOffer {
+  id                  String             @id @default(cuid())
+  providerReferenceId String
+  // Local calendar date (spec section 99) - timezone is not assumed; a
+  // provider-supplied local time string is stored separately from any
+  // internal sort timestamp, exactly like HistoricalDate's own
+  // "never fabricate a precision the source doesn't have" discipline.
+  activityDate        DateTime           @db.Date
+  activityTime        String?
+  participants        Int
+  currency            String
+  amount              Decimal            @db.Decimal(12, 2)
+  durationMinutes     Int?
+  ticketType          String?
+  cancellationSummary String?
+  bookingUrl          String?
+  availability        AvailabilityStatus @default(UNKNOWN)
+  fetchedAt           DateTime           @default(now())
+  expiresAt           DateTime?
+  refreshAfter        DateTime?
+  createdAt           DateTime           @default(now())
+
+  providerReference ProviderActivityReference @relation(fields: [providerReferenceId], references: [id], onDelete: Cascade)
+
+  @@index([providerReferenceId, activityDate])
+  @@index([expiresAt])
 }

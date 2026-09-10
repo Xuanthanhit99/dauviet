@@ -5,12 +5,29 @@ import { AuditService } from '../audit/audit.service';
 import { resolveTranslation } from '../../common/translation/resolve-translation.util';
 import { toSlug } from '../../common/util/slug.util';
 import { GEOGRAPHY_ERROR_CODES } from '../../common/errors/geography-error-codes';
-import { assertNoRegionParentCycle, assertSameCountry } from '../../common/geography/geography-consistency.util';
+import {
+  assertNoRegionParentCycle,
+  assertSameCountry,
+  GEOGRAPHY_FILTER_UNRESOLVED,
+  resolvePublicCountryId,
+  resolvePublicRegionId,
+} from '../../common/geography/geography-consistency.util';
 import { CreateRegionDto, UpdateRegionDto, UpsertRegionTranslationDto } from './dto/region.dto';
 
 export interface RegionListFilter {
   countryId?: string;
   parentRegionId?: string;
+  type?: RegionType;
+  locale: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface PublicRegionListFilter {
+  /** Country canonicalSlug/iso2/iso3, or the raw internal id (compatibility fallback) - never a raw id as the only documented public shape. */
+  country?: string;
+  /** Region canonicalSlug, or the raw internal id (compatibility fallback). */
+  parentRegion?: string;
   type?: RegionType;
   locale: string;
   page: number;
@@ -207,6 +224,31 @@ export class RegionsService {
     return region;
   }
 
+  /**
+   * Public entry point for `GET /v1/regions` (post-G04 API consistency
+   * hardening - see docs/backend/POST_G04_API_CONSISTENCY_HARDENING.md).
+   * `RegionsController.list()` used to pass `?country=`/`?parentRegion=`
+   * straight through as `countryId`/`parentRegionId` to `list()` below - the
+   * same defect class G04 already fixed on `/v1/destinations`. Resolves
+   * each filter to a real id (or 404s - never silently broadens/empties),
+   * then delegates to the unchanged, id-based `list()`.
+   */
+  async listPublic(filter: PublicRegionListFilter) {
+    const { country, parentRegion, type, locale, page, pageSize } = filter;
+    const [countryId, parentRegionId] = await Promise.all([
+      resolvePublicCountryId(this.prisma, country),
+      resolvePublicRegionId(this.prisma, parentRegion),
+    ]);
+    if (countryId === GEOGRAPHY_FILTER_UNRESOLVED) {
+      throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.COUNTRY_NOT_FOUND, message: 'Country not found.' });
+    }
+    if (parentRegionId === GEOGRAPHY_FILTER_UNRESOLVED) {
+      throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.REGION_NOT_FOUND, message: 'Region not found.' });
+    }
+    return this.list({ countryId, parentRegionId, type, locale, page, pageSize });
+  }
+
+  /** Id-based filter contract for trusted internal callers - public slug/code/id resolution lives in `listPublic` above, never here. */
   async list(filter: RegionListFilter) {
     const { countryId, parentRegionId, type, locale, page, pageSize } = filter;
     const where: Prisma.RegionWhereInput = {

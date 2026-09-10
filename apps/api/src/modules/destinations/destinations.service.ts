@@ -22,6 +22,18 @@ export interface DestinationListFilter {
   pageSize: number;
 }
 
+export interface PublicDestinationListFilter {
+  /** Country/Region/City canonicalSlug or Theme slug - the public filter contract every other public route already uses, never a raw internal id. */
+  country?: string;
+  region?: string;
+  city?: string;
+  type?: DestinationType;
+  theme?: string;
+  locale: string;
+  page: number;
+  pageSize: number;
+}
+
 /**
  * Bounded section sizes for detail composition (spec section 30/94/95) -
  * "detail may return richer bounded sections", never an unbounded graph
@@ -487,6 +499,63 @@ export class DestinationsService {
   }
 
   /**
+   * Public entry point for `GET /v1/destinations` (live QA defect: the
+   * controller used to pass the raw `?country=`/`?region=`/`?city=`/
+   * `?theme=` query string straight through as `countryId` etc to `list()`
+   * below, so every documented filter silently matched nothing for any real
+   * slug - see docs/backend/G04_DESTINATION_DISCOVERY.md section 11 for the
+   * sibling defect this same class of bug already caused once on this exact
+   * route). Resolves each filter from its public canonicalSlug/slug to the
+   * internal id `list()` actually needs, then delegates.
+   *
+   * Each filter accepts EITHER its public canonicalSlug/slug OR the raw
+   * internal id (`OR` lookup) - not because the id is a documented public
+   * shape, but so nothing already depending on the pre-fix id-passthrough
+   * behavior breaks silently.
+   *
+   * An explicitly-supplied filter that resolves to nothing throws the same
+   * `*_NOT_FOUND` 404 convention every other slug-keyed public route in this
+   * API already uses (`CountriesService.getPublishedIdBySlug`, etc) - never
+   * silently broadens the query by dropping the filter, and never silently
+   * empties the page by treating "not found" as "found nothing to combine
+   * with" (that would look identical to a merely-empty result set to a
+   * caller, hiding a typo'd/stale filter value). Country/Region/City also
+   * require `status: PUBLISHED`, matching every other public geography
+   * lookup - a DRAFT geography row is not a valid public filter target.
+   */
+  async listPublic(filter: PublicDestinationListFilter) {
+    const { country, region, city, type, theme, locale, page, pageSize } = filter;
+    const [countryRow, regionRow, cityRow, themeRow] = await Promise.all([
+      country
+        ? this.prisma.country.findFirst({ where: { status: PublicationStatus.PUBLISHED, OR: [{ canonicalSlug: country }, { id: country }] } })
+        : undefined,
+      region
+        ? this.prisma.region.findFirst({ where: { status: PublicationStatus.PUBLISHED, OR: [{ canonicalSlug: region }, { id: region }] } })
+        : undefined,
+      city
+        ? this.prisma.city.findFirst({ where: { status: PublicationStatus.PUBLISHED, OR: [{ canonicalSlug: city }, { id: city }] } })
+        : undefined,
+      theme ? this.prisma.theme.findFirst({ where: { OR: [{ slug: theme }, { id: theme }] } }) : undefined,
+    ]);
+
+    if (country && !countryRow) throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.COUNTRY_NOT_FOUND, message: 'Country not found.' });
+    if (region && !regionRow) throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.REGION_NOT_FOUND, message: 'Region not found.' });
+    if (city && !cityRow) throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.CITY_NOT_FOUND, message: 'City not found.' });
+    if (theme && !themeRow) throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.DESTINATION_THEME_NOT_FOUND, message: 'Theme not found.' });
+
+    return this.list({
+      countryId: countryRow?.id,
+      regionId: regionRow?.id,
+      cityId: cityRow?.id,
+      type,
+      themeId: themeRow?.id,
+      locale,
+      page,
+      pageSize,
+    });
+  }
+
+  /**
    * Lightweight summary list (spec section 94/95: list stays lightweight,
    * detail carries the richer bounded sections). Deterministic ordering -
    * `importance DESC, canonicalSlug ASC, id ASC` (spec section 26 example
@@ -494,7 +563,10 @@ export class DestinationsService {
    * existing editorial-priority field, so no redundant/fabricated score
    * column was added - see docs/backend/G04_DESTINATION_DISCOVERY.md
    * "Discovery ranking" for the full reasoning and documented future
-   * extension point for a completeness-weighted composite score).
+   * extension point for a completeness-weighted composite score). Id-based
+   * filter contract for trusted internal callers (`CountriesService`,
+   * `CitiesService`) that have already resolved their own geography rows -
+   * public slug resolution lives in `listPublic` above, never here.
    */
   async list(filter: DestinationListFilter) {
     const { countryId, regionId, cityId, type, themeId, locale, page, pageSize } = filter;
