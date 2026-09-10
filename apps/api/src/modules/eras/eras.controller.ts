@@ -8,7 +8,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 import { Locale } from '../../common/decorators/locale.decorator';
 import { ErasService } from './eras.service';
-import { CreateEraDto } from './dto/era.dto';
+import { CreateEraDto, SetEraCountriesDto } from './dto/era.dto';
 
 class SetEraParentDto {
   @ApiPropertyOptional({ description: 'Omit/null to detach from any parent era.' })
@@ -46,5 +46,12 @@ export class ErasController {
   @Patch(':id/parent')
   setParent(@Param('id') id: string, @Body() dto: SetEraParentDto, @CurrentUser() user: AuthUser) {
     return this.eras.setParent(id, dto.parentEraId ?? null, user.id);
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.EDITOR, Role.ADMIN)
+  @Patch(':id/countries')
+  setCountries(@Param('id') id: string, @Body() dto: SetEraCountriesDto, @CurrentUser() user: AuthUser) {
+    return this.eras.setCountries(id, dto.countryIds, user.id);
   }
 }

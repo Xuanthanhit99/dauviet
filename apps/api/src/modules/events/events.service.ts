@@ -8,7 +8,8 @@ import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
 import { buildHistoricalDateColumns, toHistoricalDateResponse } from '../../common/historical-date/historical-date.util';
 import { getPublicSourcesForEntity } from '../facts/fact-sources.util';
 import { StoriesService } from '../stories/stories.service';
-import { CreateEventDto } from './dto/event.dto';
+import { CreateEventDto, EventCountryLinkInputDto } from './dto/event.dto';
+import { GEOGRAPHY_ERROR_CODES } from '../../common/errors/geography-error-codes';
 
 @Injectable()
 export class EventsService {
@@ -30,9 +31,23 @@ export class EventsService {
     }
   }
 
+  /** Rejects any countryId that does not reference an existing G01 Country (G03 section 30-ish - EventCountry is a real M:N, not a 1:1 FK). */
+  private async assertCountriesExist(countryIds: string[]): Promise<void> {
+    if (countryIds.length === 0) return;
+    const found = await this.prisma.country.findMany({ where: { id: { in: countryIds } }, select: { id: true } });
+    const foundIds = new Set(found.map((c) => c.id));
+    const missing = countryIds.filter((id) => !foundIds.has(id));
+    if (missing.length > 0) {
+      throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.COUNTRY_NOT_FOUND, message: `No Country with id ${missing.join(', ')}.` });
+    }
+  }
+
   async create(dto: CreateEventDto, actorId: string) {
     const canonical = dto.translations.find((t) => t.locale === CANONICAL_LOCALE) ?? dto.translations[0];
     if (!canonical) throw new BadRequestException('At least one translation is required.');
+
+    const countries: EventCountryLinkInputDto[] = dto.countries ?? [];
+    await this.assertCountriesExist(countries.map((c) => c.countryId));
 
     const canonicalSlug = await this.ensureUniqueSlug(toSlug(canonical.title));
     const date = buildHistoricalDateColumns(dto.date);
@@ -47,12 +62,15 @@ export class EventsService {
         dateDay: date.day,
         datePrecision: date.precision,
         dateQualifier: date.qualifier,
+        dateEra: date.era,
         dateEndYear: date.endYear,
         dateEndMonth: date.endMonth,
         dateEndDay: date.endDay,
         dateLabel: date.label,
         dateSortStart: date.sortStart,
         dateSortEnd: date.sortEnd,
+        dateChronologyStart: date.chronologyStart,
+        dateChronologyEnd: date.chronologyEnd,
         translations: {
           create: dto.translations.map((t) => ({
             locale: t.locale,
@@ -63,12 +81,30 @@ export class EventsService {
             method: t.method ?? 'ORIGINAL',
           })),
         },
+        countryLinks: countries.length > 0 ? { create: countries.map((c) => ({ countryId: c.countryId, role: c.role })) } : undefined,
       },
       include: { translations: true },
     });
 
     await this.audit.log({ actorId, action: 'event.created', entityType: 'EVENT', entityId: event.id });
     return event;
+  }
+
+  /** Replaces the full EventCountry set for this event (G03) - mirrors the era/dynasty "setParent"-style setter pattern used elsewhere in this module. */
+  async setCountries(eventId: string, countries: EventCountryLinkInputDto[], actorId: string) {
+    const event = await this.prisma.historicalEvent.findUnique({ where: { id: eventId } });
+    if (!event) throw new NotFoundException('Event not found.');
+    await this.assertCountriesExist(countries.map((c) => c.countryId));
+
+    await this.prisma.$transaction([
+      this.prisma.eventCountry.deleteMany({ where: { eventId } }),
+      ...(countries.length > 0
+        ? [this.prisma.eventCountry.createMany({ data: countries.map((c) => ({ eventId, countryId: c.countryId, role: c.role })) })]
+        : []),
+    ]);
+
+    await this.audit.log({ actorId, action: 'event.countries.changed', entityType: 'EVENT', entityId: eventId, metadata: { countries } });
+    return this.prisma.eventCountry.findMany({ where: { eventId }, include: { country: true } });
   }
 
   async findBySlug(slug: string, locale: string) {
@@ -82,6 +118,7 @@ export class EventsService {
         placeLinks: { include: { place: { include: { translations: true } } } },
         personLinks: { include: { person: { include: { translations: true } } } },
         themeLinks: { include: { theme: { include: { translations: true } } } },
+        countryLinks: { include: { country: true } },
       },
     });
     if (!event || event.publicationStatus !== PublicationStatus.PUBLISHED) {
@@ -100,12 +137,15 @@ export class EventsService {
           day: event.dateDay,
           precision: event.datePrecision,
           qualifier: event.dateQualifier,
+          era: event.dateEra,
           endYear: event.dateEndYear,
           endMonth: event.dateEndMonth,
           endDay: event.dateEndDay,
           label: event.dateLabel,
           sortStart: event.dateSortStart,
           sortEnd: event.dateSortEnd,
+          chronologyStart: event.dateChronologyStart,
+          chronologyEnd: event.dateChronologyEnd,
         },
         locale,
       ),
@@ -124,6 +164,7 @@ export class EventsService {
         const { translation: tt } = resolveTranslation(l.theme.translations, locale);
         return { id: l.theme.id, slug: l.theme.slug, category: l.theme.category, name: tt?.name ?? l.theme.slug };
       }),
+      countries: event.countryLinks.map((l) => ({ id: l.country.id, slug: l.country.canonicalSlug, iso2: l.country.iso2, role: l.role })),
       translation,
       meta: { requestedLocale: locale, resolvedLocale, fallbackApplied },
     };
@@ -151,12 +192,15 @@ export class EventsService {
             day: e.dateDay,
             precision: e.datePrecision,
             qualifier: e.dateQualifier,
+            era: e.dateEra,
             endYear: e.dateEndYear,
             endMonth: e.dateEndMonth,
             endDay: e.dateEndDay,
             label: e.dateLabel,
             sortStart: e.dateSortStart,
             sortEnd: e.dateSortEnd,
+            chronologyStart: e.dateChronologyStart,
+            chronologyEnd: e.dateChronologyEnd,
           },
           locale,
         ),

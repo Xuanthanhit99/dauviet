@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
-import { DatePrecision, DateQualifier, PublicationStatus } from '@prisma/client';
+import { DateEra, DatePrecision, DateQualifier, PublicationStatus } from '@prisma/client';
 import { EventsService } from './events.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
@@ -23,17 +23,21 @@ describe('EventsService.findBySlug', () => {
     placeLinks: [],
     personLinks: [],
     themeLinks: [],
+    countryLinks: [],
     dateYear: 1288,
     dateMonth: null,
     dateDay: null,
     datePrecision: DatePrecision.YEAR,
     dateQualifier: DateQualifier.EXACT,
+    dateEra: DateEra.CE,
     dateEndYear: null,
     dateEndMonth: null,
     dateEndDay: null,
     dateLabel: null,
     dateSortStart: new Date(Date.UTC(1288, 0, 1)),
     dateSortEnd: new Date(Date.UTC(1288, 11, 31)),
+    dateChronologyStart: 1288 * 372,
+    dateChronologyEnd: 1288 * 372 + 371,
   };
 
   beforeEach(() => {

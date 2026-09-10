@@ -8,7 +8,7 @@ import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
 import { buildHistoricalDateColumns, toHistoricalDateResponse } from '../../common/historical-date/historical-date.util';
 import { getPublicSourcesForEntity } from '../facts/fact-sources.util';
 import { StoriesService } from '../stories/stories.service';
-import { CreatePersonDto } from './dto/person.dto';
+import { CreatePersonDto, PersonPlaceLinkInputDto } from './dto/person.dto';
 
 @Injectable()
 export class PeopleService {
@@ -46,23 +46,29 @@ export class PeopleService {
         birthDay: birth.day,
         birthPrecision: birth.precision,
         birthQualifier: birth.qualifier,
+        birthEra: birth.era,
         birthEndYear: birth.endYear,
         birthEndMonth: birth.endMonth,
         birthEndDay: birth.endDay,
         birthLabel: birth.label,
         birthSortStart: birth.sortStart,
         birthSortEnd: birth.sortEnd,
+        birthChronologyStart: birth.chronologyStart,
+        birthChronologyEnd: birth.chronologyEnd,
         deathYear: death.year,
         deathMonth: death.month,
         deathDay: death.day,
         deathPrecision: death.precision,
         deathQualifier: death.qualifier,
+        deathEra: death.era,
         deathEndYear: death.endYear,
         deathEndMonth: death.endMonth,
         deathEndDay: death.endDay,
         deathLabel: death.label,
         deathSortStart: death.sortStart,
         deathSortEnd: death.sortEnd,
+        deathChronologyStart: death.chronologyStart,
+        deathChronologyEnd: death.chronologyEnd,
         translations: {
           create: dto.translations.map((t) => ({
             locale: t.locale,
@@ -82,10 +88,38 @@ export class PeopleService {
     return person;
   }
 
+  /** Rejects any placeId that does not reference an existing Place (G03 - PersonPlace is a real M:N). */
+  private async assertPlacesExist(placeIds: string[]): Promise<void> {
+    if (placeIds.length === 0) return;
+    const found = await this.prisma.place.findMany({ where: { id: { in: placeIds } }, select: { id: true } });
+    const foundIds = new Set(found.map((p) => p.id));
+    const missing = placeIds.filter((id) => !foundIds.has(id));
+    if (missing.length > 0) {
+      throw new NotFoundException(`No Place with id ${missing.join(', ')}.`);
+    }
+  }
+
+  /** Replaces the full PersonPlace set for this person (G03) - mirrors the EventsService/ErasService setCountries setter pattern. Not a nationality field - see PersonPlaceRole doc comment. */
+  async setPlaces(personId: string, places: PersonPlaceLinkInputDto[], actorId: string) {
+    const person = await this.prisma.person.findUnique({ where: { id: personId } });
+    if (!person) throw new NotFoundException('Person not found.');
+    await this.assertPlacesExist(places.map((p) => p.placeId));
+
+    await this.prisma.$transaction([
+      this.prisma.personPlace.deleteMany({ where: { personId } }),
+      ...(places.length > 0
+        ? [this.prisma.personPlace.createMany({ data: places.map((p) => ({ personId, placeId: p.placeId, role: p.role })) })]
+        : []),
+    ]);
+
+    await this.audit.log({ actorId, action: 'person.places.changed', entityType: 'PERSON', entityId: personId, metadata: { places } });
+    return this.prisma.personPlace.findMany({ where: { personId }, include: { place: true } });
+  }
+
   async findBySlug(slug: string, locale: string) {
     const person = await this.prisma.person.findUnique({
       where: { canonicalSlug: slug },
-      include: { translations: true, heroMedia: true },
+      include: { translations: true, heroMedia: true, placeLinks: { include: { place: { include: { translations: true } } } } },
     });
     if (!person || person.publicationStatus !== PublicationStatus.PUBLISHED) {
       throw new NotFoundException('Person not found.');
@@ -102,12 +136,15 @@ export class PeopleService {
           day: person.birthDay,
           precision: person.birthPrecision,
           qualifier: person.birthQualifier,
+          era: person.birthEra,
           endYear: person.birthEndYear,
           endMonth: person.birthEndMonth,
           endDay: person.birthEndDay,
           label: person.birthLabel,
           sortStart: person.birthSortStart,
           sortEnd: person.birthSortEnd,
+          chronologyStart: person.birthChronologyStart,
+          chronologyEnd: person.birthChronologyEnd,
         },
         locale,
       ),
@@ -118,16 +155,23 @@ export class PeopleService {
           day: person.deathDay,
           precision: person.deathPrecision,
           qualifier: person.deathQualifier,
+          era: person.deathEra,
           endYear: person.deathEndYear,
           endMonth: person.deathEndMonth,
           endDay: person.deathEndDay,
           label: person.deathLabel,
           sortStart: person.deathSortStart,
           sortEnd: person.deathSortEnd,
+          chronologyStart: person.deathChronologyStart,
+          chronologyEnd: person.deathChronologyEnd,
         },
         locale,
       ),
       heroMedia: person.heroMedia,
+      places: person.placeLinks.map((l) => {
+        const { translation: pt } = resolveTranslation(l.place.translations, locale);
+        return { id: l.place.id, slug: l.place.canonicalSlug, name: pt?.name, role: l.role };
+      }),
       translation,
       meta: { requestedLocale: locale, resolvedLocale, fallbackApplied },
     };
@@ -192,12 +236,15 @@ export class PeopleService {
               day: l.event.dateDay,
               precision: l.event.datePrecision,
               qualifier: l.event.dateQualifier,
+              era: l.event.dateEra,
               endYear: l.event.dateEndYear,
               endMonth: l.event.dateEndMonth,
               endDay: l.event.dateEndDay,
               label: l.event.dateLabel,
               sortStart: l.event.dateSortStart,
               sortEnd: l.event.dateSortEnd,
+              chronologyStart: l.event.dateChronologyStart,
+              chronologyEnd: l.event.dateChronologyEnd,
             },
             locale,
           ),

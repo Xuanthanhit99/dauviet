@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DatePrecision, DateQualifier } from '@prisma/client';
+import { DateEra, DatePrecision, DateQualifier } from '@prisma/client';
 import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 /**
@@ -37,6 +37,11 @@ export class HistoricalDateInputDto {
   @IsOptional()
   @IsEnum(DateQualifier)
   qualifier?: DateQualifier;
+
+  @ApiPropertyOptional({ enum: DateEra, description: 'Defaults to CE (G03). year is always a positive, 1-based, in-era number - there is no historical year zero.' })
+  @IsOptional()
+  @IsEnum(DateEra)
+  era?: DateEra;
 
   @ApiPropertyOptional({ description: 'Only meaningful when qualifier is BETWEEN.' })
   @IsOptional()

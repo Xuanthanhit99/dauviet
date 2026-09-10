@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma, PlaceType } from '@prisma/client';
+import { DateEra, Prisma, PlaceType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { resolveTranslation } from '../../common/translation/resolve-translation.util';
 import { DISCOVERY_ERROR_CODES } from '../../common/errors/discovery-error-codes';
+import { toChronologyYearStart } from '../../common/historical-date/historical-date.util';
 import { MapFeaturesQueryDto } from './dto/map-query.dto';
 
 const MAX_FEATURES = 500;
@@ -152,7 +153,20 @@ export class MapService {
 
     let territoryFeatures: any[] = [];
     if (query.year !== undefined) {
-      const yearDate = new Date(Date.UTC(query.year, 0, 1));
+      // G03: filters on the authoritative chronologyStart/chronologyEnd
+      // ordinal, NOT the legacy sortStart/sortEnd DateTime pair. This
+      // matters specifically for a KNOWN BCE Territory: its legacy
+      // sortStart/sortEnd are intentionally NULL (see
+      // historical-date.util.ts "Legacy timestamp policy" - never a
+      // fabricated CE-era timestamp), and NULL there reads as "unknown -
+      // always match" below, which would incorrectly surface a BCE
+      // Territory in an unrelated CE year query. chronologyStart/End are
+      // populated for ANY known date regardless of era, so NULL there
+      // means what it should: genuinely undated. `query.year` itself has
+      // no era param (pre-existing map contract, unchanged) - it is always
+      // interpreted as CE, matching every real Territory this endpoint has
+      // ever served; true BCE map filtering remains G11 scope.
+      const yearOrdinal = toChronologyYearStart(query.year, DateEra.CE);
       // geometryStatus = 'PUBLISHED' only - draft/in-review/sensitive
       // historical geometry must never leak through the generic bbox
       // endpoint (spec section 12/33).
@@ -162,8 +176,8 @@ export class MapService {
         WHERE t."geometry" IS NOT NULL
           AND t."geometryStatus" = 'PUBLISHED'
           AND ST_Intersects(t."geometry", ST_MakeEnvelope(${minLng}, ${minLat}, ${maxLng}, ${maxLat}, 4326))
-          AND (t."sortStart" IS NULL OR t."sortStart" <= ${yearDate})
-          AND (t."sortEnd" IS NULL OR t."sortEnd" >= ${yearDate})
+          AND (t."chronologyStart" IS NULL OR t."chronologyStart" <= ${yearOrdinal})
+          AND (t."chronologyEnd" IS NULL OR t."chronologyEnd" >= ${yearOrdinal})
         LIMIT ${MAX_FEATURES}
       `;
 

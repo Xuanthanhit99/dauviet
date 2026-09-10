@@ -1,7 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
+import { DateEra } from '@prisma/client';
 import { MapService } from './map.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MapFeaturesQueryDto } from './dto/map-query.dto';
+import { toChronologyYearStart } from '../../common/historical-date/historical-date.util';
 
 /**
  * Spec section 4/9/11: bbox validation, zoom-based density, and the
@@ -115,5 +117,80 @@ describe('MapService.getFeatures', () => {
     const eventCall = prisma.$queryRaw.mock.calls.find((c: any) => c[0].join(' ').includes('HistoricalEvent'));
     const themeFragment = eventCall.slice(1).find((v: any) => v && typeof v.sql === 'string' && v.sql.includes('EventTheme'));
     expect(themeFragment).toBeDefined();
+  });
+
+  /**
+   * G03 (fix, 3rd architecture review): the Territory year filter was
+   * switched from the legacy sortStart/sortEnd DateTime pair to the
+   * authoritative chronologyStart/chronologyEnd ordinal pair specifically
+   * because "known BCE date, legacy field intentionally NULL" must NOT be
+   * treated the same as "genuinely unknown date, always match" - the old
+   * sortStart/sortEnd-based predicate could not tell the two apart. Event's
+   * WHERE clause (unaffected, left as-is per instruction) still requires
+   * dateSortStart IS NOT NULL, which already safely excludes a BCE event
+   * rather than mis-including it - a different, already-correct mechanism,
+   * not touched here.
+   */
+  it('the Territory year filter now uses chronologyStart/chronologyEnd, not the legacy sortStart/sortEnd pair', async () => {
+    await service.getFeatures(dto({ bbox: '105,20,106,21', year: 1200 }), 'vi');
+    const territoryCall = prisma.$queryRaw.mock.calls.find((c: any) => c[0].join(' ').includes('Territory'));
+    const territorySql = territoryCall[0].join(' ');
+    expect(territorySql).toContain('chronologyStart" IS NULL OR');
+    expect(territorySql).toContain('chronologyEnd" IS NULL OR');
+    expect(territorySql).not.toContain('"sortStart"');
+    expect(territorySql).not.toContain('"sortEnd"');
+  });
+
+  it("Event's year filter is unchanged (still dateSortStart IS NOT NULL) - BCE events are excluded, not mis-included", async () => {
+    await service.getFeatures(dto({ bbox: '105,20,106,21', year: 1200 }), 'vi');
+    const eventCall = prisma.$queryRaw.mock.calls.find((c: any) => c[0].join(' ').includes('HistoricalEvent'));
+    // The year-conditional clause is a Prisma.sql fragment interpolated as a
+    // VALUE (not static template text) - it must be found in the call's
+    // interpolated-values slice, same pattern as the existing "joins
+    // EventTheme only when a theme filter is provided" test above.
+    const yearFragment = eventCall.slice(1).find((v: any) => v && typeof v.sql === 'string' && v.sql.includes('dateSortStart'));
+    expect(yearFragment).toBeDefined();
+    expect(yearFragment.sql).toContain('dateSortStart" IS NOT NULL');
+  });
+});
+
+/**
+ * G03 (3rd architecture review) - pure-arithmetic proof of the Territory
+ * year-filter predicate's three required behaviors. This mirrors the SQL
+ * `WHERE (chronologyStart IS NULL OR chronologyStart <= :yearOrdinal) AND
+ * (chronologyEnd IS NULL OR chronologyEnd >= :yearOrdinal)` clause exactly
+ * (see map.service.ts), the same "transcribe-and-compare" approach used by
+ * chronology-backfill-parity.spec.ts, since $queryRaw is always mocked in
+ * this file and cannot exercise real Postgres row-filtering. The
+ * corresponding LIVE proof (a real BCE Territory row through real Postgres)
+ * is Migration Path A/B live QA, not a unit test.
+ */
+describe('Territory year-filter predicate (matches map.service.ts SQL exactly)', () => {
+  function matchesYearFilter(chronologyStart: number | null, chronologyEnd: number | null, yearOrdinal: number): boolean {
+    const startOk = chronologyStart === null || chronologyStart <= yearOrdinal;
+    const endOk = chronologyEnd === null || chronologyEnd >= yearOrdinal;
+    return startOk && endOk;
+  }
+
+  it('an UNKNOWN (undated) Territory always matches, preserving existing behavior', () => {
+    expect(matchesYearFilter(null, null, toChronologyYearStart(1200, DateEra.CE))).toBe(true);
+    expect(matchesYearFilter(null, null, toChronologyYearStart(2024, DateEra.CE))).toBe(true);
+  });
+
+  it('a known CE Territory filters normally: matches inside its span, not outside it', () => {
+    const start = toChronologyYearStart(1428, DateEra.CE);
+    const end = toChronologyYearStart(1527, DateEra.CE);
+    expect(matchesYearFilter(start, end, toChronologyYearStart(1450, DateEra.CE))).toBe(true);
+    expect(matchesYearFilter(start, end, toChronologyYearStart(1600, DateEra.CE))).toBe(false);
+    expect(matchesYearFilter(start, end, toChronologyYearStart(1400, DateEra.CE))).toBe(false);
+  });
+
+  it('a known BCE Territory can NOT match an arbitrary CE year filter', () => {
+    const start = toChronologyYearStart(300, DateEra.BCE);
+    const end = toChronologyYearStart(200, DateEra.BCE);
+    expect(matchesYearFilter(start, end, toChronologyYearStart(1200, DateEra.CE))).toBe(false);
+    expect(matchesYearFilter(start, end, toChronologyYearStart(2024, DateEra.CE))).toBe(false);
+    // It DOES still correctly match a query for its own (BCE) period, proving this isn't a blanket exclusion.
+    expect(matchesYearFilter(start, end, toChronologyYearStart(250, DateEra.BCE))).toBe(true);
   });
 });

@@ -13,6 +13,8 @@ import { PUBLIC_VISIBLE_STATUSES } from '../../common/moderation/public-visible-
 import { CreatePlaceDto, UpdatePlaceDto } from './dto/place.dto';
 import { NearbyPlacesQueryDto } from './dto/nearby-query.dto';
 import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
+import { GEOGRAPHY_ERROR_CODES } from '../../common/errors/geography-error-codes';
+import { assertSameCountry } from '../../common/geography/geography-consistency.util';
 
 const MAX_NEARBY_RADIUS_METERS = 50_000;
 const DEFAULT_NEARBY_RADIUS_METERS = 5_000;
@@ -47,9 +49,60 @@ export class PlacesService {
     }
   }
 
+  /**
+   * Current-geography consistency (G03, mirrors G01's
+   * DestinationsService.assertHierarchyConsistency): a Place's
+   * current-day country/region/city is inherently 1:1, so these are direct
+   * nullable FKs rather than join tables. countryId is optional overall
+   * (most historical Places have none of the three), but becomes required
+   * and authoritative the moment a regionId/cityId is supplied.
+   */
+  private async assertCurrentGeographyConsistency(countryId?: string | null, regionId?: string | null, cityId?: string | null) {
+    if (!countryId) {
+      if (regionId || cityId) {
+        throw new BadRequestException({
+          code: GEOGRAPHY_ERROR_CODES.GEOGRAPHY_COUNTRY_MISMATCH,
+          message: 'currentCountryId is required when currentRegionId or currentCityId is given.',
+        });
+      }
+      return;
+    }
+
+    const country = await this.prisma.country.findUnique({ where: { id: countryId } });
+    if (!country) {
+      throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.COUNTRY_NOT_FOUND, message: `No Country with id ${countryId}.` });
+    }
+
+    let city: { id: string; countryId: string; regionId: string | null } | null = null;
+    if (cityId) {
+      city = await this.prisma.city.findUnique({ where: { id: cityId } });
+      if (!city) {
+        throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.CITY_NOT_FOUND, message: `No City with id ${cityId}.` });
+      }
+      assertSameCountry(city, countryId, 'currentCityId must belong to the same country as currentCountryId.');
+    }
+
+    if (regionId) {
+      const region = await this.prisma.region.findUnique({ where: { id: regionId } });
+      if (!region) {
+        throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.REGION_NOT_FOUND, message: `No Region with id ${regionId}.` });
+      }
+      assertSameCountry(region, countryId, 'currentRegionId must belong to the same country as currentCountryId.');
+
+      if (city?.regionId && city.regionId !== regionId) {
+        throw new BadRequestException({
+          code: GEOGRAPHY_ERROR_CODES.GEOGRAPHY_REGION_CITY_MISMATCH,
+          message: "currentRegionId does not match the current city's own region.",
+        });
+      }
+    }
+  }
+
   async create(dto: CreatePlaceDto, actorId: string) {
     const canonical = dto.translations.find((t) => t.locale === CANONICAL_LOCALE) ?? dto.translations[0];
     if (!canonical) throw new BadRequestException('At least one translation is required.');
+
+    await this.assertCurrentGeographyConsistency(dto.currentCountryId, dto.currentRegionId, dto.currentCityId);
 
     const canonicalSlug = await this.ensureUniqueCanonicalSlug(toSlug(canonical.name));
 
@@ -58,6 +111,9 @@ export class PlacesService {
         type: dto.type,
         canonicalSlug,
         parentPlaceId: dto.parentPlaceId,
+        currentCountryId: dto.currentCountryId,
+        currentRegionId: dto.currentRegionId,
+        currentCityId: dto.currentCityId,
         publicationStatus: PublicationStatus.DRAFT,
         translations: {
           create: dto.translations.map((t) => ({
@@ -96,6 +152,9 @@ export class PlacesService {
         translations: true,
         heroMedia: true,
         parentPlace: { include: { translations: true } },
+        currentCountry: true,
+        currentRegion: true,
+        currentCity: true,
       },
     });
     if (!place) throw new NotFoundException('Place not found.');
@@ -111,6 +170,9 @@ export class PlacesService {
     return {
       id: place.id,
       slug: place.canonicalSlug,
+      currentCountry: place.currentCountry ? { id: place.currentCountry.id, slug: place.currentCountry.canonicalSlug, iso2: place.currentCountry.iso2 } : null,
+      currentRegion: place.currentRegion ? { id: place.currentRegion.id, slug: place.currentRegion.canonicalSlug } : null,
+      currentCity: place.currentCity ? { id: place.currentCity.id, slug: place.currentCity.canonicalSlug } : null,
       type: place.type,
       publicationStatus: place.publicationStatus,
       parentPlace: place.parentPlace
@@ -149,9 +211,21 @@ export class PlacesService {
     const place = await this.prisma.place.findUnique({ where: { id } });
     if (!place) throw new NotFoundException('Place not found.');
 
+    const nextCountryId = dto.currentCountryId === undefined ? place.currentCountryId : dto.currentCountryId;
+    const nextRegionId = dto.currentRegionId === undefined ? place.currentRegionId : dto.currentRegionId;
+    const nextCityId = dto.currentCityId === undefined ? place.currentCityId : dto.currentCityId;
+    if (dto.currentCountryId !== undefined || dto.currentRegionId !== undefined || dto.currentCityId !== undefined) {
+      await this.assertCurrentGeographyConsistency(nextCountryId, nextRegionId, nextCityId);
+    }
+
     const updated = await this.prisma.place.update({
       where: { id },
-      data: { type: dto.type },
+      data: {
+        type: dto.type,
+        currentCountryId: nextCountryId,
+        currentRegionId: nextRegionId,
+        currentCityId: nextCityId,
+      },
     });
 
     if (dto.latitude !== undefined && dto.longitude !== undefined) {
@@ -202,12 +276,15 @@ export class PlacesService {
               day: l.event.dateDay,
               precision: l.event.datePrecision,
               qualifier: l.event.dateQualifier,
+              era: l.event.dateEra,
               endYear: l.event.dateEndYear,
               endMonth: l.event.dateEndMonth,
               endDay: l.event.dateEndDay,
               label: l.event.dateLabel,
               sortStart: l.event.dateSortStart,
               sortEnd: l.event.dateSortEnd,
+              chronologyStart: l.event.dateChronologyStart,
+              chronologyEnd: l.event.dateChronologyEnd,
             },
             locale,
           ),

@@ -8,7 +8,7 @@ import { CurrentUser, AuthUser } from '../../common/decorators/current-user.deco
 import { Locale } from '../../common/decorators/locale.decorator';
 import { CursorPaginationQuery } from '../../common/dto/pagination.dto';
 import { PeopleService } from './people.service';
-import { CreatePersonDto } from './dto/person.dto';
+import { CreatePersonDto, SetPersonPlacesDto } from './dto/person.dto';
 import { CommentsService } from '../comments/comments.service';
 
 class SetPublicationStatusDto {
@@ -70,5 +70,12 @@ export class PeopleController {
   @Patch(':id/publication-status')
   setStatus(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: SetPublicationStatusDto) {
     return this.people.setPublicationStatus(id, dto.status, user.id);
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.EDITOR, Role.ADMIN)
+  @Patch(':id/places')
+  setPlaces(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: SetPersonPlacesDto) {
+    return this.people.setPlaces(id, dto.places, user.id);
   }
 }

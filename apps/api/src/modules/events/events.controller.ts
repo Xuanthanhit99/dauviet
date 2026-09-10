@@ -8,7 +8,7 @@ import { CurrentUser, AuthUser } from '../../common/decorators/current-user.deco
 import { Locale } from '../../common/decorators/locale.decorator';
 import { CursorPaginationQuery } from '../../common/dto/pagination.dto';
 import { EventsService } from './events.service';
-import { CreateEventDto } from './dto/event.dto';
+import { CreateEventDto, SetEventCountriesDto } from './dto/event.dto';
 import { CommentsService } from '../comments/comments.service';
 
 class SetPublicationStatusDto {
@@ -64,5 +64,12 @@ export class EventsController {
   @Patch(':id/publication-status')
   setStatus(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: SetPublicationStatusDto) {
     return this.events.setPublicationStatus(id, dto.status, user.id);
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.EDITOR, Role.ADMIN)
+  @Patch(':id/countries')
+  setCountries(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: SetEventCountriesDto) {
+    return this.events.setCountries(id, dto.countries, user.id);
   }
 }

@@ -181,6 +181,50 @@ enum DateQualifier {
   TRADITIONAL
 }
 
+// G03 (Global Backend V2 Extension, Global Historical Knowledge Extension).
+// Additive companion to DatePrecision/DateQualifier - see
+// docs/backend/HISTORICAL_DATE_V2.md for the full model. `year` on every
+// date-bearing column remains a POSITIVE, 1-based, in-era display number
+// (1 BCE and 1 CE are adjacent - there is no historical year zero); `era`
+// says which side of the epoch it falls on. Defaults to CE everywhere so
+// every existing Phase 00-12.1 date column keeps its exact prior meaning
+// with zero reinterpretation (a plain additive column with a DEFAULT).
+enum DateEra {
+  BCE
+  CE
+}
+
+// G03 - explicit occurrence-vs-scope semantics for EventCountry.role (a
+// generic optional string here was ambiguous - a reviewer could not tell
+// whether a linked country meant "this happened here" or "this is merely
+// related"). RELATED is the conservative default so an existing/unspecified
+// link never silently implies a stronger claim ("occurred in") than an
+// editor actually asserted.
+enum EventCountryRole {
+  OCCURRED_IN
+  AFFECTED
+  ORIGIN
+  DESTINATION
+  RELATED
+}
+
+// G03 - minimal Person<->Place association (spec's "people associated with
+// multiple geographic contexts" requirement). Deliberately NOT a
+// nationality/citizenship field and does not feed any nationality
+// inference - each row is one explicit, editor-asserted association in one
+// role. A person can have several rows against several places (e.g. BIRTH
+// in one place, RULE in another), and in principle more than one row for
+// the same role (e.g. RESIDENCE in two different places over a lifetime).
+enum PersonPlaceRole {
+  BIRTH
+  DEATH
+  RESIDENCE
+  ACTIVITY
+  RULE
+  EXILE
+  OTHER
+}
+
 enum FactType {
   BIOGRAPHICAL
   EVENT_DETAIL
@@ -911,10 +955,16 @@ model Country {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
-  translations CountryTranslation[]
-  regions      Region[]
-  cities       City[]
-  destinations Destination[]
+  translations  CountryTranslation[]
+  regions       Region[]
+  cities        City[]
+  destinations  Destination[]
+  // G03: reverse side of Place.currentCountryId/EventCountry/EraCountry -
+  // this global geography domain (G01) stays otherwise unaware of the
+  // historical domain; these are the only new back-relations added here.
+  currentPlaces Place[]
+  eventLinks    EventCountry[]
+  eraLinks      EraCountry[]
 
   @@index([status])
 }
@@ -957,9 +1007,11 @@ model Region {
   parentRegion Region?  @relation("RegionHierarchy", fields: [parentRegionId], references: [id])
   childRegions Region[] @relation("RegionHierarchy")
 
-  translations RegionTranslation[]
-  cities       City[]
-  destinations Destination[]
+  translations  RegionTranslation[]
+  cities        City[]
+  destinations  Destination[]
+  // G03: reverse side of Place.currentRegionId.
+  currentPlaces Place[]
 
   @@index([countryId])
   @@index([parentRegionId])
@@ -1011,8 +1063,10 @@ model City {
   country Country @relation(fields: [countryId], references: [id])
   region  Region? @relation(fields: [regionId], references: [id])
 
-  translations CityTranslation[]
-  destinations Destination[]
+  translations  CityTranslation[]
+  destinations  Destination[]
+  // G03: reverse side of Place.currentCityId.
+  currentPlaces Place[]
 
   @@index([countryId])
   @@index([regionId])
@@ -1461,7 +1515,21 @@ model Place {
   parentPlaceId        String?
   location             Unsupported("geometry(Point, 4326)")?
   geometry             Unsupported("geometry(Geometry, 4326)")?
+  // Untouched by G03 - Phase 03's documented free-text gap, never bulk-
+  // converted/reinterpreted (spec section 12). currentCountryId/RegionId/
+  // CityId below are new, optional, additive - populated only where an
+  // explicit, safe mapping exists.
   currentAdminRegion   String?
+  // G03: current (modern-day) geography context - direct nullable FKs, not
+  // a join table, because a physical Place has at most one current
+  // country/region/city (unlike Event/Era below, which genuinely need
+  // many-to-many). Mirrors the exact shape G01's Destination already uses
+  // (countryId/regionId/cityId), for consistency. This is operational/
+  // editorial metadata, not a HistoricalFact claim (spec section 56/57) -
+  // no citation is required to say "this place is currently in Kyoto."
+  currentCountryId     String?
+  currentRegionId      String?
+  currentCityId        String?
   historicalImportance Int                                      @default(0)
   heroMediaId          String?
   unescoStatus         String?
@@ -1470,9 +1538,12 @@ model Place {
   createdAt            DateTime                                 @default(now())
   updatedAt            DateTime                                 @updatedAt
 
-  parentPlace Place?      @relation("PlaceHierarchy", fields: [parentPlaceId], references: [id])
-  childPlaces Place[]     @relation("PlaceHierarchy")
-  heroMedia   MediaAsset? @relation("PlaceHeroMedia", fields: [heroMediaId], references: [id])
+  parentPlace    Place?      @relation("PlaceHierarchy", fields: [parentPlaceId], references: [id])
+  childPlaces    Place[]     @relation("PlaceHierarchy")
+  heroMedia      MediaAsset? @relation("PlaceHeroMedia", fields: [heroMediaId], references: [id])
+  currentCountry Country?    @relation(fields: [currentCountryId], references: [id])
+  currentRegion  Region?     @relation(fields: [currentRegionId], references: [id])
+  currentCity    City?       @relation(fields: [currentCityId], references: [id])
 
   translations       PlaceTranslation[]
   visits             PlaceVisit[]
@@ -1483,9 +1554,14 @@ model Place {
   communityLinks     CommunityStoryPlace[]
   contributions      Contribution[]
   thenNowComparisons ThenNowComparison[]
+  // G03: back-relation for PersonPlace (see Person.placeLinks doc comment).
+  personLinks        PersonPlace[]
 
   @@index([type])
   @@index([parentPlaceId])
+  @@index([currentCountryId])
+  @@index([currentRegionId])
+  @@index([currentCityId])
 }
 
 model PlaceTranslation {
@@ -1518,29 +1594,37 @@ model Person {
   // Historical date model (docs/backend/HISTORICAL_DOMAIN.md) - year/month/day
   // hold only what is actually known; birth*SortStart/End are internal
   // ordering aids only, never returned as "the" date over the API.
-  birthYear      Int?
-  birthMonth     Int?
-  birthDay       Int?
-  birthPrecision DatePrecision @default(UNKNOWN)
-  birthQualifier DateQualifier @default(UNCERTAIN)
-  birthEndYear   Int?
-  birthEndMonth  Int?
-  birthEndDay    Int?
-  birthLabel     String?
-  birthSortStart DateTime?
-  birthSortEnd   DateTime?
+  birthYear            Int?
+  birthMonth           Int?
+  birthDay             Int?
+  birthPrecision       DatePrecision @default(UNKNOWN)
+  birthQualifier       DateQualifier @default(UNCERTAIN)
+  // G03: which epoch `birthYear` (and, for a BETWEEN range, birthEndYear)
+  // falls in - defaults CE so every existing row's meaning is unchanged.
+  birthEra             DateEra       @default(CE)
+  birthEndYear         Int?
+  birthEndMonth        Int?
+  birthEndDay          Int?
+  birthLabel           String?
+  birthSortStart       DateTime?
+  birthSortEnd         DateTime?
+  birthChronologyStart Int?
+  birthChronologyEnd   Int?
 
-  deathYear      Int?
-  deathMonth     Int?
-  deathDay       Int?
-  deathPrecision DatePrecision @default(UNKNOWN)
-  deathQualifier DateQualifier @default(UNCERTAIN)
-  deathEndYear   Int?
-  deathEndMonth  Int?
-  deathEndDay    Int?
-  deathLabel     String?
-  deathSortStart DateTime?
-  deathSortEnd   DateTime?
+  deathYear            Int?
+  deathMonth           Int?
+  deathDay             Int?
+  deathPrecision       DatePrecision @default(UNKNOWN)
+  deathQualifier       DateQualifier @default(UNCERTAIN)
+  deathEra             DateEra       @default(CE)
+  deathEndYear         Int?
+  deathEndMonth        Int?
+  deathEndDay          Int?
+  deathLabel           String?
+  deathSortStart       DateTime?
+  deathSortEnd         DateTime?
+  deathChronologyStart Int?
+  deathChronologyEnd   Int?
 
   heroMediaId          String?
   historicalImportance Int               @default(0)
@@ -1556,6 +1640,10 @@ model Person {
   eventLinks     EventPerson[]
   storyLinks     StoryPerson[]
   communityLinks CommunityStoryPerson[]
+  // G03: explicit, editor-asserted association with a Place in a given role
+  // (birth/death/residence/etc) - see PersonPlaceRole doc comment. Not a
+  // nationality field.
+  placeLinks     PersonPlace[]
 }
 
 model PersonTranslation {
@@ -1583,26 +1671,37 @@ model PersonTranslation {
 }
 
 model HistoricalEvent {
-  id                String            @id @default(cuid())
-  canonicalSlug     String            @unique
-  eraId             String?
-  territoryId       String?
-  dateYear          Int?
-  dateMonth         Int?
-  dateDay           Int?
-  datePrecision     DatePrecision     @default(UNKNOWN)
-  dateQualifier     DateQualifier     @default(UNCERTAIN)
-  dateEndYear       Int?
-  dateEndMonth      Int?
-  dateEndDay        Int?
-  dateLabel         String?
-  dateSortStart     DateTime?
-  dateSortEnd       DateTime?
-  importance        Int               @default(0)
-  heroMediaId       String?
-  publicationStatus PublicationStatus @default(DRAFT)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  id                  String            @id @default(cuid())
+  canonicalSlug       String            @unique
+  eraId               String?
+  territoryId         String?
+  dateYear            Int?
+  dateMonth           Int?
+  dateDay             Int?
+  datePrecision       DatePrecision     @default(UNKNOWN)
+  dateQualifier       DateQualifier     @default(UNCERTAIN)
+  dateEra             DateEra           @default(CE)
+  dateEndYear         Int?
+  dateEndMonth        Int?
+  dateEndDay          Int?
+  dateLabel           String?
+  // Legacy internal ordering aid (pre-G03) - CE-safe only (Date.UTC's
+  // legacy two-digit-year behavior corrupts astronomical years 0-99, i.e.
+  // CE 1-99 and BCE 1). Preserved unchanged for any existing consumer that
+  // reads it directly; no longer authoritative for ordering/range-filtering
+  // as of G03 - see dateChronologyStart/End below.
+  dateSortStart       DateTime?
+  dateSortEnd         DateTime?
+  // G03 authoritative chronology ordinals (docs/backend/HISTORICAL_DATE_V2.md)
+  // - pure-integer, proleptic, BCE/CE-correct, no Date/DateTime involved.
+  // This is what ordering and range-overlap queries must use going forward.
+  dateChronologyStart Int?
+  dateChronologyEnd   Int?
+  importance          Int               @default(0)
+  heroMediaId         String?
+  publicationStatus   PublicationStatus @default(DRAFT)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
   era       HistoricalEra? @relation(fields: [eraId], references: [id])
   territory Territory?     @relation(fields: [territoryId], references: [id])
@@ -1616,10 +1715,15 @@ model HistoricalEvent {
   communityLinks CommunityStoryEvent[]
   themeLinks     EventTheme[]
   journeyStops   JourneyStop[]                @relation("JourneyStopEvent")
+  // G03: an event may span multiple modern countries (spec section 15/16) -
+  // a real many-to-many join, unlike Place's single current-country FKs
+  // below, since plurality is a genuine requirement here.
+  countryLinks   EventCountry[]
 
   @@index([eraId])
   @@index([territoryId])
   @@index([dateSortStart])
+  @@index([dateChronologyStart])
 }
 
 model HistoricalEventTranslation {
@@ -1654,19 +1758,29 @@ model HistoricalEra {
   // can start "circa" and end on an exact year). No end recorded (both
   // endYear and endPrecision null) means "still ongoing", distinct from an
   // explicitly UNKNOWN end. sortStart/sortEnd are internal ordering aids.
-  startYear      Int?
-  startMonth     Int?
-  startDay       Int?
-  startPrecision DatePrecision  @default(UNKNOWN)
-  startQualifier DateQualifier  @default(UNCERTAIN)
-  endYear        Int?
-  endMonth       Int?
-  endDay         Int?
-  endPrecision   DatePrecision?
-  endQualifier   DateQualifier?
-  dateLabel      String?
-  sortStart      DateTime?
-  sortEnd        DateTime?
+  startYear       Int?
+  startMonth      Int?
+  startDay        Int?
+  startPrecision  DatePrecision  @default(UNKNOWN)
+  startQualifier  DateQualifier  @default(UNCERTAIN)
+  startEra        DateEra        @default(CE)
+  endYear         Int?
+  endMonth        Int?
+  endDay          Int?
+  endPrecision    DatePrecision?
+  endQualifier    DateQualifier?
+  // G03: nullable, no default - mirrors endPrecision/endQualifier's own
+  // "no end recorded" convention rather than forcing a CE default on a
+  // column that may legitimately be absent.
+  endEra          DateEra?
+  dateLabel       String?
+  // Legacy internal ordering aid (pre-G03) - see HistoricalEvent.dateSortStart
+  // doc comment for why this is no longer authoritative.
+  sortStart       DateTime?
+  sortEnd         DateTime?
+  // G03 authoritative chronology ordinals - see HistoricalEvent.dateChronologyStart.
+  chronologyStart Int?
+  chronologyEnd   Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1678,8 +1792,14 @@ model HistoricalEra {
   events         HistoricalEvent[]
   factLinks      FactEra[]
   communityLinks CommunityStoryEra[]
+  // G03: an era may span multiple modern countries (spec section 17/18) -
+  // e.g. a broad cultural/period era is not owned by one country. This is a
+  // geographic-applicability/scope relation only - it never implies
+  // ownership, nationality, or exclusive territorial control.
+  countryLinks   EraCountry[]
 
   @@index([sortStart])
+  @@index([chronologyStart])
 }
 
 model HistoricalEraTranslation {
@@ -1706,20 +1826,28 @@ model Dynasty {
   canonicalSlug  String  @unique
   capitalPlaceId String?
 
-  // Period date model - see HistoricalEra for the field-by-field contract.
-  startYear      Int?
-  startMonth     Int?
-  startDay       Int?
-  startPrecision DatePrecision  @default(UNKNOWN)
-  startQualifier DateQualifier  @default(UNCERTAIN)
-  endYear        Int?
-  endMonth       Int?
-  endDay         Int?
-  endPrecision   DatePrecision?
-  endQualifier   DateQualifier?
-  dateLabel      String?
-  sortStart      DateTime?
-  sortEnd        DateTime?
+  // Period date model - see HistoricalEra for the field-by-field contract
+  // (G03 added startEra/endEra there and here identically, for consistency
+  // across every period-dated model - Dynasty is not itself part of the
+  // Japan fixture in G03, but leaving it BCE-incapable while Era/Territory
+  // gain it would be an arbitrary, undocumented inconsistency).
+  startYear       Int?
+  startMonth      Int?
+  startDay        Int?
+  startPrecision  DatePrecision  @default(UNKNOWN)
+  startQualifier  DateQualifier  @default(UNCERTAIN)
+  startEra        DateEra        @default(CE)
+  endYear         Int?
+  endMonth        Int?
+  endDay          Int?
+  endPrecision    DatePrecision?
+  endQualifier    DateQualifier?
+  endEra          DateEra?
+  dateLabel       String?
+  sortStart       DateTime?
+  sortEnd         DateTime?
+  chronologyStart Int?
+  chronologyEnd   Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1728,6 +1856,7 @@ model Dynasty {
   personLinks  PersonDynasty[]
 
   @@index([sortStart])
+  @@index([chronologyStart])
 }
 
 model DynastyTranslation {
@@ -1756,22 +1885,34 @@ model Territory {
   geometry      Unsupported("geometry(Geometry, 4326)")?
 
   // Period date model (historical validity window) - see HistoricalEra for
-  // the field-by-field contract. sortStart/sortEnd are what MapService's
-  // year-scoped bbox query actually filters on (EPSG:4326, see
-  // docs/backend/HISTORICAL_DOMAIN.md).
-  startYear      Int?
-  startMonth     Int?
-  startDay       Int?
-  startPrecision DatePrecision  @default(UNKNOWN)
-  startQualifier DateQualifier  @default(UNCERTAIN)
-  endYear        Int?
-  endMonth       Int?
-  endDay         Int?
-  endPrecision   DatePrecision?
-  endQualifier   DateQualifier?
-  dateLabel      String?
-  sortStart      DateTime?
-  sortEnd        DateTime?
+  // the field-by-field contract. chronologyStart/End (below) are what
+  // MapService's year-scoped bbox query filters on (EPSG:4326, see
+  // docs/backend/HISTORICAL_DOMAIN.md) - switched from the legacy
+  // sortStart/sortEnd in G03's 3rd architecture review, because a KNOWN BCE
+  // Territory's legacy fields are intentionally NULL (never a fabricated
+  // CE-era timestamp) and NULL there would have read as "unknown - always
+  // match" for an arbitrary CE year query, incorrectly surfacing it.
+  // MapService's `year` query param remains CE-only by contract (unchanged,
+  // no G03 gate requires BCE map support - that stays G11 scope); a known
+  // BCE Territory simply never matches a CE year query, same as a
+  // chronologically-distant CE one wouldn't.
+  startYear       Int?
+  startMonth      Int?
+  startDay        Int?
+  startPrecision  DatePrecision  @default(UNKNOWN)
+  startQualifier  DateQualifier  @default(UNCERTAIN)
+  startEra        DateEra        @default(CE)
+  endYear         Int?
+  endMonth        Int?
+  endDay          Int?
+  endPrecision    DatePrecision?
+  endQualifier    DateQualifier?
+  endEra          DateEra?
+  dateLabel       String?
+  sortStart       DateTime?
+  sortEnd         DateTime?
+  chronologyStart Int?
+  chronologyEnd   Int?
 
   // Geometry provenance (section 17): interpretive historical polygons must
   // never be silently overwritten - provenanceNote + geometryVersion give a
@@ -1791,6 +1932,7 @@ model Territory {
   geometryHistory TerritoryGeometryRevision[]
 
   @@index([sortStart])
+  @@index([chronologyStart])
 }
 
 // Historical boundary polygons are interpretive and revisable - a new
@@ -1868,6 +2010,68 @@ model PersonDynasty {
   @@unique([personId, dynastyId])
 }
 
+// G03 (Global Backend V2 Extension, Global Historical Knowledge Extension) -
+// modern-geography scope for a HistoricalEvent that spans one or more
+// countries (spec section 15/16). Deliberately a real many-to-many join,
+// unlike Place's single current-country FKs above - plurality is a genuine
+// requirement here (a war, a trade route, a diplomatic event is not owned
+// by one country). `role` is an explicit EventCountryRole (not the generic
+// String? used by EventPlace/EventPerson.role) because leaving a country
+// link's historical meaning undefined here is exactly the kind of ambiguity
+// a "did this actually happen in this country" claim cannot tolerate;
+// @@default(RELATED) keeps every row's semantics unambiguous even when an
+// editor doesn't specify a more precise role.
+model EventCountry {
+  id        String           @id @default(cuid())
+  eventId   String
+  countryId String
+  role      EventCountryRole @default(RELATED)
+
+  event   HistoricalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  country Country         @relation(fields: [countryId], references: [id])
+
+  @@unique([eventId, countryId])
+  @@index([countryId])
+}
+
+// G03 - modern-geography scope for a HistoricalEra that spans one or more
+// countries (spec section 17/18 - e.g. a broad cultural/period era like the
+// Renaissance is not owned by one country). Real many-to-many, same
+// plurality rationale as EventCountry above, but deliberately NOT given a
+// role field: an era's country links are always geographic
+// applicability/scope only, never ownership, nationality, or exclusive
+// territorial control - there is no second meaning to disambiguate here.
+model EraCountry {
+  id        String @id @default(cuid())
+  eraId     String
+  countryId String
+
+  era     HistoricalEra @relation(fields: [eraId], references: [id], onDelete: Cascade)
+  country Country       @relation(fields: [countryId], references: [id])
+
+  @@unique([eraId, countryId])
+  @@index([countryId])
+}
+
+// G03 - minimal Person<->Place association (see PersonPlaceRole doc comment).
+// No pre-existing Person<->Place relation existed before this (Person only
+// reached Place indirectly, via EventPerson+EventPlace on a shared Event) -
+// this is a new, direct, deliberately small join table, not an extension of
+// an existing one. onDelete: Cascade on both sides mirrors the existing
+// EventPlace/EventPerson/PersonDynasty convention for this kind of link.
+model PersonPlace {
+  id       String          @id @default(cuid())
+  personId String
+  placeId  String
+  role     PersonPlaceRole @default(OTHER)
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  place  Place  @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, placeId, role])
+  @@index([placeId])
+}
+
 // Event classification catalog (spec section 11) - see the ThemeCategory
 // comment above. `slug` is stable/locale-agnostic (used for filter query
 // params); display name is localized via ThemeTranslation.
@@ -1910,27 +2114,30 @@ model EventTheme {
 // =========================================================================
 
 model HistoricalFact {
-  id              String              @id @default(cuid())
-  factType        FactType
-  dateYear        Int?
-  dateMonth       Int?
-  dateDay         Int?
-  datePrecision   DatePrecision       @default(UNKNOWN)
-  dateQualifier   DateQualifier       @default(UNCERTAIN)
-  dateEndYear     Int?
-  dateEndMonth    Int?
-  dateEndDay      Int?
-  dateLabel       String?
-  dateSortStart   DateTime?
-  dateSortEnd     DateTime?
-  certainty       FactCertainty       @default(UNCERTAIN)
-  sensitivity     FactSensitivity     @default(NORMAL)
-  editorialStatus FactEditorialStatus @default(DRAFT)
-  createdById     String?
-  reviewedById    String?
-  reviewedAt      DateTime?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id                  String              @id @default(cuid())
+  factType            FactType
+  dateYear            Int?
+  dateMonth           Int?
+  dateDay             Int?
+  datePrecision       DatePrecision       @default(UNKNOWN)
+  dateQualifier       DateQualifier       @default(UNCERTAIN)
+  dateEra             DateEra             @default(CE)
+  dateEndYear         Int?
+  dateEndMonth        Int?
+  dateEndDay          Int?
+  dateLabel           String?
+  dateSortStart       DateTime?
+  dateSortEnd         DateTime?
+  dateChronologyStart Int?
+  dateChronologyEnd   Int?
+  certainty           FactCertainty       @default(UNCERTAIN)
+  sensitivity         FactSensitivity     @default(NORMAL)
+  editorialStatus     FactEditorialStatus @default(DRAFT)
+  createdById         String?
+  reviewedById        String?
+  reviewedAt          DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
 
   translations   HistoricalFactTranslation[]
   citations      Citation[]

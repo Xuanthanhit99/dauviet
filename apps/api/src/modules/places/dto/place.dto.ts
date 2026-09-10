@@ -62,6 +62,21 @@ export class CreatePlaceDto {
   @Max(180)
   longitude?: number;
 
+  @ApiPropertyOptional({ description: 'Current-geography link to G01 Country (G03). Required if currentRegionId/currentCityId is given.' })
+  @IsOptional()
+  @IsString()
+  currentCountryId?: string;
+
+  @ApiPropertyOptional({ description: 'Current-geography link to G01 Region (G03). Must belong to currentCountryId.' })
+  @IsOptional()
+  @IsString()
+  currentRegionId?: string;
+
+  @ApiPropertyOptional({ description: 'Current-geography link to G01 City (G03). Must belong to currentCountryId.' })
+  @IsOptional()
+  @IsString()
+  currentCityId?: string;
+
   @ApiProperty({ type: [PlaceTranslationInputDto] })
   @IsArray()
   @ArrayMinSize(1)
@@ -85,4 +100,19 @@ export class UpdatePlaceDto {
   @IsOptional()
   @IsNumber()
   longitude?: number;
+
+  @ApiPropertyOptional({ description: 'Current-geography link to G01 Country (G03). Required if currentRegionId/currentCityId is given.' })
+  @IsOptional()
+  @IsString()
+  currentCountryId?: string;
+
+  @ApiPropertyOptional({ description: 'Current-geography link to G01 Region (G03). Must belong to currentCountryId.' })
+  @IsOptional()
+  @IsString()
+  currentRegionId?: string;
+
+  @ApiPropertyOptional({ description: 'Current-geography link to G01 City (G03). Must belong to currentCountryId.' })
+  @IsOptional()
+  @IsString()
+  currentCityId?: string;
 }
