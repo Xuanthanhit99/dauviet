@@ -339,10 +339,19 @@ describe('Golden Dataset production-seed safety (spec sections 59/60)', () => {
  * natural unique key `.upsert()` could target (a provider can legitimately
  * gain a second attribution rule or operational snapshot over time), so
  * both use the identical explicit `findFirst` guard before `.create(` -
- * never a bare, unguarded create.
+ * never a bare, unguarded create. G06 adds a fourth: `CostAssumption`'s
+ * `@@unique([scope, scopeId, category, unit, effectiveFrom])` does not
+ * actually enforce uniqueness for GLOBAL-scoped rows (Postgres treats every
+ * NULL as distinct in a unique index, and `scopeId` is always null for
+ * GLOBAL), so a native `.upsert()` would silently insert a duplicate row on
+ * every seed run - the seed script uses the same explicit `findFirst`-then-
+ * conditional-`create` guard instead (see
+ * `CostAssumptionsService.assertNoDuplicateIdentity`'s doc comment in
+ * apps/api/src/modules/cost-assumptions/cost-assumptions.service.ts for the
+ * full explanation of why the DB constraint alone is insufficient here).
  */
 describe('Golden Dataset idempotency (spec sections 45/76)', () => {
-  const ALLOWED_BARE_CREATE_MODELS = new Set(['user', 'providerAttributionRule', 'restaurantOperationalSnapshot']);
+  const ALLOWED_BARE_CREATE_MODELS = new Set(['user', 'providerAttributionRule', 'restaurantOperationalSnapshot', 'costAssumption']);
 
   it('every prisma.<model>.create( call in the seed script is either an allowed documented exception or does not exist - upsert() is used everywhere else', () => {
     const matches = [...seedSource.matchAll(/prisma\.(\w+)\.create\(/g)].map((m) => m[1]);

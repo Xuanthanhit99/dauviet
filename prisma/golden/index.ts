@@ -18,3 +18,5 @@ export * from './japan';
 export * from './destination-discovery';
 // G05 - Stay + Food + Activities (small VN+JP fixture).
 export * from './stay-food-activities';
+// G06 - Trip Planner + Cost Engine (DRAFT-only illustrative fixture).
+export * from './cost-assumptions';

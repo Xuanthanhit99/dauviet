@@ -1099,3 +1099,103 @@ was flagged for a dedicated fix; not part of G05.
 transaction/payment/wallet/affiliate conversion tracking (G10), any redesign of `/v1/search`/
 `/v1/map/features` (G11 - none of G05's new entities are integrated into either). No `Booking`,
 `Trip`, `TripItem`, or payment-processing table exists anywhere in this codebase as of G05.
+
+## 19. GLOBAL BACKEND V2 EXTENSION - G06 status
+
+**G06 (Trip Planner + Cost Engine)**, built on the unchanged V1/G01/G02/G03/G04/G05 baselines.
+**Verdict: COMPLETE — not LOCKED, and not a Backend V2 Freeze claim (that remains gated on G12
+alone).** Full 290-gate audit and exact reasoning: `docs/backend/G06_FINAL_REPORT.md`. The original
+G06 brief delivered to the implementing session was initially cut off mid-sentence by the client at
+roughly its section 115 of a stated 168 sections; sections 116-168, plus the full individually-worded
+`G06-GATE-188` through `G06-GATE-290` manifest (103 gates), were subsequently supplied in a
+"CANONICAL SPEC RECOVERY / DELTA CLOSURE" follow-up and individually delta-audited against concrete
+evidence — no gate was collapsed into a range, no gate was inferred PASS from implementation
+existence alone where live proof was explicitly required.
+**All 290 gates PASS, 0 FAIL, 0 UNVERIFIED, 0 P0, 0 P1.** 2 of the 290 (budget-vs-target comparison,
+day-level time-conflict detection) are **PASS — NOT APPLICABLE (OPTIONAL, NOT IMPLEMENTED)**: both
+trace to verbatim "MAY"/"if implemented" clauses in the original brief (section 53, section 75) that
+were deliberately never built. This is a scope-compliance PASS, not a claim either feature exists —
+both are listed explicitly, by name, in `G06_FINAL_REPORT.md`'s "Optional capabilities intentionally
+not implemented in G06" section, and remain ordinary buildable follow-up work if ever requested.
+
+The delta-closure pass itself implemented the one real completeness gap the recovery audit
+identified: **the minimum G05 provider-evidence resolver** (`TripCostEstimatesService`
+`.resolveOfferEvidence`), reusing G05's own `ProviderRegistryService.getExecutionContext` gate
+unchanged, live-proven by a 10-case test matrix (fresh offer contributes; expired/suspended/revoked/
+missing-attribution/context-mismatch/currency-mismatch/unavailable all correctly fall back to
+`CostAssumption`/UNKNOWN; a persisted snapshot never changes after a later provider status change;
+the `ACTIVITY` branch proven independently of `STAY`). It also produced two proofs nothing in this
+phase had produced before: a **real-PostgreSQL `CostAssumption` mutation rollback proof** and a
+**real-HTTP concurrent-generation proof** (two simultaneous identical `POST .../estimates` requests
+never produce more than one generation row), and extended the existing generation-rollback proof to
+also cover the transactional audit row.
+
+9 new models (`Trip`(+`archivedAt`/`version`), `TripDestination`, `TripDay`, `TripItem`,
+`TripTransportLeg`, `CostAssumption`, `TripCostEstimateGeneration`, `TripCostEstimate`,
+`TripCostEstimateItem`), 11 new enums, 2 new `EntityKind` values - zero column/enum-value change to
+any existing G00-G05 model. The Cost Engine is deliberately split into a DB-free pure core
+(precedence resolution/unit multiplication/scenario aggregation/canonical input-hash, all unit-
+tested with zero Prisma dependency) and a DB-touching orchestrator, per the brief's own purity
+requirement (never an LLM-generated number, never randomness, never a current-time dependency beyond
+the caller-supplied trip date).
+
+**What was proven live:** Migration Path A (fresh DB, all 18 migrations, seeded); Migration Path B
+(a real pre-existing V1-G05-seeded database, G06's migration applied on top, 19 table row counts and
+5 content-hashes byte-identical before/after, then the previously-failing G06 seed step succeeding
+cleanly); Trip ownership (404-then-403, never hiding existence) and optimistic concurrency (409 - a
+deliberate, brief-mandated divergence from Story/Journey/Contribution's existing 400 for the
+identical shape); non-destructive archive (`Trip.archivedAt`, excluded from default list, blocks
+mutation with `409 TRIP_ARCHIVED`, read routes stay available, nothing is ever deleted); itinerary
+replace-all + two-phase reorder (the same algorithm `JourneysService.reorderStops` already
+established); `CostAssumption` admin RBAC (`ADMIN`-only, stricter than the `EDITOR`/`ADMIN` tier used
+for catalogue content, matching `provider-licenses`' own tier) plus its forward-only DRAFT→ACTIVE→
+RETIRED status machine and the GLOBAL-scope duplicate-identity guard (Postgres's own unique index
+cannot catch it, since `NULL != NULL`); atomic 3-scenario estimate generation with a **real
+PostgreSQL rollback proof** (a forced mid-transaction failure leaves zero rows, not even the
+generation row or its transactional audit entry); a separate **real-PostgreSQL `CostAssumption`
+mutation rollback proof**; a **real-HTTP concurrent-generation proof** (two simultaneous identical
+requests never produce more than one generation row - either both resolve to the same `201`, or the
+loser gets a clean `409`, never a duplicate row or an unhandled crash); `inputHash`-keyed idempotency
+(an unchanged recalculation returns the existing generation, never a duplicate); full regression both
+green (73/73 unit suites, 980 tests; 8/8 e2e suites, 62 tests).
+
+**Two real defects found and fixed during this phase's own live verification** (both now re-
+verified passing): a seed-idempotency regression test (`golden-dataset-validation.spec.ts`)
+correctly caught an undocumented bare `prisma.costAssumption.create(` call, fixed by registering it
+as the same kind of documented exception G05 already established for
+`ProviderAttributionRule`/`RestaurantOperationalSnapshot` (a model with no DB-enforceable natural
+unique key); and a wrong-error-code bug in `CostAssumptionsService.setStatus` (an invalid status
+transition incorrectly reused `COST_ASSUMPTION_INVALID_RANGE`, caught by static review, fixed with a
+dedicated `COST_ASSUMPTION_INVALID_STATUS_TRANSITION` code).
+
+**One real, latent, non-blocking risk found and documented, not fixed at the schema level:** hard-
+deleting a `User`/`Trip` that has a generated cost estimate hits a genuine PostgreSQL cascade-
+ordering conflict (`TripCostEstimateItem` carries both a `CASCADE` FK and separate `SET NULL` FKs
+that all originate from the same `Trip` being deleted at once) - confirmed via a direct SQL repro
+against the live dev database. **Not reachable from any current product route** - G06 ships no
+Trip/User hard-delete endpoint, archive is the only lifecycle exit - so this was fixed at the test-
+cleanup level only (explicit, ordered, multi-statement deletion in `trips.e2e-spec.ts`'s `afterAll`)
+rather than by changing the accepted migration. Flagged for whichever future phase first implements
+real hard-delete.
+
+**Known deferred (not fixed, out of scope for G06):** the exact same pre-existing
+`EntityKind.FACT`/17-trigram-index drift G04 and G05 each independently found was found again during
+this migration's generation and stripped the same way - not a G06 change. A Postgres port conflict
+with an unrelated project's container on the shared dev host (not this codebase's issue) was fixed
+via a local-only, gitignored `docker-compose.override.yml`, never the tracked `docker-compose.yml`.
+
+**Deferred to later Global phases (not scope creep into G06):** collaborative `TripMember`/shared
+editing (G07), location sharing (G08), expense settlement (G09), any booking transaction/payment/
+wallet/affiliate conversion tracking (G10), any redesign of `/v1/search`/`/v1/map/features` (G11).
+
+**Optional capabilities intentionally not built within G06 itself** (not an oversight, and not a gap
+in the COMPLETE verdict — see `G06_FINAL_REPORT.md`'s "Optional capabilities intentionally not
+implemented in G06"): budget-vs-target comparison and day-level time-conflict detection — both
+verbatim "MAY"/"if implemented" clauses in the original brief (sections 53/75), neither mandated by
+the later-supplied canonical gate manifest either. Building either now would be adding unrequested
+product scope purely to expand functionality, which this phase's own closure discipline explicitly
+avoids; both remain ordinary, buildable follow-up work if a future phase or the product owner
+requests them. G05 offer-evidence integration into the Cost Engine, previously a documented stub,
+**is no longer deferred** — see above.
+**G07 has not been started. "Backend V2 Freeze" has not been claimed by G06 or any phase before
+G12, consistent with every prior phase.**

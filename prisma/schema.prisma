@@ -460,6 +460,12 @@ enum EntityKind {
   DISH
   ATTRACTION
   ACTIVITY
+  // Added G06 (Global Backend V2 Extension, Trip Planner + Cost Engine) -
+  // additive-only, lets AuditLog point precisely at a private Trip or an
+  // admin-managed CostAssumption row. No existing value renamed/removed/
+  // reordered.
+  TRIP
+  TRIP_COST_ASSUMPTION
 }
 
 enum CommunityStoryType {
@@ -660,6 +666,10 @@ model User {
   revisionsAuthored   Revision[]
   factReviews         FactReview[]
   thenNowComparisons  ThenNowComparison[]
+  // Added G06 (Global Backend V2 Extension, Trip Planner + Cost Engine) -
+  // a Trip is private, single-owner planning data (spec section 9/59) - no
+  // TripMember/collaboration model yet (deferred to G07).
+  trips               Trip[]
 
   avatarMedia MediaAsset? @relation("UserAvatar", fields: [avatarMediaId], references: [id])
 
@@ -986,6 +996,9 @@ model Country {
   attractions            Attraction[]
   activities             Activity[]
   cuisines               Cuisine[]
+  // G06 (Trip Planner + Cost Engine) - reverse side of Trip.originCountryId
+  // (a Trip's optional origin, not a home address - spec section 13).
+  originatingTrips       Trip[]                  @relation("TripOriginCountry")
 
   @@index([status])
 }
@@ -1028,17 +1041,19 @@ model Region {
   parentRegion Region?  @relation("RegionHierarchy", fields: [parentRegionId], references: [id])
   childRegions Region[] @relation("RegionHierarchy")
 
-  translations   RegionTranslation[]
-  cities         City[]
-  destinations   Destination[]
+  translations     RegionTranslation[]
+  cities           City[]
+  destinations     Destination[]
   // G03: reverse side of Place.currentRegionId.
-  currentPlaces  Place[]
+  currentPlaces    Place[]
   // G05 (Stay + Food + Activities) - additive-only reverse relations.
-  accommodations Accommodation[]
-  restaurants    Restaurant[]
-  attractions    Attraction[]
-  activities     Activity[]
-  cuisines       Cuisine[]
+  accommodations   Accommodation[]
+  restaurants      Restaurant[]
+  attractions      Attraction[]
+  activities       Activity[]
+  cuisines         Cuisine[]
+  // G06 (Trip Planner + Cost Engine) - reverse side of Trip.originRegionId.
+  originatingTrips Trip[]              @relation("TripOriginRegion")
 
   @@index([countryId])
   @@index([parentRegionId])
@@ -1090,15 +1105,18 @@ model City {
   country Country @relation(fields: [countryId], references: [id])
   region  Region? @relation(fields: [regionId], references: [id])
 
-  translations   CityTranslation[]
-  destinations   Destination[]
+  translations     CityTranslation[]
+  destinations     Destination[]
   // G03: reverse side of Place.currentCityId.
-  currentPlaces  Place[]
+  currentPlaces    Place[]
   // G05 (Stay + Food + Activities) - additive-only reverse relations.
-  accommodations Accommodation[]
-  restaurants    Restaurant[]
-  attractions    Attraction[]
-  activities     Activity[]
+  accommodations   Accommodation[]
+  restaurants      Restaurant[]
+  attractions      Attraction[]
+  activities       Activity[]
+  // G06 (Trip Planner + Cost Engine) - reverse side of Trip.originCityId and
+  // of TripTransportLeg's from/to city legs (see TripTransportLeg below).
+  originatingTrips Trip[]            @relation("TripOriginCity")
 
   @@index([countryId])
   @@index([regionId])
@@ -1181,6 +1199,13 @@ model Destination {
   attractionLinks       DestinationAttraction[]
   activityLinks         DestinationActivity[]
   dishLinks             DestinationDish[]
+  // G06 (Trip Planner + Cost Engine) - a Trip's private, owner-scoped
+  // selection of this Destination (never the reverse - Destination itself
+  // stays completely unaware of any specific Trip's planning state, spec
+  // section 5 "Trip != Journey").
+  tripDestinations      TripDestination[]
+  tripTransportLegsFrom TripTransportLeg[]            @relation("TripTransportLegFrom")
+  tripTransportLegsTo   TripTransportLeg[]            @relation("TripTransportLegTo")
 
   @@index([countryId])
   @@index([regionId])
@@ -1820,6 +1845,10 @@ model Place {
   // optional typed mapping when a historical Place is also a visitor
   // attraction, never a merge.
   attractions        Attraction[]
+  // G06 (Trip Planner + Cost Engine) - back-relation for TripItem.placeId
+  // (a PLACE-type itinerary item, e.g. a historical site with no G05
+  // Attraction/Activity entry of its own yet - spec section 73).
+  tripItems          TripItem[]
 
   @@index([type])
   @@index([parentPlaceId])
@@ -3450,6 +3479,8 @@ model Accommodation {
   translations       AccommodationTranslation[]
   destinationLinks   DestinationAccommodation[]
   providerReferences ProviderAccommodationReference[]
+  // G06 (Trip Planner + Cost Engine) - back-relation for TripItem.accommodationId.
+  tripItems          TripItem[]
 
   @@index([countryId])
   @@index([regionId])
@@ -3718,6 +3749,8 @@ model Restaurant {
   cuisineLinks       RestaurantCuisine[]
   dishLinks          RestaurantDish[]
   providerReferences ProviderRestaurantReference[]
+  // G06 (Trip Planner + Cost Engine) - back-relation for TripItem.restaurantId.
+  tripItems          TripItem[]
 
   @@index([countryId])
   @@index([regionId])
@@ -3884,6 +3917,8 @@ model Attraction {
   translations     AttractionTranslation[]
   destinationLinks DestinationAttraction[]
   activities       Activity[]
+  // G06 (Trip Planner + Cost Engine) - back-relation for TripItem.attractionId.
+  tripItems        TripItem[]
 
   @@index([countryId])
   @@index([regionId])
@@ -3955,6 +3990,8 @@ model Activity {
   translations       ActivityTranslation[]
   destinationLinks   DestinationActivity[]
   providerReferences ProviderActivityReference[]
+  // G06 (Trip Planner + Cost Engine) - back-relation for TripItem.activityId.
+  tripItems          TripItem[]
 
   @@index([countryId])
   @@index([regionId])
@@ -4055,4 +4092,446 @@ model ActivityOffer {
 
   @@index([providerReferenceId, activityDate])
   @@index([expiresAt])
+}
+
+// =========================================================================
+// TRIP PLANNER + COST ENGINE  (G06, Global Backend V2 Extension)
+// =========================================================================
+// See docs/backend/G06_PRE_IMPLEMENTATION_REPORT.md for the full contract
+// and rationale behind every divergence from prior-phase convention noted
+// inline below. Trip is PRIVATE, single-owner planning data (spec section
+// 9/59/60) - completely distinct from G04's Journey (editorial/curatorial,
+// no owner, no cost - spec section 4) and from a future G09 Expense/G10
+// Booking (spec section 3: PLANNED COST != ESTIMATED COST != LIVE PROVIDER
+// PRICE != BOOKED COST != ACTUAL EXPENSE). No G00-G05 table, column, or enum
+// value is modified by this phase beyond the purely additive `EntityKind`
+// values and back-relation array fields added above (zero new column on any
+// existing table).
+
+enum TripStatus {
+  DRAFT
+  PLANNING
+  READY
+}
+
+enum TripItemType {
+  ACCOMMODATION
+  RESTAURANT
+  ACTIVITY
+  ATTRACTION
+  PLACE
+  TRANSPORT
+  CUSTOM
+}
+
+enum TripTransportMode {
+  WALK
+  LOCAL_TRANSIT
+  TRAIN
+  BUS
+  FLIGHT
+  FERRY
+  CAR
+  TAXI_RIDESHARE
+  BIKE
+  OTHER
+}
+
+// USER_INPUT / RULE_BASED_ESTIMATE / PROVIDER_EVIDENCE / UNKNOWN (spec
+// section 23/42) - UNKNOWN is a first-class provenance, never silently
+// coerced to a zero amount.
+enum TripCostProvenance {
+  USER_INPUT
+  RULE_BASED_ESTIMATE
+  PROVIDER_EVIDENCE
+  UNKNOWN
+}
+
+enum CostCategory {
+  STAY
+  FOOD
+  ACTIVITY
+  TRANSPORT
+  OTHER
+}
+
+enum CostUnit {
+  PER_PERSON
+  PER_PERSON_PER_DAY
+  PER_ROOM_PER_NIGHT
+  PER_TRIP
+  PER_ITEM
+  PER_LEG
+}
+
+enum CostAssumptionScope {
+  GLOBAL
+  COUNTRY
+  REGION
+  CITY
+  DESTINATION
+}
+
+enum CostAssumptionStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+enum CostScenario {
+  LOW
+  TYPICAL
+  HIGH
+}
+
+enum EstimateCompleteness {
+  COMPLETE
+  PARTIAL
+}
+
+enum EstimateConfidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+// Ownership-only aggregate root (spec section 9/19) - no TripMember/
+// collaboration model yet (deferred to G07, spec section 5/62). Optimistic
+// concurrency via `version` follows the existing Story/Journey/Contribution
+// pattern, but a version conflict here returns 409 (spec section 62),
+// deliberately diverging from those three's existing 400 - see the
+// pre-implementation report section 1.7 for why this does not change their
+// locked behavior.
+model Trip {
+  id                   String     @id @default(cuid())
+  ownerId              String
+  title                String
+  status               TripStatus @default(DRAFT)
+  // Local calendar dates (same discipline as every G05 offer date - spec
+  // section 11) - never a UTC instant. endDate >= startDate is enforced at
+  // the service layer, matching this schema's existing convention of never
+  // encoding cross-column invariants as DB constraints (e.g. G05 offer date
+  // ordering is likewise service-layer only).
+  startDate            DateTime   @db.Date
+  endDate              DateTime   @db.Date
+  // ISO 4217, normalized uppercase - same bare-String + regex convention as
+  // Country.defaultCurrency/AccommodationOffer.currency (spec section 12).
+  // No live/derived FX conversion exists in this codebase (verified during
+  // the pre-implementation audit); see TripCostEstimate below for how
+  // cross-currency evidence is handled without one.
+  primaryCurrency      String
+  travelerCount        Int        @default(1)
+  roomCount            Int?
+  // Optional structured origin (spec section 13) - never a precise home
+  // address; a plain label is also allowed when no canonical geography row
+  // fits. Four scalar fields, not a separate TripOrigin table, because a
+  // Trip has exactly one origin value, not a collection (see
+  // pre-implementation report section 4).
+  originCountryId      String?
+  originRegionId       String?
+  originCityId         String?
+  originLabel          String?
+  // Optional planning target (spec section 52/53) - a user aspiration, never
+  // confused with TripCostEstimate (calculated) or a future Expense
+  // (actual). Two scalar fields, not a separate TripBudgetTarget table, for
+  // the same single-value reasoning as origin above.
+  targetBudgetAmount   Decimal?   @db.Decimal(12, 2)
+  targetBudgetCurrency String?
+  notes                String?
+  // Non-destructive archive (corrected pre-implementation decision - see
+  // docs/backend/G06_PRE_IMPLEMENTATION_REPORT.md section 3.8/7): a `null`
+  // timestamp means active/planning; a set timestamp means archived. This
+  // is deliberately a plain nullable timestamp, not a fourth `TripStatus`
+  // value - the planning lifecycle (DRAFT/PLANNING/READY) and the
+  // archive/soft-delete lifecycle are two independent axes, exactly like
+  // Journey/Story keep `editorialStatus` and `archivedAt` independent
+  // elsewhere in this schema. Archiving never touches `destinations`/
+  // `days`/`items`/`transportLegs`/`estimateGenerations` below, and never
+  // cascades into any canonical entity a TripItem references - it is purely
+  // a visibility flag future G07/G08/G09 phases can build on (referenced
+  // Trip rows must survive an owner's "I'm done planning this" action).
+  archivedAt           DateTime?
+  version              Int        @default(0)
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  originCountry Country? @relation("TripOriginCountry", fields: [originCountryId], references: [id])
+  originRegion  Region?  @relation("TripOriginRegion", fields: [originRegionId], references: [id])
+  originCity    City?    @relation("TripOriginCity", fields: [originCityId], references: [id])
+
+  destinations        TripDestination[]
+  days                TripDay[]
+  items               TripItem[]
+  transportLegs       TripTransportLeg[]
+  estimateGenerations TripCostEstimateGeneration[]
+
+  @@index([ownerId, archivedAt])
+  @@index([ownerId, status])
+  @@index([originCountryId])
+  @@index([originRegionId])
+  @@index([originCityId])
+}
+
+// A Trip's ordered selection of canonical Destinations (spec section 14) -
+// never a bare `Trip.destinationId`, and never a generic entityType+entityId
+// polymorphic relation (same DB-enforced-FK discipline G04's
+// DestinationPlace/DestinationTheme/etc. already established - spec section
+// 18). Overlapping arrival/departure ranges across rows are deliberately
+// allowed (spec section 15) - users may plan nearby areas on the same day.
+model TripDestination {
+  id            String    @id @default(cuid())
+  tripId        String
+  destinationId String
+  sortOrder     Int
+  // Local calendar dates, optional - validated at the service layer to fall
+  // within [Trip.startDate, Trip.endDate] and arrival <= departure when both
+  // are present.
+  arrivalDate   DateTime? @db.Date
+  departureDate DateTime? @db.Date
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  trip        Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  destination Destination @relation(fields: [destinationId], references: [id])
+
+  @@unique([tripId, sortOrder])
+  @@index([tripId])
+  @@index([destinationId])
+}
+
+// One row per planning day (spec section 16) - date is a local calendar
+// date, unique per Trip, and validated at the service layer to fall within
+// [Trip.startDate, Trip.endDate]. dayNumber is a denormalized display
+// convenience (1-based, matches `date`'s position in the Trip's date range)
+// so clients never have to compute it from `date` themselves.
+model TripDay {
+  id        String   @id @default(cuid())
+  tripId    String
+  date      DateTime @db.Date
+  dayNumber Int
+  title     String?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  trip          Trip                   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  items         TripItem[]
+  estimateItems TripCostEstimateItem[]
+
+  @@unique([tripId, date])
+  @@index([tripId])
+}
+
+// Deliberately typed nullable FKs, one per canonical entity kind, rather
+// than a generic entityType+entityId polymorphic relation (spec section
+// 17/18) - a cost estimate's correctness depends on this item resolving to
+// a real, current canonical row, so a silently-dangling generic reference
+// here would corrupt cost calculations invisibly. This is a deliberate
+// divergence from Comment/Bookmark's existing generic targetType+targetId
+// pattern elsewhere in this codebase (acceptable there because a broken
+// reference is cosmetic, not financial) - see the pre-implementation report
+// section 1.11/2.2. Exactly one canonical FK (or none, for CUSTOM/TRANSPORT)
+// must be set consistent with `type`; enforced at the service layer, the
+// same place every other cross-field invariant in this schema already is.
+model TripItem {
+  id              String       @id @default(cuid())
+  tripId          String
+  tripDayId       String
+  type            TripItemType
+  sortOrder       Int
+  accommodationId String?
+  restaurantId    String?
+  activityId      String?
+  attractionId    String?
+  placeId         String?
+  transportLegId  String?
+  // Required for CUSTOM (spec section 21); otherwise an optional
+  // display-snapshot label only - the canonical FK above stays authoritative
+  // (spec section 64 - never duplicate the whole canonical entity here).
+  title           String?
+  notes           String?
+  // "HH:mm", validated at the DTO layer with the same @Matches discipline as
+  // every other non-full-DateTime field in this schema (spec section 19) -
+  // never a bare UTC instant; a Trip may cross timezones, so the timezone
+  // itself is resolved from the relevant Destination/City at read time, not
+  // stored redundantly here.
+  startLocalTime  String?
+  endLocalTime    String?
+  allDay          Boolean      @default(false)
+  // User-entered planning override (spec section 78/79 precedence tier 1) -
+  // distinct from, and takes precedence over, any TripCostEstimateItem
+  // computed later from provider evidence or CostAssumption.
+  plannedAmount   Decimal?     @db.Decimal(12, 2)
+  plannedCurrency String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  trip          Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  day           TripDay           @relation(fields: [tripDayId], references: [id], onDelete: Cascade)
+  accommodation Accommodation?    @relation(fields: [accommodationId], references: [id])
+  restaurant    Restaurant?       @relation(fields: [restaurantId], references: [id])
+  activity      Activity?         @relation(fields: [activityId], references: [id])
+  attraction    Attraction?       @relation(fields: [attractionId], references: [id])
+  place         Place?            @relation(fields: [placeId], references: [id])
+  transportLeg  TripTransportLeg? @relation(fields: [transportLegId], references: [id])
+
+  estimateItems TripCostEstimateItem[]
+
+  @@unique([tripDayId, sortOrder])
+  @@index([tripId])
+  @@index([accommodationId])
+  @@index([restaurantId])
+  @@index([activityId])
+  @@index([attractionId])
+  @@index([placeId])
+  @@index([transportLegId])
+}
+
+// Minimal planning-only transport concept (spec section 22/23/24) - never a
+// booking, never a live fare, never an invented road distance. `fromLabel`/
+// `toLabel` are always populated (for display even when no canonical
+// Destination/City is selected); `fromDestinationId`/`toDestinationId` are
+// optional structured context on top of that free label.
+model TripTransportLeg {
+  id                String             @id @default(cuid())
+  tripId            String
+  sortOrder         Int
+  mode              TripTransportMode
+  fromLabel         String
+  toLabel           String
+  fromDestinationId String?
+  toDestinationId   String?
+  plannedDate       DateTime?          @db.Date
+  plannedAmount     Decimal?           @db.Decimal(12, 2)
+  plannedCurrency   String?
+  provenance        TripCostProvenance @default(UNKNOWN)
+  notes             String?
+  createdAt         DateTime           @default(now())
+
+  trip            Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  fromDestination Destination? @relation("TripTransportLegFrom", fields: [fromDestinationId], references: [id])
+  toDestination   Destination? @relation("TripTransportLegTo", fields: [toDestinationId], references: [id])
+
+  items         TripItem[]
+  estimateItems TripCostEstimateItem[]
+
+  @@unique([tripId, sortOrder])
+  @@index([tripId])
+  @@index([fromDestinationId])
+  @@index([toDestinationId])
+}
+
+// Admin-managed planning-cost configuration (spec section 31-33/79-81/96-99)
+// - ADMIN-only mutation (same RBAC tier as ProviderLicense, not the looser
+// EDITOR/ADMIN used for public catalogue content - pre-implementation report
+// section 1.10). Feeds the deterministic Cost Engine; never itself a live
+// price. `scopeId` is null only when `scope = GLOBAL`; otherwise it is the
+// id of the Country/Region/City/Destination row named by `scope` (no DB-
+// level polymorphic FK is possible here since the target table varies by
+// scope - the same tradeoff G05's ProviderAccommodationReference-style
+// tables already accept for provider-side ids - validated at the service
+// layer instead).
+model CostAssumption {
+  id            String               @id @default(cuid())
+  scope         CostAssumptionScope
+  scopeId       String?
+  category      CostCategory
+  unit          CostUnit
+  currency      String
+  // low <= typical <= high enforced at the service layer (spec section 80).
+  lowAmount     Decimal              @db.Decimal(12, 2)
+  typicalAmount Decimal              @db.Decimal(12, 2)
+  highAmount    Decimal              @db.Decimal(12, 2)
+  effectiveFrom DateTime             @db.Date
+  effectiveTo   DateTime?            @db.Date
+  status        CostAssumptionStatus @default(DRAFT)
+  version       Int                  @default(1)
+  // Provenance note (e.g. "editorial estimate" or a cited source) - never
+  // fabricated by an LLM (spec section 51).
+  source        String
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  estimateItems TripCostEstimateItem[]
+
+  @@unique([scope, scopeId, category, unit, effectiveFrom])
+  @@index([scope, scopeId, category, status])
+}
+
+// Atomic parent for one calculation generation (spec section 91-93) - LOW/
+// TYPICAL/HIGH are always written together in one transaction (spec section
+// 92); `inputHash` + `engineVersion` give idempotent re-calculation (spec
+// section 48/93) via the unique constraint below.
+model TripCostEstimateGeneration {
+  id            String   @id @default(cuid())
+  tripId        String
+  // Trip.version at calculation time - part of the idempotency key so a
+  // Trip edit between two calculations is never silently ignored.
+  tripVersion   Int
+  inputHash     String
+  engineVersion String
+  calculatedAt  DateTime @default(now())
+
+  trip      Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  estimates TripCostEstimate[]
+
+  @@unique([tripId, inputHash, engineVersion])
+  @@index([tripId, calculatedAt])
+}
+
+// One row per scenario within a generation (spec section 29/30/89/90) - the
+// LOW <= TYPICAL <= HIGH invariant holds by construction (every contributing
+// CostAssumption/offer amount already satisfies it - see the
+// pre-implementation report section 3.5), never by runtime renormalization.
+model TripCostEstimate {
+  id           String               @id @default(cuid())
+  generationId String
+  scenario     CostScenario
+  currency     String
+  totalAmount  Decimal              @db.Decimal(12, 2)
+  completeness EstimateCompleteness
+  confidence   EstimateConfidence
+  unknownCount Int                  @default(0)
+
+  generation TripCostEstimateGeneration @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  items      TripCostEstimateItem[]
+
+  @@unique([generationId, scenario])
+}
+
+// Explainable component breakdown (spec section 28/45/89) - sum(amount) over
+// non-UNKNOWN items must equal the parent estimate's totalAmount (tested,
+// not just documented). `amount`/`currency` are null exactly when
+// `provenance = UNKNOWN` (spec section 42 - UNKNOWN is never coerced to 0).
+// `offerId` is a plain id pointer (no Prisma relation) to an
+// AccommodationOffer/ActivityOffer row - deliberately not a DB relation, so
+// a future G05 offer-retention-policy deletion never cascades into or is
+// blocked by this table (spec section 65/66 - only the minimal permitted
+// evidence snapshot is kept, not a live dependency on the offer still
+// existing).
+model TripCostEstimateItem {
+  id             String             @id @default(cuid())
+  estimateId     String
+  category       CostCategory
+  tripDayId      String?
+  tripItemId     String?
+  transportLegId String?
+  currency       String?
+  amount         Decimal?           @db.Decimal(12, 2)
+  provenance     TripCostProvenance
+  assumptionId   String?
+  offerId        String?
+  description    String?
+
+  estimate     TripCostEstimate  @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  tripDay      TripDay?          @relation(fields: [tripDayId], references: [id])
+  tripItem     TripItem?         @relation(fields: [tripItemId], references: [id])
+  transportLeg TripTransportLeg? @relation(fields: [transportLegId], references: [id])
+  assumption   CostAssumption?   @relation(fields: [assumptionId], references: [id])
+
+  @@index([estimateId])
+  @@index([tripDayId])
+  @@index([tripItemId])
+  @@index([transportLegId])
+  @@index([assumptionId])
 }

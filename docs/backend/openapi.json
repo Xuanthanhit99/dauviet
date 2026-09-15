@@ -38,7 +38,9 @@
                 "CUISINE",
                 "DISH",
                 "ATTRACTION",
-                "ACTIVITY"
+                "ACTIVITY",
+                "TRIP",
+                "TRIP_COST_ASSUMPTION"
               ],
               "type": "string"
             }
@@ -5645,7 +5647,9 @@
                 "CUISINE",
                 "DISH",
                 "ATTRACTION",
-                "ACTIVITY"
+                "ACTIVITY",
+                "TRIP",
+                "TRIP_COST_ASSUMPTION"
               ],
               "type": "string"
             }
@@ -10404,6 +10408,667 @@
           }
         ]
       }
+    },
+    "/v1/trips": {
+      "post": {
+        "operationId": "TripsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "TripsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "DRAFT",
+                "PLANNING",
+                "READY"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}": {
+      "get": {
+        "operationId": "TripsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "TripsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTripDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/archive": {
+      "post": {
+        "operationId": "TripsController_archive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveTripDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/destinations": {
+      "put": {
+        "operationId": "TripsController_replaceDestinations",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceTripDestinationsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/transport-legs": {
+      "put": {
+        "operationId": "TripsController_replaceTransportLegs",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceTripTransportLegsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/days/{dayId}/items": {
+      "put": {
+        "operationId": "TripsController_replaceDayItems",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dayId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceTripDayItemsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/days/{dayId}/items/reorder": {
+      "patch": {
+        "operationId": "TripsController_reorderDayItems",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dayId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderTripDayItemsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/estimates": {
+      "post": {
+        "operationId": "TripsController_generateEstimate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "TripsController_listEstimates",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/estimates/latest": {
+      "get": {
+        "operationId": "TripsController_latestEstimate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/cost-assumptions": {
+      "post": {
+        "operationId": "CostAssumptionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCostAssumptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-cost-assumptions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "CostAssumptionsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "GLOBAL",
+                "COUNTRY",
+                "REGION",
+                "CITY",
+                "DESTINATION"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "STAY",
+                "FOOD",
+                "ACTIVITY",
+                "TRANSPORT",
+                "OTHER"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "DRAFT",
+                "ACTIVE",
+                "RETIRED"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-cost-assumptions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/cost-assumptions/{id}": {
+      "get": {
+        "operationId": "CostAssumptionsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-cost-assumptions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "CostAssumptionsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCostAssumptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-cost-assumptions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/cost-assumptions/{id}/status": {
+      "patch": {
+        "operationId": "CostAssumptionsController_setStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCostAssumptionStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-cost-assumptions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
     }
   },
   "info": {
@@ -12216,7 +12881,9 @@
               "CUISINE",
               "DISH",
               "ATTRACTION",
-              "ACTIVITY"
+              "ACTIVITY",
+              "TRIP",
+              "TRIP_COST_ASSUMPTION"
             ]
           },
           "entityId": {
@@ -12914,7 +13581,9 @@
               "CUISINE",
               "DISH",
               "ATTRACTION",
-              "ACTIVITY"
+              "ACTIVITY",
+              "TRIP",
+              "TRIP_COST_ASSUMPTION"
             ]
           },
           "entityId": {
@@ -15157,6 +15826,498 @@
         },
         "required": [
           "activityId"
+        ]
+      },
+      "CreateTripDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Kyoto autumn trip"
+          },
+          "startDate": {
+            "type": "string",
+            "example": "2026-11-01",
+            "description": "Local calendar date, YYYY-MM-DD - never a UTC instant."
+          },
+          "endDate": {
+            "type": "string",
+            "example": "2026-11-05",
+            "description": "Local calendar date, YYYY-MM-DD. Must be >= startDate; equal is a valid one-day trip."
+          },
+          "primaryCurrency": {
+            "type": "string",
+            "example": "JPY",
+            "description": "ISO 4217 currency code, uppercase."
+          },
+          "travelerCount": {
+            "type": "number",
+            "default": 1,
+            "minimum": 1
+          },
+          "roomCount": {
+            "type": "number",
+            "minimum": 1
+          },
+          "originCountrySlug": {
+            "type": "string",
+            "description": "Country canonicalSlug (e.g. \"japan\"). Unresolvable value -> 404 COUNTRY_NOT_FOUND."
+          },
+          "originRegionSlug": {
+            "type": "string",
+            "description": "Region canonicalSlug. Unresolvable value -> 404 REGION_NOT_FOUND."
+          },
+          "originCitySlug": {
+            "type": "string",
+            "description": "City canonicalSlug. Unresolvable value -> 404 CITY_NOT_FOUND."
+          },
+          "originLabel": {
+            "type": "string",
+            "description": "Free-text origin label, used when no canonical geography row fits - never a precise home address."
+          },
+          "targetBudgetAmount": {
+            "type": "string",
+            "description": "Optional planning target - a user aspiration, never confused with a calculated estimate."
+          },
+          "targetBudgetCurrency": {
+            "type": "string",
+            "example": "JPY"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "startDate",
+          "endDate",
+          "primaryCurrency"
+        ]
+      },
+      "UpdateTripDto": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "number",
+            "description": "The version this edit was read at."
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PLANNING",
+              "READY"
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "example": "2026-11-01"
+          },
+          "endDate": {
+            "type": "string",
+            "example": "2026-11-05"
+          },
+          "primaryCurrency": {
+            "type": "string",
+            "example": "JPY"
+          },
+          "travelerCount": {
+            "type": "number",
+            "minimum": 1
+          },
+          "roomCount": {
+            "type": "number",
+            "minimum": 1
+          },
+          "originCountrySlug": {
+            "type": "string"
+          },
+          "originRegionSlug": {
+            "type": "string"
+          },
+          "originCitySlug": {
+            "type": "string"
+          },
+          "originLabel": {
+            "type": "string"
+          },
+          "targetBudgetAmount": {
+            "type": "string"
+          },
+          "targetBudgetCurrency": {
+            "type": "string",
+            "example": "JPY"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expectedVersion"
+        ]
+      },
+      "ArchiveTripDto": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "number",
+            "description": "The version this archive action was read at."
+          }
+        },
+        "required": [
+          "expectedVersion"
+        ]
+      },
+      "TripDestinationInputDto": {
+        "type": "object",
+        "properties": {
+          "destinationSlug": {
+            "type": "string",
+            "description": "Destination canonicalSlug. Unresolvable value -> 404 DESTINATION_NOT_FOUND."
+          },
+          "arrivalDate": {
+            "type": "string",
+            "example": "2026-11-01"
+          },
+          "departureDate": {
+            "type": "string",
+            "example": "2026-11-03"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "destinationSlug"
+        ]
+      },
+      "ReplaceTripDestinationsDto": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "number",
+            "description": "The Trip version this replace was read at."
+          },
+          "destinations": {
+            "description": "The full ordered destination list - this replaces the entire set, it is never a partial patch.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TripDestinationInputDto"
+            }
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "destinations"
+        ]
+      },
+      "TripTransportLegInputDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "WALK",
+              "LOCAL_TRANSIT",
+              "TRAIN",
+              "BUS",
+              "FLIGHT",
+              "FERRY",
+              "CAR",
+              "TAXI_RIDESHARE",
+              "BIKE",
+              "OTHER"
+            ]
+          },
+          "fromLabel": {
+            "type": "string",
+            "example": "Tokyo Station"
+          },
+          "toLabel": {
+            "type": "string",
+            "example": "Kyoto Station"
+          },
+          "fromDestinationSlug": {
+            "type": "string",
+            "description": "Destination canonicalSlug, if the origin coincides with a canonical Destination. Unresolvable -> 404 DESTINATION_NOT_FOUND."
+          },
+          "toDestinationSlug": {
+            "type": "string",
+            "description": "Destination canonicalSlug, if the endpoint coincides with a canonical Destination. Unresolvable -> 404 DESTINATION_NOT_FOUND."
+          },
+          "plannedDate": {
+            "type": "string",
+            "example": "2026-11-03"
+          },
+          "plannedAmount": {
+            "type": "string",
+            "description": "User-entered or rule-based planning estimate - never a fabricated live fare (spec section 41)."
+          },
+          "plannedCurrency": {
+            "type": "string",
+            "example": "JPY"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode",
+          "fromLabel",
+          "toLabel"
+        ]
+      },
+      "ReplaceTripTransportLegsDto": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "number",
+            "description": "The Trip version this replace was read at."
+          },
+          "transportLegs": {
+            "description": "The full ordered transport-leg list - this replaces the entire set, it is never a partial patch.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TripTransportLegInputDto"
+            }
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "transportLegs"
+        ]
+      },
+      "TripItemInputDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "ACCOMMODATION",
+              "RESTAURANT",
+              "ACTIVITY",
+              "ATTRACTION",
+              "PLACE",
+              "TRANSPORT",
+              "CUSTOM"
+            ]
+          },
+          "accommodationSlug": {
+            "type": "string",
+            "description": "Required when type = ACCOMMODATION. Unresolvable -> 404 ACCOMMODATION_NOT_FOUND."
+          },
+          "restaurantSlug": {
+            "type": "string",
+            "description": "Required when type = RESTAURANT. Unresolvable -> 404 RESTAURANT_NOT_FOUND."
+          },
+          "activitySlug": {
+            "type": "string",
+            "description": "Required when type = ACTIVITY. Unresolvable -> 404 ACTIVITY_NOT_FOUND."
+          },
+          "attractionSlug": {
+            "type": "string",
+            "description": "Required when type = ATTRACTION. Unresolvable -> 404 ATTRACTION_NOT_FOUND."
+          },
+          "placeSlug": {
+            "type": "string",
+            "description": "Required when type = PLACE. Unresolvable -> 404 TRIP_ITEM_PLACE_NOT_FOUND."
+          },
+          "transportLegId": {
+            "type": "string",
+            "description": "Required when type = TRANSPORT - an existing TripTransportLeg id on this trip."
+          },
+          "title": {
+            "type": "string",
+            "description": "Required when type = CUSTOM; otherwise an optional display-snapshot label only."
+          },
+          "notes": {
+            "type": "string"
+          },
+          "startLocalTime": {
+            "type": "string",
+            "example": "09:30",
+            "description": "\"HH:mm\" local time - timezone is resolved from the relevant Destination/City, never stored here."
+          },
+          "endLocalTime": {
+            "type": "string",
+            "example": "11:00"
+          },
+          "allDay": {
+            "type": "boolean",
+            "default": false
+          },
+          "plannedAmount": {
+            "type": "string",
+            "description": "User-entered planning override (spec section 78 precedence tier 1)."
+          },
+          "plannedCurrency": {
+            "type": "string",
+            "example": "JPY"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "ReplaceTripDayItemsDto": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "number",
+            "description": "The Trip version this replace was read at."
+          },
+          "items": {
+            "description": "The full ordered item list for this day - this replaces the entire set, it is never a partial patch.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TripItemInputDto"
+            }
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "items"
+        ]
+      },
+      "ReorderTripDayItemsDto": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "number",
+            "description": "The Trip version this reorder was read at."
+          },
+          "itemIds": {
+            "description": "Every existing TripItem id for this day, in the desired final order.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "itemIds"
+        ]
+      },
+      "CreateCostAssumptionDto": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "GLOBAL",
+              "COUNTRY",
+              "REGION",
+              "CITY",
+              "DESTINATION"
+            ]
+          },
+          "scopeSlug": {
+            "type": "string",
+            "description": "Required unless scope = GLOBAL - the Country/Region/City/Destination canonicalSlug or id named by `scope`."
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "STAY",
+              "FOOD",
+              "ACTIVITY",
+              "TRANSPORT",
+              "OTHER"
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "PER_PERSON",
+              "PER_PERSON_PER_DAY",
+              "PER_ROOM_PER_NIGHT",
+              "PER_TRIP",
+              "PER_ITEM",
+              "PER_LEG"
+            ]
+          },
+          "currency": {
+            "type": "string",
+            "example": "VND"
+          },
+          "lowAmount": {
+            "type": "string",
+            "description": "low <= typical <= high, enforced at the service layer (spec section 80)."
+          },
+          "typicalAmount": {
+            "type": "string"
+          },
+          "highAmount": {
+            "type": "string"
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "example": "2026-01-01"
+          },
+          "effectiveTo": {
+            "type": "string",
+            "example": "2026-12-31"
+          },
+          "source": {
+            "type": "string",
+            "description": "Provenance note (e.g. \"editorial estimate\" or a cited source) - never fabricated by an LLM (spec section 51)."
+          }
+        },
+        "required": [
+          "scope",
+          "category",
+          "unit",
+          "currency",
+          "lowAmount",
+          "typicalAmount",
+          "highAmount",
+          "effectiveFrom",
+          "source"
+        ]
+      },
+      "UpdateCostAssumptionDto": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "example": "VND"
+          },
+          "lowAmount": {
+            "type": "string"
+          },
+          "typicalAmount": {
+            "type": "string"
+          },
+          "highAmount": {
+            "type": "string"
+          },
+          "effectiveTo": {
+            "type": "string",
+            "example": "2026-12-31"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      },
+      "SetCostAssumptionStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "ACTIVE",
+              "RETIRED"
+            ]
+          }
+        },
+        "required": [
+          "status"
         ]
       }
     }

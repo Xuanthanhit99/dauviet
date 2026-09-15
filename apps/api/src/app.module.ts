@@ -48,6 +48,8 @@ import { DishesModule } from './modules/dishes/dishes.module';
 import { RestaurantsModule } from './modules/restaurants/restaurants.module';
 import { AttractionsModule } from './modules/attractions/attractions.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
+import { TripsModule } from './modules/trips/trips.module';
+import { CostAssumptionsModule } from './modules/cost-assumptions/cost-assumptions.module';
 
 @Module({
   imports: [
@@ -123,6 +125,12 @@ import { ActivitiesModule } from './modules/activities/activities.module';
     RestaurantsModule,
     AttractionsModule,
     ActivitiesModule,
+    // G06 - Global Backend V2 Extension, Trip Planner + Cost Engine. Private,
+    // owner-scoped planning data - geography-independent at the module-wiring
+    // level (origin/destination lookups go through PrismaService directly,
+    // not through DestinationsModule/CountriesModule's own services).
+    TripsModule,
+    CostAssumptionsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

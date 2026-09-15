@@ -57,6 +57,7 @@ import {
   GOLDEN_EDITORIAL_SLOTS,
   GOLDEN_ERAS,
   GOLDEN_EVENTS,
+  GOLDEN_COST_ASSUMPTIONS,
   GOLDEN_FACTS,
   GOLDEN_JOURNEYS,
   GOLDEN_PEOPLE,
@@ -1259,6 +1260,40 @@ async function main() {
       create: { personId: lyCongUan.id, placeId: thangLong.id, role: 'RULE' },
     });
   }
+
+  console.log('Seeding G06 Trip Planner + Cost Engine DRAFT-only illustrative cost assumptions (see prisma/golden/cost-assumptions.ts)...');
+  for (const spec of GOLDEN_COST_ASSUMPTIONS) {
+    // Plain upsert-by-composite-unique-key does not work here: Postgres
+    // treats every NULL as distinct in a unique index, and `scopeId` is
+    // always null for these GLOBAL-scope fixture rows, so the DB-level
+    // `@@unique([scope, scopeId, category, unit, effectiveFrom])` constraint
+    // never actually fires for them (see CostAssumptionsService.
+    // assertNoDuplicateIdentity's doc comment for the full explanation) -
+    // find-then-conditionally-create instead, the same workaround this
+    // seed already uses for `ProviderLicense` (which has no natural unique
+    // slug either).
+    const effectiveFrom = new Date(spec.effectiveFrom);
+    const existing = await prisma.costAssumption.findFirst({
+      where: { scope: 'GLOBAL', scopeId: null, category: spec.category as any, unit: spec.unit as any, effectiveFrom },
+    });
+    if (!existing) {
+      await prisma.costAssumption.create({
+        data: {
+          scope: 'GLOBAL',
+          category: spec.category as any,
+          unit: spec.unit as any,
+          currency: spec.currency,
+          lowAmount: spec.lowAmount,
+          typicalAmount: spec.typicalAmount,
+          highAmount: spec.highAmount,
+          effectiveFrom,
+          source: spec.source,
+          status: 'DRAFT',
+        },
+      });
+    }
+  }
+  console.log(`G06 Cost Assumptions: ${GOLDEN_COST_ASSUMPTIONS.length} DRAFT-only GLOBAL fixture rows (never ACTIVE without explicit product/finance sign-off).`);
 
   console.log(`Golden dataset seed complete (version ${GOLDEN_DATASET_VERSION}, reviewed ${GOLDEN_DATASET_REVIEWED_AT}).`);
   console.log(`Published ${publishedFactKeys.size}/${GOLDEN_FACTS.length + JAPAN_FACTS.length} golden historical facts (100% of published facts carry >=1 VERIFIED citation - see docs/backend/GOLDEN_DATASET.md).`);

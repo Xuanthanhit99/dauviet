@@ -47,6 +47,7 @@ A `User.roles` is a Postgres array (`Role[]`) - one account can hold several rol
 | Restaurants (G05) | `POST /restaurants`, `PATCH /restaurants/:id/translations/:locale`, `.../status`, `.../cuisines`, `.../dishes`, `.../destinations`, `POST /restaurants/provider-references`, `PATCH /restaurants/provider-references/:id/map` | `EDITOR`, `ADMIN` |
 | Attractions (G05) | `POST /attractions`, `PATCH /attractions/:id/translations/:locale`, `.../status`, `.../destinations` | `EDITOR`, `ADMIN` |
 | Activities (G05) | `POST /activities`, `PATCH /activities/:id/translations/:locale`, `.../status`, `.../destinations`, `POST /activities/provider-references`, `PATCH /activities/provider-references/:id/map` | `EDITOR`, `ADMIN` |
+| Admin/Cost Assumptions (G06) | every `/admin/cost-assumptions/**` route (create, list, detail, update, status) | `ADMIN` only - deliberately no `EDITOR` carve-out, same tier as Providers above (spec: a mistake here silently skews every owner's cost estimate, not just one piece of editorial copy - `HISTORIAN_REVIEWER`/`MODERATOR`/`EDITOR`/`USER` have no authority here at all) |
 | Facts | every `/facts/**` route (create, link, editorial-status) | `CONTRIBUTOR`, `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` (module-level guard; see separation-of-duties note for the extra in-service checks on publishing, completing FACT_REVIEW, and retracting) |
 | Sources | `POST /sources` | `CONTRIBUTOR`, `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` |
 | Sources | `POST /sources/:id/documents` | `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` |
@@ -88,6 +89,21 @@ Every route not listed above that still requires `@ApiBearerAuth()` (e.g. `GET /
 /cuisines`, `.../:slug`, `GET /dishes`, `.../:slug`, `GET /restaurants`, `.../:slug`,
 `.../:slug/operational-snapshot`, `GET /attractions`, `.../:slug`, `GET /activities`, `.../:slug`,
 `.../:slug/offers`) requires no authentication at all.
+
+## Owner-scoped authorization (G06 — a new pattern, not role-based)
+
+Every `/v1/trips/**` route (`Trip` create/list/get/update/archive, destinations, transport-legs,
+day items, reorder, estimates) carries **no `@Roles()` decorator at all** - it is not missing from
+this matrix by oversight, it is structurally a different authorization model than every other row
+above. Trip is private, single-owner planning data (no `TripMember`/collaboration exists - deferred
+to G07): any authenticated `USER` may create and manage their *own* Trips, and authorization is
+enforced entirely in service code (`TripsService.getOwnedOrThrow`), not by role. A request for a
+Trip that does not exist at all gets `404 TRIP_NOT_FOUND`; a request for a Trip that exists but
+belongs to a different authenticated user gets `403 TRIP_NOT_OWNER` - existence is never hidden,
+matching this codebase's established `Comment`/`Contribution` ownership convention exactly (see
+`G06_PRE_IMPLEMENTATION_REPORT.md` section 1.6/4.2 for the full precedent trace). **No role,
+including `ADMIN`, is given implicit read/write access to another user's private Trip** - this is a
+deliberate decision, not an oversight (`getOwnedOrThrow` performs no role check of any kind).
 
 ## Separation of duties (spec Phase 02 section 20)
 

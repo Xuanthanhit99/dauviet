@@ -13,7 +13,7 @@ does not replace or amend any V1 document.
 | **G03** | **Global Historical Knowledge Extension** | **COMPLETE** | `DateEra` BCE/CE, chronology ordinals, `EventCountry`/`EraCountry`/`PersonPlace`, small Japan historical fixture. See this file's G03 summary below. |
 | **G04** | **Destination Discovery** | **COMPLETE** | `DestinationPlace`/`Theme`/`Story`/`Journey`/`Event` composition, `DestinationCollection`, deterministic discovery ranking/related-destinations. See `docs/backend/G04_DESTINATION_DISCOVERY.md`. |
 | **G05** | **Stay + Food + Activities** | **COMPLETE** | `Accommodation`/`Cuisine`/`Dish`/`Restaurant`/`Attraction`/`Activity` canonical identities, `Provider*Reference` + `*Offer`/`OperationalSnapshot` provider layer (reuses G02's `ProviderRegistryService` gate unchanged), Vietnam+Japan seed. See `docs/backend/G05_STAY_FOOD_ACTIVITIES.md`. |
-| G06 | Trip Planner + Cost Engine | Not started | `Trip`, itinerary, estimated/live cost. |
+| **G06** | **Trip Planner + Cost Engine** | **COMPLETE** | `Trip`/itinerary/`CostAssumption`/deterministic Cost Engine fully implemented and live-verified (Path A+B migration proofs, real generation+audit+CostAssumption rollback proofs, a real-HTTP concurrent-generation proof, 8/8 e2e (62 tests) + 73/73 unit (980 tests) suites green); G05 offer-evidence integration is wired in (`resolveOfferEvidence`, live-proven by a 10-case matrix). 290/290 canonical gates PASS, 0 FAIL, 0 UNVERIFIED, 0 P0, 0 P1. 2 gates (149, 177) are PASS - NOT APPLICABLE: both trace to explicit "MAY" clauses in the original brief (budget-vs-target comparison, time-conflict detection) that were deliberately not implemented - see `docs/backend/G06_FINAL_REPORT.md`'s "Optional capabilities intentionally not implemented in G06". Verdict COMPLETE, not LOCKED - this row is not a Backend V2 Freeze claim. |
 | G07 | Trip Collaboration | Not started | Trip members, invitations, shared itinerary editing. |
 | G08 | Location Sharing | Not started | Opt-in, trip-scoped, time-limited location sessions. |
 | G09 | Expense Split / Settlement | Not started | `TripExpense`, settlement suggestions (bookkeeping only, no wallet). |
@@ -143,3 +143,55 @@ does not replace or amend any V1 document.
   zero restart and zero caching, while the canonical entity routes stay fully reachable throughout).
 - Explicitly out of scope (per the G05 brief): `Trip`/booking/payment/wallet, affiliate/commission
   ranking, G11 global search/map redesign, G06+ scope.
+
+## G06 summary (see `docs/backend/G06_FINAL_REPORT.md` for the full 290-gate audit — verdict COMPLETE, 290 PASS/0 FAIL/0 UNVERIFIED)
+
+- New: `Trip`(+`archivedAt`/`version`), `TripDestination`, `TripDay`, `TripItem`,
+  `TripTransportLeg`, `CostAssumption`, `TripCostEstimateGeneration`, `TripCostEstimate`,
+  `TripCostEstimateItem`. 11 new enums (`TripStatus`, `TripItemType`, `TripTransportMode`,
+  `TripCostProvenance`, `CostCategory`, `CostUnit`, `CostAssumptionScope`, `CostAssumptionStatus`,
+  `CostScenario`, `EstimateCompleteness`, `EstimateConfidence`); 2 new `EntityKind` values (`TRIP`,
+  `TRIP_COST_ASSUMPTION`).
+- Migration: `prisma/migrations/20260911103710_g06_trip_planner_cost_engine/` - purely additive,
+  zero destructive changes. Had the same pre-existing drift artifact G04/G05 each independently
+  found (`EntityKind.FACT` + 17 trigram/GIST index drops) manually stripped before applying, same
+  as before - flagged separately, not a G06 change.
+- Cost Engine is split into a DB-free pure core (precedence resolution, unit multiplication,
+  scenario aggregation, canonical input-hash) and a DB-touching orchestrator
+  (`TripCostEstimatesService` + `resolveAssumptionCandidates`), per the brief's own purity
+  requirement. G05 offer-evidence integration (`AccommodationOffer`/`ActivityOffer` as
+  PROVIDER_EVIDENCE) is now wired in via `resolveOfferEvidence`, reusing G05's own
+  `ProviderRegistryService.getExecutionContext` gate unchanged (fail-closed per reference, nothing
+  cached, live-proven by a 10-case test matrix: fresh offer contributes, expired/suspended/revoked/
+  missing-attribution/context-mismatch/currency-mismatch/unavailable all correctly fall back to
+  `CostAssumption`/UNKNOWN, a persisted snapshot never changes after a later provider status change).
+  Every category still resolves correctly via `CostAssumption`/UNKNOWN when no eligible offer exists.
+- Seed: `prisma/golden/cost-assumptions.ts` - 4 DRAFT-only GLOBAL fixture rows (STAY/FOOD/ACTIVITY/
+  TRANSPORT); real `ACTIVE` production figures are an explicit, un-invented product/finance input.
+- Live-verified: Trip ownership (404-then-403)/optimistic concurrency (409, a deliberate divergence
+  from Story/Journey/Contribution's 400)/non-destructive archive; itinerary replace-all + reorder;
+  `CostAssumption` admin RBAC (ADMIN-only, stricter than catalogue content) + forward-only status
+  machine; atomic 3-scenario estimate generation with a real PostgreSQL rollback proof extended to
+  cover the transactional audit row too (zero rows survive a forced mid-transaction failure, not even
+  the generation row or the audit entry); a separate real-PostgreSQL `CostAssumption` mutation
+  rollback proof; a real-HTTP concurrent-generation proof (two simultaneous identical requests never
+  produce more than one generation row); `inputHash` idempotency; Migration Path A (fresh DB) and
+  Path B (17 pre-existing migrations + real seeded V1-G05 data, G06 applied on top - 19 table row
+  counts and 5 content hashes byte-identical before/after, not re-run this delta pass since no
+  schema/migration/seed change occurred); full regression both green (73/73 unit suites, 980 tests;
+  8/8 e2e suites, 62 tests). A real, reproducible Postgres cascade-ordering conflict was found for a
+  hypothetical future Trip/User hard-delete (not reachable from any current route - archive is the
+  only lifecycle exit) and documented as a known latent risk for whichever phase eventually builds
+  one.
+- **COMPLETE**: the original G06 brief's missing sections 116-168 and the full
+  `G06-GATE-188`-through-`290` manifest were subsequently supplied and individually delta-audited
+  (see `G06_FINAL_REPORT.md`'s recovered manifest section) - all 290 canonical gates PASS, 0 FAIL, 0
+  UNVERIFIED, 0 P0, 0 P1. 2 of the 290 (budget-vs-target comparison, day-level time-conflict
+  detection) are PASS - NOT APPLICABLE: both are explicit "MAY"/"if implemented" clauses in the
+  original brief, deliberately not built rather than added as unrequested scope just to force a
+  number, listed by name (not hidden) in `G06_FINAL_REPORT.md`'s "Optional capabilities intentionally
+  not implemented in G06". **COMPLETE here is a phase-level verdict only - it is not a Backend V2
+  Freeze claim**, which remains gated on G12 alone.
+- Explicitly out of scope (per the G06 brief, sections 0-115): Trip collaboration/`TripMember`
+  (G07), location sharing (G08), expense settlement (G09), affiliate/monetization (G10), any
+  booking/payment/wallet, any AI-generated numeric cost, G11 global search/map redesign.
