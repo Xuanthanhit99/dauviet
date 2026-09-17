@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Brand Application System: Web + iOS + Android",
+    "version": "Phase 08 V1.0",
+    "status": "PRODUCTION CANDIDATE"
+  },
+  "goal": "apply locked Phases 01–07 consistently across product surfaces without redesigning locked UX baselines",
+  "shared_brand_contract": {
+    "identity": "same Time Trace master geometry and approved responsive logo variants",
+    "color": "same Phase 02 semantic tokens; platform system colors only when mapped deliberately",
+    "type": "same Phase 03 hierarchy/locale contracts; native platform rendering may use implementation-specific loading",
+    "icons": "same Phase 04 semantic vocabulary; platform navigation glyph conventions allowed only when semantics remain consistent",
+    "map": "same Phase 05 spatial identity and accessibility rules",
+    "motion": "same Phase 06 choreography/timing intent with platform-native implementation",
+    "media": "same Phase 07 truth/provenance/disclosure requirements"
+  },
+  "web": {
+    "shell": "locked Global Navigation + App Shell remains authoritative",
+    "logo": "horizontal master in wide header; compact/symbol variant at constrained widths",
+    "navigation": "desktop nav and responsive mobile nav retain locked information architecture",
+    "typography": "locale-aware webfont/subset loading; no CJK family shipping to unrelated locales",
+    "map": "keyboard + synchronized accessible entity list for complex spatial views",
+    "motion": "CSS/Web Animations/native map transitions mapped to Phase 06 tokens",
+    "media": "responsive image pipeline; provenance rendered from backend/CMS",
+    "pwa": "favicon/app icons use locked Phase 01 production assets"
+  },
+  "ios": {
+    "shell": "native navigation patterns may adapt presentation but not product hierarchy",
+    "safe_area": "all branded surfaces respect device safe areas and Dynamic Island/notch",
+    "logo": "symbol/compact lockup preferred in tight native chrome; no geometry redraw",
+    "type": "Dynamic Type support; hierarchy maps to Phase 03 and must survive accessibility sizes",
+    "touch": "44x44 pt minimum interactive target",
+    "motion": "Reduce Motion maps to Phase 06 reduced-motion behavior",
+    "map": "native gestures coexist with accessible alternate entity list",
+    "icons": "semantic icons preserve Phase 04 meaning; SF Symbols may be used for generic OS actions only, not to replace Dấu Việt domain glyphs",
+    "media": "provenance/disclosure remains visible/retrievable in native presentation"
+  },
+  "android": {
+    "shell": "native navigation patterns may adapt presentation but not product hierarchy",
+    "insets": "edge-to-edge layouts respect status/navigation bars and display cutouts",
+    "logo": "symbol/compact lockup in constrained app chrome; no geometry redraw",
+    "type": "font scaling supported; hierarchy maps to Phase 03 and survives large text",
+    "touch": "48x48 dp preferred Material-compatible target; never below locked accessibility intent",
+    "motion": "system animator/reduced-motion preferences map to Phase 06 reduced-motion behavior where available",
+    "map": "native gestures coexist with accessible alternate entity list",
+    "icons": "Material/system icons may serve generic OS actions only; domain semantics use Phase 04 glyphs",
+    "media": "same provenance/disclosure contract as web/iOS"
+  },
+  "responsive_application": {
+    "desktop": "brand presence can be editorial and spacious; avoid over-branding every card",
+    "tablet": "preserve hierarchy while reducing decorative whitespace",
+    "mobile": "content and utility first; compact identity; no loss of provenance/state cues",
+    "orientation": "landscape/portrait reflow must not alter semantic priority"
+  },
+  "app_icon_launch": {
+    "app_icon": "locked Phase 01 safe-area validated symbol; platform masks applied without redrawing geometry",
+    "splash_launch": "minimal brand moment; no long cinematic gate; respect Phase 06",
+    "store_assets": "brand-consistent but truthful real media; no fabricated product screenshots or misleading travel imagery"
+  },
+  "platform_specific_allowed": [
+    "native safe-area/inset handling",
+    "native navigation presentation",
+    "native text rendering and accessibility scaling",
+    "generic OS action icons",
+    "platform-native sheets/dialogs where product semantics remain intact",
+    "native haptics for direct confirmation where not required for meaning"
+  ],
+  "platform_specific_prohibited": [
+    "separate logo geometry per platform",
+    "different semantic colors that change meaning",
+    "replacing domain glyphs with unrelated system icons",
+    "hiding provenance on mobile to save space",
+    "motion behavior that ignores reduced-motion contract",
+    "using platform conventions to reorder locked product hierarchy without UX justification",
+    "fake store screenshots or media that violates Phase 07"
+  ],
+  "qa_gate": {
+    "next": "Phase 08.1 Cross-Platform Brand Consistency & Accessibility QA",
+    "test": [
+      "web desktop/mobile",
+      "iOS compact/large text/reduce motion",
+      "Android compact/large font/reduced motion",
+      "dark/light",
+      "multilingual VI/EN/FR/JA/KO/SC/TC",
+      "map",
+      "Story",
+      "Journey",
+      "provenance",
+      "app icon/launch"
+    ]
+  }
+}

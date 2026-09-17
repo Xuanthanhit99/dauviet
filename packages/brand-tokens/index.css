@@ -1,0 +1,4 @@
+/* Source-exact canonical styles; import once at the application root. */
+@import "./canonical/color.css";
+@import "./canonical/typography.css";
+@import "./canonical/map.css";

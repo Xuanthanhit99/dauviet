@@ -1,0 +1,97 @@
+{
+  "status": "BLOCKED",
+  "sourceIntegrity": "PASS",
+  "microGeometryIdentity": "PASS",
+  "geometryProof": "Reversing the single authorized fill replacement restores every original source byte, including all six paths, mask, attributes, metadata and ordering.",
+  "authorizedColorMapping": "PASS",
+  "colorDifferences": [
+    {
+      "attribute": "fill",
+      "visiblePath": 3,
+      "from": "#062A24",
+      "to": "#EADDC7",
+      "occurrences": 1
+    }
+  ],
+  "unauthorizedColorMappings": 0,
+  "otherFillStrokeDifferences": [],
+  "svgAccessibility": "PASS",
+  "brokenReferences": 0,
+  "contrast": {
+    "method": "sRGB relative luminance, (Lmax + 0.05)/(Lmin + 0.05)",
+    "warmSandRatios": {
+      "#062A24": 11.481765120536505,
+      "#18463C": 7.911403799848775
+    },
+    "warmSandThreshold": 3,
+    "warmSandResult": "PASS",
+    "preservedForest700OnForest700": 1,
+    "preservedForest700OnDeepForest": 1.4512930209371917
+  },
+  "renderQA": [
+    {
+      "sizePx": 16,
+      "background": "#062A24",
+      "result": "PASS",
+      "notes": "Journey/aperture retained; faint green regions visible. Low regional contrast remains a limitation; human approval pending."
+    },
+    {
+      "sizePx": 16,
+      "background": "#18463C",
+      "result": "FAIL",
+      "notes": "Both unchanged Forest 700 regions merge into identical background (1:1). Silhouette and Reveal are lost in those regions; no clipping or geometry mutation."
+    },
+    {
+      "sizePx": 24,
+      "background": "#062A24",
+      "result": "PASS",
+      "notes": "Journey/aperture retained; faint green regions visible. Low regional contrast remains a limitation; human approval pending."
+    },
+    {
+      "sizePx": 24,
+      "background": "#18463C",
+      "result": "FAIL",
+      "notes": "Both unchanged Forest 700 regions merge into identical background (1:1). Silhouette and Reveal are lost in those regions; no clipping or geometry mutation."
+    }
+  ],
+  "comparison32": "Normal dark master only; exhibits same surface-color collision on Forest 700. Does not authorize candidate changes.",
+  "renderer": "Local Google Chrome headless, device scale factor 1, native 16/24/32 CSS px; PNG crops via Pillow. 6x board uses nearest-neighbor enlargement for inspection only.",
+  "artifacts": [
+    {
+      "file": "docs/brand/qa/dark-micro-v1.0/dark-micro-16px-062a24.png",
+      "sha256": "badbf9f78e0ef2ab0f869d099697fd98075f07131c194c1f930a6e119030b084"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.0/dark-micro-16px-18463c.png",
+      "sha256": "785d32f63533d32ace35fd76ae8e197018742167975de7a5625e0cb2826899f9"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.0/dark-micro-24px-062a24.png",
+      "sha256": "22a8994008961f9721ddeb18ec264f1b26c5c3dd5c9a30a94b3612de0df0c9b1"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.0/dark-micro-24px-18463c.png",
+      "sha256": "eb0e6ac603625f070d360e9f2f6936342bdcc622c3a4fdd6d7422ca25feb3457"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.0/master-reference-32px-062a24.png",
+      "sha256": "ce1579759bd465e6a21091c0b1414ccc3ac6a696ec3c17decd4c33cc6d425496"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.0/master-reference-32px-18463c.png",
+      "sha256": "c80e3152fd5e2fc5b01fce33ca88593939d94ad115703020ba6a808f0cf3f345"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.0/pixel-inspection-6x.png",
+      "sha256": "dc189f32d4684fa553cdebc7b56d4b5512811361eab468da18457b35fc694e8a"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.0/render-board.png",
+      "sha256": "378e31919cf17f18bb685ef1c3c423b60cf5103517d995ab02c7670dfaca4ef3"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.0/render-input.html",
+      "sha256": "95926d24969734dc7c61431c4f8331a31b91b471684a18504d326fe7dc860bf2"
+    }
+  ]
+}

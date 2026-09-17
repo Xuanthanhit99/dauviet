@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Phase 05.1 Map Density, State & Accessibility QA",
+    "version": "V1.0",
+    "status": "PASS_WITH_IMPLEMENTATION_RULES"
+  },
+  "density": {
+    "world_country": "PASS — clusters + featured destinations only; no marker carpet",
+    "region_destination": "PASS — mixed clusters + high-importance entities",
+    "city_place": "PASS_WITH_RULE — individual markers allowed, labels must be priority-gated/collision-managed",
+    "site_detail": "PASS — individual markers + labels + overlays"
+  },
+  "states": {
+    "hover": "PASS — subtle scale/elevation only",
+    "focus": "PASS — Phase 02 focus-visible ring retained",
+    "selected": "PASS — scale 1.12–1.18 + stronger boundary, glyph unchanged",
+    "visited": "PASS — check/stamp + accessible state, not color only",
+    "saved": "PASS — bookmark + accessible state",
+    "unavailable": "PASS_WITH_RULE — neutral treatment must include reason/explanation",
+    "featured": "PASS_WITH_RULE — size/editorial hierarchy, never gold-only"
+  },
+  "labels": {
+    "max_lines": "2",
+    "collision": "required map-engine collision handling",
+    "selected": "full label preferred",
+    "truncation": "accessible full name retained",
+    "font": "must not shrink below Phase 03 tokens to force fit",
+    "result": "PASS"
+  },
+  "clusters": {
+    "count": "mandatory",
+    "bands": "36 / 44 / 52 px",
+    "dense_overlap": "PASS_WITH_RULE — use zoom/spiderfy/list; never stack unreadable counts",
+    "keyboard": "cluster control must be focusable if interactive",
+    "result": "PASS_WITH_RULES"
+  },
+  "historical_uncertainty": {
+    "verified": "solid boundary + label/legend where needed",
+    "uncertain": "dashed boundary + explicit uncertainty label/legend",
+    "opacity_only": "prohibited",
+    "result": "PASS"
+  },
+  "themes": {
+    "light": "PASS",
+    "dark": "PASS_WITH_RULE — preserve >=3:1 essential marker/glyph boundaries and avoid low-contrast basemap interference",
+    "monochrome": "PASS — type/state remains glyph/shape based"
+  },
+  "accessibility": {
+    "touch_target": "PASS — 44x44 CSS px minimum independent of visual marker size",
+    "keyboard": "PASS_WITH_RULE — interactive markers/clusters focusable in logical map/list order",
+    "screen_reader": "PASS_WITH_RULE — accessible name includes entity type + name + state",
+    "reduced_motion": "PASS — scale/cluster transitions may be disabled",
+    "graphics_contrast": "PASS_WITH_RULE — essential graphics >=3:1 against adjacent map surface",
+    "color_only": "PASS — prohibited"
+  },
+  "production_corrections": [
+    "At City/Place density, label visibility must be priority-based and collision-managed; never show every label simultaneously.",
+    "On dark or visually busy basemaps, marker container needs a contrast keyline/halo when required to maintain >=3:1 boundary contrast.",
+    "Cluster expansion must choose zoom, spiderfy, or accessible list; overlapping clusters may not remain as unreadable stacked circles.",
+    "Unavailable markers need an explanatory reason in tooltip/panel/accessibility text.",
+    "Historical uncertainty must use dashed/explicit uncertainty semantics, not opacity alone.",
+    "Map keyboard navigation should expose a synchronized accessible entity list where direct spatial tab order becomes impractical."
+  ],
+  "decision": {
+    "phase05_lock_readiness": "READY_FOR_PRODUCTION_LOCK",
+    "condition": "include the six implementation rules above as part of the locked spatial system"
+  }
+}

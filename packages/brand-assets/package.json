@@ -1,0 +1,14 @@
+{
+  "name": "@dauviet/brand-assets",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dấu Việt Global 2026 V1 source-locked brand foundation",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    "./logo/*": "./logo/*",
+    "./app-icons/*": "./app-icons/*"
+  }
+}

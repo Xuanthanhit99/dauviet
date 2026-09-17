@@ -1,0 +1,70 @@
+{
+  "status": "PASS",
+  "version": "1.4.1",
+  "reason": "METADATA_ONLY_CORRECTIVE_RELEASE",
+  "parentVersion": "1.4",
+  "visualGeometryIdentity": "PASS 3/3",
+  "fingerprintMethod": "SHA-256 of complete UTF-8 SVG with only title and desc elements removed. All remaining bytes are identical; also verify reversal of the two ID insertions restores parent bytes.",
+  "checks": {
+    "dvg-logo-horizontal-primary-light-v1.4.1.svg": {
+      "parentFile": "dvg-logo-horizontal-primary-light-v1.4.svg",
+      "parentSha256": "162530f8f61dd724ea9a8367899ab21db40e51461b09f7c38f588662d56e8315",
+      "correctedSha256": "ea6dfc833167956d2712ee52e1ae04a3b23abfe326f82e17edf97da879a9ee6a",
+      "visualFingerprint": "39d1bbf5cc7a43298062343be640bfc4f6b2d7f7e10614b7e33ec2e6cd604b0c",
+      "visualGeometryIdentity": true,
+      "pathCountBefore": 20,
+      "pathCountAfter": 20,
+      "exactMetadataPatchReversible": true,
+      "no_live_text": true,
+      "journey_mask_present": true,
+      "no_raster": true,
+      "no_filter": true,
+      "no_gradient": true,
+      "accessibilityReferences": [
+        "title",
+        "desc"
+      ],
+      "brokenReferencesAfter": 0
+    },
+    "dvg-logo-horizontal-primary-dark-v1.4.1.svg": {
+      "parentFile": "dvg-logo-horizontal-primary-dark-v1.4.svg",
+      "parentSha256": "893827b744448812c0e39b5d90f4b53c6ba26904fb45232b463d3beb9cbb8809",
+      "correctedSha256": "ce7d2c7e14686fa0d023d7f1fc98941dad50bc0372e66f51c5530ec53bf4e22e",
+      "visualFingerprint": "0df49d0a88b4598af45dd07060836a31c0894eccef0319fc8b3b813286522091",
+      "visualGeometryIdentity": true,
+      "pathCountBefore": 20,
+      "pathCountAfter": 20,
+      "exactMetadataPatchReversible": true,
+      "no_live_text": true,
+      "journey_mask_present": true,
+      "no_raster": true,
+      "no_filter": true,
+      "no_gradient": true,
+      "accessibilityReferences": [
+        "title",
+        "desc"
+      ],
+      "brokenReferencesAfter": 0
+    },
+    "dvg-logo-horizontal-primary-mono-v1.4.1.svg": {
+      "parentFile": "dvg-logo-horizontal-primary-mono-v1.4.svg",
+      "parentSha256": "12bd1046f5ec0af990d69311c04d875ba84e27edbd606ed072abc1375153c5de",
+      "correctedSha256": "5a531c086be82b8e4850b8c358509bb637e4d1ad7c5f25b3ef9cf36e4cb217e7",
+      "visualFingerprint": "0681f9978e0c00797f4a29c38a8eb091e1f0dfcdd3d9c1d4020697907d42a18c",
+      "visualGeometryIdentity": true,
+      "pathCountBefore": 20,
+      "pathCountAfter": 20,
+      "exactMetadataPatchReversible": true,
+      "no_live_text": true,
+      "journey_mask_present": true,
+      "no_raster": true,
+      "no_filter": true,
+      "no_gradient": true,
+      "accessibilityReferences": [
+        "title",
+        "desc"
+      ],
+      "brokenReferencesAfter": 0
+    }
+  }
+}

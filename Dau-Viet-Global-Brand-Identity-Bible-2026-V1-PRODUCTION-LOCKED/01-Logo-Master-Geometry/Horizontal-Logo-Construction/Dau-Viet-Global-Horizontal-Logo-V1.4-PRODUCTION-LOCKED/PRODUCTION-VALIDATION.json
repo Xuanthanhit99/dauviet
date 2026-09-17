@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "version": "1.4",
+  "checks": {
+    "dvg-logo-horizontal-primary-light-v1.4.svg": {
+      "no_live_text": true,
+      "journey_mask_present": true,
+      "outlined_wordmark": true,
+      "no_raster": true,
+      "no_gradient": true,
+      "no_filter": true
+    },
+    "dvg-logo-horizontal-primary-dark-v1.4.svg": {
+      "no_live_text": true,
+      "journey_mask_present": true,
+      "outlined_wordmark": true,
+      "no_raster": true,
+      "no_gradient": true,
+      "no_filter": true
+    },
+    "dvg-logo-horizontal-primary-mono-v1.4.svg": {
+      "no_live_text": true,
+      "journey_mask_present": true,
+      "outlined_wordmark": true,
+      "no_raster": true,
+      "no_gradient": true,
+      "no_filter": true
+    }
+  }
+}

@@ -1,0 +1,214 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Interaction & State Colors",
+    "version": "Phase 02.1 V1.0"
+  },
+  "interaction": {
+    "primary": {
+      "default": {
+        "bg": "#062A24",
+        "fg": "#FFFFFF"
+      },
+      "hover": {
+        "bg": "#0B352E",
+        "fg": "#FFFFFF"
+      },
+      "pressed": {
+        "bg": "#031D19",
+        "fg": "#FFFFFF"
+      },
+      "focus": {
+        "bg": "#062A24",
+        "fg": "#FFFFFF",
+        "ring": "#D4AF7C"
+      },
+      "disabled": {
+        "bg": "#D2D0CC",
+        "fg": "#666666"
+      }
+    },
+    "accent": {
+      "default": {
+        "bg": "#D4AF7C",
+        "fg": "#1A1A1A"
+      },
+      "hover": {
+        "bg": "#C8A36E",
+        "fg": "#1A1A1A"
+      },
+      "pressed": {
+        "bg": "#BE9560",
+        "fg": "#1A1A1A"
+      },
+      "focus": {
+        "bg": "#D4AF7C",
+        "fg": "#1A1A1A",
+        "ring": "#18463C"
+      },
+      "disabled": {
+        "bg": "#DED4C4",
+        "fg": "#666666"
+      }
+    },
+    "surface_selection": {
+      "selected_bg": "#DCE9E4",
+      "selected_fg": "#062A24",
+      "selected_border": "#18463C",
+      "visited_fg": "#6A5741",
+      "visited_icon": "#9A7447"
+    },
+    "functional": {
+      "success": {
+        "fg": "#286044",
+        "bg": "#E3EFE8"
+      },
+      "warning": {
+        "fg": "#704B16",
+        "bg": "#F6E8C8"
+      },
+      "error": {
+        "fg": "#8A3430",
+        "bg": "#F6E1DE"
+      },
+      "info": {
+        "fg": "#315B6D",
+        "bg": "#E1EDF1"
+      }
+    }
+  },
+  "domain_rules": {
+    "map": {
+      "default_marker": "shape + entity icon + semantic color; never color alone",
+      "selected_marker": "increase outline/scale + selected surface/border; not color-only",
+      "visited_marker": "visited glyph/check + label/state metadata; gold/brown may supplement",
+      "cluster": "numeric count required",
+      "historical_time_filter": "active tab/label + shape/border, not hue alone"
+    },
+    "story_explorer": {
+      "current_scene": "progress position + active indicator + text label",
+      "completed_scene": "completion glyph plus subdued treatment",
+      "evidence_available": "evidence/source icon plus label where space permits",
+      "citation_warning": "warning icon + text; not amber alone"
+    },
+    "journey": {
+      "planned": "calendar/plan cue + label",
+      "visited": "check/stamp cue + text state",
+      "saved": "bookmark cue + accessible name",
+      "unavailable": "disabled styling + text/icon explanation"
+    }
+  },
+  "accessibility": {
+    "normal_text_min_contrast": "4.5:1",
+    "large_text_and_ui_graphics_min": "3:1",
+    "focus_indicator_rule": "visible non-color-independent outline/ring with >=3:1 adjacent contrast where applicable",
+    "color_only_states": "prohibited",
+    "reduced_transparency": "state must remain legible without transparency/blur"
+  },
+  "validation": [
+    {
+      "name": "primary.default",
+      "fg": "#FFFFFF",
+      "bg": "#062A24",
+      "ratio": 15.39,
+      "aa_normal": true
+    },
+    {
+      "name": "primary.hover",
+      "fg": "#FFFFFF",
+      "bg": "#0B352E",
+      "ratio": 13.44,
+      "aa_normal": true
+    },
+    {
+      "name": "primary.pressed",
+      "fg": "#FFFFFF",
+      "bg": "#031D19",
+      "ratio": 17.59,
+      "aa_normal": true
+    },
+    {
+      "name": "primary.focus",
+      "fg": "#FFFFFF",
+      "bg": "#062A24",
+      "ratio": 15.39,
+      "aa_normal": true
+    },
+    {
+      "name": "primary.disabled",
+      "fg": "#666666",
+      "bg": "#D2D0CC",
+      "ratio": 3.73,
+      "aa_normal": false
+    },
+    {
+      "name": "accent.default",
+      "fg": "#1A1A1A",
+      "bg": "#D4AF7C",
+      "ratio": 8.47,
+      "aa_normal": true
+    },
+    {
+      "name": "accent.hover",
+      "fg": "#1A1A1A",
+      "bg": "#C8A36E",
+      "ratio": 7.39,
+      "aa_normal": true
+    },
+    {
+      "name": "accent.pressed",
+      "fg": "#1A1A1A",
+      "bg": "#BE9560",
+      "ratio": 6.35,
+      "aa_normal": true
+    },
+    {
+      "name": "accent.focus",
+      "fg": "#1A1A1A",
+      "bg": "#D4AF7C",
+      "ratio": 8.47,
+      "aa_normal": true
+    },
+    {
+      "name": "accent.disabled",
+      "fg": "#666666",
+      "bg": "#DED4C4",
+      "ratio": 3.92,
+      "aa_normal": false
+    },
+    {
+      "name": "functional.success",
+      "fg": "#286044",
+      "bg": "#E3EFE8",
+      "ratio": 6.24,
+      "aa_normal": true
+    },
+    {
+      "name": "functional.warning",
+      "fg": "#704B16",
+      "bg": "#F6E8C8",
+      "ratio": 6.39,
+      "aa_normal": true
+    },
+    {
+      "name": "functional.error",
+      "fg": "#8A3430",
+      "bg": "#F6E1DE",
+      "ratio": 6.4,
+      "aa_normal": true
+    },
+    {
+      "name": "functional.info",
+      "fg": "#315B6D",
+      "bg": "#E1EDF1",
+      "ratio": 6.17,
+      "aa_normal": true
+    },
+    {
+      "name": "selection.selected",
+      "fg": "#062A24",
+      "bg": "#DCE9E4",
+      "ratio": 12.33,
+      "aa_normal": true
+    }
+  ]
+}

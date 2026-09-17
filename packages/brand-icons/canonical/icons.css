@@ -1,0 +1,7 @@
+.dv-icon{inline-size:1.5rem;block-size:1.5rem;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.dv-icon--compact{inline-size:1.25rem;block-size:1.25rem;stroke-width:2}
+.dv-icon--utility{inline-size:1rem;block-size:1rem}
+.dv-icon-button{min-inline-size:44px;min-block-size:44px;display:inline-grid;place-items:center}
+.dv-icon-button:focus-visible{outline:3px solid var(--dv-focus-light);outline-offset:3px}
+.dv-surface-dark .dv-icon-button:focus-visible{outline-color:var(--dv-focus-dark)}
+/* Semantic state must never rely on color or motion alone. */

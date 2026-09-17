@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Iconography & Semantic Symbol System",
+    "version": "Phase 04 V1.0",
+    "status": "PRODUCTION CANDIDATE"
+  },
+  "grammar": {
+    "grid": "24x24",
+    "stroke": "1.75px default; 2px compact",
+    "caps_joins": "round",
+    "meaning": "monochrome-first; color-only and motion-only semantics prohibited",
+    "logo": "Time Trace logo never reused as generic UI icon"
+  },
+  "entities": {
+    "place": "landform/spatial abstraction",
+    "people": "human/profile",
+    "event": "occurrence/time pulse",
+    "culture": "interlocking/woven",
+    "time": "temporal arc",
+    "source": "document/evidence",
+    "story": "open narrative",
+    "journey": "route with nodes"
+  },
+  "trust": {
+    "citation": "source marker + accessible label",
+    "evidence": "document/lens",
+    "verified": "check + bounded shape",
+    "reconstruction": "layered symbol + disclosure",
+    "ai_translation": "language indicator + disclosure",
+    "warning": "triangle/exclamation + text",
+    "sensitive": "shield/notice + text"
+  },
+  "map": {
+    "pointer": "permitted only as map utility container, not brand symbol",
+    "categories": "inner glyph + supplementary color",
+    "selected": "outline + scale + glyph/state",
+    "visited": "check/stamp + accessible state",
+    "cluster": "numeric count mandatory"
+  },
+  "accessibility": {
+    "simple_utility": "16px minimum visual",
+    "semantic_domain": "20–24px preferred",
+    "touch_target": "44x44 CSS px",
+    "graphics_contrast": ">=3:1",
+    "standalone_icon": "accessible name required if non-obvious",
+    "focus": "inherits Phase 02 focus-visible"
+  }
+}

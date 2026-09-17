@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Color & Accessibility System",
+    "version": "Phase 02 V1.0"
+  },
+  "primitive": {
+    "forest_950": "#062A24",
+    "forest_700": "#18463C",
+    "gold_500": "#D4AF7C",
+    "sand_100": "#EADDC7",
+    "stone_400": "#B6B6B6",
+    "charcoal_950": "#1A1A1A",
+    "white": "#FFFFFF"
+  },
+  "semantic": {
+    "bg.canvas": "#FFFFFF",
+    "bg.subtle": "#EADDC7",
+    "bg.inverse": "#062A24",
+    "text.primary": "#1A1A1A",
+    "text.inverse": "#FFFFFF",
+    "text.inverse.soft": "#EADDC7",
+    "brand.primary": "#062A24",
+    "brand.secondary": "#18463C",
+    "brand.accent": "#D4AF7C",
+    "border.default": "#B6B6B6",
+    "action.primary.bg": "#062A24",
+    "action.primary.fg": "#FFFFFF",
+    "action.accent.bg": "#D4AF7C",
+    "action.accent.fg": "#1A1A1A",
+    "focus.ring.light": "#18463C",
+    "focus.ring.dark": "#EADDC7"
+  },
+  "rules": {
+    "gold_on_white": "prohibited for normal text",
+    "gold_on_sand": "prohibited for normal text",
+    "stone_on_white": "prohibited for normal text",
+    "color_only_state": "prohibited; pair color with icon/text/shape",
+    "minimum_body_text": "WCAG AA >= 4.5:1",
+    "large_text_ui_graphics": "WCAG AA >= 3:1",
+    "preferred_editorial_text": "target AAA >= 7:1 when practical"
+  }
+}

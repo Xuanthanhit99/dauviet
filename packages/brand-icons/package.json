@@ -1,0 +1,16 @@
+{
+  "name": "@dauviet/brand-icons",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dấu Việt Global 2026 V1 source-locked brand foundation",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": "./index.mjs",
+    "./styles.css": "./canonical/icons.css",
+    "./semantic.svg": "./canonical/semantic.svg",
+    "./micro.svg": "./canonical/micro.svg"
+  }
+}

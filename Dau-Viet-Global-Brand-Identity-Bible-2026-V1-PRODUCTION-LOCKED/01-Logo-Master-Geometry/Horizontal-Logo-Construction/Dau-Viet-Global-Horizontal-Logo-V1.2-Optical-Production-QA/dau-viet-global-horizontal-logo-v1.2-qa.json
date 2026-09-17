@@ -1,0 +1,23 @@
+{
+  "project": "Dấu Việt Global",
+  "asset": "Horizontal Logo Candidate B",
+  "version": "V1.2",
+  "decision": "PASS_WITH_REQUIRED_FINALIZATION",
+  "lifecycle": "APPROVED_DERIVATIVE_CANDIDATE",
+  "checks": {
+    "viewBox_420x96": true,
+    "canonical_mask_present": true,
+    "canonical_palette_gold": true,
+    "canonical_palette_forest": true,
+    "canonical_palette_deep_forest": true,
+    "primary_wordmark_correct": true,
+    "global_qualifier_present": true,
+    "tagline_excluded": true,
+    "no_gradient": true,
+    "no_filter": true,
+    "no_raster_image": true,
+    "live_text_present": true
+  },
+  "production_lock": false,
+  "next": "V1.3 outlined Light/Dark/Mono finalization"
+}

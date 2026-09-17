@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Marketing, Social, Store & External Brand Applications",
+    "version": "Phase 10 V1.0",
+    "status": "PRODUCTION_CANDIDATE"
+  },
+  "role": "Extend the locked product identity into acquisition and public-facing channels without turning Dấu Việt into a generic travel campaign or breaking truth/provenance rules.",
+  "brand_promise": {
+    "primary": "Explore Places. Understand Stories.",
+    "supporting": "Discovery first; depth through place, story, culture, people, time and evidence."
+  },
+  "external_principles": [
+    "Recognizable as Dấu Việt before it looks like a tourism ad.",
+    "Real place/media truth remains mandatory outside the product.",
+    "One strong story/question per asset; avoid collage overload.",
+    "Brand system is consistent, but campaign composition may be expressive.",
+    "External assets may tease understanding; they must not fabricate product capabilities, ratings, reviews or historical certainty.",
+    "Logo remains a signature, not wallpaper."
+  ],
+  "channels": {
+    "social": {
+      "formats": [
+        "1:1 feed",
+        "4:5 feed",
+        "9:16 story/reel cover",
+        "16:9 video/YouTube thumbnail"
+      ],
+      "system": "real-media focal image + restrained brand frame + short editorial hook + optional entity/time/source cue",
+      "rules": [
+        "hook first",
+        "avoid text-heavy museum panels",
+        "safe zones for platform UI",
+        "source/disclosure retained when historical/reconstructed media could be misunderstood"
+      ]
+    },
+    "app_store": {
+      "formats": [
+        "iOS App Store screenshots",
+        "Google Play screenshots",
+        "feature graphic",
+        "app icon"
+      ],
+      "system": "real product UI + concise benefit statement + truthful media",
+      "rules": [
+        "no fabricated UI",
+        "no fake ratings/review counts",
+        "no impossible map/story states",
+        "app icon uses locked Phase 01 mark",
+        "localize copy rather than baking English-only screenshots"
+      ]
+    },
+    "campaign": {
+      "formats": [
+        "launch hero",
+        "paid/social campaign",
+        "OOH/digital banner",
+        "email/header"
+      ],
+      "system": "one destination/story tension + Dấu Việt identity + discovery CTA",
+      "rules": [
+        "avoid discount-tour visual language",
+        "no generic airplane/globe/pin brand motif",
+        "campaign effects never alter documentary meaning"
+      ]
+    },
+    "press_media_kit": {
+      "assets": [
+        "master/mono logo",
+        "clearspace/min-size guidance",
+        "core palette",
+        "approved product screenshots",
+        "boilerplate",
+        "tagline",
+        "foundational imagery with provenance"
+      ],
+      "rules": [
+        "provide correct logo files rather than screenshots",
+        "third-party use must preserve clearspace/contrast",
+        "historical imagery includes provenance/rights context"
+      ]
+    },
+    "video": {
+      "system": "Place → Question → Time/Story → Evidence/Connection → Explore next",
+      "rules": [
+        "first seconds establish place/question",
+        "captions/subtitles mandatory for spoken informational content",
+        "motion follows Phase 06",
+        "reconstruction/AI disclosure survives video crop/export"
+      ]
+    },
+    "co_branding": {
+      "system": "Dấu Việt mark + partner mark separated by neutral spacing/divider; no merged hybrid symbol",
+      "rules": [
+        "do not recolor/redraw Time Trace to mimic partner",
+        "partner cannot imply endorsement of historical claims without editorial basis",
+        "provenance responsibilities remain explicit"
+      ]
+    }
+  },
+  "content_pillars": [
+    {
+      "name": "Place Discovery",
+      "hook": "Why should I go / look closer?",
+      "visual": "real destination/place media"
+    },
+    {
+      "name": "Every Place Has a Story",
+      "hook": "What happened here?",
+      "visual": "place + time/story layer"
+    },
+    {
+      "name": "Connections",
+      "hook": "Who/what connects this place to the wider world?",
+      "visual": "restrained relationship cue"
+    },
+    {
+      "name": "Then & Now",
+      "hook": "What changed?",
+      "visual": "truthful paired media + disclosure"
+    },
+    {
+      "name": "Journey",
+      "hook": "What route helps me understand this region?",
+      "visual": "route + stops + real media"
+    },
+    {
+      "name": "Evidence / How We Know",
+      "hook": "How do we know this?",
+      "visual": "artifact/source/citation without academic clutter"
+    }
+  ],
+  "composition": {
+    "hierarchy": [
+      "media/story focal point",
+      "editorial hook",
+      "brand signature",
+      "CTA/context",
+      "source/disclosure where needed"
+    ],
+    "logo": "preferred quiet corner/signature placement with required clearspace",
+    "gold": "accent for focus/trace/reveal; not large luxury-gold washes",
+    "effects": "subtle Time/Journey/Reveal motif permitted; no fake parchment, mystical glow or generic luxury-travel grading"
+  },
+  "copy": {
+    "tone": [
+      "curious",
+      "informed",
+      "inviting",
+      "specific",
+      "never sensationalized history"
+    ],
+    "headline": "short editorial question or meaningful statement; usually 3–10 words where language permits",
+    "cta": [
+      "Explore",
+      "Understand the story",
+      "See the journey",
+      "Explore the place",
+      "See how we know"
+    ],
+    "avoid": [
+      "clickbait certainty",
+      "fake superlatives",
+      "generic Wanderlust copy",
+      "unsupported oldest/biggest/first claims"
+    ]
+  },
+  "localization": {
+    "rule": "localize message, line breaks and cultural context; do not mechanically translate baked artwork",
+    "logo": "brand mark unchanged",
+    "typography": "Phase 03 locale contracts",
+    "store": "localized screenshot copy layers and metadata",
+    "social": "platform/local-market safe zones and text density adjusted without changing truth"
+  },
+  "measurement_ethics": {
+    "rule": "marketing optimization cannot override brand truth or accessibility",
+    "prohibit": [
+      "fake social proof",
+      "fabricated urgency",
+      "dark-pattern CTA",
+      "misleading before/after",
+      "wrong-entity image optimized for clicks"
+    ]
+  },
+  "qa_next": "Phase 10.1 — External Brand Consistency, Truth & Campaign QA"
+}

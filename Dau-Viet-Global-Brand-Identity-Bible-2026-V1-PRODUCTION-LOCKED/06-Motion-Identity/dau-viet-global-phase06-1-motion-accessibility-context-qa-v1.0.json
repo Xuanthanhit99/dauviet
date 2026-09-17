@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Phase 06.1 Motion Accessibility & Context QA",
+    "version": "V1.0",
+    "status": "PASS_WITH_IMPLEMENTATION_RULES"
+  },
+  "normal_motion": {
+    "logo_reveal": "PASS — 700–900ms acceptable only as non-blocking brand/application moment",
+    "map_selection": "PASS — 180–240ms; anchor stable; no bounce",
+    "map_camera": "PASS_WITH_RULE — 280–480ms; only when orientation benefit is clear; must be interruptible",
+    "story_scene": "PASS — 360–520ms; content/evidence not delayed",
+    "journey_progress": "PASS — 200–360ms; semantic progress only",
+    "overlay_panel": "PASS — 200–280ms with focus handoff independent of animation",
+    "then_now": "PASS_WITH_RULE — motion supplements explicit state, never replaces it",
+    "connection_graph": "PASS_WITH_RULE — animate relationship focus only; no perpetual graph movement"
+  },
+  "reduced_motion": {
+    "logo": "PASS — static or <=150ms opacity",
+    "map": "PASS — jump/short fade; no camera fly",
+    "story": "PASS — direct swap or <=150ms crossfade",
+    "journey": "PASS — immediate state/route update",
+    "parallax": "PASS — removed",
+    "path_drawing": "PASS — removed",
+    "large_translate_scale": "PASS — removed",
+    "meaning_retained": "PASS — state/focus/progress still explicit"
+  },
+  "keyboard_focus": {
+    "overlay_open": "PASS_WITH_RULE — focus moves to meaningful first target or container after semantic state change, not after animation completes",
+    "overlay_close": "PASS — return focus to invoker",
+    "map_marker": "PASS — keyboard selection cannot depend on hover animation",
+    "story_navigation": "PASS — chapter/scene focus state updates immediately",
+    "skip_links": "PASS — unaffected by motion",
+    "result": "PASS_WITH_RULES"
+  },
+  "interruption": {
+    "user_navigation": "PASS_WITH_RULE — new input cancels/shortens prior transition immediately",
+    "map_camera": "PASS_WITH_RULE — wheel/pan/keyboard/marker selection interrupts active camera animation",
+    "story_scene": "PASS_WITH_RULE — next/previous navigation replaces in-flight transition cleanly",
+    "overlay": "PASS — close action available throughout transition",
+    "result": "PASS_WITH_RULES"
+  },
+  "timing_accessibility": {
+    "essential_action_delay": "PASS — prohibited",
+    "autoplay": "PASS_WITH_RULE — content-heavy surfaces default off; meaningful autoplay needs pause/control",
+    "flashing": "PASS — prohibited",
+    "motion_only": "PASS — prohibited",
+    "loading": "PASS — structural skeleton/progress preferred over decorative loops"
+  },
+  "production_corrections": [
+    "Focus movement must be tied to semantic state change, never animation-end events.",
+    "All user-triggered map camera and scene transitions must be cancellable by fresh input.",
+    "Reduced-motion mode must disable camera fly, path drawing, parallax and large scale/translate, not merely shorten them.",
+    "Logo/hero cinematic motion may never gate navigation or essential content.",
+    "Then & Now and Journey progress must retain explicit textual/state cues even when all motion is removed.",
+    "Connection graphs may animate selected relationships only; continuous ambient node drift is prohibited on core content surfaces.",
+    "Autoplay ambient/cinematic motion is off by default on content-heavy surfaces; any meaningful autoplay requires pause/stop control.",
+    "Animation completion events must not be required for data loading, focus state, URL/navigation state, citations or evidence visibility."
+  ],
+  "decision": {
+    "phase06_lock_readiness": "READY_FOR_PRODUCTION_LOCK",
+    "condition": "include the eight implementation rules above in the locked baseline"
+  }
+}

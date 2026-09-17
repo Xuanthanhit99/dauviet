@@ -1,0 +1,126 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Phase 10.1 External Brand Consistency, Truth & Campaign QA",
+    "version": "V1.0",
+    "status": "PASS_WITH_IMPLEMENTATION_RULES"
+  },
+  "areas": {
+    "Social Ratios": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "1:1",
+        "4:5",
+        "9:16",
+        "16:9",
+        "safe zones",
+        "disclosure survival",
+        "focal crop integrity"
+      ]
+    },
+    "App Store / Google Play": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "real UI",
+        "truthful feature statements",
+        "localized screenshot layers",
+        "locked app icon",
+        "no fake ratings/reviews/activity"
+      ]
+    },
+    "Campaign": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "one story/question",
+        "Dấu Việt recognizability",
+        "no generic travel motifs",
+        "truthful CTA",
+        "no unsupported historical certainty"
+      ]
+    },
+    "Video": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "Place→Question→Story→Evidence→Explore",
+        "captions/subtitles",
+        "Phase 06 motion",
+        "Phase 07 disclosure persistence"
+      ]
+    },
+    "Localization": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "editable copy layers",
+        "locale-specific reflow",
+        "Phase 03 typography",
+        "disclosure preserved",
+        "no baked English master"
+      ]
+    },
+    "Press Kit": {
+      "status": "PASS",
+      "checks": [
+        "official logo assets",
+        "clearspace/min size",
+        "palette",
+        "approved screenshots",
+        "tagline/boilerplate",
+        "rights/provenance context"
+      ]
+    },
+    "Co-branding": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "separate marks",
+        "neutral spacing",
+        "no Time Trace redraw",
+        "no false endorsement"
+      ]
+    },
+    "Truth & Provenance": {
+      "status": "PASS",
+      "checks": [
+        "correct entity",
+        "no wrong-entity substitution",
+        "media classification survives export",
+        "no fake product state"
+      ]
+    },
+    "Accessibility": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "text contrast",
+        "safe readable size",
+        "captions",
+        "non-color-only disclosure",
+        "motion preferences where applicable"
+      ]
+    },
+    "Marketing Ethics": {
+      "status": "PASS",
+      "checks": [
+        "no fake social proof",
+        "no fabricated urgency",
+        "no dark patterns",
+        "no misleading before/after"
+      ]
+    }
+  },
+  "decision": {
+    "phase10_lock_readiness": "READY_FOR_PRODUCTION_LOCK",
+    "condition": "include all twelve production rules"
+  },
+  "production_rules": [
+    "Every external asset must preserve the locked Time Trace identity, semantic palette, typography hierarchy and recognizable Dấu Việt composition; campaign expression cannot create a parallel brand.",
+    "Social crops at 1:1, 4:5, 9:16 and 16:9 must preserve the focal subject, essential disclosure and platform-safe text/logo zones.",
+    "App Store and Google Play creative must show real product states and truthful capabilities; fabricated UI, fake ratings/reviews, fake community activity and impossible product states are prohibited.",
+    "Historical, archive, reconstruction, AI-generated and materially restored media retain Phase 07 classification/disclosure after crop, thumbnailing, animation and video export.",
+    "External imagery must resolve to the correct place/person/event/entity; visually similar or higher-performing wrong-entity substitutes are prohibited.",
+    "Campaign copy cannot turn uncertain or disputed historical claims into certainty, nor use unsupported oldest/first/biggest/superlative claims.",
+    "Localized assets preserve meaning, disclosure and brand hierarchy; copy remains editable and is recomposed for locale rather than mechanically baked into one raster master.",
+    "Video and motion marketing follow Phase 06, include captions/subtitles for informational speech, and preserve disclosure long enough to be perceivable.",
+    "Co-branding keeps marks separate, preserves Time Trace geometry/clearspace/contrast, and never implies editorial endorsement or verification that does not exist.",
+    "Press/media kits distribute approved master assets, usage rules and rights/provenance context; screenshots or recreated logos are not substitutes for official assets.",
+    "Marketing optimization cannot use fake social proof, fabricated urgency, dark-pattern CTAs, misleading before/after comparisons or inaccessible click-maximizing treatments.",
+    "Every campaign asset must communicate one primary story/question and a truthful next action; generic travel collage, logo wallpaper and decorative pseudo-history are prohibited defaults."
+  ]
+}

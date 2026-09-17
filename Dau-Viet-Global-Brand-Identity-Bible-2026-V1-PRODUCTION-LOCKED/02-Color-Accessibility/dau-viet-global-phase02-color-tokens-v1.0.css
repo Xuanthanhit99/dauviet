@@ -1,0 +1,26 @@
+:root {
+  --dv-forest-950: #062A24;
+  --dv-forest-700: #18463C;
+  --dv-gold-500: #D4AF7C;
+  --dv-sand-100: #EADDC7;
+  --dv-stone-400: #B6B6B6;
+  --dv-charcoal-950: #1A1A1A;
+  --dv-white: #FFFFFF;
+
+  --dv-bg-canvas: var(--dv-white);
+  --dv-bg-subtle: var(--dv-sand-100);
+  --dv-bg-inverse: var(--dv-forest-950);
+  --dv-text-primary: var(--dv-charcoal-950);
+  --dv-text-inverse: var(--dv-white);
+  --dv-text-inverse-soft: var(--dv-sand-100);
+  --dv-brand-primary: var(--dv-forest-950);
+  --dv-brand-secondary: var(--dv-forest-700);
+  --dv-brand-accent: var(--dv-gold-500);
+  --dv-border-default: var(--dv-stone-400);
+  --dv-action-primary-bg: var(--dv-forest-950);
+  --dv-action-primary-fg: var(--dv-white);
+  --dv-action-accent-bg: var(--dv-gold-500);
+  --dv-action-accent-fg: var(--dv-charcoal-950);
+  --dv-focus-ring-light: var(--dv-forest-700);
+  --dv-focus-ring-dark: var(--dv-sand-100);
+}

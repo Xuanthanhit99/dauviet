@@ -1,0 +1,220 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Typography QA",
+    "version": "V1.1",
+    "status": "PASS_WITH_IMPLEMENTATION_RULES"
+  },
+  "samples": {
+    "vi": {
+      "hero": "Khám phá một nơi. Hiểu câu chuyện phía sau.",
+      "body": "Mỗi vùng đất đều mang theo những lớp ký ức, con người và biến đổi theo thời gian. Dấu Việt giúp bạn khám phá địa điểm và hiểu câu chuyện phía sau chúng.",
+      "map": "Hoàng thành Thăng Long",
+      "meta": "Nguồn · Bảo tàng · Cập nhật 14/09/2026"
+    },
+    "en": {
+      "hero": "Explore Places. Understand Stories.",
+      "body": "Every place carries layers of memory, people and change through time. Dấu Việt connects discovery with the stories that explain why a place matters.",
+      "map": "Imperial Citadel of Thăng Long",
+      "meta": "Sources · Museum record · Updated Sep 14, 2026"
+    },
+    "fr": {
+      "hero": "Explorez les lieux. Comprenez leurs histoires.",
+      "body": "Chaque lieu porte des couches de mémoire, de culture et de transformations. Découvrez le monde tout en comprenant les histoires qui lui donnent du sens.",
+      "map": "Cité impériale de Thăng Long",
+      "meta": "Sources · Archives · Mis à jour le 14 septembre 2026"
+    },
+    "zh-Hans": {
+      "hero": "探索地方，理解故事。",
+      "body": "每一个地方都承载着时间、人物、文化与变化的痕迹。通过地点发现世界，也理解塑造这些地方的故事。",
+      "map": "升龙皇城",
+      "meta": "来源 · 博物馆记录 · 2026年9月14日更新"
+    },
+    "zh-Hant": {
+      "hero": "探索地方，理解故事。",
+      "body": "每一個地方都承載著時間、人物、文化與變化的痕跡。透過地點探索世界，也理解塑造這些地方的故事。",
+      "map": "昇龍皇城",
+      "meta": "來源 · 博物館紀錄 · 2026年9月14日更新"
+    },
+    "ja": {
+      "hero": "場所を巡り、物語を理解する。",
+      "body": "あらゆる場所には、時間、人々、文化、変化の痕跡が重なっています。場所を発見するだけでなく、その背景にある物語まで理解します。",
+      "map": "タンロン皇城",
+      "meta": "出典 · 博物館資料 · 2026年9月14日更新"
+    },
+    "ko": {
+      "hero": "장소를 탐험하고, 이야기를 이해하세요.",
+      "body": "모든 장소에는 시간과 사람, 문화와 변화의 흔적이 겹겹이 쌓여 있습니다. 장소를 발견하는 것을 넘어 그곳을 만든 이야기를 이해합니다.",
+      "map": "탕롱 황성",
+      "meta": "출처 · 박물관 기록 · 2026년 9월 14일 업데이트"
+    }
+  },
+  "layout_tests": [
+    {
+      "locale": "vi",
+      "surface": "hero",
+      "width_px": 922,
+      "container_px": 720,
+      "result": "PASS_WRAP"
+    },
+    {
+      "locale": "vi",
+      "surface": "map_label",
+      "width_px": 168,
+      "container_px": 260,
+      "result": "PASS"
+    },
+    {
+      "locale": "vi",
+      "surface": "metadata",
+      "width_px": 264,
+      "container_px": 420,
+      "result": "PASS"
+    },
+    {
+      "locale": "en",
+      "surface": "hero",
+      "width_px": 706,
+      "container_px": 720,
+      "result": "PASS_SINGLE"
+    },
+    {
+      "locale": "en",
+      "surface": "map_label",
+      "width_px": 203,
+      "container_px": 260,
+      "result": "PASS"
+    },
+    {
+      "locale": "en",
+      "surface": "metadata",
+      "width_px": 322,
+      "container_px": 420,
+      "result": "PASS"
+    },
+    {
+      "locale": "fr",
+      "surface": "hero",
+      "width_px": 909,
+      "container_px": 720,
+      "result": "PASS_WRAP"
+    },
+    {
+      "locale": "fr",
+      "surface": "map_label",
+      "width_px": 193,
+      "container_px": 260,
+      "result": "PASS"
+    },
+    {
+      "locale": "fr",
+      "surface": "metadata",
+      "width_px": 339,
+      "container_px": 420,
+      "result": "PASS"
+    },
+    {
+      "locale": "zh-Hans",
+      "surface": "hero",
+      "width_px": 252,
+      "container_px": 720,
+      "result": "PASS_SINGLE"
+    },
+    {
+      "locale": "zh-Hans",
+      "surface": "map_label",
+      "width_px": 34,
+      "container_px": 260,
+      "result": "PASS"
+    },
+    {
+      "locale": "zh-Hans",
+      "surface": "metadata",
+      "width_px": 179,
+      "container_px": 420,
+      "result": "PASS"
+    },
+    {
+      "locale": "zh-Hant",
+      "surface": "hero",
+      "width_px": 252,
+      "container_px": 720,
+      "result": "PASS_SINGLE"
+    },
+    {
+      "locale": "zh-Hant",
+      "surface": "map_label",
+      "width_px": 34,
+      "container_px": 260,
+      "result": "PASS"
+    },
+    {
+      "locale": "zh-Hant",
+      "surface": "metadata",
+      "width_px": 179,
+      "container_px": 420,
+      "result": "PASS"
+    },
+    {
+      "locale": "ja",
+      "surface": "hero",
+      "width_px": 353,
+      "container_px": 720,
+      "result": "PASS_SINGLE"
+    },
+    {
+      "locale": "ja",
+      "surface": "map_label",
+      "width_px": 50,
+      "container_px": 260,
+      "result": "PASS"
+    },
+    {
+      "locale": "ja",
+      "surface": "metadata",
+      "width_px": 179,
+      "container_px": 420,
+      "result": "PASS"
+    },
+    {
+      "locale": "ko",
+      "surface": "hero",
+      "width_px": 457,
+      "container_px": 720,
+      "result": "PASS_SINGLE"
+    },
+    {
+      "locale": "ko",
+      "surface": "map_label",
+      "width_px": 37,
+      "container_px": 260,
+      "result": "PASS"
+    },
+    {
+      "locale": "ko",
+      "surface": "metadata",
+      "width_px": 210,
+      "container_px": 420,
+      "result": "PASS"
+    }
+  ],
+  "criteria": {
+    "diacritics_vi": "PASS — Vietnamese sample preserves full diacritics",
+    "latin_long_heading": "PASS — wrapping allowed; no forced one-line hero contract",
+    "fr_expansion": "PASS — components must allow wrapping, not fixed English widths",
+    "cjk_tracking": "PASS RULE — locale selectors reset letter-spacing to normal",
+    "ko_heading_break": "PASS RULE — keep-all may be used for headings, not globally",
+    "zh_sc_tc_separation": "PASS RULE — separate SC and TC family contracts",
+    "body_readability": "PASS — primary reading token is 16/26",
+    "zoom_200": "PASS SPEC — no fixed-height text containers allowed",
+    "map_labels": "PASS WITH CONTRACT — max 2 lines or accessible truncation where map density requires",
+    "source_metadata": "PASS WITH WRAP — metadata must wrap rather than shrink below token"
+  },
+  "production_rules": {
+    "fixed_height_text_containers": "prohibited for translated content unless overflow behavior is explicitly designed",
+    "hero_titles": "may wrap; never reduce below mobile token merely to preserve one line",
+    "map_labels": "1–2 lines depending zoom/density; accessible full name remains available",
+    "metadata": "wrap or reflow; never shrink below Caption token",
+    "locale_font_loading": "load locale-specific assets on demand",
+    "browser_native_QA": "required during implementation for shaping/font-loading regressions, not a redesign gate"
+  }
+}

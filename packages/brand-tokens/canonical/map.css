@@ -1,0 +1,33 @@
+/* Dấu Việt Global — Phase 05 Map Marker & Spatial Identity V1.0 */
+.dv-map-marker {
+  --marker-size: 32px;
+  inline-size: var(--marker-size);
+  block-size: var(--marker-size);
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: var(--dv-forest-950, #062A24);
+}
+.dv-map-marker--compact { --marker-size: 24px; }
+.dv-map-marker--featured { --marker-size: 40px; }
+.dv-map-marker__hit {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  display: grid;
+  place-items: center;
+}
+.dv-map-marker[aria-selected="true"] { transform: scale(1.15); }
+.dv-map-marker__label { max-inline-size: 18rem; }
+.dv-map-marker__cluster {
+  min-inline-size: 36px;
+  min-block-size: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font: var(--dv-type-label);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dv-map-marker { transition: none !important; }
+}
+/* Marker color is supplementary. Entity type/state must remain encoded by glyph,
+   outline/shape, count, label or explicit state cue. */

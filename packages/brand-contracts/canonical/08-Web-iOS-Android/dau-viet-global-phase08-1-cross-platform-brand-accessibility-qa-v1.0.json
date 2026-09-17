@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Phase 08.1 Cross-Platform Brand Consistency & Accessibility QA",
+    "version": "V1.0",
+    "status": "PASS_WITH_IMPLEMENTATION_RULES"
+  },
+  "platforms": {
+    "web_desktop": "PASS — locked App Shell, horizontal identity, keyboard-accessible complex maps",
+    "web_mobile": "PASS WITH RULE — compact identity, 200% reflow, provenance/state retained",
+    "ios": "PASS WITH RULE — safe areas, Dynamic Type, >=44x44pt targets, Reduce Motion, SF Symbols only for generic actions",
+    "android": "PASS WITH RULE — insets/cutouts, large font, 48x48dp preferred, motion preferences, system icons only for generic actions"
+  },
+  "themes": "PASS WITH RULE — dark/light preserve Phase 02 semantics, never literal inversion",
+  "locales": {
+    "VI": "PASS",
+    "EN": "PASS",
+    "FR": "PASS WITH REFLOW",
+    "JA": "PASS WITH JP CONTRACT",
+    "KO": "PASS WITH KO CONTRACT",
+    "zh-Hans": "PASS WITH SC CONTRACT",
+    "zh-Hant": "PASS WITH TC CONTRACT"
+  },
+  "contexts": {
+    "Map": "PASS WITH ACCESSIBLE ALTERNATIVES",
+    "Story": "PASS",
+    "Journey": "PASS",
+    "Provenance": "PASS WITH RETRIEVABILITY",
+    "AppIcon": "PASS",
+    "Launch": "PASS WITH NON-BLOCKING RULE"
+  },
+  "production_rules": [
+    "One logo geometry across Web, iOS and Android; masks/safe areas/chrome never redraw it.",
+    "Semantic color, domain icon, map-state, motion and provenance meaning remain invariant across platforms.",
+    "Mobile compaction never removes evidence, provenance, verification, warning or state retrievability.",
+    "Web 200% zoom, iOS Dynamic Type and Android large-font scaling reflow; fixed-height clipping is prohibited.",
+    "System icons are limited to generic OS actions; Dấu Việt domain semantics retain Phase 04 glyphs.",
+    "Reduced motion removes high-motion behavior rather than merely accelerating it.",
+    "Dark/light themes preserve Phase 02 contrast/state semantics; literal palette inversion is prohibited.",
+    "Platform map gestures cannot remove required keyboard/screen-reader/accessible-list alternatives.",
+    "Locale behavior follows Phase 03; font fallback must not collapse SC/TC/JP/KR distinctions.",
+    "Launch/splash/brand animation never gates navigation, auth recovery, deep links or essential content.",
+    "Store screenshots/promotional media obey Phase 07 truth rules; fabricated states/wrong-entity imagery are prohibited.",
+    "Platform adaptation may change mechanics/density but not locked hierarchy or semantic priority without approved UX change."
+  ],
+  "decision": {
+    "phase08_lock_readiness": "READY_FOR_PRODUCTION_LOCK",
+    "condition": "include all twelve production rules"
+  }
+}

@@ -1,0 +1,43 @@
+:root {
+  --dv-action-primary: #062A24;
+  --dv-action-primary-hover: #0B352E;
+  --dv-action-primary-pressed: #031D19;
+  --dv-action-primary-fg: #FFFFFF;
+
+  --dv-action-accent: #D4AF7C;
+  --dv-action-accent-hover: #C8A36E;
+  --dv-action-accent-pressed: #BE9560;
+  --dv-action-accent-fg: #1A1A1A;
+
+  --dv-focus-light: #18463C;
+  --dv-focus-dark: #D4AF7C;
+
+  --dv-disabled-bg: #D2D0CC;
+  --dv-disabled-fg: #666666;
+
+  --dv-selected-bg: #DCE9E4;
+  --dv-selected-fg: #062A24;
+  --dv-selected-border: #18463C;
+  --dv-visited-fg: #6A5741;
+  --dv-visited-accent: #9A7447;
+
+  --dv-success-fg: #286044;
+  --dv-success-bg: #E3EFE8;
+  --dv-warning-fg: #704B16;
+  --dv-warning-bg: #F6E8C8;
+  --dv-error-fg: #8A3430;
+  --dv-error-bg: #F6E1DE;
+  --dv-info-fg: #315B6D;
+  --dv-info-bg: #E1EDF1;
+}
+
+/* Accessibility contract:
+   state != color alone. Add icon/text/shape/border/position cues.
+   :focus-visible must never be removed. */
+.dv-focusable:focus-visible {
+  outline: 3px solid var(--dv-focus-light);
+  outline-offset: 3px;
+}
+.dv-surface-dark .dv-focusable:focus-visible {
+  outline-color: var(--dv-focus-dark);
+}

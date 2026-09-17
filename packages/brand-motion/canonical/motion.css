@@ -1,0 +1,41 @@
+/* Dấu Việt Global — Phase 06 Motion Identity V1.0 */
+:root {
+  --dv-motion-instant: 80ms;
+  --dv-motion-fast: 160ms;
+  --dv-motion-standard: 240ms;
+  --dv-motion-narrative: 440ms;
+  --dv-motion-cinematic: 800ms;
+  --dv-ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+  --dv-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --dv-ease-move: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dv-motion-state {
+  transition:
+    opacity var(--dv-motion-fast) var(--dv-ease-move),
+    transform var(--dv-motion-fast) var(--dv-ease-move);
+}
+.dv-motion-panel {
+  transition:
+    opacity var(--dv-motion-standard) var(--dv-ease-enter),
+    transform var(--dv-motion-standard) var(--dv-ease-enter);
+}
+.dv-motion-story {
+  transition:
+    opacity var(--dv-motion-narrative) var(--dv-ease-enter),
+    transform var(--dv-motion-narrative) var(--dv-ease-enter);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dv-motion-instant: 0ms;
+    --dv-motion-fast: 0ms;
+    --dv-motion-standard: 0ms;
+    --dv-motion-narrative: 0ms;
+    --dv-motion-cinematic: 0ms;
+  }
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

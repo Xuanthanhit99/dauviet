@@ -1,0 +1,17 @@
+{
+  "name": "@dauviet/brand-tokens",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dấu Việt Global 2026 V1 source-locked brand foundation",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    "./styles.css": "./index.css",
+    "./color.css": "./canonical/color.css",
+    "./typography.css": "./canonical/typography.css",
+    "./typography.json": "./canonical/typography.json",
+    "./map.css": "./canonical/map.css"
+  }
+}

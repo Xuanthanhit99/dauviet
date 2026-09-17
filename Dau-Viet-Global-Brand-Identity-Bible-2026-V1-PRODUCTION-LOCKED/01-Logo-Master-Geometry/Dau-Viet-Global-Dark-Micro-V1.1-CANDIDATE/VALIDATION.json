@@ -1,0 +1,110 @@
+{
+  "status": "PASS",
+  "sourceIntegrity": "PASS",
+  "microGeometryIdentity": "PASS",
+  "geometryProof": {
+    "method": "Exact source replacement equality; SHA-256 after normalizing only authorized visible fill values. All other bytes, including gold, masks, path data, metadata and ordering, are retained.",
+    "sourceFingerprint": "c5807f98b68e6f55334480dd19c833aa64aff650f579fff1660724d214ef16c1",
+    "candidateFingerprint": "c5807f98b68e6f55334480dd19c833aa64aff650f579fff1660724d214ef16c1",
+    "pathCountBefore": 6,
+    "pathCountAfter": 6,
+    "viewBox": "0 0 32 32"
+  },
+  "authorizedColorMapping": "PASS",
+  "colorDifferences": [
+    {
+      "attribute": "fill",
+      "visiblePath": 2,
+      "from": "#18463C",
+      "to": "#EADDC7"
+    },
+    {
+      "attribute": "fill",
+      "visiblePath": 3,
+      "from": "#062A24",
+      "to": "#EADDC7"
+    },
+    {
+      "attribute": "fill",
+      "visiblePath": 4,
+      "from": "#18463C",
+      "to": "#EADDC7"
+    }
+  ],
+  "unauthorizedColorMappings": 0,
+  "otherFillStrokeDifferences": [],
+  "preservedGold": "#D4AF7C",
+  "svgAccessibility": "PASS",
+  "brokenReferences": 0,
+  "contrast": {
+    "tokenFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/02-Color-Accessibility/dau-viet-global-color-system-final-validation-v1.1.json",
+    "method": "sRGB relative luminance; (Lmax + 0.05)/(Lmin + 0.05)",
+    "warmSandRatios": {
+      "#062A24": 11.481765120536505,
+      "#18463C": 7.911403799848775
+    },
+    "preservedGoldRatios": {
+      "#062A24": 7.492240916775542,
+      "#18463C": 5.162459137257705
+    },
+    "graphicalThreshold": 3,
+    "result": "PASS"
+  },
+  "renderQA": [
+    {
+      "sizePx": 16,
+      "background": "#062A24",
+      "result": "PASS",
+      "notes": "Complete silhouette and former green regions visible; Journey and Reveal remain open. No clipping, filled aperture or severe pixel collapse. 16px antialiasing retained; final human approval pending."
+    },
+    {
+      "sizePx": 16,
+      "background": "#18463C",
+      "result": "PASS",
+      "notes": "Complete silhouette and former green regions visible; Journey and Reveal remain open. No clipping, filled aperture or severe pixel collapse. 16px antialiasing retained; final human approval pending."
+    },
+    {
+      "sizePx": 24,
+      "background": "#062A24",
+      "result": "PASS",
+      "notes": "Complete silhouette and former green regions visible; Journey and Reveal remain open. No clipping, filled aperture or severe pixel collapse. 16px antialiasing retained; final human approval pending."
+    },
+    {
+      "sizePx": 24,
+      "background": "#18463C",
+      "result": "PASS",
+      "notes": "Complete silhouette and former green regions visible; Journey and Reveal remain open. No clipping, filled aperture or severe pixel collapse. 16px antialiasing retained; final human approval pending."
+    }
+  ],
+  "renderer": "Local Google Chrome headless; device scale factor 1; native 16/24 CSS px. Pillow crops; inspection board enlarged 6x nearest-neighbor without altering native evidence.",
+  "artifacts": [
+    {
+      "file": "docs/brand/qa/dark-micro-v1.1/dark-micro-16px-062a24.png",
+      "sha256": "c66791c0c04fbaed89e8ceacc20207c11acd45bd7d8f1c7e8467279d7816ac7d"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.1/dark-micro-16px-18463c.png",
+      "sha256": "e0dba818ce4bf0561f61618c5994c7fe4a5890ea39629f15fbb1067b35f1625e"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.1/dark-micro-24px-062a24.png",
+      "sha256": "2caa9780a42fa712e568b5753e867b72991b02878f8e47104ff4a2d9e6669215"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.1/dark-micro-24px-18463c.png",
+      "sha256": "06be22e14b20bb857c9201ad16b1d1b905c706b2ec3c934b77529c48b9e67560"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.1/pixel-inspection-6x.png",
+      "sha256": "d02b044611478d500a10f4029050e52ec603a45dcb4a8335887d4d4d23e5aa17"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.1/render-board.png",
+      "sha256": "9cb1e61918847cc70153244fc55da0c1df9faa2bb62c70d894ac6a1311d0b065"
+    },
+    {
+      "file": "docs/brand/qa/dark-micro-v1.1/render-input.html",
+      "sha256": "938fb64aaeb095a4f0c856badd4f2b165d005d5eee92eea3bcfcdc8fa648d0d7"
+    }
+  ]
+}

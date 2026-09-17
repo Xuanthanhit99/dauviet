@@ -1,0 +1,28 @@
+{
+  "project": "Dấu Việt Global",
+  "logo": "Time Trace V3",
+  "phase": "Production Validation V1.4",
+  "status": "PASS_WITH_RULES",
+  "master_geometry": "dau-viet-global-time-trace-v3-geometry-v1.3.svg",
+  "micro_geometry": "dau-viet-global-time-trace-v3-micro-v1.3.svg",
+  "minimum_size_rules": {
+    "16px": "micro-mark only",
+    "24px": "micro-mark preferred/required",
+    "32px": "master allowed",
+    "48px_plus": "master preferred"
+  },
+  "application_rules": {
+    "master_flat_vector": true,
+    "negative_space_reveal_required": true,
+    "glow_required": false,
+    "texture_required": false,
+    "metallic_required": false
+  },
+  "validation_checks": {
+    "light_background": "PASS",
+    "dark_background": "PASS",
+    "monochrome": "PASS",
+    "favicon_16_24_32": "PASS_WITH_MICRO_RULE",
+    "app_icon_safe_area": "PASS"
+  }
+}

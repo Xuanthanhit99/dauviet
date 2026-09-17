@@ -1,0 +1,139 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Phase 09.1 Historical Visualization Integrity, Accessibility & Narrative QA",
+    "version": "V1.0",
+    "status": "PASS_WITH_IMPLEMENTATION_RULES"
+  },
+  "areas": {
+    "Timeline": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "explicit temporal axis or period context",
+        "approximate/disputed dates use ranges or uncertainty labels",
+        "turning-point emphasis is not color-only",
+        "parallel tracks remain comparable and labeled"
+      ],
+      "rule": "No false precision: unknown or approximate dates cannot be rendered as exact points unless the source supports that precision."
+    },
+    "Connections": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "typed edges",
+        "direction where meaningful",
+        "selected neighborhood/progressive disclosure",
+        "static/reduced-motion comprehensibility"
+      ],
+      "rule": "Dense graphs must collapse into focused neighborhoods, grouped summaries or accessible lists rather than unreadable hairballs."
+    },
+    "Event Playback": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "chronology separated from causality",
+        "sequence reflects sourced evidence",
+        "static equivalent available",
+        "playback controls interruptible"
+      ],
+      "rule": "Animation cannot imply causality, simultaneity or certainty beyond what the evidence supports."
+    },
+    "Evidence Visualization": {
+      "status": "PASS",
+      "checks": [
+        "fact-source relationship retrievable",
+        "source/locator available",
+        "verified/disputed/uncertain explicit",
+        "retractions/competing evidence visible where relevant"
+      ],
+      "rule": "Evidence graphics support understanding but never replace access to the underlying source/citation."
+    },
+    "Quantitative Charts": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "axes/units/source present",
+        "bar zero-baseline by default",
+        "missing values not converted to zero",
+        "estimates labeled",
+        "no decorative 3D distortion"
+      ],
+      "rule": "Any non-zero bar baseline, normalization, index, aggregation or derived measure requires explicit explanation where it could affect interpretation."
+    },
+    "Historical Maps": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "documented vs inferred routes differentiated",
+        "uncertain extents explicit",
+        "map provenance/source available",
+        "spatial graphics are contextual evidence rather than background decoration"
+      ],
+      "rule": "Uncertain borders, routes or extents must never be rendered with the same certainty treatment as verified geography."
+    },
+    "Uncertainty & Dispute": {
+      "status": "PASS",
+      "checks": [
+        "verified/probable/disputed/uncertain/unknown distinct",
+        "color not sole encoding",
+        "unknown is not interpolated",
+        "competing interpretations accessible"
+      ],
+      "rule": "Epistemic state is content, not decoration, and must survive grayscale, reduced motion and theme changes."
+    },
+    "Mobile Density": {
+      "status": "PASS_WITH_RULE",
+      "checks": [
+        "progressive disclosure",
+        "selected graph neighborhood",
+        "timeline density reduced without deleting evidence",
+        "horizontal exploration has accessible alternative"
+      ],
+      "rule": "Mobile may reduce simultaneous density but cannot remove uncertainty, provenance, relationship type or factual context."
+    },
+    "Reduced Motion": {
+      "status": "PASS",
+      "checks": [
+        "static timeline/graph state",
+        "event playback has static equivalent",
+        "map movement not required for meaning",
+        "selection/state remains explicit"
+      ],
+      "rule": "Motion may explain progression, but all factual meaning must remain in the static state."
+    }
+  },
+  "narrative_integrity": {
+    "status": "PASS_WITH_RULE",
+    "checks": [
+      "one primary question/thesis per visual story",
+      "time/space/relationships revealed progressively",
+      "evidence available on demand",
+      "ending answers what changed / why it matters / explore next"
+    ],
+    "rule": "Do not stack multiple independent charts/graphs merely because data exists; every visualization must answer a specific editorial question."
+  },
+  "accessibility": {
+    "status": "PASS_WITH_RULE",
+    "rules": [
+      "Important charts/diagrams provide a concise textual summary or accessible data alternative.",
+      "Interactive nodes/points expose keyboard- or assistive-technology-reachable detail where interaction exists.",
+      "Essential lines, markers and boundaries meet Phase 02 contrast requirements against adjacent surfaces.",
+      "Color is never the sole encoding for category, certainty, direction or state.",
+      "Labels reflow and may progressively disclose; they may not shrink below locked Phase 03 readability tokens.",
+      "Reduced-motion/static alternatives preserve the full factual message."
+    ]
+  },
+  "production_rules": [
+    "Historical time graphics never display more temporal precision than the underlying source supports.",
+    "Relationship graphs use typed edges and progressive disclosure; dense hairball graphs are prohibited as a primary reading mode.",
+    "Event Playback visually separates chronology from causality and never implies unsupported sequence, simultaneity or certainty.",
+    "Evidence visualizations keep the underlying citation/source retrievable; visual summaries never replace source access.",
+    "Quantitative charts require axes, units and provenance; missing values remain missing and estimates remain labeled.",
+    "Non-zero bar baselines, derived indices, normalization, aggregation or transformations are explicitly explained when they can materially change interpretation.",
+    "Historical maps differentiate documented, inferred, disputed and uncertain spatial claims using non-color-only treatments.",
+    "Unknown information is never visually interpolated into a known value, date, route, border or relationship.",
+    "Mobile layouts may reduce simultaneous density but cannot remove provenance, uncertainty, relationship type or factual context.",
+    "All factual meaning survives reduced motion; animation is explanatory enhancement only.",
+    "Important visualizations provide a concise textual summary or accessible data representation, and interactive elements expose reachable details.",
+    "Every visualization answers a defined editorial question; walls of charts, generic KPI-dashboard layouts and decorative pseudo-historical graphics are prohibited."
+  ],
+  "decision": {
+    "phase09_lock_readiness": "READY_FOR_PRODUCTION_LOCK",
+    "condition": "include the twelve production rules above in the locked baseline"
+  }
+}

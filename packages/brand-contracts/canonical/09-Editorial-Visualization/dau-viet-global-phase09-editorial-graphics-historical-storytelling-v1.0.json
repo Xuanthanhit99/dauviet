@@ -1,0 +1,155 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Editorial Graphics, Data Visualization & Historical Storytelling Visual Language",
+    "version": "Phase 09 V1.0",
+    "status": "PRODUCTION_CANDIDATE"
+  },
+  "purpose": "Turn verified knowledge, time, relationships and evidence into readable visual stories without making Dấu Việt feel like a textbook or generic analytics dashboard.",
+  "principles": [
+    "Story first, evidence always available.",
+    "Visual structure clarifies historical relationships; it never fabricates certainty.",
+    "Travel/discovery remains the entry layer; historical graphics deepen understanding rather than dominate every surface.",
+    "Use the locked Phase 02 palette semantically and restrainedly; gold is emphasis, not default data ink.",
+    "Charts and diagrams must remain understandable in monochrome and without motion.",
+    "Editorial graphics inherit Phase 03 typography, Phase 04 semantic glyphs, Phase 05 spatial language, Phase 06 motion and Phase 07 provenance."
+  ],
+  "visual_families": {
+    "timeline": {
+      "forms": [
+        "linear chronology",
+        "era band",
+        "turning-point timeline",
+        "parallel-track comparison"
+      ],
+      "rules": [
+        "time axis remains explicit",
+        "uncertain dates use bounded/ranged uncertainty",
+        "no false precision",
+        "turning points use editorial emphasis plus labels, not gold alone"
+      ]
+    },
+    "connections": {
+      "forms": [
+        "typed relationship graph",
+        "influence chain",
+        "people-place-event-culture network"
+      ],
+      "rules": [
+        "edges have relationship type",
+        "direction shown when meaningful",
+        "selected neighborhood emphasized",
+        "avoid hairball graphs; progressively disclose"
+      ]
+    },
+    "event_playback": {
+      "forms": [
+        "phase sequence",
+        "spatial-temporal playback",
+        "cause → event → consequence"
+      ],
+      "rules": [
+        "distinguish chronology from causality",
+        "playback never implies unverified sequence",
+        "static equivalent required"
+      ]
+    },
+    "evidence": {
+      "forms": [
+        "fact-source link",
+        "evidence stack",
+        "artifact/source strip",
+        "confidence/verification annotation"
+      ],
+      "rules": [
+        "citation locator remains retrievable",
+        "source class visible where relevant",
+        "confidence never encoded by color alone",
+        "retracted/disputed content explicit"
+      ]
+    },
+    "comparison": {
+      "forms": [
+        "Then & Now",
+        "before/after state",
+        "era comparison",
+        "place/culture comparison"
+      ],
+      "rules": [
+        "comparison dimensions explicit",
+        "different dates/viewpoints disclosed",
+        "avoid decorative symmetry that implies equivalence"
+      ]
+    },
+    "data_chart": {
+      "forms": [
+        "bar",
+        "line",
+        "scatter",
+        "small multiples when justified"
+      ],
+      "rules": [
+        "use charts only for genuinely quantitative claims",
+        "axes/units/source required",
+        "zero baseline for bars unless a justified exception is explicitly signaled",
+        "avoid pie/donut when precise comparison matters",
+        "no 3D charts",
+        "no decorative data distortion"
+      ]
+    },
+    "map_story": {
+      "forms": [
+        "route + narrative stops",
+        "historical extent",
+        "movement/influence flow",
+        "event landscape"
+      ],
+      "rules": [
+        "uncertainty explicit",
+        "routes distinguish documented vs inferred",
+        "map is contextual evidence, not decorative background"
+      ]
+    }
+  },
+  "certainty_language": {
+    "verified": "solid treatment + explicit verified/source context where needed",
+    "probable": "qualified label + bounded uncertainty treatment",
+    "disputed": "explicit disputed label + competing evidence access",
+    "uncertain": "dashed/range/uncertainty marker + text/legend",
+    "unknown": "do not interpolate visually as known"
+  },
+  "editorial_composition": {
+    "entry": "one clear question/thesis",
+    "middle": "progressive reveal of time/space/relationships",
+    "depth": "evidence on demand",
+    "exit": "what changed / why it matters / where to explore next",
+    "avoid": [
+      "wall of charts",
+      "museum-panel density",
+      "generic dashboard cards",
+      "ornamental pseudo-historical frames",
+      "fake parchment as default"
+    ]
+  },
+  "quantitative_integrity": {
+    "source": "every factual quantitative visualization must resolve to source/provenance",
+    "transform": "aggregation/normalization/calculation should be reproducible or documented",
+    "missing": "missing values shown as missing, never zero by default",
+    "estimates": "estimates labeled",
+    "scale": "avoid truncated or dual-axis treatments that materially mislead",
+    "comparison": "denominators and units remain comparable"
+  },
+  "accessibility": {
+    "text_equivalent": "important charts/diagrams need concise summary or accessible data alternative",
+    "keyboard": "interactive nodes/points expose keyboard-reachable details where applicable",
+    "contrast": "Phase 02 essential graphics contrast applies",
+    "color": "never sole encoding",
+    "motion": "Phase 06 reduced-motion/static equivalent applies",
+    "zoom": "labels reflow and remain readable; do not shrink below locked typography tokens"
+  },
+  "responsive": {
+    "desktop": "may show richer multi-track/graph context",
+    "mobile": "progressive disclosure, horizontal time navigation only when accessible alternative exists, simplified graph neighborhood",
+    "rule": "mobile simplification may reduce simultaneous density but not remove relationships, uncertainty or evidence retrievability"
+  },
+  "qa_next": "Phase 09.1 — Historical Visualization Integrity, Accessibility & Narrative QA"
+}

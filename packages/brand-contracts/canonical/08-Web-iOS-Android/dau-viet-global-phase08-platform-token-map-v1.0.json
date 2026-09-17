@@ -1,0 +1,29 @@
+{
+  "shared": {
+    "brand.logo": "time-trace-v3-production-master",
+    "brand.colors": "phase02-production-lock",
+    "brand.type": "phase03-production-lock",
+    "brand.icons": "phase04-production-lock",
+    "brand.map": "phase05-production-lock",
+    "brand.motion": "phase06-production-lock",
+    "brand.media": "phase07-production-lock"
+  },
+  "web": {
+    "interactiveTargetMin": "44px",
+    "logoWide": "horizontal",
+    "logoCompact": "symbol",
+    "fontScaling": "browser/text zoom"
+  },
+  "ios": {
+    "interactiveTargetMin": "44pt",
+    "logoCompact": "symbol",
+    "fontScaling": "Dynamic Type",
+    "reducedMotion": "UIAccessibility.isReduceMotionEnabled"
+  },
+  "android": {
+    "interactiveTargetPreferred": "48dp",
+    "logoCompact": "symbol",
+    "fontScaling": "fontScale/sp",
+    "reducedMotion": "system animator/accessibility preference mapping"
+  }
+}

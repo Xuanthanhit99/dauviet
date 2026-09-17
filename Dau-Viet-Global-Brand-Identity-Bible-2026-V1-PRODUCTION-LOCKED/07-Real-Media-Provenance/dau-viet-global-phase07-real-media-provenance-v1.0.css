@@ -1,0 +1,34 @@
+/* Dấu Việt Global — Phase 07 Real Media & Provenance V1.0 */
+.dv-media {
+  position: relative;
+  overflow: clip;
+  background: var(--dv-surface-muted, #EADDC7);
+}
+.dv-media img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.dv-media--evidence img,
+.dv-media--artifact img {
+  object-fit: contain;
+}
+.dv-media__provenance {
+  font: var(--dv-type-caption);
+  color: var(--dv-text-secondary, #6A5741);
+}
+.dv-media__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  min-block-size: 24px;
+  padding-inline: .5rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font: var(--dv-type-caption);
+}
+.dv-media[data-media-class="reconstruction"] .dv-media__badge,
+.dv-media[data-media-class="ai-generated"] .dv-media__badge {
+  font-weight: 600;
+}
+/* Never hide Reconstruction / AI-generated status using hover-only UI. */

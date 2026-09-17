@@ -1,0 +1,32 @@
+{
+  "asset": "Dấu Việt Global Horizontal Logo",
+  "version": "1.4.1",
+  "status": "PRODUCTION_LOCKED",
+  "approved_input": "Candidate B V1.3.1",
+  "approval_date": "2026-09-17",
+  "canonical_variants": {
+    "primary_light": "dvg-logo-horizontal-primary-light-v1.4.1.svg",
+    "primary_dark": "dvg-logo-horizontal-primary-dark-v1.4.1.svg",
+    "primary_mono": "dvg-logo-horizontal-primary-mono-v1.4.1.svg"
+  },
+  "editable_source": "../Dau-Viet-Global-Horizontal-Logo-V1.4-PRODUCTION-LOCKED/dvg-logo-horizontal-construction-editable-v1.4.svg",
+  "rules": [
+    "Do not redesign or redraw the Time Trace V3 symbol.",
+    "Do not modify approved wordmark outlines, proportions, qualifier treatment, or spacing silently.",
+    "Tagline is excluded from the primary horizontal logo.",
+    "Use canonical dark/mono variants instead of CSS/filter recoloring.",
+    "32px renders are QA references; 48px is the wide-navigation target; 64px+ is preferred for brand-forward use.",
+    "Any future change requires a new lifecycle version and validation."
+  ],
+  "reason": "METADATA_ONLY_CORRECTIVE_RELEASE",
+  "parentVersion": "1.4",
+  "parentPackage": "../Dau-Viet-Global-Horizontal-Logo-V1.4-PRODUCTION-LOCKED",
+  "authorization": "User instruction authorizes V1.4.1 metadata-only corrective release and production registry integration.",
+  "editable_source_distribution": false,
+  "visual_design_changed": false,
+  "geometry_changed": false,
+  "wordmark_changed": false,
+  "color_changed": false,
+  "spacing_changed": false,
+  "accessibility_metadata_corrected": true
+}

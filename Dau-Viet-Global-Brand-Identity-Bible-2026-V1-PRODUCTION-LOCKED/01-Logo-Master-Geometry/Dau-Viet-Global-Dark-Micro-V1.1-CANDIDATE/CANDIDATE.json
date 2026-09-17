@@ -1,0 +1,33 @@
+{
+  "version": "1.1",
+  "lifecycle": "CANDIDATE",
+  "status": "CANDIDATE_READY_FOR_APPROVAL",
+  "treatment": "Dark Micro Treatment V1.1",
+  "treatmentStatus": "APPROVED_TREATMENT_SPECIFICATION",
+  "approvalDate": "2026-09-17",
+  "humanVisualApproval": "PENDING_FINAL_VISUAL_APPROVAL",
+  "sourceFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/dau-viet-global-time-trace-v3-micro-v1.3.svg",
+  "sourceSha256": "5ea0abc6b5045ebda285a467ca5f112595473008832435f6177637c52d5d9e2d",
+  "candidateFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Dark-Micro-V1.1-CANDIDATE/dvg-dark-micro-v1.1.svg",
+  "candidateSha256": "0733fcea85b2d32362b04f00f8fd0a700cac56abebea3e1411b7f1f9aa5e6b1d",
+  "historicalCandidate": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Dark-Micro-V1.0-CANDIDATE/CANDIDATE.json",
+  "distribution": false,
+  "sizesPx": [
+    16,
+    24
+  ],
+  "permittedBackgrounds": [
+    "#062A24",
+    "#18463C"
+  ],
+  "authorizedColorMapping": {
+    "#062A24": "#EADDC7",
+    "#18463C": "#EADDC7"
+  },
+  "authorizedMappingCount": 2,
+  "changedFillOccurrences": 3,
+  "unauthorizedColorMappings": 0,
+  "geometryChanges": 0,
+  "preservedGold": "#D4AF7C",
+  "qaReport": "docs/brand/brand-dark-micro-candidate-pass-04-1-1.md"
+}

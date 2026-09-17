@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Motion Identity & Interaction Choreography",
+    "version": "Phase 06 V1.0",
+    "status": "PRODUCTION CANDIDATE"
+  },
+  "principles": {
+    "concept": "Reveal through time: motion clarifies continuity, spatial relationship and discovery",
+    "character": "quiet, cinematic, deliberate; never flashy, bouncy or game-like",
+    "priority": "meaning first, continuity second, decoration last",
+    "effects": "glow/parallax/blur are optional application treatments and never required for comprehension"
+  },
+  "timing": {
+    "instant": "0–80ms — direct feedback only",
+    "fast": "120–180ms — hover, icon/state, small controls",
+    "standard": "200–280ms — panels, selection, cards, map state",
+    "narrative": "360–520ms — Story scene/section transitions",
+    "cinematic": "600–900ms — hero/logo reveal only; never blocks interaction"
+  },
+  "easing": {
+    "enter": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "exit": "cubic-bezier(0.4, 0, 1, 1)",
+    "move": "cubic-bezier(0.4, 0, 0.2, 1)",
+    "linear": "linear only for true progress/time playback"
+  },
+  "patterns": {
+    "logo_reveal": {
+      "duration": "700–900ms",
+      "sequence": "Time layers establish → Journey path reveals → negative-space Reveal resolves",
+      "rules": "one-shot brand/application moment; no mandatory glow; static logo remains fully recognizable"
+    },
+    "map_selection": {
+      "duration": "180–240ms",
+      "sequence": "marker boundary/scale → label/panel response → optional camera move",
+      "rules": "anchor must remain spatially stable; no bounce"
+    },
+    "map_camera": {
+      "duration": "280–480ms",
+      "rules": "use only when context benefits; preserve orientation; user input interrupts immediately"
+    },
+    "story_scene": {
+      "duration": "360–520ms",
+      "sequence": "outgoing context softens → spatial/time continuity maintained → incoming scene settles",
+      "rules": "avoid theatrical page flips; citations/evidence never delayed behind animation"
+    },
+    "journey_progress": {
+      "duration": "200–360ms",
+      "sequence": "current stop changes → route progress updates → content focus follows",
+      "rules": "route progress is semantic; never decorative looping"
+    },
+    "overlay_panel": {
+      "duration": "200–280ms",
+      "rules": "fade + small translate/scale; focus moves correctly; background motion restrained"
+    },
+    "then_now": {
+      "duration": "240–400ms",
+      "rules": "explicit Then/Now state remains visible; crossfade/slider motion cannot be sole cue"
+    },
+    "connection_graph": {
+      "duration": "220–360ms",
+      "rules": "highlight related nodes/edges progressively; do not animate whole graph continuously"
+    },
+    "loading": {
+      "rules": "prefer structural skeleton/progress; avoid mystical looping ornament as default"
+    }
+  },
+  "reduced_motion": {
+    "trigger": "prefers-reduced-motion: reduce and native platform equivalent",
+    "replace": "remove parallax, camera fly, path drawing, large scale/translate and cinematic sequences",
+    "retain": "instant state changes, opacity where safe, focus/state visibility, semantic progress",
+    "logo": "show final static master or minimal <=150ms opacity transition",
+    "map": "jump/short fade to target rather than fly animation",
+    "story": "direct scene swap or <=150ms crossfade",
+    "journey": "update route/state immediately without drawn-path animation"
+  },
+  "accessibility": {
+    "interruptible": "motion triggered by user navigation must be interruptible",
+    "no_blocking": "essential content/actions cannot wait for decorative animation",
+    "focus": "focus location must follow overlays/navigation independent of animation",
+    "flash": "no flashing/strobing identity behavior",
+    "motion_only": "prohibited",
+    "autoplay": "continuous ambient motion off by default on content-heavy surfaces; pause controls if meaningful autoplay exists"
+  }
+}

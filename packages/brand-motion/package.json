@@ -1,0 +1,13 @@
+{
+  "name": "@dauviet/brand-motion",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dấu Việt Global 2026 V1 source-locked brand foundation",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    "./styles.css": "./canonical/motion.css"
+  }
+}

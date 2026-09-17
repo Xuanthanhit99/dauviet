@@ -1,0 +1,17 @@
+{
+  "version": "V1.3",
+  "candidate": "B",
+  "decision": "READY_FOR_OUTLINE_GATE",
+  "production_locked": false,
+  "font_status": {
+    "exact_noto_serif_semibold_found": true,
+    "exact_noto_sans_semibold_found": true,
+    "serif_path": "/usr/share/fonts/truetype/noto/NotoSerif-SemiBold.ttf",
+    "sans_path": "/usr/share/fonts/truetype/noto/NotoSans-SemiBold.ttf"
+  },
+  "variants": [
+    "dau-viet-global-horizontal-logo-candidate-b-v1.3-light.svg",
+    "dau-viet-global-horizontal-logo-candidate-b-v1.3-dark.svg",
+    "dau-viet-global-horizontal-logo-candidate-b-v1.3-mono.svg"
+  ]
+}

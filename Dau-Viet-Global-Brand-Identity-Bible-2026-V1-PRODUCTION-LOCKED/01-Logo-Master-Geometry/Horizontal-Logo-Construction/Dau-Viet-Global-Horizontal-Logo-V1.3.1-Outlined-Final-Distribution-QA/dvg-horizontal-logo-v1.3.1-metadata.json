@@ -1,0 +1,64 @@
+{
+  "version": "V1.3.1",
+  "candidate": "B",
+  "decision": "FINAL_DISTRIBUTION_QA_PASS_AWAITING_HUMAN_APPROVAL",
+  "production_locked": false,
+  "fonts": {
+    "primary": "NotoSerif-SemiBold.ttf",
+    "qualifier": "NotoSans-SemiBold.ttf"
+  },
+  "bounds": {
+    "primary": [
+      96.992,
+      18.713,
+      243.436,
+      55.045
+    ],
+    "global": [
+      98.649,
+      61.025,
+      156.52000000000004,
+      69.11
+    ]
+  },
+  "qa": {
+    "light": {
+      "no_live_text": true,
+      "wordmark_outline_group": true,
+      "canonical_journey_mask": true,
+      "no_raster": true,
+      "no_gradient": true,
+      "no_filter": true,
+      "correct_name_aria": true
+    },
+    "dark": {
+      "no_live_text": true,
+      "wordmark_outline_group": true,
+      "canonical_journey_mask": true,
+      "no_raster": true,
+      "no_gradient": true,
+      "no_filter": true,
+      "correct_name_aria": true
+    },
+    "mono": {
+      "no_live_text": true,
+      "wordmark_outline_group": true,
+      "canonical_journey_mask": true,
+      "no_raster": true,
+      "no_gradient": true,
+      "no_filter": true,
+      "correct_name_aria": true
+    }
+  },
+  "renders": {
+    "light_32": "dvg-logo-horizontal-light-outlined-v1.3.1-32px.png",
+    "light_48": "dvg-logo-horizontal-light-outlined-v1.3.1-48px.png",
+    "light_64": "dvg-logo-horizontal-light-outlined-v1.3.1-64px.png",
+    "dark_32": "dvg-logo-horizontal-dark-outlined-v1.3.1-32px.png",
+    "dark_48": "dvg-logo-horizontal-dark-outlined-v1.3.1-48px.png",
+    "dark_64": "dvg-logo-horizontal-dark-outlined-v1.3.1-64px.png",
+    "mono_32": "dvg-logo-horizontal-mono-outlined-v1.3.1-32px.png",
+    "mono_48": "dvg-logo-horizontal-mono-outlined-v1.3.1-48px.png",
+    "mono_64": "dvg-logo-horizontal-mono-outlined-v1.3.1-64px.png"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "asset": "Dark Micro",
+  "version": "1.1",
+  "status": "PRODUCTION_LOCKED",
+  "approvalDate": "2026-09-17",
+  "humanVisualApproval": "APPROVED",
+  "approvalAuthority": "Explicit user Pass #4.2 final human visual approval",
+  "treatment": "Dark Micro Treatment V1.1",
+  "geometryParent": "Time Trace V3 Micro V1.3",
+  "geometrySource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/dau-viet-global-time-trace-v3-micro-v1.3.svg",
+  "approvedCandidate": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Dark-Micro-V1.1-CANDIDATE/dvg-dark-micro-v1.1.svg",
+  "approvedCandidateSha256": "0733fcea85b2d32362b04f00f8fd0a700cac56abebea3e1411b7f1f9aa5e6b1d",
+  "canonicalFile": "dvg-dark-micro-v1.1.svg",
+  "distribution": true,
+  "sizesPx": [
+    16,
+    24
+  ],
+  "permittedBackgrounds": [
+    "#062A24",
+    "#18463C"
+  ],
+  "authorizedColorMapping": {
+    "#062A24": "#EADDC7",
+    "#18463C": "#EADDC7"
+  },
+  "preservedGold": "#D4AF7C",
+  "geometryChanged": false,
+  "pathsChanged": false,
+  "colorsChangedFromSource": true,
+  "visualCandidateChangedAfterApproval": false,
+  "qaEvidence": "docs/brand/qa/dark-micro-v1.1/",
+  "repositoryLock": "docs/brand/locks/dark-micro-v1.1.md"
+}

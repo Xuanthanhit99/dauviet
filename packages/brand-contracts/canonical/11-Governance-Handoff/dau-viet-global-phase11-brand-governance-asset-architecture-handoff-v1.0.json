@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Brand Governance, Asset Architecture & Production Handoff",
+    "version": "Phase 11 V1.0",
+    "status": "PRODUCTION_CANDIDATE"
+  },
+  "objective": "Make Production-Locked Phases 01–10 executable and resistant to accidental drift across design, backend/CMS, web, iOS, Android, editorial and marketing.",
+  "source_of_truth": {
+    "brand_bible": "Brand Identity Bible 2026 V1 + phase lock records",
+    "code": "versioned design tokens and canonical asset package",
+    "media": "backend/CMS MediaAsset + provenance/rights metadata",
+    "product": "locked UX baselines remain authoritative for structure",
+    "rule": "A derived mockup, screenshot, campaign export or local copied asset never becomes a new source of truth."
+  },
+  "asset_architecture": {
+    "registry_fields": [
+      "assetId",
+      "canonicalName",
+      "assetClass",
+      "phaseOwner",
+      "version",
+      "status",
+      "sourceFile",
+      "exportFormats",
+      "platformUsage",
+      "locale",
+      "theme",
+      "rights/provenance when applicable",
+      "supersedes",
+      "deprecatedAt"
+    ],
+    "classes": [
+      "logo",
+      "app-icon",
+      "favicon",
+      "color-token",
+      "type-token",
+      "icon",
+      "map-marker",
+      "motion-token",
+      "media",
+      "editorial-graphic",
+      "store-marketing",
+      "template"
+    ],
+    "status": [
+      "DRAFT",
+      "CANDIDATE",
+      "APPROVED",
+      "PRODUCTION_LOCKED",
+      "DEPRECATED",
+      "RETIRED"
+    ],
+    "naming": "dvg-{class}-{semantic-name}-{variant}-v{major}.{minor}.{ext}",
+    "rule": "Exports inherit canonical IDs/version; filename convenience never replaces registry identity."
+  },
+  "ownership": {
+    "Brand/Design": "identity geometry, visual semantics, lock decisions",
+    "Product/UX": "information architecture and locked experience hierarchy",
+    "Engineering": "faithful implementation, token/asset consumption, runtime QA",
+    "Editorial/Research": "historical claim/evidence/provenance approval",
+    "Media/CMS": "asset/entity relation, rights, classification, transformations",
+    "Marketing": "approved external compositions/copy within Phase 10",
+    "rule": "No function may silently override another function's locked authority."
+  },
+  "change_control": {
+    "patch": "implementation correction with no semantic/geometry/hierarchy change; document and test",
+    "minor": "backward-compatible addition/variant; requires owner review + QA",
+    "major": "changes locked geometry, semantics, hierarchy or governing principle; requires explicit re-open decision and impact review",
+    "emergency": "legal/safety/truth/accessibility correction may ship quickly but must be documented and reconciled into canonical baseline",
+    "prohibit": "silent redesign in implementation PRs"
+  },
+  "handoff": {
+    "design_to_code": [
+      "token manifest",
+      "canonical SVG/icon sprite",
+      "responsive rules",
+      "state matrix",
+      "locale rules",
+      "accessibility notes"
+    ],
+    "cms_to_frontend": [
+      "MediaAsset id",
+      "entity relation",
+      "class",
+      "rights/provenance",
+      "disclosure",
+      "transform history"
+    ],
+    "release_bundle": [
+      "brand package version",
+      "token version",
+      "asset registry snapshot",
+      "QA checklist",
+      "known exceptions",
+      "deprecation notices"
+    ],
+    "rule": "Implementation tickets reference canonical asset/token IDs rather than screenshots alone."
+  },
+  "repository": {
+    "recommended_paths": [
+      "/packages/brand-tokens",
+      "/packages/brand-assets",
+      "/packages/brand-icons",
+      "/packages/brand-motion",
+      "/packages/brand-contracts",
+      "/docs/brand/locks",
+      "/docs/brand/qa"
+    ],
+    "generated": "platform exports may be generated from canonical masters; generated output is not manually edited",
+    "checksum": "release-critical canonical assets should be checksum/version verified in CI"
+  },
+  "ci_gates": [
+    "forbid unknown logo assets in production surfaces",
+    "validate token references and deprecated tokens",
+    "SVG/icon lint for viewBox/currentColor/accessibility contract where applicable",
+    "media UI cannot publish evidence-sensitive assets without required classification/provenance fields",
+    "store/marketing production package requires truth/disclosure checklist",
+    "snapshot/visual regression on critical brand surfaces",
+    "locale overflow/text scaling checks on critical templates",
+    "reduced-motion checks on signature interactions"
+  ],
+  "exceptions": {
+    "format": "exceptionId, owner, reason, affected surface, rule waived, risk, expiry/review date, approval",
+    "rule": "Exceptions are explicit, scoped and expiring; repeated exceptions trigger system review rather than becoming undocumented precedent."
+  },
+  "deprecation": {
+    "rule": "Never delete/replace a locked asset silently. Mark deprecated, identify successor, migrate consumers, then retire.",
+    "compatibility": "major asset/token changes require migration notes."
+  },
+  "ai_agent_handoff": {
+    "Claude": "backend/CMS contracts, media/provenance enforcement and API/domain implementation must consume locked brand/content contracts without inventing UI semantics",
+    "Codex": "web/mobile implementation consumes canonical assets/tokens and locked UX baselines; may fix implementation issues but cannot redesign locked phases",
+    "prompt_rule": "Every implementation prompt states locked baselines, canonical files/IDs, allowed changes, prohibited redesign and required QA evidence."
+  },
+  "release_definition_of_done": [
+    "canonical IDs resolved",
+    "no deprecated/unregistered production assets",
+    "platform accessibility gates pass",
+    "locale/theme variants pass",
+    "media provenance/disclosure pass",
+    "visual regression reviewed",
+    "exceptions documented",
+    "lock/version changelog updated"
+  ],
+  "qa_next": "Phase 11.1 — Governance, Drift Prevention & Handoff QA"
+}

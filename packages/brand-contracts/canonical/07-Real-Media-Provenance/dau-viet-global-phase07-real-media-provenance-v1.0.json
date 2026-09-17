@@ -1,0 +1,182 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Photography, Real Media & Provenance Visual System",
+    "version": "Phase 07 V1.0",
+    "status": "PRODUCTION CANDIDATE"
+  },
+  "principles": {
+    "truth_first": "documentary truth and provenance outrank visual similarity or aesthetic convenience",
+    "entity_correctness": "media must be linked to the correct entity/content context",
+    "no_substitution": "never substitute a visually similar local/public asset for the correct place/person/object/event",
+    "no_randomization": "never randomize imagery to fill empty states",
+    "ai_policy": "AI-generated/reconstructed media is never presented as documentary evidence",
+    "effects": "brand grading/effects must not materially alter documentary meaning"
+  },
+  "media_classes": {
+    "documentary_photo": {
+      "label": "Documentary",
+      "requirements": [
+        "correct entity",
+        "source/provenance",
+        "rights/license",
+        "date/period when known"
+      ],
+      "presentation": "normal editorial photography"
+    },
+    "archival_photo": {
+      "label": "Archive",
+      "requirements": [
+        "archive/source",
+        "creator when known",
+        "date/period",
+        "rights/public-domain status"
+      ],
+      "presentation": "preserve archival character; restrained restoration only"
+    },
+    "artifact_scan": {
+      "label": "Artifact / Record",
+      "requirements": [
+        "holding institution/source",
+        "object/document identity",
+        "rights",
+        "date when known"
+      ],
+      "presentation": "no decorative crop that removes evidentiary context"
+    },
+    "map_historical": {
+      "label": "Historical Map",
+      "requirements": [
+        "source",
+        "date/edition",
+        "creator/publisher when known",
+        "rights"
+      ],
+      "presentation": "locator/legend preserved where evidentiary"
+    },
+    "reconstruction": {
+      "label": "Reconstruction",
+      "requirements": [
+        "explicit disclosure",
+        "basis/sources",
+        "creator/method",
+        "rights"
+      ],
+      "presentation": "visually differentiated from documentary media"
+    },
+    "ai_generated": {
+      "label": "AI-generated",
+      "requirements": [
+        "explicit disclosure",
+        "purpose",
+        "generation/editorial provenance",
+        "not evidence"
+      ],
+      "presentation": "never adjacent to evidence without clear distinction"
+    },
+    "illustration": {
+      "label": "Illustration",
+      "requirements": [
+        "creator/source",
+        "rights",
+        "editorial role"
+      ],
+      "presentation": "clearly illustrative"
+    },
+    "user_contributed": {
+      "label": "Community contribution",
+      "requirements": [
+        "contributor attribution policy",
+        "rights/consent",
+        "moderation status",
+        "capture date/location when supplied"
+      ],
+      "presentation": "community context preserved"
+    }
+  },
+  "provenance_fields": {
+    "required_core": [
+      "mediaAssetId",
+      "entity/content relation",
+      "media class",
+      "source/provenance",
+      "rights/license",
+      "editorial status"
+    ],
+    "conditional": [
+      "creator",
+      "capture/creation date",
+      "historical period",
+      "institution/archive",
+      "location",
+      "source URL/archive reference",
+      "transformation history",
+      "reconstruction basis",
+      "AI disclosure"
+    ],
+    "frontend_rule": "frontend renders backend/CMS provenance; it does not invent or infer missing provenance"
+  },
+  "visual_direction": {
+    "documentary": "natural light, authentic atmosphere, human scale, geographic/cultural specificity",
+    "avoid": [
+      "generic luxury-travel stock look",
+      "heavy teal-orange grade",
+      "fake film damage",
+      "AI surrealism",
+      "excessive HDR",
+      "tourism-ad clichés"
+    ],
+    "grade": "restrained tonal coherence; preserve skin, artifact, landscape and material truth",
+    "crop": "editorial crop may improve composition but must not falsify context or remove important evidence",
+    "overlays": "text gradients permitted for legibility if they do not obscure critical evidence"
+  },
+  "ratios": {
+    "hero": "16:9 or cinematic responsive crop with protected focal region",
+    "destination_card": "4:3 preferred",
+    "place_story_card": "3:2 or 4:3",
+    "portrait_person": "4:5",
+    "artifact_record": "native ratio preferred; do not force-crop evidence",
+    "then_now": "matched viewport/anchor when possible; otherwise disclose mismatch"
+  },
+  "then_now": {
+    "pairing": "real historical/archive media + real contemporary media preferred",
+    "alignment": "align viewpoint/anchor only when evidence supports it",
+    "mismatch": "if viewpoint/date/extent differs, disclose it",
+    "reconstruction": "cannot silently occupy the Then side as if historical photography"
+  },
+  "transformations": {
+    "allowed": [
+      "resize",
+      "responsive crop",
+      "format conversion",
+      "compression",
+      "orientation correction",
+      "restrained exposure/color normalization",
+      "clearly disclosed restoration"
+    ],
+    "record_when_material": [
+      "restoration",
+      "object removal for conservation/cleanup",
+      "compositing",
+      "colorization",
+      "AI-assisted reconstruction"
+    ],
+    "prohibited_as_documentary": [
+      "fabricated people/objects",
+      "invented historical scenery",
+      "materially changing architecture/artifacts",
+      "undisclosed generative fill",
+      "misleading sky/weather replacement"
+    ]
+  },
+  "fallbacks": {
+    "missing_media": "use designed no-media state, map/context graphic, verified text/story treatment or provenance-safe placeholder",
+    "never": "scan local/public folders for similar images; random image; wrong entity image; unlabeled AI substitute"
+  },
+  "accessibility": {
+    "alt": "describe meaningful visible content and its relevance; avoid repeating captions verbatim",
+    "decorative": "empty alt only when genuinely decorative",
+    "caption": "provenance/caption remains available near evidence-sensitive media",
+    "contrast": "text overlays maintain Phase 02 contrast requirements",
+    "zoom": "artifact/document imagery should support inspection where product context requires"
+  }
+}

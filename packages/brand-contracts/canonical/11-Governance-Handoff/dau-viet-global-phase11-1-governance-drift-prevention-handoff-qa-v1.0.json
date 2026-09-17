@@ -1,0 +1,104 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Phase 11.1 Governance, Drift Prevention & Handoff QA",
+    "version": "V1.0",
+    "status": "PASS_WITH_IMPLEMENTATION_RULES"
+  },
+  "scenario_tests": [
+    {
+      "scenario": "Agent redraws locked logo",
+      "result": "BLOCK",
+      "expected_control": "Major change requires explicit RE-OPEN; implementation agent has no redesign authority."
+    },
+    {
+      "scenario": "Developer copies/edits SVG locally",
+      "result": "BLOCK",
+      "expected_control": "Consumer must reference canonical registered asset; copied derivative cannot become master."
+    },
+    {
+      "scenario": "Token fork inside app code",
+      "result": "BLOCK",
+      "expected_control": "Semantic tokens must resolve to canonical package; local forks require approved exception or upstream change."
+    },
+    {
+      "scenario": "Deprecated asset still consumed",
+      "result": "BLOCK RELEASE",
+      "expected_control": "CI/release gate identifies consumer and successor migration before retirement."
+    },
+    {
+      "scenario": "CMS evidence media lacks provenance",
+      "result": "BLOCK PUBLISH",
+      "expected_control": "Required MediaAsset classification/provenance is a data/editorial issue; frontend cannot infer it."
+    },
+    {
+      "scenario": "Emergency accessibility/truth fix",
+      "result": "ALLOW + RECONCILE",
+      "expected_control": "Ship scoped correction when necessary; document owner/risk and reconcile canonical baseline immediately after."
+    },
+    {
+      "scenario": "Generated iOS/Android export differs",
+      "result": "REGENERATE",
+      "expected_control": "Platform exports derive from canonical master; generated outputs are not hand-edited."
+    },
+    {
+      "scenario": "Marketing uses old logo export",
+      "result": "BLOCK",
+      "expected_control": "External package must resolve to current Production-Locked registry version."
+    },
+    {
+      "scenario": "Locale causes clipping",
+      "result": "FIX IMPLEMENTATION",
+      "expected_control": "Reflow/layout correction is Patch if semantics/hierarchy stay unchanged; do not shrink below typography contract."
+    },
+    {
+      "scenario": "Reduced-motion regression",
+      "result": "BLOCK RELEASE",
+      "expected_control": "Signature interactions must retain static/full factual meaning under reduced motion."
+    },
+    {
+      "scenario": "Visual regression from token update",
+      "result": "REVIEW",
+      "expected_control": "Compare intended token change and affected locked surfaces; unexplained drift blocks release."
+    },
+    {
+      "scenario": "Temporary exception expires",
+      "result": "BLOCK / RENEW REVIEW",
+      "expected_control": "Exception cannot silently become precedent; renew with owner/risk or remove."
+    }
+  ],
+  "handoff_qa": {
+    "Design→Code": "PASS — canonical IDs, tokens, SVG/icon masters, state/responsive/locale/accessibility contracts",
+    "CMS→Frontend": "PASS WITH GATE — provenance/classification required for evidence-sensitive media",
+    "Claude": "PASS WITH RULE — backend/CMS/domain implementation consumes locked contracts; no UI semantic invention",
+    "Codex": "PASS WITH RULE — Web/mobile consumes locked assets/tokens/UX; no redesign authority",
+    "Platform Exports": "PASS WITH RULE — generated from masters; no manual master fork",
+    "Release": "PASS WITH RULE — registry snapshot, QA evidence, exceptions/deprecations and changelog required"
+  },
+  "drift_controls": {
+    "unknown_asset": "BLOCK/FLAG",
+    "local_token_fork": "BLOCK/EXCEPTION_REQUIRED",
+    "deprecated_consumer": "MIGRATE/BLOCK_AS_REQUIRED",
+    "visual_regression": "REVIEW/BLOCK_IF_UNEXPLAINED",
+    "missing_provenance": "BLOCK_PUBLISH",
+    "expired_exception": "BLOCK_OR_RENEW_REVIEW",
+    "major_semantic_change": "REOPEN_REQUIRED"
+  },
+  "production_rules": [
+    "Canonical registry ID + version, not filename or screenshot, determines production asset identity.",
+    "Production consumers may not create or promote local derivative masters of locked logo, icon, token or motion assets.",
+    "Any change to locked geometry, semantic meaning, product hierarchy or governing principle is Major and requires explicit RE-OPEN plus impact review.",
+    "Patch corrections are permitted only when they preserve locked semantics/hierarchy and include focused QA evidence.",
+    "Deprecated assets/tokens require a named successor and consumer migration; unresolved production consumers block retirement/release as applicable.",
+    "Evidence-sensitive media missing required classification, entity relation, rights/provenance or disclosure cannot be published, and frontend inference is prohibited.",
+    "Generated platform exports are reproducible derivatives of canonical masters and are regenerated rather than manually patched.",
+    "Exceptions are registered, scoped, owned, risk-documented and time-bounded; expiry requires removal or explicit renewal review.",
+    "Critical release gates include canonical asset resolution, deprecated usage, visual regression, locale/text scaling, reduced motion and provenance/disclosure.",
+    "Emergency legal, safety, truth or accessibility fixes may bypass normal cadence but not documentation, ownership, follow-up QA or canonical reconciliation.",
+    "Claude/Codex implementation prompts and tickets identify locked baselines, canonical IDs/files, allowed changes, prohibited redesign and required QA evidence.",
+    "A release is not brand-complete until the registry/changelog reflects shipped versions and all known exceptions/deprecations are reconciled or explicitly carried."
+  ],
+  "decision": {
+    "phase11_lock_readiness": "READY_FOR_PRODUCTION_LOCK",
+    "condition": "include all twelve production rules"
+  }
+}

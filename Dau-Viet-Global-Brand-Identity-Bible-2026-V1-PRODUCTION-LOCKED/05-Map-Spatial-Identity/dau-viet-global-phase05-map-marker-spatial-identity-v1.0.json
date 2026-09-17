@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Map Marker & Spatial Identity System",
+    "version": "Phase 05 V1.0",
+    "status": "PRODUCTION CANDIDATE"
+  },
+  "principles": {
+    "role": "spatial discovery utility, not a second brand logo",
+    "base": "map markers use a restrained pointer/container with Phase 04 semantic inner glyphs",
+    "color": "Phase 02 colors are supplementary; shape/glyph/state carry meaning",
+    "density": "progressive disclosure by zoom; avoid marker carpet",
+    "time": "historical/time filtering changes state/context, not just hue"
+  },
+  "marker_geometry": {
+    "default_visual": "32px",
+    "compact_visual": "24px",
+    "featured_visual": "40px",
+    "touch_target": "44x44 CSS px minimum",
+    "inner_glyph": "20px at default; 16px micro at compact; 24px at featured",
+    "stroke": "1.75px canonical; 2px compact optical",
+    "anchor": "bottom-center for point locations",
+    "safe_area": "inner glyph centered above pointer tip; no glyph enters lower anchor zone"
+  },
+  "semantic_markers": {
+    "place": {
+      "container": "spatial pointer",
+      "glyph": "Place",
+      "priority": "core"
+    },
+    "story": {
+      "container": "spatial pointer",
+      "glyph": "Story",
+      "priority": "narrative"
+    },
+    "journey": {
+      "container": "spatial pointer",
+      "glyph": "Journey",
+      "priority": "route"
+    },
+    "event": {
+      "container": "spatial pointer",
+      "glyph": "Event",
+      "priority": "temporal"
+    },
+    "culture": {
+      "container": "spatial pointer",
+      "glyph": "Culture",
+      "priority": "theme"
+    }
+  },
+  "states": {
+    "default": "outline/container + semantic glyph",
+    "hover": "subtle scale/elevation; no semantic change",
+    "focus": "Phase 02 focus-visible ring + stable anchor",
+    "selected": "1.12–1.18 scale + stronger outline/halo + semantic glyph retained",
+    "visited": "check/stamp secondary cue + accessible state",
+    "saved": "bookmark secondary cue + accessible state",
+    "unavailable": "neutral/disabled treatment + explanation",
+    "featured": "40px visual + editorial emphasis, not gold-only meaning"
+  },
+  "clusters": {
+    "visual": "bounded circle/soft polygon, not a branded logo",
+    "count": "numeric count mandatory",
+    "size_bands": {
+      "small": "36px",
+      "medium": "44px",
+      "large": "52px"
+    },
+    "meaning": "cluster size/count carries density; color may indicate layer but never replaces count",
+    "expansion": "zoom/spiderfy/list depending density and platform"
+  },
+  "zoom_behavior": {
+    "world_country": "clusters + featured editorial destinations only",
+    "region_destination": "clusters + high-importance destinations/places",
+    "city_place": "individual markers with semantic glyphs",
+    "site_detail": "individual markers, labels and spatial overlays as needed"
+  },
+  "labels": {
+    "default": "label appears by priority/zoom, not on every marker",
+    "selected": "full label preferred",
+    "max_lines": "2",
+    "truncation": "accessible full name retained",
+    "collision": "map engine collision handling required; never shrink typography ad hoc"
+  },
+  "routes_areas": {
+    "journey_route": "line/path + direction/progress cues; markers identify stops",
+    "historical_extent": "area/polygon + label/legend; never encode certainty only by opacity",
+    "uncertain_location": "dashed/uncertainty treatment + explicit label/legend",
+    "then_now": "paired spatial state with explicit Then/Now labels or control"
+  },
+  "accessibility": {
+    "contrast": "essential marker/glyph boundaries >=3:1 where required",
+    "color_only": "prohibited",
+    "touch": "44x44 CSS px minimum interactive target",
+    "keyboard": "focusable interactive markers with meaningful accessible names",
+    "screen_reader": "entity type + name + state, e.g. Place: Imperial Citadel — visited",
+    "motion": "selection/cluster transitions respect reduced motion"
+  }
+}

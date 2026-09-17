@@ -1,0 +1,151 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Multilingual Typography System",
+    "version": "Phase 03 V1.0",
+    "status": "PRODUCTION CANDIDATE",
+    "principle": "Editorial serif for narrative/display; neutral sans for UI/data; locale-aware script fallback."
+  },
+  "families": {
+    "display_latin": {
+      "preferred": "Noto Serif",
+      "locales": [
+        "vi",
+        "en",
+        "fr"
+      ],
+      "role": "hero/editorial headings, story titles, pull quotes"
+    },
+    "ui_latin": {
+      "preferred": "Noto Sans",
+      "locales": [
+        "vi",
+        "en",
+        "fr"
+      ],
+      "role": "navigation, controls, metadata, maps, forms"
+    },
+    "cjk_sans": {
+      "ja": "Noto Sans JP",
+      "ko": "Noto Sans KR",
+      "zh-Hans": "Noto Sans SC",
+      "zh-Hant": "Noto Sans TC",
+      "role": "UI/body/default CJK fallback"
+    },
+    "cjk_serif": {
+      "ja": "Noto Serif JP",
+      "ko": "Noto Serif KR",
+      "zh-Hans": "Noto Serif SC",
+      "zh-Hant": "Noto Serif TC",
+      "role": "editorial/display CJK where available; otherwise locale sans"
+    }
+  },
+  "scale": {
+    "display-xl": {
+      "desktop": "64/68",
+      "mobile": "42/46",
+      "weight": 600,
+      "tracking": "-0.02em"
+    },
+    "display-lg": {
+      "desktop": "48/54",
+      "mobile": "36/42",
+      "weight": 600,
+      "tracking": "-0.015em"
+    },
+    "h1": {
+      "desktop": "40/48",
+      "mobile": "32/40",
+      "weight": 600,
+      "tracking": "-0.01em"
+    },
+    "h2": {
+      "desktop": "32/40",
+      "mobile": "28/36",
+      "weight": 600,
+      "tracking": "-0.005em"
+    },
+    "h3": {
+      "desktop": "24/32",
+      "mobile": "22/30",
+      "weight": 600,
+      "tracking": "0"
+    },
+    "body-lg": {
+      "desktop": "18/30",
+      "mobile": "18/29",
+      "weight": 400,
+      "tracking": "0"
+    },
+    "body": {
+      "desktop": "16/26",
+      "mobile": "16/26",
+      "weight": 400,
+      "tracking": "0"
+    },
+    "body-sm": {
+      "desktop": "14/22",
+      "mobile": "14/22",
+      "weight": 400,
+      "tracking": "0"
+    },
+    "label": {
+      "desktop": "14/20",
+      "mobile": "14/20",
+      "weight": 600,
+      "tracking": "0.01em"
+    },
+    "caption": {
+      "desktop": "12/18",
+      "mobile": "12/18",
+      "weight": 500,
+      "tracking": "0.01em"
+    }
+  },
+  "locale_rules": {
+    "vi": {
+      "hyphenation": "off by default",
+      "line_break": "normal",
+      "display": "serif",
+      "ui": "sans"
+    },
+    "en": {
+      "hyphenation": "auto for long editorial copy only",
+      "display": "serif",
+      "ui": "sans"
+    },
+    "fr": {
+      "hyphenation": "auto for editorial copy; preserve French punctuation spacing",
+      "display": "serif",
+      "ui": "sans"
+    },
+    "zh-Hans": {
+      "line_break": "strict/locale-aware",
+      "display": "CJK serif optional",
+      "ui": "Noto Sans SC"
+    },
+    "zh-Hant": {
+      "line_break": "strict/locale-aware",
+      "display": "CJK serif optional",
+      "ui": "Noto Sans TC"
+    },
+    "ja": {
+      "line_break": "strict/locale-aware; avoid Latin tracking rules",
+      "display": "Noto Serif JP optional",
+      "ui": "Noto Sans JP"
+    },
+    "ko": {
+      "line_break": "keep-all where suitable for headings; normal body wrapping",
+      "display": "Noto Serif KR optional",
+      "ui": "Noto Sans KR"
+    }
+  },
+  "accessibility": {
+    "minimum_body": "16px default for primary reading copy",
+    "line_length": "45–75 Latin characters for long-form editorial; locale-aware measure for CJK",
+    "text_zoom": "layout must survive 200% text zoom",
+    "all_caps": "avoid for long Vietnamese/CJK strings; reserve for short labels",
+    "tracking": "never force Latin negative tracking onto CJK",
+    "font_weight": "avoid thin/light for body and essential UI",
+    "content_language": "set correct HTML lang / locale metadata"
+  }
+}

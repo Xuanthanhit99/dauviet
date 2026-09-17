@@ -1,0 +1,126 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Phase 07.1 Media Truth, Disclosure & Context QA",
+    "version": "V1.0",
+    "status": "PASS_WITH_IMPLEMENTATION_RULES"
+  },
+  "surface_qa": {
+    "Hero": {
+      "result": "PASS_WITH_RULE",
+      "checks": [
+        "correct destination/entity media",
+        "protected focal crop",
+        "rights/provenance available",
+        "text overlay does not hide critical evidence"
+      ],
+      "rule": "Hero may prioritize emotion, but cannot use a visually similar wrong-location image."
+    },
+    "Destination Card": {
+      "result": "PASS",
+      "checks": [
+        "correct destination relation",
+        "4:3 preferred",
+        "no random fallback",
+        "provenance available on detail/context"
+      ],
+      "rule": "Cards may simplify visible metadata, but provenance remains retrievable."
+    },
+    "Place Detail": {
+      "result": "PASS",
+      "checks": [
+        "correct place/entity",
+        "documentary vs reconstruction differentiated",
+        "caption/source near evidence-sensitive media",
+        "crop preserves context"
+      ],
+      "rule": "Primary place imagery cannot be substituted by nearby/similar architecture."
+    },
+    "Story Explorer": {
+      "result": "PASS_WITH_RULE",
+      "checks": [
+        "scene media has source relation",
+        "evidence media clearly distinguished from atmosphere media",
+        "citations never hidden by immersive treatment",
+        "transformations disclosed when material"
+      ],
+      "rule": "Immersion cannot blur the boundary between documentary evidence and illustrative atmosphere."
+    },
+    "Then & Now": {
+      "result": "PASS_WITH_RULE",
+      "checks": [
+        "Then media class explicit",
+        "Now media real contemporary",
+        "viewpoint/date mismatch disclosed",
+        "reconstruction never silently acts as Then"
+      ],
+      "rule": "Visual alignment is secondary to truth; disclose imperfect matches."
+    },
+    "Person": {
+      "result": "PASS",
+      "checks": [
+        "portrait identity verified",
+        "creator/source/date when known",
+        "illustration/reconstruction labeled",
+        "no lookalike substitution"
+      ],
+      "rule": "No generic historical portrait may stand in for a person."
+    },
+    "Event": {
+      "result": "PASS_WITH_RULE",
+      "checks": [
+        "event image actually depicts/relates to event",
+        "later commemorative images identified",
+        "reconstruction/illustration disclosed",
+        "date/context visible when ambiguity exists"
+      ],
+      "rule": "An image of the place after the event cannot be implied to depict the event itself."
+    },
+    "Artifact / Source": {
+      "result": "PASS",
+      "checks": [
+        "native ratio/contain preferred",
+        "institution/object identity",
+        "inspection/zoom where needed",
+        "no crop removing evidentiary details"
+      ],
+      "rule": "Evidence integrity outranks card consistency."
+    },
+    "Community": {
+      "result": "PASS_WITH_RULE",
+      "checks": [
+        "contribution status",
+        "rights/consent",
+        "attribution policy",
+        "capture metadata when supplied",
+        "moderation state"
+      ],
+      "rule": "Community media must not inherit editorial verification merely by appearing beside verified content."
+    }
+  },
+  "cross_system": {
+    "entity_correctness": "PASS — wrong/similar entity substitution prohibited",
+    "provenance": "PASS_WITH_RULE — frontend may simplify display but provenance must remain retrievable where relevant",
+    "rights": "PASS — rights/license required before production publication",
+    "reconstruction": "PASS — explicit disclosure and visual distinction required",
+    "ai_generated": "PASS — disclosure required; never evidence",
+    "transformations": "PASS_WITH_RULE — material changes recorded/disclosed",
+    "missing_media": "PASS — designed fallback only",
+    "accessibility": "PASS_WITH_RULE — useful alt; evidence captions/provenance available; inspection for records/artifacts"
+  },
+  "production_rules": [
+    "A production asset must resolve to the correct MediaAsset and correct entity/content relation before publication.",
+    "Hero/card visual convenience never permits wrong-location, wrong-person, lookalike or random substitution.",
+    "Evidence-sensitive media must keep provenance/caption retrievable near the viewing context; immersive layouts may not hide evidence identity.",
+    "Reconstruction, AI-generated, illustration and material restoration/colorization must be explicitly classified/disclosed where users could mistake them for documentary evidence.",
+    "Then & Now must disclose viewpoint/date/spatial mismatch and cannot silently use reconstruction as historical photography.",
+    "Event media must distinguish images of the event from later images of the same place, memorial or reenactment.",
+    "Artifact/source presentation preserves evidentiary detail and native ratio where needed; card consistency cannot justify destructive cropping.",
+    "Community media retains contribution/moderation/rights context and never inherits editorial verification by proximity.",
+    "Missing media uses a designed provenance-safe fallback; public/local folder scanning, random imagery and visually similar substitutes are prohibited.",
+    "Frontend never invents provenance metadata; missing source/rights/classification is a CMS/editorial data issue, not a UI inference task."
+  ],
+  "decision": {
+    "phase07_lock_readiness": "READY_FOR_PRODUCTION_LOCK",
+    "condition": "include the ten production rules above in the locked baseline"
+  }
+}

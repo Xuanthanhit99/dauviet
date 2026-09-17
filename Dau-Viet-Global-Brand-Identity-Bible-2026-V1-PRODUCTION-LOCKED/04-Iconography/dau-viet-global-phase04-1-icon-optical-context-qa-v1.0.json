@@ -1,0 +1,239 @@
+{
+  "meta": {
+    "system": "Dấu Việt Global — Phase 04.1 Icon Optical & Context QA",
+    "version": "V1.0",
+    "status": "PASS_WITH_MICRO_ICON_RULES"
+  },
+  "size_matrix": [
+    {
+      "icon": "place",
+      "size": 16,
+      "result": "PASS"
+    },
+    {
+      "icon": "place",
+      "size": 20,
+      "result": "PASS"
+    },
+    {
+      "icon": "place",
+      "size": 24,
+      "result": "PASS"
+    },
+    {
+      "icon": "place",
+      "size": 32,
+      "result": "PASS"
+    },
+    {
+      "icon": "people",
+      "size": 16,
+      "result": "PASS_WITH_RULE"
+    },
+    {
+      "icon": "people",
+      "size": 20,
+      "result": "PASS"
+    },
+    {
+      "icon": "people",
+      "size": 24,
+      "result": "PASS"
+    },
+    {
+      "icon": "people",
+      "size": 32,
+      "result": "PASS"
+    },
+    {
+      "icon": "event",
+      "size": 16,
+      "result": "PASS_WITH_RULE"
+    },
+    {
+      "icon": "event",
+      "size": 20,
+      "result": "PASS"
+    },
+    {
+      "icon": "event",
+      "size": 24,
+      "result": "PASS"
+    },
+    {
+      "icon": "event",
+      "size": 32,
+      "result": "PASS"
+    },
+    {
+      "icon": "culture",
+      "size": 16,
+      "result": "FAIL_DETAIL"
+    },
+    {
+      "icon": "culture",
+      "size": 20,
+      "result": "PASS_WITH_RULE"
+    },
+    {
+      "icon": "culture",
+      "size": 24,
+      "result": "PASS"
+    },
+    {
+      "icon": "culture",
+      "size": 32,
+      "result": "PASS"
+    },
+    {
+      "icon": "time",
+      "size": 16,
+      "result": "PASS_WITH_RULE"
+    },
+    {
+      "icon": "time",
+      "size": 20,
+      "result": "PASS"
+    },
+    {
+      "icon": "time",
+      "size": 24,
+      "result": "PASS"
+    },
+    {
+      "icon": "time",
+      "size": 32,
+      "result": "PASS"
+    },
+    {
+      "icon": "source",
+      "size": 16,
+      "result": "FAIL_DETAIL"
+    },
+    {
+      "icon": "source",
+      "size": 20,
+      "result": "PASS_WITH_RULE"
+    },
+    {
+      "icon": "source",
+      "size": 24,
+      "result": "PASS"
+    },
+    {
+      "icon": "source",
+      "size": 32,
+      "result": "PASS"
+    },
+    {
+      "icon": "story",
+      "size": 16,
+      "result": "FAIL_DETAIL"
+    },
+    {
+      "icon": "story",
+      "size": 20,
+      "result": "PASS_WITH_RULE"
+    },
+    {
+      "icon": "story",
+      "size": 24,
+      "result": "PASS"
+    },
+    {
+      "icon": "story",
+      "size": 32,
+      "result": "PASS"
+    },
+    {
+      "icon": "journey",
+      "size": 16,
+      "result": "FAIL_DETAIL"
+    },
+    {
+      "icon": "journey",
+      "size": 20,
+      "result": "PASS_WITH_RULE"
+    },
+    {
+      "icon": "journey",
+      "size": 24,
+      "result": "PASS"
+    },
+    {
+      "icon": "journey",
+      "size": 32,
+      "result": "PASS"
+    },
+    {
+      "icon": "verified",
+      "size": 16,
+      "result": "PASS"
+    },
+    {
+      "icon": "verified",
+      "size": 20,
+      "result": "PASS"
+    },
+    {
+      "icon": "verified",
+      "size": 24,
+      "result": "PASS"
+    },
+    {
+      "icon": "verified",
+      "size": 32,
+      "result": "PASS"
+    },
+    {
+      "icon": "warning",
+      "size": 16,
+      "result": "PASS"
+    },
+    {
+      "icon": "warning",
+      "size": 20,
+      "result": "PASS"
+    },
+    {
+      "icon": "warning",
+      "size": 24,
+      "result": "PASS"
+    },
+    {
+      "icon": "warning",
+      "size": 32,
+      "result": "PASS"
+    }
+  ],
+  "micro_corrections": {
+    "16px": {
+      "culture": "use simplified single interlock/wave mark; canonical woven double-wave starts at 20px",
+      "source": "remove secondary text-line detail; retain document silhouette only",
+      "story": "simplify to single open-book contour; avoid inner spine micro-detail if rasterized",
+      "journey": "use two nodes + single path; enlarge nodes optically",
+      "people": "slightly enlarge head/body separation; 2px compact stroke",
+      "event": "reduce ray length / keep four cardinal ticks only",
+      "time": "slightly shorten hand detail; 2px compact stroke"
+    },
+    "20px": "canonical semantics allowed; compact stroke 2px acceptable",
+    "24px": "canonical master glyph size; preferred semantic/domain size",
+    "32px": "canonical geometry; no extra decorative detail should be introduced"
+  },
+  "context_qa": {
+    "light_dark": "PASS — currentColor construction survives light/dark; retain Phase 02 contrast tokens",
+    "monochrome": "PASS — all required meanings remain shape-based",
+    "map_density": "PASS_WITH_RULES — map uses 20–24px inner semantic glyphs; 16px reserved for utility-only dense states, not primary category recognition",
+    "story_explorer": "PASS — Story, Source, Evidence/Verified remain distinct at 20–24px",
+    "journey": "PASS_WITH_RULES — Journey canonical mark should not be used below 20px without micro simplification",
+    "trust": "PASS — Verified and Warning remain legible at 16px; disclosure text still required where semantics are non-obvious",
+    "touch_target": "PASS SPEC — visual glyph size is independent from 44×44 minimum interactive target"
+  },
+  "decision": {
+    "16px": "not all semantic master glyphs may use canonical detail; use defined micro variants",
+    "20px": "minimum canonical semantic glyph size",
+    "24px": "preferred/default semantic glyph size",
+    "32px": "canonical display/feature size; do not add decorative detail",
+    "production_lock": "Phase 04 may proceed to Production Lock if micro variants are treated as part of the system"
+  }
+}
