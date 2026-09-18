@@ -55,7 +55,7 @@ export function validateDarkMicroProduction(files, registry) {
   const a = matching[0];
   if (matching.length !== 1 || a.assetId !== 'dvg-logo-dark-micro-v1.1' || a.assetClass !== 'logo' || a.semantic !== 'micro' || a.theme !== 'dark' || a.version !== '1.1' || a.status !== 'PRODUCTION_LOCKED' || a.distribution !== true || a.sourceFile !== source || a.productionPath !== dest || JSON.stringify(a.roles) !== '["CANONICAL_DARK_MICRO"]') errors.push('DARK_MICRO_PRODUCTION_REGISTRY');
   const mapping = { '#062A24': '#EADDC7', '#18463C': '#EADDC7' }, backgrounds = ['#062A24', '#18463C'];
-  if (lock.status !== 'PRODUCTION_LOCKED' || lock.version !== '1.1' || lock.humanVisualApproval !== 'APPROVED' || lock.approvalDate !== '2026-09-17' || lock.distribution !== true || lock.approvedCandidate !== candidate || lock.geometryChanged !== false || lock.pathsChanged !== false || lock.visualCandidateChangedAfterApproval !== false) errors.push('DARK_MICRO_PRODUCTION_LOCK');
+  if (lock.status !== 'PRODUCTION_LOCKED' || lock.asset !== 'Dark Micro' || lock.canonicalFile !== 'dvg-dark-micro-v1.1.svg' || lock.colorsChangedFromSource !== true || lock.version !== '1.1' || lock.humanVisualApproval !== 'APPROVED' || lock.approvalDate !== '2026-09-17' || lock.distribution !== true || lock.approvedCandidate !== candidate || lock.geometryChanged !== false || lock.pathsChanged !== false || lock.visualCandidateChangedAfterApproval !== false) errors.push('DARK_MICRO_PRODUCTION_LOCK');
   for (const record of [lock, a]) {
     if (!record || JSON.stringify(record.authorizedColorMapping) !== JSON.stringify(mapping) || record.preservedGold !== '#D4AF7C' || record.geometryParent !== 'Time Trace V3 Micro V1.3' || record.geometrySource !== microSource || record.treatment !== 'Dark Micro Treatment V1.1') errors.push('DARK_MICRO_PRODUCTION_TREATMENT');
   }
@@ -63,6 +63,10 @@ export function validateDarkMicroProduction(files, registry) {
   if (!files.has(source) || !files.has(candidate) || !files.get(source)?.equals(files.get(candidate))) errors.push('DARK_MICRO_CANDIDATE_PRODUCTION_IDENTITY');
   if (!files.has(dest) || !files.has(source) || !files.get(dest)?.equals(files.get(source))) errors.push('DARK_MICRO_PRODUCTION_DISTRIBUTION_IDENTITY');
   if (text(source) !== text(microSource).replaceAll('#062A24', '#EADDC7').replaceAll('#18463C', '#EADDC7')) errors.push('DARK_MICRO_PRODUCTION_GEOMETRY_OR_COLOR');
+  // Validate the approved lineage too: production cannot bless damaged candidate QA or SVGs.
+  errors.push(...validateDarkMicroV11(files, registry));
+  for (const key of ['microGeometryIdentity', 'authorizedColorMapping', 'svgAccessibility']) if (proof[key] !== 'PASS') errors.push('DARK_MICRO_PRODUCTION_PROOF');
+  if (proof.unauthorizedColorMappings !== 0 || proof.preservedGold !== '#D4AF7C') errors.push('DARK_MICRO_PRODUCTION_PROOF');
   const expectedHash = sha(text(candidate));
   if (lock.approvedCandidateSha256 !== expectedHash || [proof.candidateSha256, proof.productionSha256, proof.distributionSha256].some(h => h !== expectedHash) || proof.status !== 'PASS' || proof.lifecycle !== 'PRODUCTION_LOCKED' || proof.humanVisualApproval !== 'APPROVED' || proof.approvalDate !== '2026-09-17' || proof.brokenReferences !== 0) errors.push('DARK_MICRO_PRODUCTION_PROOF');
   let historicalProof;

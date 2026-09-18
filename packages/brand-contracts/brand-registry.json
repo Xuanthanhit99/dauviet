@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "brand": "Dấu Việt Global",
+  "brand": "Dáº¥u Viá»‡t Global",
   "release": "2026-V1",
   "sourceDirectory": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED",
   "sourceManifestChecksum": "3fe46ae720a148a365dd1b28c32935c9bc86938a0286c64e46147b414ef9d5df",
@@ -1310,10 +1310,128 @@
       "lockSource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Dark-Micro-V1.1-PRODUCTION-LOCKED/LOCK.json",
       "validationSource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Dark-Micro-V1.1-PRODUCTION-LOCKED/PRODUCTION-VALIDATION.json",
       "repositoryLockFile": "docs/brand/locks/dark-micro-v1.1.md"
+    },
+    {
+      "assetId": "dvg-logo-inverse-mono-v1.0",
+      "canonicalName": "dvg-inverse-mono-v1.0.svg",
+      "assetClass": "logo",
+      "phaseOwner": "Phase 01",
+      "version": "1.0",
+      "status": "PRODUCTION_LOCKED",
+      "sourceFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/dvg-inverse-mono-v1.0.svg",
+      "productionPath": "packages/brand-assets/logo/micro/dvg-inverse-mono-v1.0.svg",
+      "variants": [],
+      "platformUsage": [
+        "web",
+        "ios",
+        "android",
+        "admin"
+      ],
+      "locale": "all",
+      "theme": "dark",
+      "supersedes": [],
+      "deprecated": false,
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "4c8d3e0be650f5e5ac67c70e44b11fd6101e5bffcab81712aa57686abdd5cb64"
+      },
+      "bytes": 2056,
+      "roles": [
+        "CANONICAL_INVERSE_MONO_MICRO"
+      ],
+      "semantic": "inverse-mono",
+      "scope": "micro",
+      "fill": "#FFFFFF",
+      "visibleColorCount": 1,
+      "distribution": true,
+      "usage": {
+        "sizesPx": [
+          16,
+          24
+        ],
+        "permittedBackgrounds": [
+          "#062A24",
+          "#18463C"
+        ]
+      },
+      "geometryParent": "Time Trace V3 Micro V1.4 Mono",
+      "geometrySource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/dau-viet-global-time-trace-v3-micro-v1.4-mono.svg",
+      "treatment": "Inverse Mono Treatment V1.0",
+      "authorizedColorMapping": {
+        "#111111": "#FFFFFF"
+      },
+      "approvalDate": "2026-09-18",
+      "lockSource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/LOCK.json",
+      "validationSource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/PRODUCTION-VALIDATION.json",
+      "repositoryLockFile": "docs/brand/locks/inverse-mono-v1.0.md"
+    },
+    {
+      "family": "trust-glyph",
+      "semantic": "citation",
+      "semanticDefinition": "source marker + accessible label",
+      "metaphor": "Reference Brackets + Source Point",
+      "construction": "Citation Trust Glyph Construction V1.0",
+      "grid": 24,
+      "viewBox": "0 0 24 24",
+      "strokeWidth": 1.75,
+      "linecap": "round",
+      "linejoin": "round",
+      "fill": "none",
+      "stroke": "currentColor",
+      "geometry": {
+        "left": "M8 6 H6.5 C5.67 6 5 6.67 5 7.5 V16.5 C5 17.33 5.67 18 6.5 18 H8",
+        "right": "M16 6 H17.5 C18.33 6 19 6.67 19 7.5 V16.5 C19 17.33 18.33 18 17.5 18 H16",
+        "circle": {
+          "cx": 12,
+          "cy": 12,
+          "r": 1.5
+        }
+      },
+      "sizesPx": [
+        20,
+        24,
+        32
+      ],
+      "preferredSizePx": 24,
+      "minimumSizePx": 20,
+      "micro16": false,
+      "size16Status": "NOT_SUPPORTED",
+      "assetId": "dvg-trust-citation-v1.0",
+      "canonicalName": "dvg-trust-citation-v1.0.svg",
+      "assetClass": "trust-glyph",
+      "phaseOwner": "Phase 04",
+      "version": "1.0",
+      "status": "PRODUCTION_LOCKED",
+      "sourceFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/dvg-trust-citation-v1.0.svg",
+      "productionPath": "packages/brand-icons/canonical/trust/dvg-trust-citation-v1.0.svg",
+      "variants": [],
+      "platformUsage": [
+        "web",
+        "ios",
+        "android",
+        "admin"
+      ],
+      "locale": "all",
+      "theme": "all",
+      "supersedes": [],
+      "deprecated": false,
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "db8d2a65ff86be3eb565af66dfa7da1fffb5806ebd8931b84b99002ef9ab9ad9"
+      },
+      "bytes": 676,
+      "roles": [
+        "CANONICAL_CITATION_TRUST_GLYPH"
+      ],
+      "distribution": true,
+      "approvalDate": "2026-09-18",
+      "lockSource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/LOCK.json",
+      "validationSource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/PRODUCTION-VALIDATION.json",
+      "repositoryLockFile": "docs/brand/locks/citation-trust-glyph-v1.0.md"
     }
   ],
   "foundationStatus": "READY_WITH_CANONICAL_ASSET_GAPS",
-  "applicationIntegrationStatus": "NOT_STARTED — NO APPLICATION CONSUMERS PRESENT",
+  "applicationIntegrationStatus": "NOT_STARTED â€” NO APPLICATION CONSUMERS PRESENT",
   "gaps": [
     {
       "gapId": "horizontal-logo",
@@ -1333,20 +1451,31 @@
     {
       "gapId": "glyph-citation",
       "phaseOwner": "Phase 04",
-      "status": "CANONICAL_ASSET_GAP",
-      "reason": "Required semantic has no dedicated canonical sprite symbol or explicitly approved alias.",
+      "status": "RESOLVED",
+      "reason": "Citation Trust Glyph V1.0 PRODUCTION_LOCKED; final human visual approval 2026-09-18; candidate/source/distribution byte identity PASS; actual SVG QA 3/3; 20/24/32px only, 16px NOT_SUPPORTED.",
       "evidence": [
-        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/dau-viet-global-phase04-iconography-semantic-system-v1.0.json"
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/dau-viet-global-phase04-iconography-semantic-system-v1.0.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-CANDIDATE/VALIDATION.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/LOCK.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/PRODUCTION-VALIDATION.json"
+      ],
+      "candidateFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json",
+      "resolvedBy": [
+        "dvg-trust-citation-v1.0"
       ]
     },
     {
       "gapId": "glyph-evidence",
       "phaseOwner": "Phase 04",
-      "status": "CANONICAL_ASSET_GAP",
-      "reason": "Required semantic has no dedicated canonical sprite symbol or explicitly approved alias.",
+      "status": "CANDIDATE_READY_FOR_APPROVAL",
+      "reason": "Evidence Construction V1.0 approved2026-09-18: Document + Inspection Lens; exact open-document geometry,20/24/32px QA3/3PASS,16px unsupported. Final human visual approval pending; distribution false.",
       "evidence": [
-        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/dau-viet-global-phase04-iconography-semantic-system-v1.0.json"
-      ]
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/dau-viet-global-phase04-iconography-semantic-system-v1.0.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-CANDIDATE/VALIDATION.json"
+      ],
+      "candidateFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json"
     },
     {
       "gapId": "glyph-reconstruction",
@@ -1422,10 +1551,18 @@
     {
       "gapId": "dark-monochrome",
       "phaseOwner": "Phase 01",
-      "status": "CANONICAL_ASSET_GAP",
-      "reason": "No dedicated production SVG or currentColor recoloring contract is supplied for this application. Use supported light assets or the dark master at 32px+ as appropriate.",
+      "status": "RESOLVED",
+      "reason": "Inverse Mono V1.0 PRODUCTION_LOCKED after final human visual approval 2026-09-18. Micro only 16/24px, White on Deep Forest and Forest 700; exact approved candidate bytes.",
       "evidence": [
-        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/dau-viet-global-time-trace-v3-production-validation-v1.4.json"
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/dau-viet-global-time-trace-v3-production-validation-v1.4.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-CANDIDATE/CANDIDATE.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-CANDIDATE/VALIDATION.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/LOCK.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/PRODUCTION-VALIDATION.json"
+      ],
+      "candidateFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-CANDIDATE/CANDIDATE.json",
+      "resolvedBy": [
+        "dvg-logo-inverse-mono-v1.0"
       ]
     }
   ],
@@ -1459,16 +1596,34 @@
       },
       "status": "PRODUCTION_LOCKED",
       "distribution": true
+    },
+    {
+      "sourceDirectory": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED",
+      "manifestFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/MANIFEST.sha256",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "15c63de58235612da96b3a82418a761b43919b40c0aac95f5d820168b439328b"
+      },
+      "status": "PRODUCTION_LOCKED",
+      "distribution": true
+    },
+    {
+      "sourceDirectory": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED",
+      "manifestFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/MANIFEST.sha256",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "963b194d7928fdb288c67f884e7b7eda5446c8df1feb4c4c579923a4963797c8"
+      },
+      "status": "PRODUCTION_LOCKED",
+      "distribution": true
     }
   ],
   "repositoryLockFile": "docs/brand/locks/horizontal-logo-v1.4.1.md",
   "actionableDesignGapIds": [
-    "dark-monochrome",
-    "glyph-citation",
     "glyph-evidence",
     "glyph-reconstruction",
     "glyph-ai-translation",
     "glyph-sensitive"
   ],
-  "repositoryManifestChecksum": "9f83d3e00f7fb11971531008be4abf9074e4ffff8ab99a46c962c01a34dd2569"
+  "repositoryManifestChecksum": "05b14f6847b8f26cfcd70076d8a4eb3046907ab62a2f3d66985ebb7c626569b0"
 }

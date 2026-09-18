@@ -4,6 +4,10 @@ const micro = new Set(['culture', 'source', 'story', 'journey']);
 const approvedAt16 = new Set(['place', 'verified', 'warning']);
 
 export function getIconReference(name, size = 24) {
+  if (name === 'citation') {
+    if (![20, 24, 32].includes(size)) throw new RangeError('Citation supports 20, 24, 32px; 16px NOT_SUPPORTED.');
+    return Object.freeze({ file: 'trust/dvg-trust-citation-v1.0.svg', size });
+  }
   if (!semantic.has(name)) {
     throw new RangeError(`No supplied canonical icon for ${name}; retain its explicit text label. Do not substitute another semantic glyph.`);
   }

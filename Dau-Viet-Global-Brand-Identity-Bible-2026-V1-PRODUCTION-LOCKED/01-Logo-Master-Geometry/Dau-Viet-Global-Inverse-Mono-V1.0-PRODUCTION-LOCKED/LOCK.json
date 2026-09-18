@@ -1,0 +1,36 @@
+{
+  "asset": "Inverse Mono",
+  "version": "1.0",
+  "status": "PRODUCTION_LOCKED",
+  "humanVisualApproval": "APPROVED",
+  "approvalDate": "2026-09-18",
+  "approvalAuthority": "Explicit user Pass #5.2 final human visual approval",
+  "treatment": "Inverse Mono Treatment V1.0",
+  "geometryParent": "Time Trace V3 Micro V1.4 Mono",
+  "geometrySource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/dau-viet-global-time-trace-v3-micro-v1.4-mono.svg",
+  "parentSha256": "ca59b22908a2a245c5f66cf1b5f20df1575fa01ce1b0c30742e1beba4c785abf",
+  "approvedCandidate": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-CANDIDATE/dvg-inverse-mono-v1.0.svg",
+  "approvedCandidateSha256": "4c8d3e0be650f5e5ac67c70e44b11fd6101e5bffcab81712aa57686abdd5cb64",
+  "canonicalFile": "dvg-inverse-mono-v1.0.svg",
+  "scope": "micro",
+  "sizesPx": [
+    16,
+    24
+  ],
+  "fill": "#FFFFFF",
+  "visibleColorCount": 1,
+  "authorizedColorMapping": {
+    "#111111": "#FFFFFF"
+  },
+  "unauthorizedColorMappings": 0,
+  "permittedBackgrounds": [
+    "#062A24",
+    "#18463C"
+  ],
+  "distribution": true,
+  "geometryChanged": false,
+  "pathsChanged": false,
+  "visualCandidateChangedAfterApproval": false,
+  "repositoryLock": "docs/brand/locks/inverse-mono-v1.0.md",
+  "qaEvidence": "docs/brand/qa/inverse-mono-v1.0/"
+}

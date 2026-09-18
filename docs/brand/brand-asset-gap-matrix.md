@@ -15,8 +15,8 @@ All file references below resolve under the immutable Brand Bible unless explici
 | Symbol-only | 01 | CANONICAL_MASTER / CANONICAL_MICRO | Existing registered SVGs already are symbol-only | No duplicate standalone symbol | Resolved by existing size variants |
 | Light behavior | 01,02 | Canonical master, micro, mono | PRODUCTION_LOCKED | Use supplied fills unchanged | Resolved within source-supported use |
 | Dark behavior, master | 01,02 | CANONICAL_MASTER — V1.3 dark | PRODUCTION_LOCKED; exact copy | Use dedicated dark asset, 32px+ | Resolved; runtime contrast still consumer QA |
-| Dark behavior, micro | 01 | Dark Micro V1.1 treatment approved; V1.0 failed evidence preserved | CANDIDATE; no production distribution | Pass #4.1.1: four real SVG renders pass; final human approval pending | CANDIDATE_READY_FOR_APPROVAL |
-| Dark behavior, mono | 01 | MISSING — CANONICAL_ASSET_GAP for contrasting dark variant | Supplied mono uses fixed dark ink; not currentColor | Do not infer inverse mono from a board | CANONICAL_ASSET_GAP for inverse mono usage |
+| Dark behavior, micro | 01 | Dark Micro V1.1; human approval 2026-09-17 | PRODUCTION_LOCKED; approved candidate bytes | 16/24px only on #062A24 and #18463C; real SVG QA PASS 4/4 | RESOLVED |
+| Dark behavior, mono | 01 | Inverse Mono V1.0; final human approval 2026-09-18 | PRODUCTION_LOCKED; exact approved candidate bytes | White #FFFFFF, MICRO ONLY 16/24px on #062A24 / #18463C; QA PASS 4/4 | RESOLVED |
 | App icon 1024 | 01,08 | APPROVED_DERIVATIVE — supplied V1.4 PNG with validation | APPROVED_DERIVATIVE; exact copy | Normalize lifecycle label; do not regenerate | Resolved as supplied derivative, not a complete native set |
 | Place | 04 | CANONICAL_AVAILABLE — `dv-icon-place` | `semantic.svg` | Existing resolver retained | 16/20/24/32px; 16px explicitly passes QA |
 | People | 04 | CANONICAL_AVAILABLE — `dv-icon-people` | `semantic.svg` | Existing resolver retained | 20/24/32px |
@@ -26,7 +26,7 @@ All file references below resolve under the immutable Brand Bible unless explici
 | Source | 04 | CANONICAL_AVAILABLE + CANONICAL_MICRO_AVAILABLE | `dv-icon-source`, `dv-icon-source-micro` | Existing resolver selects micro at 16px | Resolved at 16/20/24/32px |
 | Story | 04 | CANONICAL_AVAILABLE + CANONICAL_MICRO_AVAILABLE | `dv-icon-story`, `dv-icon-story-micro` | Existing resolver selects micro at 16px | Resolved at 16/20/24/32px |
 | Journey | 04 | CANONICAL_AVAILABLE + CANONICAL_MICRO_AVAILABLE | `dv-icon-journey`, `dv-icon-journey-micro` | Existing resolver selects micro at 16px | Resolved at 16/20/24/32px |
-| Citation | 04 | CANONICAL_ASSET_GAP | No dedicated symbol | “source marker + accessible label” describes semantics but assigns no explicit alias to `dv-icon-source`; do not infer one | CANONICAL_ASSET_GAP; text label remains required |
+| Citation | 04 | Citation Trust Glyph V1.0; final human approval 2026-09-18 | PRODUCTION_LOCKED; byte-identical brand-icons copy | 24x24; stroke 1.75; 20/24/32px QA PASS 3/3; 16px NOT_SUPPORTED | RESOLVED |
 | Evidence | 04 | CANONICAL_ASSET_GAP | No dedicated symbol | “document/lens” is not production vector geometry or an explicit sprite alias | CANONICAL_ASSET_GAP |
 | Verified | 04 | CANONICAL_AVAILABLE — `dv-icon-verified` | `semantic.svg` | Retain bounded check and accessible semantics | 16/20/24/32px; 16px explicitly passes QA |
 | Reconstruction | 04 | CANONICAL_ASSET_GAP | No dedicated symbol | Preserve explicit disclosure; no invented layered glyph | CANONICAL_ASSET_GAP |
@@ -81,4 +81,34 @@ Source package: `01-Logo-Master-Geometry/Horizontal-Logo-Construction/Dau-Viet-G
 
 Validation: original source 133/133, parent manifest 17/17, corrective manifest 7/7, source/copy byte identity 3/3, geometry identity 3/3, brand tests 20/20, XML references 10/10. The controlled repository inventory covers 194 source artifacts without blanket exclusions or approval of rejected candidates.
 
-Remaining actionable design gaps: exactly seven - Dark Micro, Inverse Mono, Citation, Evidence, Reconstruction, AI Translation, Sensitive. People/Event/Time 16px remain governed by the existing 20px minimum; no new micro artwork or silent fallback was introduced. That Pass #3 checkpoint preceded Dark Micro work. Current Pass #4.1.1: Dark Micro V1.1 is CANDIDATE_READY_FOR_APPROVAL, pending final human visual approval; it is not resolved or production locked. Other gap states are unchanged.
+Remaining actionable design gaps: exactly seven - Dark Micro, Inverse Mono, Citation, Evidence, Reconstruction, AI Translation, Sensitive. People/Event/Time 16px remain governed by the existing 20px minimum; no new micro artwork or silent fallback was introduced. That Pass #3 checkpoint preceded Dark Micro work. Historical Pass #4.1.1: Dark Micro V1.1 is CANDIDATE_READY_FOR_APPROVAL, pending final human visual approval; it is not resolved or production locked. Other gap states are unchanged.
+
+## Current Pass #4.2 Dark Micro resolution
+
+Dark Micro V1.1 is RESOLVED / PRODUCTION_LOCKED after final human approval on 2026-09-17. Production and distribution preserve the approved candidate bytes. Evidence: `locks/dark-micro-v1.1.md` and the sibling production package LOCK.json, PRODUCTION-VALIDATION.json and MANIFEST.sha256. Approved QA remains at `qa/dark-micro-v1.1/` (PASS 4/4).
+
+Remaining actionable design gaps: exactly six ? Inverse Mono, Citation, Evidence, Reconstruction, AI Translation, Sensitive. All unrelated gaps and governed 16px requirements remain unchanged.
+
+## Pass #5.1 Inverse Mono candidate
+
+Inverse Mono V1.0 is CANDIDATE_READY_FOR_APPROVAL, not RESOLVED or PRODUCTION_LOCKED. Treatment approved 2026-09-18: exact #111111 to #FFFFFF replacement from the existing micro mono source, 16/24px only, on #062A24 and #18463C. Real SVG QA passes all four combinations; final human visual approval is pending. No master inverse scope is authorized. Evidence: `brand-inverse-mono-candidate-pass-05-1.md` and `qa/inverse-mono-v1.0/`. The five Trust Glyph gaps remain unchanged; six actionable gaps remain in total, including this pending candidate.
+
+## Current Pass #5.2 Inverse Mono production lock
+
+Inverse Mono V1.0 is RESOLVED / PRODUCTION_LOCKED after final human visual approval 2026-09-18. Historical candidate and QA are unchanged; production and logo/micro distribution are byte-identical to the approved candidate. White #FFFFFF, MICRO ONLY 16/24px on #062A24 and #18463C. Master/horizontal inverse usage is not authorized. Evidence: `locks/inverse-mono-v1.0.md` and `brand-inverse-mono-production-lock-pass-05-2.md`.
+
+Remaining actionable design gaps: exactly five - Citation, Evidence, Reconstruction, AI Translation, Sensitive. Horizontal Logo, Dark Micro and Inverse Mono are resolved. Existing People/Event/Time 16px policy remains unchanged. Earlier candidate-ready sections are historical checkpoints.
+
+## Current Pass #6.1 Citation candidate
+
+Citation Trust Glyph V1.0 is CANDIDATE_READY_FOR_APPROVAL, not RESOLVED or PRODUCTION_LOCKED. Exact user-approved Reference Brackets + Source Point geometry; standalone accessibility valid; actual candidate SVG QA passes 20/24/32px. 16px NOT_SUPPORTED. Candidate source, construction approval and QA evidence: `brand-citation-candidate-pass-06-1.md` and `qa/citation-v1.0/`. Production resolver remains unchanged and rejects Citation until a separate production integration. Four other actionable gaps remain unchanged: Evidence, Reconstruction, AI Translation, Sensitive. Five total including pending Citation.
+
+## Pass #6.2 production checkpoint
+
+Citation Trust Glyph V1.0: PRODUCTION_LOCKED, final human visual approval APPROVED 2026-09-18. Candidate integrity, candidate-to-production and production-to-brand-icons byte identity, exact geometry/style, accessibility and actual SVG QA 3/3 PASS. Complete Brand suite 61/61 PASS. Citation is RESOLVED. Historical candidate-ready statements above remain audit checkpoints.
+
+Exactly four actionable design gaps remain: Evidence, Reconstruction, AI Translation, Sensitive. None started. Evidence: `locks/citation-trust-glyph-v1.0.md` and `brand-citation-production-lock-pass-06-2.md`.
+
+## Pass #7 Evidence construction audit
+
+Evidence remains CANONICAL_ASSET_GAP. Phase04 JSON `/trust/evidence` contains `document/lens`: semantic shorthand, not deterministic construction or approved asset alias. Evidence-specific geometry/sizes are undefined; no16px micro asset exists. Generic system policy:20px minimum,24px preferred,32px supported. Missing:unambiguous metaphor approval and exact24x24 construction. No artwork/candidate created. Sources232/232 PASS; tests61/61 PASS. See `brand-evidence-resolution-pass-07.md`. Reconstruction,AI Translation,Sensitive unchanged; four actionable gaps remain.

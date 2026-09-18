@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Dấu Việt Global 2026 V1 source-locked brand foundation",
+  "description": "Dáº¥u Viá»‡t Global 2026 V1 source-locked brand foundation",
   "sideEffects": [
     "**/*.css"
   ],
@@ -11,6 +11,7 @@
     ".": "./index.mjs",
     "./styles.css": "./canonical/icons.css",
     "./semantic.svg": "./canonical/semantic.svg",
-    "./micro.svg": "./canonical/micro.svg"
+    "./micro.svg": "./canonical/micro.svg",
+    "./trust/dvg-trust-citation-v1.0.svg": "./canonical/trust/dvg-trust-citation-v1.0.svg"
   }
 }

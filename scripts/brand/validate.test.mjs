@@ -3,7 +3,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { collectSnapshot, validateSnapshot, sourceDirectory, horizontalSource, horizontalParent, horizontalSvgErrors, visualFingerprint } from './validate.mjs';
 import { getIconReference } from '../../packages/brand-icons/index.mjs';
-import { darkMicroDirectory, darkMicroV11Directory, microSource, validateDarkMicro, validateDarkMicroV11, contrastRatio } from './validate-dark-micro.mjs';
+import { darkMicroDirectory, darkMicroV11Directory, microSource, validateDarkMicro, validateDarkMicroV11, validateDarkMicroProduction, darkMicroProductionDirectory, contrastRatio } from './validate-dark-micro.mjs';
 
 const baseline = collectSnapshot(fileURLToPath(new URL('../../', import.meta.url)));
 const registry = JSON.parse(baseline.get('packages/brand-contracts/brand-registry.json'));
@@ -31,7 +31,7 @@ test('V1.1 cannot become production or broaden its background and size rules', (
     mutate(c); files.set(p, Buffer.from(JSON.stringify(c)));
     assert.ok(validateDarkMicroV11(files, registry).includes(code));
   }
-  const changed = structuredClone(registry); changed.gaps.find(g => g.gapId === 'dark-micro').status = 'RESOLVED';
+  const changed = structuredClone(registry); changed.gaps.find(g => g.gapId === 'dark-micro').status = 'UNAPPROVED';
   assert.ok(validateDarkMicroV11(baseline, changed).includes('DARK_MICRO_V11_PREMATURE_PRODUCTION_OR_GAP_DRIFT'));
 });
 test('V1.1 requires valid references and flat vector content', () => {
@@ -158,7 +158,7 @@ test('all exposed icon references resolve to actual sprite symbols', () => {
   for (const name of ['culture', 'source', 'story', 'journey']) assert.equal(getIconReference(name, 16).sprite, 'micro.svg');
 });
 test('missing trust glyphs and missing 16px variants never silently fall back', () => {
-  for (const name of ['citation', 'evidence', 'reconstruction', 'ai-translation', 'sensitive']) assert.throws(() => getIconReference(name), RangeError);
+  for (const name of ['evidence', 'reconstruction', 'ai-translation', 'sensitive']) assert.throws(() => getIconReference(name), RangeError);
   for (const name of ['people', 'event', 'time']) assert.throws(() => getIconReference(name, 16), RangeError);
   assert.throws(() => getIconReference('place', 12), RangeError);
 });
@@ -195,9 +195,9 @@ test('gaps remain evidence-backed records rather than fabricated assets', () => 
   assert.ok(errors.some(error => error.startsWith('INVALID_GAP_RECORD')));
   assert.ok(errors.some(error => error.startsWith('MISSING_GAP_EVIDENCE')));
 });
-test('both micro logos remain available and retain the mask at their source checksum', () => {
+test('all four micro logos remain available and retain the mask at their source checksum', () => {
   const assets = registry.assets.filter(asset => asset.assetClass === 'logo' && asset.productionPath.includes('/micro/'));
-  assert.equal(assets.length, 2);
+  assert.equal(assets.length, 4);
   for (const asset of assets) {
     assert.deepEqual(baseline.get(asset.productionPath), baseline.get(asset.sourceFile));
     assert.ok(baseline.get(asset.productionPath).toString().includes('mask="url(#micro-cut)"'));
@@ -254,10 +254,52 @@ test('supplemental historical sources remain pinned and unknown source files fai
   assert.ok(validateSnapshot(unknown).some(error => error.startsWith('UNREGISTERED_SOURCE')));
 });
 
-test('horizontal resolution leaves exactly seven design gaps and the existing micro policy', () => {
-  assert.equal(registry.assets.length, 39);
+test('production resolutions leave exactly four design gaps and the existing micro policy', () => {
+  assert.equal(registry.assets.length, 42);
   assert.equal(registry.gaps.find(gap => gap.gapId === 'horizontal-logo').status, 'RESOLVED');
-  assert.deepEqual(registry.actionableDesignGapIds, ['dark-micro', 'dark-monochrome', 'glyph-citation', 'glyph-evidence', 'glyph-reconstruction', 'glyph-ai-translation', 'glyph-sensitive']);
-  for (const id of registry.actionableDesignGapIds) assert.equal(registry.gaps.find(gap => gap.gapId === id).status, id === 'dark-micro' ? 'CANDIDATE_READY_FOR_APPROVAL' : 'CANONICAL_ASSET_GAP');
+  assert.deepEqual(registry.actionableDesignGapIds, ['glyph-evidence', 'glyph-reconstruction', 'glyph-ai-translation', 'glyph-sensitive']);
+  for (const id of registry.actionableDesignGapIds) assert.equal(registry.gaps.find(gap => gap.gapId === id).status, id === 'glyph-evidence' ? 'CANDIDATE_READY_FOR_APPROVAL' : 'CANONICAL_ASSET_GAP');
   for (const name of ['people', 'event', 'time']) assert.throws(() => getIconReference(name, 16), RangeError);
+});
+
+test('production lock preserves approved bytes, lifecycle and exact dark micro classification', () => {
+  assert.deepEqual(validateDarkMicroProduction(baseline, registry), []);
+  const source = `${darkMicroProductionDirectory}/dvg-dark-micro-v1.1.svg`;
+  const dest = 'packages/brand-assets/logo/micro/dvg-dark-micro-v1.1.svg';
+  for (const p of [source, dest]) {
+    const missing = new Map(baseline); missing.delete(p);
+    assert.ok(validateDarkMicroProduction(missing, registry).some(e => e.includes('IDENTITY')));
+    const changed = new Map(baseline); changed.set(p, Buffer.concat([baseline.get(p), Buffer.from('\n')]));
+    assert.ok(validateDarkMicroProduction(changed, registry).some(e => e.includes('IDENTITY')));
+  }
+  for (const mutate of [a => { a.roles.push('CANONICAL_MONO'); }, a => { a.usage.sizesPx = [24]; }, a => { a.usage.permittedBackgrounds.push('#FFFFFF'); }, a => { a.status = 'CANDIDATE'; }, a => { a.distribution = false; }]) {
+    const changed = structuredClone(registry); mutate(changed.assets.find(a => a.assetId === 'dvg-logo-dark-micro-v1.1'));
+    assert.ok(validateDarkMicroProduction(baseline, changed).length > 0);
+  }
+});
+
+test('production proof rejects false approval, mappings, accessibility and QA claims', () => {
+  for (const [name, mutate] of [
+    ['LOCK.json', v => { v.humanVisualApproval = 'PENDING'; }],
+    ['LOCK.json', v => { v.colorsChangedFromSource = false; }],
+    ['LOCK.json', v => { v.authorizedColorMapping['#D4AF7C'] = '#EADDC7'; }],
+    ['PRODUCTION-VALIDATION.json', v => { v.svgAccessibility = 'FAIL'; }],
+    ['PRODUCTION-VALIDATION.json', v => { v.unauthorizedColorMappings = 1; }],
+    ['PRODUCTION-VALIDATION.json', v => { v.renderQA[0].result = 'FAIL'; }],
+  ]) {
+    const files = new Map(baseline), p = `${darkMicroProductionDirectory}/${name}`, v = JSON.parse(files.get(p));
+    mutate(v); files.set(p, Buffer.from(JSON.stringify(v)));
+    assert.ok(validateDarkMicroProduction(files, registry).length > 0);
+  }
+  const files = new Map(baseline); files.delete(`${darkMicroProductionDirectory}/MANIFEST.sha256`);
+  assert.ok(validateDarkMicroProduction(files, registry).includes('DARK_MICRO_PRODUCTION_MANIFEST'));
+});
+
+test('resolved dark micro requires production evidence and retains its own resolution independently of inverse mono', () => {
+  assert.equal(registry.gaps.find(g => g.gapId === 'dark-micro').status, 'RESOLVED');
+  assert.equal(registry.gaps.find(g => g.gapId === 'dark-monochrome').status, 'RESOLVED');
+  const changed = structuredClone(registry); changed.assets = changed.assets.filter(a => a.assetId !== 'dvg-logo-dark-micro-v1.1');
+  assert.ok(validateDarkMicroProduction(baseline, changed).includes('DARK_MICRO_PRODUCTION_REGISTRY'));
+  const files = new Map(baseline); files.delete(`${darkMicroProductionDirectory}/LOCK.json`);
+  assert.ok(validateDarkMicroProduction(files, registry).includes('DARK_MICRO_PRODUCTION_METADATA'));
 });

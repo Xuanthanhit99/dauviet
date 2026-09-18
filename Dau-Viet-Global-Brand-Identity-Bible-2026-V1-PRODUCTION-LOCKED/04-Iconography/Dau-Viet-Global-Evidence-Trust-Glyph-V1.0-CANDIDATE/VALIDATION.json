@@ -1,0 +1,67 @@
+{
+  "status": "PASS",
+  "geometryIdentity": "PASS",
+  "geometryFingerprint": "0cbf53352b002bec9d4372c0aee1852a2c6218a4bbcae476b3377ecb5e60e02c",
+  "pathCount": 4,
+  "circleCount": 1,
+  "transforms": 0,
+  "unexpectedGeometry": 0,
+  "flatVector": "PASS",
+  "svgAccessibility": "PASS",
+  "brokenReferences": 0,
+  "humanVisualApproval": "PENDING_FINAL_VISUAL_APPROVAL",
+  "qaColorPolicy": "QA_CONTEXT_ONLY_NOT_NEW_TOKENS",
+  "renderer": "Google Chrome headless, device scale factor1; actual SVG embedded byte-identically in isolated iframes;600x220 board; native crops;6x nearest-neighbor inspection",
+  "renderQA": [
+    {
+      "sizePx": 20,
+      "result": "PASS",
+      "file": "docs/brand/qa/evidence-v1.0/evidence-20px.png",
+      "foreground": "#1A1A1A",
+      "background": "#FFFFFF",
+      "findings": "Document and fold readable; lens/handle recognizable; approved open lower-right contour retained; no clipping or malformed junction; coherent strokes/negative space. Evidence silhouette distinct from brackets, check badge and plain source document."
+    },
+    {
+      "sizePx": 24,
+      "result": "PASS",
+      "file": "docs/brand/qa/evidence-v1.0/evidence-24px.png",
+      "foreground": "#1A1A1A",
+      "background": "#FFFFFF",
+      "findings": "Document and fold readable; lens/handle recognizable; approved open lower-right contour retained; no clipping or malformed junction; coherent strokes/negative space. Evidence silhouette distinct from brackets, check badge and plain source document."
+    },
+    {
+      "sizePx": 32,
+      "result": "PASS",
+      "file": "docs/brand/qa/evidence-v1.0/evidence-32px.png",
+      "foreground": "#1A1A1A",
+      "background": "#FFFFFF",
+      "findings": "Document and fold readable; lens/handle recognizable; approved open lower-right contour retained; no clipping or malformed junction; coherent strokes/negative space. Evidence silhouette distinct from brackets, check badge and plain source document."
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "docs/brand/qa/evidence-v1.0/evidence-20px.png",
+      "sha256": "d08accb9d529568fbddb75a91f18050fac7a0832e10714b7884e2e4b95a5105d"
+    },
+    {
+      "file": "docs/brand/qa/evidence-v1.0/evidence-24px.png",
+      "sha256": "f5099f15e1108ad7190d7854762acbb780fd8ab3081a6e98bf981bced1a67f55"
+    },
+    {
+      "file": "docs/brand/qa/evidence-v1.0/evidence-32px.png",
+      "sha256": "9d859c21a7bd7617efdd44de1f9948387d5a8714d3d728f3f6365c9bb4e7dfcd"
+    },
+    {
+      "file": "docs/brand/qa/evidence-v1.0/pixel-inspection.png",
+      "sha256": "c24cc79222827211f0e57a764e3597d71dd247d067c97eba7b91fc8cff772f76"
+    },
+    {
+      "file": "docs/brand/qa/evidence-v1.0/render-board.png",
+      "sha256": "b57f5a74b101020f7ffa37f718397f475054ae94c6a240f2fb24856e2ad0fb40"
+    },
+    {
+      "file": "docs/brand/qa/evidence-v1.0/render-input.html",
+      "sha256": "d2d3928588944e7265b113c76f0838a86ddb36db35ae956e96105b769765ebc6"
+    }
+  ]
+}

@@ -1977,6 +1977,280 @@
       "consumerStatus": "UNUSED_AT_AUDIT",
       "selectedProductionPaths": [],
       "disposition": "SOURCE_ONLY_NOT_APPROVED_FOR_APPLICATION_IMPORT"
+    },
+    {
+      "file": "01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-CANDIDATE/CANDIDATE.json",
+      "bytes": 1386,
+      "sha256": "34c2c6f1c2070a584d04a18c34a4c9ae4c7f8a3ede119728317bfc103f6b225a",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-CANDIDATE/MANIFEST.sha256",
+      "bytes": 335,
+      "sha256": "9247f0b520195ff755a20069af49cbd336fb2da09dae622555c2dd473a709a78",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-CANDIDATE/README.md",
+      "bytes": 1558,
+      "sha256": "5ff80ef73c9d8a45026750a555899cdb1a58ade748c4c76b08264b9161e1af20",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-CANDIDATE/VALIDATION.json",
+      "bytes": 5212,
+      "sha256": "887c95bb58ded10ed2878d2ba9e3a9b737d70215d749d60e3fd164e10f6590be",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-CANDIDATE/dvg-inverse-mono-v1.0.svg",
+      "bytes": 2056,
+      "sha256": "4c8d3e0be650f5e5ac67c70e44b11fd6101e5bffcab81712aa57686abdd5cb64",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/dvg-inverse-mono-v1.0.svg",
+      "bytes": 2056,
+      "sha256": "4c8d3e0be650f5e5ac67c70e44b11fd6101e5bffcab81712aa57686abdd5cb64",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [
+        "packages/brand-assets/logo/micro/dvg-inverse-mono-v1.0.svg"
+      ],
+      "disposition": "CANONICAL_DISTRIBUTION",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": true
+    },
+    {
+      "file": "01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/LOCK.json",
+      "bytes": 1435,
+      "sha256": "36565bebeae5dc2b4811c4ee1a39b72686fcf5cb7c200bbafb96d94b7174eaa8",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "PRODUCTION_LOCK_METADATA",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": false
+    },
+    {
+      "file": "01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/MANIFEST.sha256",
+      "bytes": 427,
+      "sha256": "15c63de58235612da96b3a82418a761b43919b40c0aac95f5d820168b439328b",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "PRODUCTION_LOCK_METADATA",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": false
+    },
+    {
+      "file": "01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/PRODUCTION-LOCK.md",
+      "bytes": 1775,
+      "sha256": "abd4b3696adbeccd2f8a0941089c890631ec8a16f43647ac7c7629cdac1ef05a",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "PRODUCTION_LOCK_METADATA",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": false
+    },
+    {
+      "file": "01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/PRODUCTION-VALIDATION.json",
+      "bytes": 5630,
+      "sha256": "8fa6c52e4c6a13e207c2d8d68e22e1be47d007aa762b6a8e4d3ea4ebe76b8f73",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "PRODUCTION_LOCK_METADATA",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": false
+    },
+    {
+      "file": "01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-PRODUCTION-LOCKED/README.md",
+      "bytes": 1841,
+      "sha256": "55819b2f0481d2d3d65676a5b22536c51054719d7cb46150a80c8326f50eb0aa",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "PRODUCTION_LOCK_METADATA",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json",
+      "bytes": 2303,
+      "sha256": "351213b88e97d34aa449db2e654c02d3ef6aefa60323fc3ddd20cc68985b08a8",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-CANDIDATE/dvg-trust-citation-v1.0.svg",
+      "bytes": 676,
+      "sha256": "db8d2a65ff86be3eb565af66dfa7da1fffb5806ebd8931b84b99002ef9ab9ad9",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-CANDIDATE/MANIFEST.sha256",
+      "bytes": 337,
+      "sha256": "092cec19d5c16839d528dd09fdbc852af78277a7e85cb4c1cd87d55406bf7392",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-CANDIDATE/README.md",
+      "bytes": 1889,
+      "sha256": "433e90a8e7868872635e682e4f1e01b40f686ac1fd8a8ac73693890abd726ac3",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-CANDIDATE/VALIDATION.json",
+      "bytes": 3695,
+      "sha256": "3855544b491537110ab8fb3f1d602c5ed63385c3d5caf5163f697817fc0af6a9",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/dvg-trust-citation-v1.0.svg",
+      "bytes": 676,
+      "sha256": "db8d2a65ff86be3eb565af66dfa7da1fffb5806ebd8931b84b99002ef9ab9ad9",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [
+        "packages/brand-icons/canonical/trust/dvg-trust-citation-v1.0.svg"
+      ],
+      "disposition": "CANONICAL_PRODUCTION_COPY",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": true
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/LOCK.json",
+      "bytes": 1450,
+      "sha256": "eef3cd69f650ff600b0dd2ef0960672e3dc20a777b8b9150f5b0f026b36f0c03",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "PRODUCTION_LOCK_METADATA",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/MANIFEST.sha256",
+      "bytes": 424,
+      "sha256": "963b194d7928fdb288c67f884e7b7eda5446c8df1feb4c4c579923a4963797c8",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "PRODUCTION_LOCK_METADATA",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/PRODUCTION-LOCK.md",
+      "bytes": 1602,
+      "sha256": "4807e52914492797b1c491d56e6b9b97ce9d24727a612869521a021d2733a748",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "PRODUCTION_LOCK_METADATA",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/PRODUCTION-VALIDATION.json",
+      "bytes": 4010,
+      "sha256": "957aeebf7d59d19c7b30f774337b2fe6aad1de9a892a38566dfda6e6763800d3",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "PRODUCTION_LOCK_METADATA",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-PRODUCTION-LOCKED/README.md",
+      "bytes": 1714,
+      "sha256": "efdb90a3929f9951e314fd9dcc630ee00a2b0a5eda2c0855e0c2363ee085d838",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "PRODUCTION_LOCK_METADATA",
+      "classification": "PRODUCTION_LOCKED",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json",
+      "bytes": 2302,
+      "sha256": "febcd92579925123a1e0acd84d25a677a1176118274e992495090337f093728e",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-CANDIDATE/dvg-trust-evidence-v1.0.svg",
+      "bytes": 701,
+      "sha256": "b680cdd3cd1d5b63721adb0033a9c8df85d43d0d3705719c5b19c65e49134739",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-CANDIDATE/MANIFEST.sha256",
+      "bytes": 333,
+      "sha256": "d9093901c8d3be21830e4e8190e9626a7cedb4b9edc11b032c0f67d5700f31a4",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-CANDIDATE/README.md",
+      "bytes": 1410,
+      "sha256": "1bead51a97a4a2488bd394853470bfcd1973b766dd6e0c60a7d8b76421bd6e64",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
+    },
+    {
+      "file": "04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-CANDIDATE/VALIDATION.json",
+      "bytes": 2949,
+      "sha256": "bf06ae225292ddfb2852ace8f55a3e89bf44b859f8e9ca95bc79d273d7df2109",
+      "consumerStatus": "UNUSED_AT_AUDIT",
+      "selectedProductionPaths": [],
+      "disposition": "CANDIDATE_NOT_APPROVED_FOR_APPLICATION_IMPORT",
+      "classification": "CANDIDATE",
+      "distribution": false
     }
   ]
 }

@@ -1,7 +1,10 @@
+import { validateEvidence, evidenceQa } from './validate-evidence.mjs';
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validateCitation, validateCitationProduction, citationQa } from './validate-citation.mjs';
+import { validateInverseMono, validateInverseProduction, inverseQa } from './validate-inverse-mono.mjs';
 import { validateDarkMicro, validateDarkMicroV11, validateDarkMicroProduction } from './validate-dark-micro.mjs';
 
 export const sourceDirectory = 'Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED';
@@ -51,7 +54,7 @@ export function collectSnapshot(root) {
       else files.set(file, readFileSync(path.join(root, file)));
     }
   }
-  for (const directory of [sourceDirectory, ...packageRoots, ...surfaceRoots, 'docs/brand/locks', 'docs/brand/qa/dark-micro-v1.0', 'docs/brand/qa/dark-micro-v1.1']) walk(directory);
+  for (const directory of [sourceDirectory, ...packageRoots, ...surfaceRoots, 'docs/brand/locks', 'docs/brand/qa/dark-micro-v1.0', 'docs/brand/qa/dark-micro-v1.1', inverseQa, citationQa, evidenceQa]) walk(directory);
   return files;
 }
 
@@ -162,14 +165,17 @@ export function validateSnapshot(files) {
   for (const gap of registry.gaps || []) {
     const resolvedHorizontal = gap.gapId === 'horizontal-logo' && gap.status === 'RESOLVED';
     const candidateDarkMicro = gap.gapId === 'dark-micro' && gap.status === 'RESOLVED';
-    if (!gap.gapId || gapIds.has(gap.gapId) || (!resolvedHorizontal && !candidateDarkMicro && gap.status !== 'CANONICAL_ASSET_GAP') || !gap.reason || !gap.phaseOwner || !gap.evidence?.length || gap.productionPath || gap.checksum) fail(`INVALID_GAP_RECORD ${gap.gapId}`);
+    const candidateInverse = gap.gapId === 'dark-monochrome' && gap.status === 'RESOLVED';
+    const candidateCitation = gap.gapId === 'glyph-citation' && gap.status === 'RESOLVED';
+    const candidateEvidence = gap.gapId === 'glyph-evidence' && gap.status === 'CANDIDATE_READY_FOR_APPROVAL';
+    if (!gap.gapId || gapIds.has(gap.gapId) || (!resolvedHorizontal && !candidateDarkMicro && !candidateInverse && !candidateCitation && !candidateEvidence && gap.status !== 'CANONICAL_ASSET_GAP') || !gap.reason || !gap.phaseOwner || !gap.evidence?.length || gap.productionPath || gap.checksum) fail(`INVALID_GAP_RECORD ${gap.gapId}`);
     if (resolvedHorizontal && (horizontalIds.length !== 3 || JSON.stringify(gap.resolvedBy) !== JSON.stringify(horizontalIds))) fail('INVALID_HORIZONTAL_GAP_RESOLUTION');
     gapIds.add(gap.gapId);
     for (const evidence of gap.evidence || []) if (!evidence.startsWith(`${sourceDirectory}/`) || !files.has(evidence)) fail(`MISSING_GAP_EVIDENCE ${gap.gapId}`);
   }
   if (!registry.gaps?.some(gap => gap.gapId === 'horizontal-logo' && gap.status === 'RESOLVED')) fail('UNRESOLVED_HORIZONTAL_GAP');
-  const actionable = ['dark-monochrome', 'glyph-citation', 'glyph-evidence', 'glyph-reconstruction', 'glyph-ai-translation', 'glyph-sensitive'];
-  if (JSON.stringify(registry.actionableDesignGapIds) !== JSON.stringify(actionable) || actionable.some(id => !registry.gaps?.some(gap => gap.gapId === id && gap.status === 'CANONICAL_ASSET_GAP'))) fail('ACTIONABLE_DESIGN_GAP_DRIFT');
+  const actionable = [ 'glyph-evidence', 'glyph-reconstruction', 'glyph-ai-translation', 'glyph-sensitive'];
+  if (JSON.stringify(registry.actionableDesignGapIds) !== JSON.stringify(actionable) || actionable.some(id => !registry.gaps?.some(gap => gap.gapId === id && gap.status === (id === 'glyph-evidence' ? 'CANDIDATE_READY_FOR_APPROVAL' : 'CANONICAL_ASSET_GAP')))) fail('ACTIONABLE_DESIGN_GAP_DRIFT');
   const inventorySources = new Set();
   for (const entry of inventory.files) {
     const original = canonicalSource.get(entry.file);
@@ -179,6 +185,11 @@ export function validateSnapshot(files) {
     if (JSON.stringify(destinations) !== JSON.stringify(entry.selectedProductionPaths)) fail(`INVENTORY_SELECTION_DRIFT ${entry.file}`);
   }
   if (inventorySources.size !== canonicalSource.size) fail('INVENTORY_COVERAGE_MISMATCH');
+  for (const error of validateEvidence(files, registry)) fail(error);
+  for (const error of validateCitation(files, registry)) fail(error);
+  for (const error of validateCitationProduction(files, registry)) fail(error);
+  for (const error of validateInverseMono(files, registry)) fail(error);
+  for (const error of validateInverseProduction(files, registry)) fail(error);
   for (const error of validateDarkMicro(files, registry)) fail(error);
   for (const error of validateDarkMicroV11(files, registry)) fail(error);
   for (const error of validateDarkMicroProduction(files, registry)) fail(error);
@@ -190,7 +201,7 @@ export function validateSnapshot(files) {
     ['--dv-focus-ring-light', '--dv-focus-light'], ['--dv-focus-ring-dark', '--dv-focus-dark'],
   ]);
   for (const [file, bytes] of files) {
-    if (file.startsWith(`${sourceDirectory}/`) || ['docs/brand/qa/dark-micro-v1.0/', 'docs/brand/qa/dark-micro-v1.1/'].some(dir => file.startsWith(dir))) continue;
+    if (file.startsWith(`${sourceDirectory}/`) || ['docs/brand/qa/dark-micro-v1.0/', 'docs/brand/qa/dark-micro-v1.1/', `${inverseQa}/`, `${citationQa}/`, `${evidenceQa}/`].some(dir => file.startsWith(dir))) continue;
     const inSurface = surfaceRoots.some(root => file.startsWith(`${root}/`));
     if (!production.has(file) && (file.includes('/canonical/') || /^packages\/brand-assets\/(logo|app-icons|favicon|social|store)\//.test(file))) fail(`UNREGISTERED_PRODUCTION_ASSET ${file}`);
     if (inSurface && /(?:logo|favicon|app[-_]?icon|time[-_]?trace|brand[-_]?mark).+\.(?:svg|png|webp|ico|jpe?g)$|(?:^|\/)(?:logo|favicon)\.(?:svg|png|ico)$/i.test(file)) fail(`UNREGISTERED_LOCAL_BRAND_ASSET ${file}`);

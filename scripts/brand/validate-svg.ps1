@@ -93,3 +93,25 @@ foreach ($asset in $registry.assets) {
     $checked++
 }
 Write-Output "SVG_XML_REFERENCES: $checked / $checked PASS"
+
+# Candidate is checked separately and never added to the production asset loop.
+$inverseDirectory = 'Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/01-Logo-Master-Geometry/Dau-Viet-Global-Inverse-Mono-V1.0-CANDIDATE'
+$inverse = Join-Path $repoRoot "$inverseDirectory/dvg-inverse-mono-v1.0.svg"
+$candidateMetadata = Get-Content -LiteralPath (Join-Path $repoRoot "$inverseDirectory/CANDIDATE.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+if ((Get-FileHash -LiteralPath $inverse -Algorithm SHA256).Hash.ToLowerInvariant() -cne $candidateMetadata.candidateSha256) { throw 'INVERSE_SVG_CHECKSUM_MISMATCH' }
+Assert-BrandSvg (Get-Content -LiteralPath $inverse -Raw -Encoding UTF8) $false
+Write-Output 'INVERSE_CANDIDATE_XML_REFERENCES: 1 / 1 PASS'
+
+$citationDirectory = 'Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Citation-Trust-Glyph-V1.0-CANDIDATE'
+$citation = Join-Path $repoRoot "$citationDirectory/dvg-trust-citation-v1.0.svg"
+$citationMetadata = Get-Content -LiteralPath (Join-Path $repoRoot "$citationDirectory/CANDIDATE.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+if ((Get-FileHash -LiteralPath $citation -Algorithm SHA256).Hash.ToLowerInvariant() -cne $citationMetadata.candidateSha256) { throw 'CITATION_SVG_CHECKSUM_MISMATCH' }
+Assert-BrandSvg (Get-Content -LiteralPath $citation -Raw -Encoding UTF8) $false
+Write-Output 'CITATION_CANDIDATE_XML_REFERENCES: 1 / 1 PASS'
+
+$evidenceDirectory = 'Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-CANDIDATE'
+$evidence = Join-Path $repoRoot "$evidenceDirectory/dvg-trust-evidence-v1.0.svg"
+$evidenceMetadata = Get-Content -LiteralPath (Join-Path $repoRoot "$evidenceDirectory/CANDIDATE.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+if ((Get-FileHash -LiteralPath $evidence -Algorithm SHA256).Hash.ToLowerInvariant() -cne $evidenceMetadata.candidateSha256) { throw 'EVIDENCE_SVG_CHECKSUM_MISMATCH' }
+Assert-BrandSvg (Get-Content -LiteralPath $evidence -Raw -Encoding UTF8) $false
+Write-Output 'EVIDENCE_CANDIDATE_XML_REFERENCES: 1 / 1 PASS'

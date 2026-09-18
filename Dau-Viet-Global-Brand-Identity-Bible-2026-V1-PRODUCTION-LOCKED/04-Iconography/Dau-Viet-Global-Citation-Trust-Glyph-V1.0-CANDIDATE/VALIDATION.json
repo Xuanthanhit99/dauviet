@@ -1,0 +1,96 @@
+{
+  "status": "PASS",
+  "sourceIntegrity": "PASS",
+  "geometryIdentity": "PASS",
+  "geometryFingerprint": "8a00ede16e6f11c089ce5fc901a705a03fa3ec63ace42a1557a6c08c4ebacfa2",
+  "geometryMethod": "Exact approved two path strings and circle attributes; identical geometry at every supported size",
+  "pathCount": 2,
+  "circleCount": 1,
+  "flatVector": "PASS",
+  "svgAccessibility": "PASS",
+  "brokenReferences": 0,
+  "humanVisualApproval": "PENDING_FINAL_VISUAL_APPROVAL",
+  "qaColorPolicy": "QA_CONTEXT_ONLY_NOT_NEW_TOKENS",
+  "qaContext": {
+    "foregroundToken": "primitive.charcoal_950",
+    "backgroundToken": "primitive.white",
+    "tokenFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/02-Color-Accessibility/dau-viet-global-color-system-final-validation-v1.1.json",
+    "meaning": "Neutral/light controlled inspection only, not a new Citation color restriction or token"
+  },
+  "renderMethod": {
+    "renderer": "Google Chrome headless",
+    "viewport": [
+      600,
+      220
+    ],
+    "deviceScaleFactor": 1,
+    "source": "Exact candidate SVG inline in three isolated data-HTML iframes; currentColor inherited from #1A1A1A wrapper on #FFFFFF",
+    "cropOrigins": [
+      [
+        40,
+        40
+      ],
+      [
+        220,
+        40
+      ],
+      [
+        400,
+        40
+      ]
+    ],
+    "pixelInspection": "6x Pillow NEAREST of native PNG crops"
+  },
+  "renderQA": [
+    {
+      "sizePx": 20,
+      "file": "docs/brand/qa/citation-v1.0/citation-20px.png",
+      "foreground": "#1A1A1A",
+      "background": "#FFFFFF",
+      "result": "PASS",
+      "inspection": "Brackets readable, balanced and unclipped; source point centered, visible and separate; negative space preserved, coherent strokes and stable silhouette. Same canonical geometry; no optical changes."
+    },
+    {
+      "sizePx": 24,
+      "file": "docs/brand/qa/citation-v1.0/citation-24px.png",
+      "foreground": "#1A1A1A",
+      "background": "#FFFFFF",
+      "result": "PASS",
+      "inspection": "Brackets readable, balanced and unclipped; source point centered, visible and separate; negative space preserved, coherent strokes and stable silhouette. Same canonical geometry; no optical changes."
+    },
+    {
+      "sizePx": 32,
+      "file": "docs/brand/qa/citation-v1.0/citation-32px.png",
+      "foreground": "#1A1A1A",
+      "background": "#FFFFFF",
+      "result": "PASS",
+      "inspection": "Brackets readable, balanced and unclipped; source point centered, visible and separate; negative space preserved, coherent strokes and stable silhouette. Same canonical geometry; no optical changes."
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "docs/brand/qa/citation-v1.0/citation-20px.png",
+      "sha256": "c470ccaefed09caa889c77883288feda18bb6dca147d5d4b6f66a130cd9bdead"
+    },
+    {
+      "file": "docs/brand/qa/citation-v1.0/citation-24px.png",
+      "sha256": "2d7e5c8df3ed1d723e78c4e28013baff14dd1cea5de15114d659dc7a7a187454"
+    },
+    {
+      "file": "docs/brand/qa/citation-v1.0/citation-32px.png",
+      "sha256": "1159645f7d1f8461ea73612f3dc91fee9d76e525ae1fb8d40c80ff56ede50f66"
+    },
+    {
+      "file": "docs/brand/qa/citation-v1.0/pixel-inspection.png",
+      "sha256": "308db230571fd8b31e8a3ec49ebdf5bd26fa9f0f31d63c88be8f1eae76b710c1"
+    },
+    {
+      "file": "docs/brand/qa/citation-v1.0/render-board.png",
+      "sha256": "b9a2febdb7030bc4806e07f3617d09d49392fd0798e5548a0612c84e14ca6acc"
+    },
+    {
+      "file": "docs/brand/qa/citation-v1.0/render-input.html",
+      "sha256": "f5a021a6030a37fdde102cb8b015e7eab71a9dc66fc203ce7352a5f0903909e1"
+    }
+  ]
+}

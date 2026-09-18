@@ -1,0 +1,145 @@
+{
+  "status": "PASS",
+  "sourceIntegrity": "PASS",
+  "microGeometryIdentity": "PASS",
+  "geometryProof": {
+    "method": "Exact byte replacement of four visible fills only; all metadata and geometry bytes retained",
+    "sourceFingerprint": "b15e6eb4bffbeeb6498d552542b2bc2752fb8fbe0ebe5d5995bc2a859c1c9fed",
+    "candidateFingerprint": "b15e6eb4bffbeeb6498d552542b2bc2752fb8fbe0ebe5d5995bc2a859c1c9fed",
+    "pathCountBefore": 6,
+    "pathCountAfter": 6,
+    "viewBox": "0 0 32 32",
+    "metadataChanged": false
+  },
+  "sourceVisibleColorCount": 1,
+  "candidateVisibleColorCount": 1,
+  "authorizedColorMapping": "PASS",
+  "unauthorizedColorMappings": 0,
+  "colorDifferences": [
+    {
+      "visiblePath": 1,
+      "attribute": "fill",
+      "from": "#111111",
+      "to": "#FFFFFF"
+    },
+    {
+      "visiblePath": 2,
+      "attribute": "fill",
+      "from": "#111111",
+      "to": "#FFFFFF"
+    },
+    {
+      "visiblePath": 3,
+      "attribute": "fill",
+      "from": "#111111",
+      "to": "#FFFFFF"
+    },
+    {
+      "visiblePath": 4,
+      "attribute": "fill",
+      "from": "#111111",
+      "to": "#FFFFFF"
+    }
+  ],
+  "svgAccessibility": "PASS",
+  "brokenReferences": 0,
+  "humanVisualApproval": "PENDING_FINAL_VISUAL_APPROVAL",
+  "contrast": {
+    "tokenFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/02-Color-Accessibility/dau-viet-global-color-system-final-validation-v1.1.json",
+    "method": "sRGB relative luminance; (Lmax + 0.05)/(Lmin + 0.05)",
+    "graphicalThreshold": 3,
+    "ratios": {
+      "#062A24": 15.39133217892321,
+      "#18463C": 10.605254732765168
+    },
+    "result": "PASS"
+  },
+  "renderMethod": {
+    "renderer": "Google Chrome headless",
+    "deviceScaleFactor": 1,
+    "viewport": [
+      560,
+      500
+    ],
+    "source": "render-input.html embeds four byte-identical candidate SVG data URIs",
+    "nativeCropOrigins": [
+      [
+        40,
+        40
+      ],
+      [
+        320,
+        40
+      ],
+      [
+        40,
+        240
+      ],
+      [
+        320,
+        240
+      ]
+    ],
+    "pixelInspection": "Pillow NEAREST resize of native crops at 6x; no geometry redraw"
+  },
+  "renderQA": [
+    {
+      "sizePx": 16,
+      "background": "#062A24",
+      "file": "docs/brand/qa/inverse-mono-v1.0/inverse-mono-16px-062a24.png",
+      "result": "PASS",
+      "review": "Actual-size and nearest-neighbor board inspection: silhouette recognizable, Journey and Reveal/aperture remain visible; no clipping, path collapse or disappearing geometry. Single white artwork; edge antialiasing blends with background."
+    },
+    {
+      "sizePx": 16,
+      "background": "#18463C",
+      "file": "docs/brand/qa/inverse-mono-v1.0/inverse-mono-16px-18463c.png",
+      "result": "PASS",
+      "review": "Actual-size and nearest-neighbor board inspection: silhouette recognizable, Journey and Reveal/aperture remain visible; no clipping, path collapse or disappearing geometry. Single white artwork; edge antialiasing blends with background."
+    },
+    {
+      "sizePx": 24,
+      "background": "#062A24",
+      "file": "docs/brand/qa/inverse-mono-v1.0/inverse-mono-24px-062a24.png",
+      "result": "PASS",
+      "review": "Actual-size and nearest-neighbor board inspection: silhouette recognizable, Journey and Reveal/aperture remain visible; no clipping, path collapse or disappearing geometry. Single white artwork; edge antialiasing blends with background."
+    },
+    {
+      "sizePx": 24,
+      "background": "#18463C",
+      "file": "docs/brand/qa/inverse-mono-v1.0/inverse-mono-24px-18463c.png",
+      "result": "PASS",
+      "review": "Actual-size and nearest-neighbor board inspection: silhouette recognizable, Journey and Reveal/aperture remain visible; no clipping, path collapse or disappearing geometry. Single white artwork; edge antialiasing blends with background."
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "docs/brand/qa/inverse-mono-v1.0/inverse-mono-16px-062a24.png",
+      "sha256": "c1e80a2f8ac9aca75da7c41948514e8567f2360fe89d9c71832312702a19d11c"
+    },
+    {
+      "file": "docs/brand/qa/inverse-mono-v1.0/inverse-mono-16px-18463c.png",
+      "sha256": "19d46dec28bbec58d2eef281c7e2e8396518536cfb8cca632b3c098290acd425"
+    },
+    {
+      "file": "docs/brand/qa/inverse-mono-v1.0/inverse-mono-24px-062a24.png",
+      "sha256": "c70f8eaadef0714ce12f6fd2cd31c403dae92a5d95a347ac8c6abb7d06d6fe3b"
+    },
+    {
+      "file": "docs/brand/qa/inverse-mono-v1.0/inverse-mono-24px-18463c.png",
+      "sha256": "ab44613b04f09a5b8bae9ad1356d501610512dac580038538ce35606d348447f"
+    },
+    {
+      "file": "docs/brand/qa/inverse-mono-v1.0/pixel-inspection-6x.png",
+      "sha256": "a747bbb2e3e81d09ef6f4ecb7386fc021ccec402bb84cb0e20d055e0f2d411a1"
+    },
+    {
+      "file": "docs/brand/qa/inverse-mono-v1.0/render-board.png",
+      "sha256": "95fdce206b2e40924a00e53e37dec07521b5e3a44c9fba1c36f81e57cbc807b2"
+    },
+    {
+      "file": "docs/brand/qa/inverse-mono-v1.0/render-input.html",
+      "sha256": "1ccbae88f6b9083a5574478e3d098cac4511c88d633d2ad39633a021ccde9ba4"
+    }
+  ]
+}

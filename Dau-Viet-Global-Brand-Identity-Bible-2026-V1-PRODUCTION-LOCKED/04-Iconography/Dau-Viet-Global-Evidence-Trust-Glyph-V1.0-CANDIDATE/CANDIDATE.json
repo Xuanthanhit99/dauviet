@@ -1,0 +1,68 @@
+{
+  "asset": "Evidence Trust Glyph",
+  "version": "1.0",
+  "family": "trust-glyph",
+  "semantic": "evidence",
+  "semanticDefinition": "Supporting historical material/document/artifact that can be inspected with identity, provenance and citation context.",
+  "metaphor": "Document + Inspection Lens",
+  "construction": "Evidence Trust Glyph Construction V1.0",
+  "constructionApproval": "APPROVED",
+  "approvalDate": "2026-09-18",
+  "lifecycle": "CANDIDATE",
+  "status": "CANDIDATE_READY_FOR_APPROVAL",
+  "humanVisualApproval": "PENDING_FINAL_VISUAL_APPROVAL",
+  "distribution": false,
+  "grid": 24,
+  "viewBox": "0 0 24 24",
+  "strokeWidth": 1.75,
+  "linecap": "round",
+  "linejoin": "round",
+  "fill": "none",
+  "stroke": "currentColor",
+  "geometry": {
+    "paths": [
+      "M6.5 4.5 H13 L16.5 8 V11",
+      "M13 4.5 V8 H16.5",
+      "M6.5 4.5 V19.5 H11",
+      "M17 17.5 L20 20.5"
+    ],
+    "circle": {
+      "cx": 14.5,
+      "cy": 15,
+      "r": 3.5
+    },
+    "order": [
+      "path1",
+      "path2",
+      "path3",
+      "circle",
+      "path4"
+    ],
+    "intentionalOpenDocument": true
+  },
+  "sizesPx": [
+    20,
+    24,
+    32
+  ],
+  "preferredSizePx": 24,
+  "minimumSizePx": 20,
+  "micro16": false,
+  "size16Status": "NOT_SUPPORTED",
+  "candidateFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-CANDIDATE/dvg-trust-evidence-v1.0.svg",
+  "candidateSha256": "b680cdd3cd1d5b63721adb0033a9c8df85d43d0d3705719c5b19c65e49134739",
+  "sourceEvidence": [
+    {
+      "file": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/dau-viet-global-phase04-iconography-semantic-system-v1.0.json",
+      "sha256": "1d2dc8261dec7a4036e18449befa628c2946d21ff1341a7469a724d32cabb030"
+    },
+    {
+      "file": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/dau-viet-global-phase04-1-icon-optical-context-qa-v1.0.json",
+      "sha256": "8f7b5a1a5280b80ec49e7f4c9158ae3fc79da573dd5c835dc0a6fdca195b4a5b"
+    },
+    {
+      "file": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/02-Color-Accessibility/dau-viet-global-color-system-final-validation-v1.1.json",
+      "sha256": "709cabd7d192f049b788eaa8b0d388c2535b01bc2b3b554307360cb7ba9edb58"
+    }
+  ]
+}
