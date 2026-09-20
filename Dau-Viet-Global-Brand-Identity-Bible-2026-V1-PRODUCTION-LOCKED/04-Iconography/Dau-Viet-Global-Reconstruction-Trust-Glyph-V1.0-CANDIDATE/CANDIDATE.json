@@ -1,0 +1,48 @@
+{
+  "asset": "Reconstruction Trust Glyph",
+  "version": "1.0",
+  "semantic": "reconstruction",
+  "semanticDefinition": "Reconstructed or interpretive visual/content material requiring explicit disclosure whenever it could be mistaken for documentary evidence.",
+  "metaphor": "Layered Frame + Offset Trace",
+  "construction": "Reconstruction Trust Glyph Construction V1.0",
+  "constructionApproval": "APPROVED",
+  "approvalDate": "2026-09-20",
+  "lifecycle": "CANDIDATE",
+  "status": "CANDIDATE_READY_FOR_APPROVAL",
+  "humanVisualApproval": "PENDING_FINAL_VISUAL_APPROVAL",
+  "distribution": false,
+  "grid": 24,
+  "viewBox": "0 0 24 24",
+  "strokeWidth": 1.75,
+  "linecap": "round",
+  "linejoin": "round",
+  "fill": "none",
+  "stroke": "currentColor",
+  "geometry": {
+    "backTrace": "M5 8.5 V18.5 H15",
+    "frontTrace": "M8.5 5 H18.5 V15",
+    "overlapFrame": "M8.5 8.5 H15 V15 H8.5 Z"
+  },
+  "pathCount": 3,
+  "circleCount": 0,
+  "transforms": 0,
+  "sizesPx": [
+    20,
+    24,
+    32
+  ],
+  "preferredSizePx": 24,
+  "minimumSizePx": 20,
+  "micro16": false,
+  "size16Status": "NOT_SUPPORTED",
+  "semanticGuards": [
+    "No checkmark",
+    "No sparkle or AI star",
+    "No Evidence document/lens",
+    "No Citation brackets/source point",
+    "No warning triangle/exclamation",
+    "No shield",
+    "No logo reuse"
+  ],
+  "candidateFile": "dvg-trust-reconstruction-v1.0.svg"
+}
