@@ -1552,11 +1552,15 @@
     {
       "gapId": "glyph-reconstruction",
       "phaseOwner": "Phase 04",
-      "status": "CANONICAL_ASSET_GAP",
-      "reason": "Required semantic has no dedicated canonical sprite symbol or explicitly approved alias.",
+      "status": "CANDIDATE_READY_FOR_APPROVAL",
+      "reason": "Reconstruction Construction V1.0 approved 2026-09-20: Layered Frame + Offset Trace; exact 24x24 three-path geometry recorded; structural/accessibility QA PASS; raster QA not claimed in remote GitHub session; final human visual approval pending; distribution false.",
       "evidence": [
-        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/dau-viet-global-phase04-iconography-semantic-system-v1.0.json"
-      ]
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/dau-viet-global-phase04-iconography-semantic-system-v1.0.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-CANDIDATE/VALIDATION.json",
+        "docs/brand/locks/reconstruction-trust-glyph-construction-v1.0.md"
+      ],
+      "candidateFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json"
     },
     {
       "gapId": "glyph-ai-translation",
