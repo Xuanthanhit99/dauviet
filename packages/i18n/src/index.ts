@@ -1,0 +1,1 @@
+export const supportedLocales=["vi","en"] as const; export type SupportedLocale=(typeof supportedLocales)[number]; export const canonicalLocale:SupportedLocale="vi"; export function normalizeLocale(value?:string):SupportedLocale{return value?.toLowerCase().startsWith("en")?"en":"vi"}
