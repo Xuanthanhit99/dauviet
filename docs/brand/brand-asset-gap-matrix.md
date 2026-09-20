@@ -29,7 +29,7 @@ All file references below resolve under the immutable Brand Bible unless explici
 | Citation | 04 | Citation Trust Glyph V1.0; final human approval 2026-09-18 | PRODUCTION_LOCKED; byte-identical brand-icons copy | 24x24; stroke 1.75; 20/24/32px QA PASS 3/3; 16px NOT_SUPPORTED | RESOLVED |
 | Evidence | 04 | Evidence Trust Glyph V1.0; final human approval 2026-09-20 | PRODUCTION_LOCKED; byte-identical brand-icons copy | Document + Inspection Lens; exact 24×24 geometry; QA 20/24/32 PASS; 16px NOT_SUPPORTED | RESOLVED |
 | Verified | 04 | CANONICAL_AVAILABLE — `dv-icon-verified` | `semantic.svg` | Retain bounded check and accessible semantics | 16/20/24/32px; 16px explicitly passes QA |
-| Reconstruction | 04 | Reconstruction Trust Glyph V1.0 candidate; construction approved 2026-09-20 | CANDIDATE only; distribution false | Layered Frame + Offset Trace; exact 24x24 geometry; structural QA PASS; raster QA not claimed; 16px NOT_SUPPORTED | CANDIDATE_READY_FOR_APPROVAL |
+| Reconstruction | 04 | Reconstruction Trust Glyph V1.0; final human approval 2026-09-20 | PRODUCTION_LOCKED; canonical brand-icons copy | Layered Frame + Offset Trace; structural/accessibility QA PASS; raster QA pending executable validation; 16px NOT_SUPPORTED | RESOLVED_WITH_RASTER_QA_PENDING |
 | AI Translation | 04 | CANONICAL_ASSET_GAP | No dedicated symbol | Preserve explicit language/disclosure text; no invented glyph | CANONICAL_ASSET_GAP |
 | Warning | 04 | CANONICAL_AVAILABLE — `dv-icon-warning` | `semantic.svg` | Retain triangle/exclamation and text | 16/20/24/32px; 16px explicitly passes QA |
 | Sensitive | 04 | CANONICAL_ASSET_GAP | No dedicated symbol | Explicit notice; no arbitrary shield substitution | CANONICAL_ASSET_GAP |
@@ -141,3 +141,8 @@ Human construction approval recorded 2026-09-20. Canonical metaphor is **Layered
 ## Pass #8.1 Reconstruction candidate
 
 Exact candidate geometry is recorded as three paths: `M5 8.5 V18.5 H15`, `M8.5 5 H18.5 V15`, and `M8.5 8.5 H15 V15 H8.5 Z`. Lifecycle is CANDIDATE; distribution false; structural/accessibility QA PASS. Raster QA is not claimed because this remote GitHub connector cannot execute the Chrome/Pillow QA pipeline. Final human visual approval is pending. See `brand-reconstruction-candidate-pass-08-1.md`.
+
+
+## Pass #8.2 Reconstruction production lock
+
+Final human visual approval recorded 2026-09-20. Reconstruction V1.0 is PRODUCTION_LOCKED and canonically distributed with unchanged approved geometry. Structural/accessibility QA PASS. Raster QA remains PENDING_EXECUTABLE_RENDER_QA and is not falsely claimed. The canonical design gap is resolved; executable raster QA remains a follow-up validation item. Remaining canonical design gaps: AI Translation and Sensitive.
