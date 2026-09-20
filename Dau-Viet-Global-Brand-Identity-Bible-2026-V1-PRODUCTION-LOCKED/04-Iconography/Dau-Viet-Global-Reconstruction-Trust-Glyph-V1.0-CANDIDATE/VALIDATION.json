@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "geometryIdentity": "PASS",
+  "geometryMethod": "Exact three approved candidate path strings; no transforms; identical geometry at all supported sizes",
+  "pathCount": 3,
+  "circleCount": 0,
+  "transforms": 0,
+  "unexpectedGeometry": 0,
+  "flatVector": "PASS",
+  "svgAccessibility": "PASS",
+  "brokenReferences": 0,
+  "semanticCollisionReview": "PASS",
+  "humanVisualApproval": "PENDING_FINAL_VISUAL_APPROVAL",
+  "qaMethod": "Deterministic structural and coordinate review. Remote GitHub session cannot execute the repository Chrome/Pillow raster QA pipeline.",
+  "sizeQA": [
+    {
+      "sizePx": 20,
+      "result": "STRUCTURAL_PASS",
+      "note": "Same canonical geometry; raster visual inspection pending executable QA runner."
+    },
+    {
+      "sizePx": 24,
+      "result": "STRUCTURAL_PASS",
+      "note": "Preferred size; same canonical geometry; raster visual inspection pending executable QA runner."
+    },
+    {
+      "sizePx": 32,
+      "result": "STRUCTURAL_PASS",
+      "note": "Same canonical geometry; raster visual inspection pending executable QA runner."
+    }
+  ],
+  "productionAuthorized": false
+}
