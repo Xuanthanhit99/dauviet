@@ -27,7 +27,7 @@ All file references below resolve under the immutable Brand Bible unless explici
 | Story | 04 | CANONICAL_AVAILABLE + CANONICAL_MICRO_AVAILABLE | `dv-icon-story`, `dv-icon-story-micro` | Existing resolver selects micro at 16px | Resolved at 16/20/24/32px |
 | Journey | 04 | CANONICAL_AVAILABLE + CANONICAL_MICRO_AVAILABLE | `dv-icon-journey`, `dv-icon-journey-micro` | Existing resolver selects micro at 16px | Resolved at 16/20/24/32px |
 | Citation | 04 | Citation Trust Glyph V1.0; final human approval 2026-09-18 | PRODUCTION_LOCKED; byte-identical brand-icons copy | 24x24; stroke 1.75; 20/24/32px QA PASS 3/3; 16px NOT_SUPPORTED | RESOLVED |
-| Evidence | 04 | CANONICAL_ASSET_GAP | No dedicated symbol | “document/lens” is not production vector geometry or an explicit sprite alias | CANONICAL_ASSET_GAP |
+| Evidence | 04 | Evidence Trust Glyph V1.0 candidate; construction approved 2026-09-18 | CANDIDATE only; distribution false | Document + Inspection Lens; exact 24×24 geometry; QA 20/24/32 PASS; 16px NOT_SUPPORTED | CANDIDATE_READY_FOR_APPROVAL |
 | Verified | 04 | CANONICAL_AVAILABLE — `dv-icon-verified` | `semantic.svg` | Retain bounded check and accessible semantics | 16/20/24/32px; 16px explicitly passes QA |
 | Reconstruction | 04 | CANONICAL_ASSET_GAP | No dedicated symbol | Preserve explicit disclosure; no invented layered glyph | CANONICAL_ASSET_GAP |
 | AI Translation | 04 | CANONICAL_ASSET_GAP | No dedicated symbol | Preserve explicit language/disclosure text; no invented glyph | CANONICAL_ASSET_GAP |
@@ -112,3 +112,10 @@ Exactly four actionable design gaps remain: Evidence, Reconstruction, AI Transla
 ## Pass #7 Evidence construction audit
 
 Evidence remains CANONICAL_ASSET_GAP. Phase04 JSON `/trust/evidence` contains `document/lens`: semantic shorthand, not deterministic construction or approved asset alias. Evidence-specific geometry/sizes are undefined; no16px micro asset exists. Generic system policy:20px minimum,24px preferred,32px supported. Missing:unambiguous metaphor approval and exact24x24 construction. No artwork/candidate created. Sources232/232 PASS; tests61/61 PASS. See `brand-evidence-resolution-pass-07.md`. Reconstruction,AI Translation,Sensitive unchanged; four actionable gaps remain.
+
+
+## Pass #7.1 Evidence candidate
+
+Evidence Trust Glyph V1.0 is **CANDIDATE_READY_FOR_APPROVAL**, not RESOLVED or PRODUCTION_LOCKED. The approved 2026-09-18 construction is Document + Inspection Lens with exact 24×24 geometry, 1.75px currentColor stroke, round caps/joins, fill none, four paths plus one circle, and an intentionally open lower-right document contour behind the lens. Actual SVG QA recorded in the candidate validation passes 20/24/32px; 16px is NOT_SUPPORTED. Candidate distribution remains false and final human visual approval is pending. Evidence: `brand-evidence-candidate-pass-07-1.md` and `qa/evidence-v1.0/`.
+
+Exactly four actionable design gaps remain in the registry: Evidence (pending candidate approval), Reconstruction, AI Translation and Sensitive. Earlier Pass #7 CANONICAL_ASSET_GAP text is a historical audit checkpoint.
