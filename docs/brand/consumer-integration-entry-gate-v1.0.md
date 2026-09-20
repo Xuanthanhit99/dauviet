@@ -53,3 +53,23 @@ Once freeze evidence is present, proceed with **Consumer Integration Pass #1 —
 - then implement in bounded passes with visual/accessibility QA.
 
 No backend/API/Prisma/database/.env or application code is changed by this gate.
+
+
+## Gate re-evaluation — 2026-09-20
+
+The earlier NOT_VERIFIED result was caused by a repository-search miss, not by absent backend evidence. Direct inspection of the authoritative backend handoff artifacts confirms:
+
+- `docs/backend/BACKEND_FREEZE_REPORT.md`: Phase 12 and Phase 12.1 explicitly record **BACKEND_FREEZE_PASS** and authorize Codex to begin Web, React Native/Expo and Admin work.
+- `docs/backend/LIVE_QA_REPORT.md`: six final freeze gates are backed by live evidence; Phase 12.1 closes the contribution-catalogue transaction/e2e gap.
+- `docs/backend/BACKEND_HANDOFF.md`: authoritative frontend contract and explicit Phase 12 live-validation status.
+- `docs/backend/openapi.json`: committed machine-generated OpenAPI contract.
+
+### Corrected entry decision
+
+- Brand contract readiness: **PASS**
+- Backend freeze evidence: **VERIFIED — BACKEND_FREEZE_PASS**
+- Consumer application code changes: **AUTHORIZED**
+- Existing consumer packages on `main`: **ABSENT**
+- Next action: **Pass #2 — Consumer Scaffold**, using the frozen backend handoff and locked product/brand baselines.
+
+This correction does not alter backend code or backend freeze evidence.
