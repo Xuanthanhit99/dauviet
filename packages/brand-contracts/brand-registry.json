@@ -1919,7 +1919,15 @@
         "keyboard-focus-qa",
         "reduced-motion-browser-qa"
       ],
-      "nextPass": "PASS_3_RUNTIME_QA_THEN_EXPLORE_MAP_V3"
+      "nextPass": "PASS_3_LOCKFILE_REFRESH_AND_CI_BUILD",
+      "runtimeQA": {
+        "status": "BLOCKED_LOCKFILE_REFRESH_REQUIRED",
+        "workflow": ".github/workflows/consumer-qa.yml",
+        "workflowRunObserved": false,
+        "blockingIssue": "pnpm-lock.yaml predates newly scaffolded consumer workspace importers",
+        "requiredAction": "Run pnpm install and commit the generated pnpm-lock.yaml; CI then verifies zero lockfile drift before typecheck/build.",
+        "browserQA": "PENDING_AFTER_BUILD_PASS"
+      }
     }
   }
 }
