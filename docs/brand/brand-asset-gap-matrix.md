@@ -166,3 +166,8 @@ Both exact candidate geometries are now deterministic and committed. Structural/
 ## Pass #9.2 final trust glyph production locks
 
 Final human visual approval recorded 2026-09-20. AI Translation and Sensitive V1.0 are PRODUCTION_LOCKED and canonically distributed unchanged. Canonical design gaps are resolved. Raster QA remains explicit executable follow-up.
+
+
+## Pass #10 post-lock Brand Bible / registry audit
+
+No actionable canonical design gaps remain (`actionableDesignGapIds = []`). People/Event/Time 16px remain governed non-actionable gaps: use canonical 20px minimum and do not invent micro artwork. Reconstruction/AI Translation/Sensitive raster QA remains executable validation follow-up, not a design gap. Native/PWA export sets and real social/store screenshots remain consumer-pipeline work. Registry readiness intentionally remains `FOUNDATION_ONLY`. See `brand-post-lock-audit-pass-10.md`.
