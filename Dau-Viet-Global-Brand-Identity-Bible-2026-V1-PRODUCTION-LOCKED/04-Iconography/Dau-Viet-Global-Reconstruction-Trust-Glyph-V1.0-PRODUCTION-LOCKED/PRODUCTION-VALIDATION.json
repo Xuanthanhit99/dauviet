@@ -1,0 +1,38 @@
+{
+  "status": "PASS_WITH_RASTER_QA_PENDING",
+  "sourceIntegrity": "PASS",
+  "geometryIdentity": "PASS",
+  "geometryMethod": "Exact approved three path strings; no transforms; identical geometry at every supported size",
+  "pathCount": 3,
+  "circleCount": 0,
+  "transforms": 0,
+  "unexpectedGeometry": 0,
+  "flatVector": "PASS",
+  "svgAccessibility": "PASS",
+  "brokenReferences": 0,
+  "semanticCollisionReview": "PASS",
+  "humanVisualApproval": "APPROVED",
+  "structuralSizeQA": [
+    {
+      "sizePx": 20,
+      "result": "PASS",
+      "geometry": "IDENTICAL"
+    },
+    {
+      "sizePx": 24,
+      "result": "PASS",
+      "geometry": "IDENTICAL"
+    },
+    {
+      "sizePx": 32,
+      "result": "PASS",
+      "geometry": "IDENTICAL"
+    }
+  ],
+  "rasterQA": "PENDING_EXECUTABLE_RENDER_QA",
+  "rasterQANote": "No raster PASS is claimed. The remote GitHub connector cannot execute the repository Chrome/Pillow rendering pipeline.",
+  "lifecycle": "PRODUCTION_LOCKED",
+  "approvalDate": "2026-09-20",
+  "candidateProductionContentIdentity": "PASS",
+  "productionDistributionContentIdentity": "PASS"
+}
