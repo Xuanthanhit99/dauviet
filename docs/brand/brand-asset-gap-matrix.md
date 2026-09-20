@@ -30,9 +30,9 @@ All file references below resolve under the immutable Brand Bible unless explici
 | Evidence | 04 | Evidence Trust Glyph V1.0; final human approval 2026-09-20 | PRODUCTION_LOCKED; byte-identical brand-icons copy | Document + Inspection Lens; exact 24×24 geometry; QA 20/24/32 PASS; 16px NOT_SUPPORTED | RESOLVED |
 | Verified | 04 | CANONICAL_AVAILABLE — `dv-icon-verified` | `semantic.svg` | Retain bounded check and accessible semantics | 16/20/24/32px; 16px explicitly passes QA |
 | Reconstruction | 04 | Reconstruction Trust Glyph V1.0; final human approval 2026-09-20 | PRODUCTION_LOCKED; canonical brand-icons copy | Layered Frame + Offset Trace; structural/accessibility QA PASS; raster QA pending executable validation; 16px NOT_SUPPORTED | RESOLVED_WITH_RASTER_QA_PENDING |
-| AI Translation | 04 | CANONICAL_ASSET_GAP | No dedicated symbol | Preserve explicit language/disclosure text; no invented glyph | CANONICAL_ASSET_GAP |
+| AI Translation | 04 | AI Translation Trust Glyph V1.0 candidate; construction approved 2026-09-20 | CANDIDATE only; distribution false | Language Pair + Disclosure Bridge; exact geometry; structural/accessibility QA PASS; raster QA pending; 16px NOT_SUPPORTED | CANDIDATE_READY_FOR_APPROVAL |
 | Warning | 04 | CANONICAL_AVAILABLE — `dv-icon-warning` | `semantic.svg` | Retain triangle/exclamation and text | 16/20/24/32px; 16px explicitly passes QA |
-| Sensitive | 04 | CANONICAL_ASSET_GAP | No dedicated symbol | Explicit notice; no arbitrary shield substitution | CANONICAL_ASSET_GAP |
+| Sensitive | 04 | Sensitive Trust Glyph V1.0 candidate; construction approved 2026-09-20 | CANDIDATE only; distribution false | Open Shield + Notice Point; exact geometry; structural/accessibility QA PASS; raster QA pending; 16px NOT_SUPPORTED | CANDIDATE_READY_FOR_APPROVAL |
 | People 16px | 04.1 | CANONICAL_ASSET_GAP | Resolver rejects size | Use canonical 20px minimum; no unapproved optical change | CANONICAL_ASSET_GAP |
 | Event 16px | 04.1 | CANONICAL_ASSET_GAP | Resolver rejects size | Use canonical 20px minimum | CANONICAL_ASSET_GAP |
 | Time 16px | 04.1 | CANONICAL_ASSET_GAP | Resolver rejects size | Use canonical 20px minimum | CANONICAL_ASSET_GAP |
@@ -156,3 +156,8 @@ AI Translation remains CANONICAL_ASSET_GAP; proposed construction direction is *
 ## AI Translation + Sensitive Construction V1.0 approval
 
 Human construction approval recorded 2026-09-20. AI Translation locks **Language Pair + Disclosure Bridge**; Sensitive locks **Open Shield + Notice Point**. Both inherit 24x24, currentColor 1.75px, round caps/joins, fill none, monochrome-first, 20/24/32px with 24px preferred and 20px minimum; 16px NOT_SUPPORTED. Exact coordinates remain the candidate-construction gate, so both gaps remain CANONICAL_ASSET_GAP until deterministic candidate geometry exists.
+
+
+## Pass #9.1 AI Translation + Sensitive candidates
+
+Both exact candidate geometries are now deterministic and committed. Structural/accessibility/semantic-collision QA PASS; raster QA remains pending executable validation. Both are CANDIDATE_READY_FOR_APPROVAL with distribution false. Final human visual approval is the next gate.
