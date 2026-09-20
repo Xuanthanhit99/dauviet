@@ -1851,6 +1851,16 @@
       "trust-disclosure",
       "native-pwa-export",
       "real-screen-visual-regression"
-    ]
+    ],
+    "entryGate": {
+      "version": "1.0",
+      "status": "WAITING_FOR_BACKEND_FREEZE_EVIDENCE",
+      "contract": "docs/brand/consumer-integration-entry-gate-v1.0.md",
+      "brandContractReadiness": "PASS",
+      "applicationIntegration": "NOT_STARTED",
+      "backendFreezeEvidence": "NOT_VERIFIED",
+      "consumerCodeChangesAuthorized": false,
+      "nextPassAfterGate": "CONSUMER_INTEGRATION_PASS_1_INVENTORY_MAPPING"
+    }
   }
 }
