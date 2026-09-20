@@ -15,7 +15,14 @@
     "api:test": "pnpm --filter @dauviet/api test",
     "api:test:e2e": "pnpm --filter @dauviet/api test:e2e",
     "infra:up": "docker compose up -d",
-    "infra:down": "docker compose down"
+    "infra:down": "docker compose down",
+    "web:dev": "pnpm --filter @dauviet/web dev",
+    "web:build": "pnpm --filter @dauviet/web build",
+    "web:typecheck": "pnpm --filter @dauviet/web typecheck",
+    "admin:dev": "pnpm --filter @dauviet/admin dev",
+    "admin:build": "pnpm --filter @dauviet/admin build",
+    "mobile:start": "pnpm --filter @dauviet/mobile start",
+    "consumer:typecheck": "pnpm --filter @dauviet/web typecheck && pnpm --filter @dauviet/admin typecheck && pnpm --filter @dauviet/mobile typecheck"
   },
   "devDependencies": {
     "prisma": "5.20.0",
