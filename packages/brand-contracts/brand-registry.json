@@ -1861,6 +1861,22 @@
       "backendFreezeEvidence": "NOT_VERIFIED",
       "consumerCodeChangesAuthorized": false,
       "nextPassAfterGate": "CONSUMER_INTEGRATION_PASS_1_INVENTORY_MAPPING"
+    },
+    "pass1": {
+      "status": "INVENTORY_COMPLETE",
+      "contract": "docs/brand/consumer-integration-pass-01-inventory-mapping.md",
+      "repositoryConsumerInventory": {
+        "api": "PRESENT",
+        "web": "ABSENT",
+        "mobile": "ABSENT",
+        "admin": "ABSENT"
+      },
+      "implementationBlocked": true,
+      "blockers": [
+        "BACKEND_FREEZE_EVIDENCE_NOT_VERIFIED",
+        "WEB_MOBILE_ADMIN_CONSUMERS_ABSENT"
+      ],
+      "nextPass": "PASS_2_CONSUMER_SCAFFOLD_OR_ATTACH_AFTER_BACKEND_FREEZE"
     }
   }
 }
