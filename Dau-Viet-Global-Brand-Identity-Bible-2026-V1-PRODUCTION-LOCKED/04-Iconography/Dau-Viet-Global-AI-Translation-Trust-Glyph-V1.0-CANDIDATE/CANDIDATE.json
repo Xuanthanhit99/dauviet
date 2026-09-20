@@ -1,0 +1,50 @@
+{
+  "asset": "AI Translation Trust Glyph",
+  "version": "1.0",
+  "semantic": "ai-translation",
+  "metaphor": "Language Pair + Disclosure Bridge",
+  "construction": "AI Translation Trust Glyph Construction V1.0",
+  "constructionApproval": "APPROVED",
+  "approvalDate": "2026-09-20",
+  "lifecycle": "CANDIDATE",
+  "status": "CANDIDATE_READY_FOR_APPROVAL",
+  "humanVisualApproval": "PENDING_FINAL_VISUAL_APPROVAL",
+  "distribution": false,
+  "grid": 24,
+  "viewBox": "0 0 24 24",
+  "strokeWidth": 1.75,
+  "linecap": "round",
+  "linejoin": "round",
+  "fill": "none",
+  "stroke": "currentColor",
+  "geometry": {
+    "sourceHorizontal": "M5 7 H10",
+    "sourceVertical": "M7.5 5 V9",
+    "targetHorizontal": "M14 15 H19",
+    "targetVertical": "M16.5 13 V17",
+    "bridge": "M9.5 12 H14.5",
+    "bridgeDisclosure": "M12.5 10 L14.5 12 L12.5 14"
+  },
+  "pathCount": 6,
+  "circleCount": 0,
+  "transforms": 0,
+  "sizesPx": [
+    20,
+    24,
+    32
+  ],
+  "preferredSizePx": 24,
+  "minimumSizePx": 20,
+  "micro16": false,
+  "size16Status": "NOT_SUPPORTED",
+  "semanticGuards": [
+    "No sparkle/AI star",
+    "No checkmark/Verified",
+    "No Evidence lens/document",
+    "No Citation brackets/source point",
+    "No Reconstruction layered frame",
+    "No Warning triangle",
+    "No Sensitive shield"
+  ],
+  "candidateFile": "dvg-trust-ai-translation-v1.0.svg"
+}
