@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "sourceIntegrity": "PASS",
+  "geometryIdentity": "PASS",
+  "geometryFingerprint": "0cbf53352b002bec9d4372c0aee1852a2c6218a4bbcae476b3377ecb5e60e02c",
+  "geometryMethod": "Exact approved four path strings and circle attributes; identical geometry at every supported size",
+  "pathCount": 4,
+  "circleCount": 1,
+  "transforms": 0,
+  "unexpectedGeometry": 0,
+  "flatVector": "PASS",
+  "svgAccessibility": "PASS",
+  "brokenReferences": 0,
+  "humanVisualApproval": "APPROVED",
+  "qaColorPolicy": "QA_CONTEXT_ONLY_NOT_NEW_TOKENS",
+  "renderQA": [
+    {
+      "sizePx": 20,
+      "file": "docs/brand/qa/evidence-v1.0/evidence-20px.png",
+      "result": "PASS"
+    },
+    {
+      "sizePx": 24,
+      "file": "docs/brand/qa/evidence-v1.0/evidence-24px.png",
+      "result": "PASS"
+    },
+    {
+      "sizePx": 32,
+      "file": "docs/brand/qa/evidence-v1.0/evidence-32px.png",
+      "result": "PASS"
+    }
+  ],
+  "lifecycle": "PRODUCTION_LOCKED",
+  "approvalDate": "2026-09-20",
+  "candidateSha256": "b680cdd3cd1d5b63721adb0033a9c8df85d43d0d3705719c5b19c65e49134739",
+  "productionSha256": "b680cdd3cd1d5b63721adb0033a9c8df85d43d0d3705719c5b19c65e49134739",
+  "distributionSha256": "b680cdd3cd1d5b63721adb0033a9c8df85d43d0d3705719c5b19c65e49134739",
+  "candidateProductionByteIdentity": "PASS",
+  "productionDistributionByteIdentity": "PASS"
+}
