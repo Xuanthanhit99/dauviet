@@ -131,3 +131,8 @@ Exactly three actionable design gaps remain: Reconstruction, AI Translation, Sen
 ## Pass #8 Reconstruction construction audit
 
 Reconstruction remains **CANONICAL_ASSET_GAP**. Phase 04 `layered symbol + disclosure` is semantic shorthand, not deterministic geometry. Exact metaphor/24x24 construction/layer relationship still require explicit approval before a candidate can be created. 20px minimum / 24px preferred / 32px supported is the inherited semantic policy; 16px is not authorized. No asset was invented and no application/backend code was changed. See `brand-reconstruction-resolution-pass-08.md`.
+
+
+## Reconstruction Construction V1.0 approval
+
+Human construction approval recorded 2026-09-20. Canonical metaphor is **Layered Frame + Offset Trace**. System construction is locked at 24x24, 1.75px currentColor stroke, round caps/joins, fill none; 20/24/32px supported with 24px preferred and 20px minimum; 16px NOT_SUPPORTED. Prohibited semantic collisions are recorded in `docs/brand/locks/reconstruction-trust-glyph-construction-v1.0.md`. Exact SVG coordinates remain the next candidate-construction gate; `glyph-reconstruction` therefore remains CANONICAL_ASSET_GAP until deterministic geometry and QA exist.
