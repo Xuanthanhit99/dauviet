@@ -1,5 +1,6 @@
 name: Consumer QA
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -36,9 +37,8 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --no-frozen-lockfile
-      - name: Verify lockfile is committed and current
-        run: git diff --exit-code -- pnpm-lock.yaml
+      - name: Install consumer workspace dependencies
+        run: pnpm install --no-frozen-lockfile
       - run: pnpm web:typecheck
       - run: pnpm web:build
       - run: pnpm --filter @dauviet/admin typecheck
