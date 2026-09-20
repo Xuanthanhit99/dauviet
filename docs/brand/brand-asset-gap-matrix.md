@@ -126,3 +126,8 @@ Exactly four actionable design gaps remain in the registry: Evidence (pending ca
 Evidence Trust Glyph V1.0 is **RESOLVED / PRODUCTION_LOCKED** after final human visual approval on 2026-09-20. Candidate, production and canonical distribution SVG bytes are identical (b680cdd3cd1d5b63721adb0033a9c8df85d43d0d3705719c5b19c65e49134739). Exact Document + Inspection Lens geometry is unchanged; QA 20/24/32 remains PASS 3/3; 16px remains NOT_SUPPORTED. Registry integration is complete. Evidence is removed from actionable design gaps.
 
 Exactly three actionable design gaps remain: Reconstruction, AI Translation, Sensitive. Backend/API/Prisma/DB/.env and application code remain unchanged.
+
+
+## Pass #8 Reconstruction construction audit
+
+Reconstruction remains **CANONICAL_ASSET_GAP**. Phase 04 `layered symbol + disclosure` is semantic shorthand, not deterministic geometry. Exact metaphor/24x24 construction/layer relationship still require explicit approval before a candidate can be created. 20px minimum / 24px preferred / 32px supported is the inherited semantic policy; 16px is not authorized. No asset was invented and no application/backend code was changed. See `brand-reconstruction-resolution-pass-08.md`.
