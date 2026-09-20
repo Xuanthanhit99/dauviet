@@ -1829,7 +1829,7 @@
     "status": "READY_FOR_CONSUMER_INTEGRATION",
     "scope": "BRAND_CONTRACTS_ONLY",
     "contract": "docs/brand/consumer-integration-readiness-v1.0.md",
-    "applicationIntegrationImplemented": false,
+    "applicationIntegrationImplemented": true,
     "backendSequencingPreserved": true,
     "pendingValidation": [
       "raster-qa-reconstruction",
@@ -1882,6 +1882,21 @@
         "WEB_MOBILE_ADMIN_CONSUMERS_ABSENT"
       ],
       "nextPass": "PASS_2_CONSUMER_SCAFFOLD"
+    },
+    "pass2": {
+      "status": "SCAFFOLD_CREATED",
+      "date": "2026-09-20",
+      "consumers": {
+        "web": "apps/web",
+        "mobile": "apps/mobile",
+        "admin": "apps/admin"
+      },
+      "sharedPackages": [
+        "packages/api-client",
+        "packages/i18n"
+      ],
+      "backendModified": false,
+      "nextPass": "PASS_3_WEB_APP_SHELL_AND_LOCKED_HOME_BASELINE"
     }
   }
 }
