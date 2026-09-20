@@ -1,0 +1,50 @@
+{
+  "asset": "Sensitive Trust Glyph",
+  "version": "1.0",
+  "semantic": "sensitive",
+  "metaphor": "Open Shield + Notice Point",
+  "construction": "Sensitive Trust Glyph Construction V1.0",
+  "constructionApproval": "APPROVED",
+  "approvalDate": "2026-09-20",
+  "lifecycle": "CANDIDATE",
+  "status": "CANDIDATE_READY_FOR_APPROVAL",
+  "humanVisualApproval": "PENDING_FINAL_VISUAL_APPROVAL",
+  "distribution": false,
+  "grid": 24,
+  "viewBox": "0 0 24 24",
+  "strokeWidth": 1.75,
+  "linecap": "round",
+  "linejoin": "round",
+  "fill": "none",
+  "stroke": "currentColor",
+  "geometry": {
+    "openShield": "M12 4.5 L18 7 V11.5 C18 15.5 15.5 18 12 19.5 C8.5 18 6 15.5 6 11.5 V7 L9.5 5.5",
+    "noticeStem": "M12 8.5 V12.5",
+    "noticePoint": {
+      "cx": 12,
+      "cy": 15.5,
+      "r": 0.75
+    }
+  },
+  "pathCount": 2,
+  "circleCount": 1,
+  "transforms": 0,
+  "sizesPx": [
+    20,
+    24,
+    32
+  ],
+  "preferredSizePx": 24,
+  "minimumSizePx": 20,
+  "micro16": false,
+  "size16Status": "NOT_SUPPORTED",
+  "semanticGuards": [
+    "No checkmark/Verified",
+    "No Warning triangle",
+    "No Evidence lens/document",
+    "No Citation brackets/source point",
+    "No Reconstruction layered frame",
+    "No AI Translation language pair"
+  ],
+  "candidateFile": "dvg-trust-sensitive-v1.0.svg"
+}
