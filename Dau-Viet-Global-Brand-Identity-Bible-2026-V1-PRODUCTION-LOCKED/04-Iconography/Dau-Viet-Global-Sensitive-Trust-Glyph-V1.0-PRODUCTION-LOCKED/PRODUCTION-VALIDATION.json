@@ -1,0 +1,35 @@
+{
+  "status": "PASS_WITH_RASTER_QA_PENDING",
+  "sourceIntegrity": "PASS",
+  "geometryIdentity": "PASS",
+  "pathCount": 2,
+  "circleCount": 1,
+  "transforms": 0,
+  "unexpectedGeometry": 0,
+  "flatVector": "PASS",
+  "svgAccessibility": "PASS",
+  "brokenReferences": 0,
+  "semanticCollisionReview": "PASS",
+  "humanVisualApproval": "APPROVED",
+  "structuralSizeQA": [
+    {
+      "sizePx": 20,
+      "result": "PASS",
+      "geometry": "IDENTICAL"
+    },
+    {
+      "sizePx": 24,
+      "result": "PASS",
+      "geometry": "IDENTICAL"
+    },
+    {
+      "sizePx": 32,
+      "result": "PASS",
+      "geometry": "IDENTICAL"
+    }
+  ],
+  "rasterQA": "PENDING_EXECUTABLE_RENDER_QA",
+  "rasterQANote": "No raster PASS claimed; remote GitHub connector cannot execute Chrome/Pillow render QA.",
+  "candidateProductionContentIdentity": "PASS",
+  "productionDistributionContentIdentity": "PASS"
+}
