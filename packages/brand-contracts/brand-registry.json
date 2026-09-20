@@ -1496,6 +1496,62 @@
       "lockSource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-PRODUCTION-LOCKED/LOCK.json",
       "validationSource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-PRODUCTION-LOCKED/PRODUCTION-VALIDATION.json",
       "repositoryLockFile": "docs/brand/locks/evidence-trust-glyph-v1.0.md"
+    },
+    {
+      "family": "trust-glyph",
+      "semantic": "reconstruction",
+      "semanticDefinition": "Reconstructed or interpretive visual/content material requiring explicit disclosure whenever it could be mistaken for documentary evidence.",
+      "metaphor": "Layered Frame + Offset Trace",
+      "construction": "Reconstruction Trust Glyph Construction V1.0",
+      "grid": 24,
+      "viewBox": "0 0 24 24",
+      "strokeWidth": 1.75,
+      "linecap": "round",
+      "linejoin": "round",
+      "fill": "none",
+      "stroke": "currentColor",
+      "geometry": {
+        "backTrace": "M5 8.5 V18.5 H15",
+        "frontTrace": "M8.5 5 H18.5 V15",
+        "overlapFrame": "M8.5 8.5 H15 V15 H8.5 Z"
+      },
+      "sizesPx": [
+        20,
+        24,
+        32
+      ],
+      "preferredSizePx": 24,
+      "minimumSizePx": 20,
+      "micro16": false,
+      "size16Status": "NOT_SUPPORTED",
+      "assetId": "dvg-trust-reconstruction-v1.0",
+      "canonicalName": "dvg-trust-reconstruction-v1.0.svg",
+      "assetClass": "trust-glyph",
+      "phaseOwner": "Phase 04",
+      "version": "1.0",
+      "status": "PRODUCTION_LOCKED",
+      "sourceFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-PRODUCTION-LOCKED/dvg-trust-reconstruction-v1.0.svg",
+      "productionPath": "packages/brand-icons/canonical/trust/dvg-trust-reconstruction-v1.0.svg",
+      "variants": [],
+      "platformUsage": [
+        "web",
+        "ios",
+        "android",
+        "admin"
+      ],
+      "locale": "all",
+      "theme": "all",
+      "supersedes": [],
+      "deprecated": false,
+      "roles": [
+        "CANONICAL_RECONSTRUCTION_TRUST_GLYPH"
+      ],
+      "distribution": true,
+      "approvalDate": "2026-09-20",
+      "rasterQAStatus": "PENDING_EXECUTABLE_RENDER_QA",
+      "lockSource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-PRODUCTION-LOCKED/LOCK.json",
+      "validationSource": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-PRODUCTION-LOCKED/PRODUCTION-VALIDATION.json",
+      "repositoryLockFile": "docs/brand/locks/reconstruction-trust-glyph-v1.0.md"
     }
   ],
   "foundationStatus": "READY_WITH_CANONICAL_ASSET_GAPS",
@@ -1552,15 +1608,18 @@
     {
       "gapId": "glyph-reconstruction",
       "phaseOwner": "Phase 04",
-      "status": "CANDIDATE_READY_FOR_APPROVAL",
-      "reason": "Reconstruction Construction V1.0 approved 2026-09-20: Layered Frame + Offset Trace; exact 24x24 three-path geometry recorded; structural/accessibility QA PASS; raster QA not claimed in remote GitHub session; final human visual approval pending; distribution false.",
+      "status": "RESOLVED_WITH_RASTER_QA_PENDING",
+      "reason": "Reconstruction Trust Glyph V1.0 PRODUCTION_LOCKED after final human visual approval 2026-09-20; candidate/production/distribution content identity PASS; structural/accessibility QA PASS; raster QA pending executable Chrome/Pillow validation.",
       "evidence": [
-        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/dau-viet-global-phase04-iconography-semantic-system-v1.0.json",
         "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json",
         "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-CANDIDATE/VALIDATION.json",
-        "docs/brand/locks/reconstruction-trust-glyph-construction-v1.0.md"
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-PRODUCTION-LOCKED/LOCK.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-PRODUCTION-LOCKED/PRODUCTION-VALIDATION.json"
       ],
-      "candidateFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json"
+      "candidateFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json",
+      "resolvedBy": [
+        "dvg-trust-reconstruction-v1.0"
+      ]
     },
     {
       "gapId": "glyph-ai-translation",
@@ -1702,7 +1761,6 @@
   ],
   "repositoryLockFile": "docs/brand/locks/horizontal-logo-v1.4.1.md",
   "actionableDesignGapIds": [
-    "glyph-reconstruction",
     "glyph-ai-translation",
     "glyph-sensitive"
   ],
