@@ -1,0 +1,4 @@
+@import "@dauviet/brand-tokens/styles.css";
+@import "@dauviet/brand-icons/styles.css";
+@import "@dauviet/brand-motion/styles.css";
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#fff;color:#1A1A1A}body{font-family:"Noto Sans",system-ui,sans-serif}a{color:inherit}.skip-link{position:absolute;left:-9999px}.skip-link:focus{left:1rem;top:1rem;z-index:100;background:#fff;padding:.75rem}.shell{min-height:100vh}.topbar{min-height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;border-bottom:1px solid #EADDC7}.brand{font-family:"Noto Serif",serif;font-weight:600}.nav{display:flex;gap:1.5rem}.hero{max-width:1200px;margin:auto;padding:8rem 5vw}.hero h1{font-family:"Noto Serif",serif;font-size:clamp(2.5rem,6vw,4rem);max-width:15ch}.hero p{font-size:1.125rem;line-height:1.7;max-width:60ch}@media(max-width:720px){.nav{display:none}.hero{padding-top:5rem}}
