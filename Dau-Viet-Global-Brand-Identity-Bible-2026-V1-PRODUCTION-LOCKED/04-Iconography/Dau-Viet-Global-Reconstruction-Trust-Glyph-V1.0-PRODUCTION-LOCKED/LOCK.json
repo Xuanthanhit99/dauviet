@@ -1,0 +1,41 @@
+{
+  "family": "trust-glyph",
+  "semantic": "reconstruction",
+  "semanticDefinition": "Reconstructed or interpretive visual/content material requiring explicit disclosure whenever it could be mistaken for documentary evidence.",
+  "metaphor": "Layered Frame + Offset Trace",
+  "construction": "Reconstruction Trust Glyph Construction V1.0",
+  "grid": 24,
+  "viewBox": "0 0 24 24",
+  "strokeWidth": 1.75,
+  "linecap": "round",
+  "linejoin": "round",
+  "fill": "none",
+  "stroke": "currentColor",
+  "geometry": {
+    "backTrace": "M5 8.5 V18.5 H15",
+    "frontTrace": "M8.5 5 H18.5 V15",
+    "overlapFrame": "M8.5 8.5 H15 V15 H8.5 Z"
+  },
+  "sizesPx": [
+    20,
+    24,
+    32
+  ],
+  "preferredSizePx": 24,
+  "minimumSizePx": 20,
+  "micro16": false,
+  "size16Status": "NOT_SUPPORTED",
+  "asset": "Reconstruction Trust Glyph",
+  "version": "1.0",
+  "status": "PRODUCTION_LOCKED",
+  "lifecycle": "PRODUCTION_LOCKED",
+  "distribution": true,
+  "constructionApprovalDate": "2026-09-20",
+  "finalHumanVisualApprovalDate": "2026-09-20",
+  "humanVisualApproval": "APPROVED",
+  "approvedCandidate": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Reconstruction-Trust-Glyph-V1.0-CANDIDATE/dvg-trust-reconstruction-v1.0.svg",
+  "canonicalFile": "dvg-trust-reconstruction-v1.0.svg",
+  "visualCandidateChangedAfterApproval": false,
+  "repositoryLock": "docs/brand/locks/reconstruction-trust-glyph-v1.0.md",
+  "rasterQAStatus": "PENDING_EXECUTABLE_RENDER_QA"
+}
