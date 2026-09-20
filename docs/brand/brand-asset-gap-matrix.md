@@ -151,3 +151,8 @@ Final human visual approval recorded 2026-09-20. Reconstruction V1.0 is PRODUCTI
 ## Pass #9 remaining trust glyph audit
 
 AI Translation remains CANONICAL_ASSET_GAP; proposed construction direction is **Language Pair + Disclosure Bridge**. Sensitive remains CANONICAL_ASSET_GAP; proposed construction direction is **Open Shield + Notice Point**. Both inherit the 24x24 / 1.75px / currentColor / round / fill-none grammar and proposed 20/24/32 size policy with 16px NOT_SUPPORTED. Exact geometry is intentionally deferred until explicit construction approval. See `brand-remaining-trust-glyph-audit-pass-09.md`.
+
+
+## AI Translation + Sensitive Construction V1.0 approval
+
+Human construction approval recorded 2026-09-20. AI Translation locks **Language Pair + Disclosure Bridge**; Sensitive locks **Open Shield + Notice Point**. Both inherit 24x24, currentColor 1.75px, round caps/joins, fill none, monochrome-first, 20/24/32px with 24px preferred and 20px minimum; 16px NOT_SUPPORTED. Exact coordinates remain the candidate-construction gate, so both gaps remain CANONICAL_ASSET_GAP until deterministic candidate geometry exists.
