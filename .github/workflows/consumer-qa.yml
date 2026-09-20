@@ -1,0 +1,44 @@
+name: Consumer QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "apps/admin/**"
+      - "apps/mobile/**"
+      - "packages/api-client/**"
+      - "packages/i18n/**"
+      - "packages/brand-*/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/consumer-qa.yml"
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "apps/admin/**"
+      - "apps/mobile/**"
+      - "packages/api-client/**"
+      - "packages/i18n/**"
+      - "packages/brand-*/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+jobs:
+  consumer-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm web:typecheck
+      - run: pnpm web:build
+      - run: pnpm --filter @dauviet/admin typecheck
+      - run: pnpm --filter @dauviet/admin build
+      - run: pnpm --filter @dauviet/mobile typecheck
