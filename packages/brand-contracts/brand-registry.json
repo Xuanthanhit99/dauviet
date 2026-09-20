@@ -1897,6 +1897,29 @@
       ],
       "backendModified": false,
       "nextPass": "PASS_3_WEB_APP_SHELL_AND_LOCKED_HOME_BASELINE"
+    },
+    "pass3": {
+      "status": "IMPLEMENTED_CODE_REVIEW_PENDING_RUNTIME_QA",
+      "date": "2026-09-20",
+      "scope": "WEB_APP_SHELL_HOME_V5_FOUNDATION",
+      "files": [
+        "apps/web/app/layout.tsx",
+        "apps/web/app/page.tsx",
+        "apps/web/app/globals.css"
+      ],
+      "canonicalRuntimeAssets": [
+        "dvg-logo-horizontal-primary-light-v1.4.1.svg",
+        "dau-viet-global-time-trace-v3-geometry-v1.3-dark.svg"
+      ],
+      "backendModified": false,
+      "pending": [
+        "pnpm-install-lockfile-refresh",
+        "next-build-typecheck",
+        "responsive-browser-visual-qa",
+        "keyboard-focus-qa",
+        "reduced-motion-browser-qa"
+      ],
+      "nextPass": "PASS_3_RUNTIME_QA_THEN_EXPLORE_MAP_V3"
     }
   }
 }
