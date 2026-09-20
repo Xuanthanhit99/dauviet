@@ -36,7 +36,9 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --no-frozen-lockfile
+      - name: Verify lockfile is committed and current
+        run: git diff --exit-code -- pnpm-lock.yaml
       - run: pnpm web:typecheck
       - run: pnpm web:build
       - run: pnpm --filter @dauviet/admin typecheck
