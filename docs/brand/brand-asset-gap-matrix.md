@@ -30,9 +30,9 @@ All file references below resolve under the immutable Brand Bible unless explici
 | Evidence | 04 | Evidence Trust Glyph V1.0; final human approval 2026-09-20 | PRODUCTION_LOCKED; byte-identical brand-icons copy | Document + Inspection Lens; exact 24×24 geometry; QA 20/24/32 PASS; 16px NOT_SUPPORTED | RESOLVED |
 | Verified | 04 | CANONICAL_AVAILABLE — `dv-icon-verified` | `semantic.svg` | Retain bounded check and accessible semantics | 16/20/24/32px; 16px explicitly passes QA |
 | Reconstruction | 04 | Reconstruction Trust Glyph V1.0; final human approval 2026-09-20 | PRODUCTION_LOCKED; canonical brand-icons copy | Layered Frame + Offset Trace; structural/accessibility QA PASS; raster QA pending executable validation; 16px NOT_SUPPORTED | RESOLVED_WITH_RASTER_QA_PENDING |
-| AI Translation | 04 | AI Translation Trust Glyph V1.0 candidate; construction approved 2026-09-20 | CANDIDATE only; distribution false | Language Pair + Disclosure Bridge; exact geometry; structural/accessibility QA PASS; raster QA pending; 16px NOT_SUPPORTED | CANDIDATE_READY_FOR_APPROVAL |
+| AI Translation | 04 | AI Translation Trust Glyph V1.0; final human approval 2026-09-20 | PRODUCTION_LOCKED; canonical brand-icons copy | Language Pair + Disclosure Bridge; structural/accessibility QA PASS; raster QA pending executable validation; 16px NOT_SUPPORTED | RESOLVED_WITH_RASTER_QA_PENDING |
 | Warning | 04 | CANONICAL_AVAILABLE — `dv-icon-warning` | `semantic.svg` | Retain triangle/exclamation and text | 16/20/24/32px; 16px explicitly passes QA |
-| Sensitive | 04 | Sensitive Trust Glyph V1.0 candidate; construction approved 2026-09-20 | CANDIDATE only; distribution false | Open Shield + Notice Point; exact geometry; structural/accessibility QA PASS; raster QA pending; 16px NOT_SUPPORTED | CANDIDATE_READY_FOR_APPROVAL |
+| Sensitive | 04 | Sensitive Trust Glyph V1.0; final human approval 2026-09-20 | PRODUCTION_LOCKED; canonical brand-icons copy | Open Shield + Notice Point; structural/accessibility QA PASS; raster QA pending executable validation; 16px NOT_SUPPORTED | RESOLVED_WITH_RASTER_QA_PENDING |
 | People 16px | 04.1 | CANONICAL_ASSET_GAP | Resolver rejects size | Use canonical 20px minimum; no unapproved optical change | CANONICAL_ASSET_GAP |
 | Event 16px | 04.1 | CANONICAL_ASSET_GAP | Resolver rejects size | Use canonical 20px minimum | CANONICAL_ASSET_GAP |
 | Time 16px | 04.1 | CANONICAL_ASSET_GAP | Resolver rejects size | Use canonical 20px minimum | CANONICAL_ASSET_GAP |
@@ -161,3 +161,8 @@ Human construction approval recorded 2026-09-20. AI Translation locks **Language
 ## Pass #9.1 AI Translation + Sensitive candidates
 
 Both exact candidate geometries are now deterministic and committed. Structural/accessibility/semantic-collision QA PASS; raster QA remains pending executable validation. Both are CANDIDATE_READY_FOR_APPROVAL with distribution false. Final human visual approval is the next gate.
+
+
+## Pass #9.2 final trust glyph production locks
+
+Final human visual approval recorded 2026-09-20. AI Translation and Sensitive V1.0 are PRODUCTION_LOCKED and canonically distributed unchanged. Canonical design gaps are resolved. Raster QA remains explicit executable follow-up.
