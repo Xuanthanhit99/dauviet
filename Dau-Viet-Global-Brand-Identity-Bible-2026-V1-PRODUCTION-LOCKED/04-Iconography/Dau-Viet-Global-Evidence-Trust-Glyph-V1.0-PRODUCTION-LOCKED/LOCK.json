@@ -1,0 +1,50 @@
+{
+  "family": "trust-glyph",
+  "semantic": "evidence",
+  "semanticDefinition": "Supporting historical material/document/artifact that can be inspected with identity, provenance and citation context.",
+  "metaphor": "Document + Inspection Lens",
+  "construction": "Evidence Trust Glyph Construction V1.0",
+  "grid": 24,
+  "viewBox": "0 0 24 24",
+  "strokeWidth": 1.75,
+  "linecap": "round",
+  "linejoin": "round",
+  "fill": "none",
+  "stroke": "currentColor",
+  "geometry": {
+    "paths": [
+      "M6.5 4.5 H13 L16.5 8 V11",
+      "M13 4.5 V8 H16.5",
+      "M6.5 4.5 V19.5 H11",
+      "M17 17.5 L20 20.5"
+    ],
+    "circle": {
+      "cx": 14.5,
+      "cy": 15,
+      "r": 3.5
+    },
+    "intentionalOpenDocument": true
+  },
+  "sizesPx": [
+    20,
+    24,
+    32
+  ],
+  "preferredSizePx": 24,
+  "minimumSizePx": 20,
+  "micro16": false,
+  "size16Status": "NOT_SUPPORTED",
+  "asset": "Evidence Trust Glyph",
+  "version": "1.0",
+  "status": "PRODUCTION_LOCKED",
+  "lifecycle": "PRODUCTION_LOCKED",
+  "distribution": true,
+  "approvalDate": "2026-09-20",
+  "constructionApprovalDate": "2026-09-18",
+  "humanVisualApproval": "APPROVED",
+  "approvedCandidate": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Evidence-Trust-Glyph-V1.0-CANDIDATE/dvg-trust-evidence-v1.0.svg",
+  "approvedCandidateSha256": "b680cdd3cd1d5b63721adb0033a9c8df85d43d0d3705719c5b19c65e49134739",
+  "canonicalFile": "dvg-trust-evidence-v1.0.svg",
+  "visualCandidateChangedAfterApproval": false,
+  "repositoryLock": "docs/brand/locks/evidence-trust-glyph-v1.0.md"
+}
