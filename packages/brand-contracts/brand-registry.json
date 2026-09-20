@@ -1823,5 +1823,34 @@
   ],
   "repositoryLockFile": "docs/brand/locks/horizontal-logo-v1.4.1.md",
   "actionableDesignGapIds": [],
-  "repositoryManifestChecksum": "05b14f6847b8f26cfcd70076d8a4eb3046907ab62a2f3d66985ebb7c626569b0"
+  "repositoryManifestChecksum": "05b14f6847b8f26cfcd70076d8a4eb3046907ab62a2f3d66985ebb7c626569b0",
+  "consumerIntegration": {
+    "version": "1.0",
+    "status": "READY_FOR_CONSUMER_INTEGRATION",
+    "scope": "BRAND_CONTRACTS_ONLY",
+    "contract": "docs/brand/consumer-integration-readiness-v1.0.md",
+    "applicationIntegrationImplemented": false,
+    "backendSequencingPreserved": true,
+    "pendingValidation": [
+      "raster-qa-reconstruction",
+      "raster-qa-ai-translation",
+      "raster-qa-sensitive",
+      "consumer-native-pwa-exports",
+      "real-product-marketing-screenshots"
+    ],
+    "gates": [
+      "canonical-path",
+      "registry-version",
+      "supported-size",
+      "theme-contrast",
+      "accessibility-input-targets",
+      "locale-font-scaling",
+      "reduced-motion",
+      "map-accessibility",
+      "media-provenance",
+      "trust-disclosure",
+      "native-pwa-export",
+      "real-screen-visual-regression"
+    ]
+  }
 }
