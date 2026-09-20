@@ -12,6 +12,10 @@
     "./styles.css": "./canonical/icons.css",
     "./semantic.svg": "./canonical/semantic.svg",
     "./micro.svg": "./canonical/micro.svg",
-    "./trust/dvg-trust-citation-v1.0.svg": "./canonical/trust/dvg-trust-citation-v1.0.svg"
+    "./trust/dvg-trust-citation-v1.0.svg": "./canonical/trust/dvg-trust-citation-v1.0.svg",
+    "./trust/dvg-trust-evidence-v1.0.svg": "./canonical/trust/dvg-trust-evidence-v1.0.svg",
+    "./trust/dvg-trust-reconstruction-v1.0.svg": "./canonical/trust/dvg-trust-reconstruction-v1.0.svg",
+    "./trust/dvg-trust-ai-translation-v1.0.svg": "./canonical/trust/dvg-trust-ai-translation-v1.0.svg",
+    "./trust/dvg-trust-sensitive-v1.0.svg": "./canonical/trust/dvg-trust-sensitive-v1.0.svg"
   }
 }
