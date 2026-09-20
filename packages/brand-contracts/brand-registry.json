@@ -1624,20 +1624,26 @@
     {
       "gapId": "glyph-ai-translation",
       "phaseOwner": "Phase 04",
-      "status": "CANONICAL_ASSET_GAP",
-      "reason": "Required semantic has no dedicated canonical sprite symbol or explicitly approved alias.",
+      "status": "CANDIDATE_READY_FOR_APPROVAL",
+      "reason": "AI Translation Construction V1.0 approved 2026-09-20; exact 24x24 candidate geometry recorded; structural/accessibility/semantic QA PASS; raster QA pending executable validation; final human visual approval pending; distribution false.",
       "evidence": [
-        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/dau-viet-global-phase04-iconography-semantic-system-v1.0.json"
-      ]
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-AI-Translation-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-AI-Translation-Trust-Glyph-V1.0-CANDIDATE/VALIDATION.json",
+        "docs/brand/locks/ai-translation-trust-glyph-construction-v1.0.md"
+      ],
+      "candidateFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-AI-Translation-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json"
     },
     {
       "gapId": "glyph-sensitive",
       "phaseOwner": "Phase 04",
-      "status": "CANONICAL_ASSET_GAP",
-      "reason": "Required semantic has no dedicated canonical sprite symbol or explicitly approved alias.",
+      "status": "CANDIDATE_READY_FOR_APPROVAL",
+      "reason": "Sensitive Construction V1.0 approved 2026-09-20; exact 24x24 candidate geometry recorded; structural/accessibility/semantic QA PASS; raster QA pending executable validation; final human visual approval pending; distribution false.",
       "evidence": [
-        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/dau-viet-global-phase04-iconography-semantic-system-v1.0.json"
-      ]
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Sensitive-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json",
+        "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Sensitive-Trust-Glyph-V1.0-CANDIDATE/VALIDATION.json",
+        "docs/brand/locks/sensitive-trust-glyph-construction-v1.0.md"
+      ],
+      "candidateFile": "Dau-Viet-Global-Brand-Identity-Bible-2026-V1-PRODUCTION-LOCKED/04-Iconography/Dau-Viet-Global-Sensitive-Trust-Glyph-V1.0-CANDIDATE/CANDIDATE.json"
     },
     {
       "gapId": "micro-people",
