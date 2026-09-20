@@ -1,0 +1,34 @@
+{
+  "status": "PASS",
+  "geometryIdentity": "PASS",
+  "geometryMethod": "Exact candidate primitive strings/attributes; no transforms; identical geometry at supported sizes",
+  "pathCount": 2,
+  "circleCount": 1,
+  "transforms": 0,
+  "unexpectedGeometry": 0,
+  "flatVector": "PASS",
+  "svgAccessibility": "PASS",
+  "brokenReferences": 0,
+  "semanticCollisionReview": "PASS",
+  "humanVisualApproval": "PENDING_FINAL_VISUAL_APPROVAL",
+  "qaMethod": "Deterministic structural, coordinate, accessibility and semantic review. Raster Chrome/Pillow QA not executable through remote GitHub connector.",
+  "sizeQA": [
+    {
+      "sizePx": 20,
+      "result": "STRUCTURAL_PASS",
+      "geometry": "IDENTICAL"
+    },
+    {
+      "sizePx": 24,
+      "result": "STRUCTURAL_PASS",
+      "geometry": "IDENTICAL"
+    },
+    {
+      "sizePx": 32,
+      "result": "STRUCTURAL_PASS",
+      "geometry": "IDENTICAL"
+    }
+  ],
+  "rasterQA": "PENDING_EXECUTABLE_RENDER_QA",
+  "productionAuthorized": false
+}
