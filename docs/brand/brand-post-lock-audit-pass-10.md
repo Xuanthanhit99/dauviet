@@ -48,3 +48,8 @@ Next production work should be **consumer integration readiness**, not additiona
 4. generate PWA/native/store/marketing derivatives only from the locked canonical inputs and real product output.
 
 No backend/API/Prisma/database/.env or application code changed in Pass #10.
+
+
+## Consumer integration readiness follow-up
+
+Consumer Integration Readiness V1.0 is now defined at `docs/brand/consumer-integration-readiness-v1.0.md` and registered machine-readably. Status is `READY_FOR_CONSUMER_INTEGRATION` for brand contracts only; `applicationIntegrationImplemented` remains false and backend-first sequencing is preserved. No application code was scaffolded or modified.
