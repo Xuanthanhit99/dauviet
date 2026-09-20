@@ -1854,13 +1854,19 @@
     ],
     "entryGate": {
       "version": "1.0",
-      "status": "WAITING_FOR_BACKEND_FREEZE_EVIDENCE",
+      "status": "PASS_BACKEND_FREEZE_VERIFIED",
       "contract": "docs/brand/consumer-integration-entry-gate-v1.0.md",
       "brandContractReadiness": "PASS",
       "applicationIntegration": "NOT_STARTED",
-      "backendFreezeEvidence": "NOT_VERIFIED",
-      "consumerCodeChangesAuthorized": false,
-      "nextPassAfterGate": "CONSUMER_INTEGRATION_PASS_1_INVENTORY_MAPPING"
+      "backendFreezeEvidence": "VERIFIED_BACKEND_FREEZE_PASS",
+      "consumerCodeChangesAuthorized": true,
+      "nextPassAfterGate": "CONSUMER_INTEGRATION_PASS_1_INVENTORY_MAPPING",
+      "evidence": [
+        "docs/backend/BACKEND_FREEZE_REPORT.md",
+        "docs/backend/LIVE_QA_REPORT.md",
+        "docs/backend/BACKEND_HANDOFF.md",
+        "docs/backend/openapi.json"
+      ]
     },
     "pass1": {
       "status": "INVENTORY_COMPLETE",
@@ -1871,12 +1877,11 @@
         "mobile": "ABSENT",
         "admin": "ABSENT"
       },
-      "implementationBlocked": true,
+      "implementationBlocked": false,
       "blockers": [
-        "BACKEND_FREEZE_EVIDENCE_NOT_VERIFIED",
         "WEB_MOBILE_ADMIN_CONSUMERS_ABSENT"
       ],
-      "nextPass": "PASS_2_CONSUMER_SCAFFOLD_OR_ATTACH_AFTER_BACKEND_FREEZE"
+      "nextPass": "PASS_2_CONSUMER_SCAFFOLD"
     }
   }
 }
