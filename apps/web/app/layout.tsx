@@ -1,0 +1,1 @@
+import "./globals.css"; export const metadata={title:"Dấu Việt Global",description:"Explore Places. Understand Stories."}; export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="vi"><body><a className="skip-link" href="#main">Bỏ qua đến nội dung</a>{children}</body></html>}
