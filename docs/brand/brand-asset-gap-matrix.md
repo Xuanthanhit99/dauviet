@@ -146,3 +146,8 @@ Exact candidate geometry is recorded as three paths: `M5 8.5 V18.5 H15`, `M8.5 5
 ## Pass #8.2 Reconstruction production lock
 
 Final human visual approval recorded 2026-09-20. Reconstruction V1.0 is PRODUCTION_LOCKED and canonically distributed with unchanged approved geometry. Structural/accessibility QA PASS. Raster QA remains PENDING_EXECUTABLE_RENDER_QA and is not falsely claimed. The canonical design gap is resolved; executable raster QA remains a follow-up validation item. Remaining canonical design gaps: AI Translation and Sensitive.
+
+
+## Pass #9 remaining trust glyph audit
+
+AI Translation remains CANONICAL_ASSET_GAP; proposed construction direction is **Language Pair + Disclosure Bridge**. Sensitive remains CANONICAL_ASSET_GAP; proposed construction direction is **Open Shield + Notice Point**. Both inherit the 24x24 / 1.75px / currentColor / round / fill-none grammar and proposed 20/24/32 size policy with 16px NOT_SUPPORTED. Exact geometry is intentionally deferred until explicit construction approval. See `brand-remaining-trust-glyph-audit-pass-09.md`.
