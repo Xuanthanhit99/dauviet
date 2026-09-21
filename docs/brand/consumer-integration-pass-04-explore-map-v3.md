@@ -38,3 +38,10 @@ The map deliberately uses a neutral internal background until an approved produc
 ## Consumer QA #21
 
 Run `35572005180`: **PASS**. Install, Web typecheck/build, Admin typecheck/build, and Mobile typecheck all completed successfully. Explore Map V3 runtime is compile/build verified. Remaining work is production basemap/style selection and browser visual/interaction QA; CI warnings about GitHub action Node runtime and future ubuntu-latest migration are non-blocking infrastructure notices.
+
+
+## Production basemap/style gate
+
+Production default is now OpenFreeMap Liberty via `NEXT_PUBLIC_MAP_STYLE_URL`, with an environment override so deployment can move to a self-hosted/custom Dấu Việt style without changing consumer code. Dấu Việt historical GeoJSON remains a separate overlay source and is never merged into or inferred from basemap content. OpenFreeMap is used as cartographic context only; attribution remains enabled through MapLibre.
+
+Consumer QA now starts the built Next.js application and performs production-server smoke requests for `/` and `/map` after build, adding a runtime route gate beyond static compilation. Pixel-level responsive/keyboard interaction evidence still requires a real browser runner and is not fabricated by this smoke gate.
