@@ -1941,7 +1941,7 @@
       }
     },
     "pass4": {
-      "status": "IMPLEMENTED_FOUNDATION_CI_QA_PENDING",
+      "status": "RUNTIME_IMPLEMENTED_CI_QA_PENDING",
       "date": "2026-09-21",
       "scope": "EXPLORE_MAP_V3",
       "paths": [
@@ -1957,9 +1957,17 @@
         "place-type-filter",
         "spatial-marker-treatment",
         "non-fabricated-empty-state",
-        "api-query-parameter-boundary"
+        "api-query-parameter-boundary",
+        "maplibre-runtime",
+        "viewport-bbox-api-binding",
+        "geojson-place-event-territory-layers",
+        "cluster-expansion",
+        "map-list-selection-sync",
+        "loading-error-empty-truncated-states",
+        "request-cancellation",
+        "reduced-motion-map-controls"
       ],
-      "next": "MAPLIBRE_RUNTIME_GEOJSON_API_BINDING"
+      "next": "CONSUMER_QA_THEN_PRODUCTION_BASEMAP_AND_VISUAL_QA"
     }
   }
 }
