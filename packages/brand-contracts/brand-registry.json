@@ -2059,6 +2059,23 @@
           "reducedMotion": "PASS"
         }
       }
+    },
+    "pass6": {
+      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "date": "2026-09-21",
+      "scope": "PLACE_DETAIL_V4",
+      "route": "/places/[slug]",
+      "apis": [
+        "GET /v1/places/{slug}",
+        "GET /v1/places/{slug}/timeline",
+        "GET /v1/places/{slug}/sources",
+        "GET /v1/places/{slug}/media",
+        "GET /v1/places/{slug}/stories",
+        "GET /v1/places/{slug}/journeys",
+        "GET /v1/places/{slug}/community"
+      ],
+      "backendChanged": false,
+      "next": "CONSUMER_QA_AND_PLACE_BROWSER_QA"
     }
   }
 }
