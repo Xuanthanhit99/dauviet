@@ -17,3 +17,19 @@ API integration boundary was upgraded so `@dauviet/api-client` supports typed qu
 No backend/API/Prisma/database/.env changes. No fake historical features, coordinates, imagery, ratings or reviews.
 
 Next implementation slice: MapLibre runtime binding, viewport-to-bbox requests, GeoJSON PLACE/EVENT/TERRITORY rendering, accessible result synchronization, and loading/error/truncated states against the frozen API contract.
+
+
+## Runtime integration — 2026-09-21
+
+Implemented:
+- MapLibre GL runtime and CSS;
+- viewport bounds → required `bbox` plus current `zoom` requests to `GET /v1/map/features`;
+- optional year/place-type query filters;
+- GeoJSON source with PLACE/EVENT point layers, TERRITORY polygon fill/line, and clustered point rendering;
+- cluster expansion and map/list selection synchronization;
+- accessible live loading/error/empty/result states;
+- backend `meta.truncated` handling with an explicit zoom-in instruction;
+- request cancellation during rapid viewport changes;
+- reduced-motion CSS treatment and 44px MapLibre controls.
+
+The map deliberately uses a neutral internal background until an approved production basemap/style source is configured; it does not invent geographic detail. Runtime compile/build QA is pending the next Consumer QA run.
