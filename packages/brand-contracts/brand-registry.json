@@ -1941,7 +1941,7 @@
       }
     },
     "pass4": {
-      "status": "RUNTIME_CI_PASS",
+      "status": "PRODUCTION_BASEMAP_IMPLEMENTED_QA_PENDING",
       "date": "2026-09-21",
       "scope": "EXPLORE_MAP_V3",
       "paths": [
@@ -1967,7 +1967,7 @@
         "request-cancellation",
         "reduced-motion-map-controls"
       ],
-      "next": "PRODUCTION_BASEMAP_STYLE_AND_VISUAL_QA",
+      "next": "CONSUMER_QA_FOR_BASEMAP_AND_PRODUCTION_SMOKE",
       "runtimeQA": {
         "status": "PASS",
         "workflow": "Consumer QA #21",
@@ -1980,6 +1980,23 @@
           "adminBuild": "PASS",
           "mobileTypecheck": "PASS"
         }
+      },
+      "basemap": {
+        "provider": "OpenFreeMap",
+        "style": "Liberty",
+        "defaultStyleUrl": "https://tiles.openfreemap.org/styles/liberty",
+        "override": "NEXT_PUBLIC_MAP_STYLE_URL",
+        "attribution": "MapLibre attribution control enabled",
+        "historicalOverlayIsolation": true
+      },
+      "browserQA": {
+        "productionServerSmoke": "IMPLEMENTED_IN_CI",
+        "routes": [
+          "/",
+          "/map"
+        ],
+        "pixelVisualQA": "PENDING_REAL_BROWSER_RUNNER",
+        "keyboardInteractionQA": "PENDING_REAL_BROWSER_RUNNER"
       }
     }
   }
