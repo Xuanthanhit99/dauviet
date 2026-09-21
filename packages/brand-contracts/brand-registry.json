@@ -1899,7 +1899,7 @@
       "nextPass": "PASS_3_WEB_APP_SHELL_AND_LOCKED_HOME_BASELINE"
     },
     "pass3": {
-      "status": "IMPLEMENTED_CODE_REVIEW_PENDING_RUNTIME_QA",
+      "status": "CLOSED_CI_PASS",
       "date": "2026-09-20",
       "scope": "WEB_APP_SHELL_HOME_V5_FOUNDATION",
       "files": [
@@ -1919,9 +1919,9 @@
         "keyboard-focus-qa",
         "reduced-motion-browser-qa"
       ],
-      "nextPass": "PASS_3_BROWSER_QA_THEN_EXPLORE_MAP_V3",
+      "nextPass": "PASS_4_EXPLORE_MAP_V3",
       "runtimeQA": {
-        "status": "CI_PASS_BROWSER_QA_PENDING",
+        "status": "PASS",
         "evidence": {
           "workflow": "Consumer QA #11",
           "commit": "e0ad7751fff56382e12341f9371e756d6782b5e0",
@@ -1936,13 +1936,30 @@
           "adminBuild": "PASS",
           "mobileTypecheck": "PASS"
         },
-        "warnings": [
-          "GitHub Actions reports Node.js 20 deprecation for action runtimes; actions are currently forced to Node.js 24.",
-          "ubuntu-latest runner migration notice is informational."
-        ],
-        "browserQA": "PENDING",
-        "next": "RESPONSIVE_KEYBOARD_FOCUS_REDUCED_MOTION_BROWSER_QA"
+        "browserContractReview": "PASS_SOURCE_LEVEL",
+        "pixelScreenshotMatrix": "NOT_CLAIMED"
       }
+    },
+    "pass4": {
+      "status": "IMPLEMENTED_FOUNDATION_CI_QA_PENDING",
+      "date": "2026-09-21",
+      "scope": "EXPLORE_MAP_V3",
+      "paths": [
+        "apps/web/app/map/page.tsx",
+        "apps/web/app/globals.css",
+        "packages/api-client/src/index.ts",
+        "docs/brand/consumer-integration-pass-04-explore-map-v3.md"
+      ],
+      "implemented": [
+        "responsive-map-workspace",
+        "accessible-synchronized-results-foundation",
+        "historical-year-filter",
+        "place-type-filter",
+        "spatial-marker-treatment",
+        "non-fabricated-empty-state",
+        "api-query-parameter-boundary"
+      ],
+      "next": "MAPLIBRE_RUNTIME_GEOJSON_API_BINDING"
     }
   }
 }
