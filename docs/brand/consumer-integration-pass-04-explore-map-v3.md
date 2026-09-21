@@ -33,3 +33,8 @@ Implemented:
 - reduced-motion CSS treatment and 44px MapLibre controls.
 
 The map deliberately uses a neutral internal background until an approved production basemap/style source is configured; it does not invent geographic detail. Runtime compile/build QA is pending the next Consumer QA run.
+
+
+## Consumer QA #21
+
+Run `35572005180`: **PASS**. Install, Web typecheck/build, Admin typecheck/build, and Mobile typecheck all completed successfully. Explore Map V3 runtime is compile/build verified. Remaining work is production basemap/style selection and browser visual/interaction QA; CI warnings about GitHub action Node runtime and future ubuntu-latest migration are non-blocking infrastructure notices.
