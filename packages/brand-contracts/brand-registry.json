@@ -2100,6 +2100,31 @@
           "reducedMotion": "PASS"
         }
       }
+    },
+    "pass7": {
+      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "date": "2026-09-21",
+      "scope": "STORY_EXPLORER_V4",
+      "route": "/stories/[slug]",
+      "api": "GET /v1/stories/{slug}",
+      "implemented": [
+        "structured-story-block-renderer",
+        "editorial-reading-layout",
+        "quote-citation-jumps",
+        "source-references",
+        "entity-references",
+        "callouts",
+        "media-reference-disclosure",
+        "place-person-event-connections",
+        "fact-certainty",
+        "citations",
+        "hero-media-disclosure",
+        "locale-fallback",
+        "loading-error-empty-states",
+        "responsive-layout"
+      ],
+      "backendChanged": false,
+      "next": "CONSUMER_QA_AND_STORY_BROWSER_QA"
     }
   }
 }
