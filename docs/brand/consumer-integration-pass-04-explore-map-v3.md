@@ -45,3 +45,10 @@ Run `35572005180`: **PASS**. Install, Web typecheck/build, Admin typecheck/build
 Production default is now OpenFreeMap Liberty via `NEXT_PUBLIC_MAP_STYLE_URL`, with an environment override so deployment can move to a self-hosted/custom Dấu Việt style without changing consumer code. Dấu Việt historical GeoJSON remains a separate overlay source and is never merged into or inferred from basemap content. OpenFreeMap is used as cartographic context only; attribution remains enabled through MapLibre.
 
 Consumer QA now starts the built Next.js application and performs production-server smoke requests for `/` and `/map` after build, adding a runtime route gate beyond static compilation. Pixel-level responsive/keyboard interaction evidence still requires a real browser runner and is not fabricated by this smoke gate.
+
+
+## Consumer QA — production runtime gate
+
+Run `35573006480`, job `106248491468`: **PASS**. Dependency install, Web typecheck/build, production Next.js server startup, readiness of `/map`, browser smoke requests for `/` and `/map`, Admin typecheck/build, and Mobile typecheck all completed successfully.
+
+This verifies the production basemap integration compiles and the built application serves the Map route in production mode. Pixel-level responsive visual QA, keyboard interaction, and reduced-motion behavior still require a real browser runner and are not claimed by the curl smoke gate.
