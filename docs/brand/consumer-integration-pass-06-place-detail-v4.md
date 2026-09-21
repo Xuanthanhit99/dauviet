@@ -1,0 +1,10 @@
+# Consumer Integration Pass #6 — Place Detail V4
+
+Date: 2026-09-21
+Status: **IMPLEMENTED — CI/BROWSER QA PENDING**
+
+Implemented `/places/[slug]` against the frozen public Place endpoints: detail, timeline, sources, media, stories, journeys, and community.
+
+Place V4 exposes the product's Time Travel / Then & Now / Evidence pillars without fabricating missing data. The detail hero uses backend-ready hero media only; historical dates come from backend formatted date responses; gallery items expose available provenance/rights metadata; public sources and public-visible community stories are rendered separately from editorial content.
+
+Sections: geographic hierarchy + hero, Understand, historical timeline, Then & Now/media, Story Explorer, Journeys, Evidence & Sources, and Community. Loading/error/empty/fallback states are explicit. Backend/API/Prisma/database remain unchanged.
