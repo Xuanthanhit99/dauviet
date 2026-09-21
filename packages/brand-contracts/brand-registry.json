@@ -2061,7 +2061,7 @@
       }
     },
     "pass6": {
-      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "status": "BROWSER_QA_IMPLEMENTED_CI_PENDING",
       "date": "2026-09-21",
       "scope": "PLACE_DETAIL_V4",
       "route": "/places/[slug]",
@@ -2075,7 +2075,29 @@
         "GET /v1/places/{slug}/community"
       ],
       "backendChanged": false,
-      "next": "CONSUMER_QA_AND_PLACE_BROWSER_QA"
+      "next": "CONSUMER_QA_THEN_CLOSE_PASS_6",
+      "browserQA": {
+        "runner": "Playwright Chromium",
+        "viewports": [
+          "390x844",
+          "834x1112",
+          "1536x960"
+        ],
+        "coverage": [
+          "responsive-no-overflow",
+          "historical-timeline",
+          "then-now-media-provenance",
+          "story-journey-links",
+          "evidence-sources",
+          "community",
+          "empty-states",
+          "locale-fallback",
+          "api-error",
+          "keyboard-focus",
+          "reduced-motion"
+        ],
+        "status": "CI_PENDING"
+      }
     }
   }
 }
