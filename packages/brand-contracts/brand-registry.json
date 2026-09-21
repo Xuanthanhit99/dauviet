@@ -2102,7 +2102,7 @@
       }
     },
     "pass7": {
-      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "status": "BROWSER_QA_IMPLEMENTED_CI_PENDING",
       "date": "2026-09-21",
       "scope": "STORY_EXPLORER_V4",
       "route": "/stories/[slug]",
@@ -2124,7 +2124,30 @@
         "responsive-layout"
       ],
       "backendChanged": false,
-      "next": "CONSUMER_QA_AND_STORY_BROWSER_QA"
+      "next": "CONSUMER_QA_THEN_CLOSE_PASS_7",
+      "browserQA": {
+        "status": "CI_PENDING",
+        "runner": "Playwright Chromium",
+        "viewports": [
+          "390x844",
+          "834x1112",
+          "1536x960"
+        ],
+        "checks": [
+          "responsive-no-overflow",
+          "structured-story-blocks",
+          "citation-navigation",
+          "connections",
+          "fact-certainty-and-evidence",
+          "historical-ai-media-disclosure",
+          "no-fabricated-media-url",
+          "empty-states",
+          "locale-fallback",
+          "api-error",
+          "keyboard-focus",
+          "reduced-motion"
+        ]
+      }
     }
   }
 }
