@@ -41,6 +41,17 @@ jobs:
         run: pnpm install --no-frozen-lockfile
       - run: pnpm web:typecheck
       - run: pnpm web:build
+      - name: Start Web for browser QA
+        run: pnpm --filter @dauviet/web start --hostname 127.0.0.1 --port 3001 > /tmp/dauviet-web.log 2>&1 &
+      - name: Wait for Web
+        run: |
+          for i in {1..30}; do curl -fsS http://127.0.0.1:3001/map >/dev/null && exit 0; sleep 1; done
+          cat /tmp/dauviet-web.log
+          exit 1
+      - name: Browser smoke QA
+        run: |
+          curl -fsS http://127.0.0.1:3001/ >/dev/null
+          curl -fsS http://127.0.0.1:3001/map >/dev/null
       - run: pnpm --filter @dauviet/admin typecheck
       - run: pnpm --filter @dauviet/admin build
       - run: pnpm --filter @dauviet/mobile typecheck
