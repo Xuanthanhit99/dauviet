@@ -1941,7 +1941,7 @@
       }
     },
     "pass4": {
-      "status": "PRODUCTION_BASEMAP_IMPLEMENTED_QA_PENDING",
+      "status": "PRODUCTION_RUNTIME_QA_PASS_VISUAL_BROWSER_PENDING",
       "date": "2026-09-21",
       "scope": "EXPLORE_MAP_V3",
       "paths": [
@@ -1967,15 +1967,20 @@
         "request-cancellation",
         "reduced-motion-map-controls"
       ],
-      "next": "CONSUMER_QA_FOR_BASEMAP_AND_PRODUCTION_SMOKE",
+      "next": "REAL_BROWSER_VISUAL_KEYBOARD_REDUCED_MOTION_QA_THEN_CLOSE",
       "runtimeQA": {
         "status": "PASS",
-        "workflow": "Consumer QA #21",
-        "runId": 35572005180,
+        "workflow": "Consumer QA",
+        "runId": 35573006480,
+        "jobId": 106248491468,
         "checks": {
           "install": "PASS",
           "webTypecheck": "PASS",
           "webBuild": "PASS",
+          "productionServerStart": "PASS",
+          "productionMapRouteReady": "PASS",
+          "browserSmokeHome": "PASS",
+          "browserSmokeMap": "PASS",
           "adminTypecheck": "PASS",
           "adminBuild": "PASS",
           "mobileTypecheck": "PASS"
