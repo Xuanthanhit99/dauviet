@@ -2016,7 +2016,7 @@
       }
     },
     "pass5": {
-      "status": "BROWSER_QA_IMPLEMENTED_CI_PENDING",
+      "status": "CLOSED_PRODUCTION_QA_PASS",
       "date": "2026-09-21",
       "scope": "DESTINATION_DETAIL_V4",
       "route": "/destinations/[slug]",
@@ -2036,26 +2036,28 @@
         "responsive-layout"
       ],
       "backendChanged": false,
-      "next": "CONSUMER_QA_THEN_CLOSE_PASS_5",
+      "next": "PASS_6_PLACE_DETAIL_V4",
       "browserQA": {
+        "status": "PASS",
+        "workflowRunId": 35625751485,
+        "jobId": 106419586591,
         "runner": "Playwright Chromium",
         "viewports": [
           "390x844",
           "834x1112",
           "1536x960"
         ],
-        "coverage": [
-          "responsive-no-overflow",
-          "destination-composition",
-          "place-story-journey-links",
-          "historical-turning-points",
-          "empty-states",
-          "translation-fallback",
-          "api-error",
-          "keyboard-focus",
-          "reduced-motion"
-        ],
-        "status": "CI_PENDING"
+        "checks": {
+          "responsiveNoOverflow": "PASS",
+          "destinationComposition": "PASS",
+          "placeStoryJourneyLinks": "PASS",
+          "historicalTurningPoints": "PASS",
+          "emptyStates": "PASS",
+          "translationFallback": "PASS",
+          "apiError": "PASS",
+          "keyboardFocus": "PASS",
+          "reducedMotion": "PASS"
+        }
       }
     }
   }
