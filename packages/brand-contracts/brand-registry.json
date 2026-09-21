@@ -2016,7 +2016,7 @@
       }
     },
     "pass5": {
-      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "status": "BROWSER_QA_IMPLEMENTED_CI_PENDING",
       "date": "2026-09-21",
       "scope": "DESTINATION_DETAIL_V4",
       "route": "/destinations/[slug]",
@@ -2036,7 +2036,27 @@
         "responsive-layout"
       ],
       "backendChanged": false,
-      "next": "CONSUMER_QA_AND_DESTINATION_BROWSER_QA"
+      "next": "CONSUMER_QA_THEN_CLOSE_PASS_5",
+      "browserQA": {
+        "runner": "Playwright Chromium",
+        "viewports": [
+          "390x844",
+          "834x1112",
+          "1536x960"
+        ],
+        "coverage": [
+          "responsive-no-overflow",
+          "destination-composition",
+          "place-story-journey-links",
+          "historical-turning-points",
+          "empty-states",
+          "translation-fallback",
+          "api-error",
+          "keyboard-focus",
+          "reduced-motion"
+        ],
+        "status": "CI_PENDING"
+      }
     }
   }
 }
