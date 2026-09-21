@@ -1919,21 +1919,29 @@
         "keyboard-focus-qa",
         "reduced-motion-browser-qa"
       ],
-      "nextPass": "PASS_3_CI_EXECUTION_AND_BROWSER_QA",
+      "nextPass": "PASS_3_BROWSER_QA_THEN_EXPLORE_MAP_V3",
       "runtimeQA": {
-        "status": "CI_EXECUTION_PENDING",
-        "workflow": ".github/workflows/consumer-qa.yml",
-        "workflowRunObserved": false,
-        "lockfileBlocker": "UNBLOCKED_IN_CI",
-        "installPolicy": "pnpm install --no-frozen-lockfile until consumer lockfile refresh is committed",
-        "checks": [
-          "web-typecheck",
-          "web-build",
-          "admin-typecheck",
-          "admin-build",
-          "mobile-typecheck"
+        "status": "CI_PASS_BROWSER_QA_PENDING",
+        "evidence": {
+          "workflow": "Consumer QA #11",
+          "commit": "e0ad7751fff56382e12341f9371e756d6782b5e0",
+          "conclusion": "SUCCESS",
+          "durationSeconds": 56
+        },
+        "checks": {
+          "install": "PASS",
+          "webTypecheck": "PASS",
+          "webBuild": "PASS",
+          "adminTypecheck": "PASS",
+          "adminBuild": "PASS",
+          "mobileTypecheck": "PASS"
+        },
+        "warnings": [
+          "GitHub Actions reports Node.js 20 deprecation for action runtimes; actions are currently forced to Node.js 24.",
+          "ubuntu-latest runner migration notice is informational."
         ],
-        "browserQA": "PENDING_AFTER_BUILD_PASS"
+        "browserQA": "PENDING",
+        "next": "RESPONSIVE_KEYBOARD_FOCUS_REDUCED_MOTION_BROWSER_QA"
       }
     }
   }
