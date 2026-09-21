@@ -12,7 +12,7 @@ const destination = {
   historicalTurningPoints:[{id:"e1",slug:"mot-su-kien",title:"Một sự kiện",date:{display:"Thế kỷ XI"},role:"TURNING_POINT"}],
   related:[],meta:{requestedLocale:"vi",resolvedLocale:"vi",fallbackApplied:false}
 };
-const fulfill=(page:any,data:any=destination,status=200)=>page.route("**/v1/destinations/**",r=>r.fulfill({status,contentType:"application/json",body:JSON.stringify(status===200?{success:true,data}:{success:false,error:{message:"Không tìm thấy điểm đến."}})}));
+const fulfill=(page:any,data:any=destination,status=200)=>page.route("**/v1/destinations/**",(r:any)=>r.fulfill({status,contentType:"application/json",body:JSON.stringify(status===200?{success:true,data}:{success:false,error:{message:"Không tìm thấy điểm đến."}})}));
 
 for(const vp of [{n:"mobile",width:390,height:844},{n:"tablet",width:834,height:1112},{n:"desktop",width:1536,height:960}]){
  test(`Destination V4 responsive ${vp.n}`,async({page})=>{await fulfill(page);await page.setViewportSize(vp);await page.goto("/destinations/ha-noi");await expect(page.getByRole("heading",{name:"Hà Nội",level:1})).toBeVisible();await expect(page.getByRole("heading",{name:"Những nơi tạo nên điểm đến"})).toBeVisible();await expect(page.getByRole("heading",{name:"Những bước ngoặt theo thời gian"})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBeTruthy();});
