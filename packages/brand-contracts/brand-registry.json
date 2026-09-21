@@ -2014,6 +2014,29 @@
           "reducedMotion": "PASS"
         }
       }
+    },
+    "pass5": {
+      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "date": "2026-09-21",
+      "scope": "DESTINATION_DETAIL_V4",
+      "route": "/destinations/[slug]",
+      "api": "GET /v1/destinations/{slug}",
+      "implemented": [
+        "localized-editorial-hero",
+        "published-hero-media-only",
+        "geography-context",
+        "themes",
+        "places",
+        "historical-turning-points",
+        "stories",
+        "journeys",
+        "translation-fallback-disclosure",
+        "explicit-empty-error-loading-states",
+        "trust-provenance-disclosure",
+        "responsive-layout"
+      ],
+      "backendChanged": false,
+      "next": "CONSUMER_QA_AND_DESTINATION_BROWSER_QA"
     }
   }
 }
