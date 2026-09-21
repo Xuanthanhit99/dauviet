@@ -22,6 +22,7 @@ type ApiEnvelope = { success: boolean; data: FeatureCollection; meta?: MapMeta }
 const EMPTY: FeatureCollection = { type: "FeatureCollection", features: [] };
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 const INITIAL_CENTER: [number, number] = [106.2, 16.4];
+const MAP_STYLE = process.env.NEXT_PUBLIC_MAP_STYLE_URL ?? "https://tiles.openfreemap.org/styles/liberty";
 
 function featureLabel(feature: DiscoveryFeature) {
   return feature.properties?.name ?? feature.properties?.title ?? feature.properties?.slug ?? "Dấu vết chưa có tên";
@@ -80,16 +81,13 @@ export default function ExploreMapClient() {
       center: INITIAL_CENTER,
       zoom: 4.4,
       attributionControl: false,
-      style: {
-        version: 8,
-        sources: {},
-        layers: [{ id: "background", type: "background", paint: { "background-color": "#EADDC7" } }],
-      },
+      style: MAP_STYLE,
     });
     mapRef.current = map;
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
     map.on("load", () => {
+      // Keep Dấu Việt historical overlays separate from the basemap source.
       map.addSource("dauviet", { type: "geojson", data: EMPTY, cluster: true, clusterRadius: 46, clusterMaxZoom: 10 });
       map.addLayer({ id: "territories-fill", type: "fill", source: "dauviet", filter: ["==", ["get", "entityType"], "TERRITORY"], paint: { "fill-color": "#18463C", "fill-opacity": 0.12 } });
       map.addLayer({ id: "territories-line", type: "line", source: "dauviet", filter: ["==", ["get", "entityType"], "TERRITORY"], paint: { "line-color": "#18463C", "line-width": 1.75 } });
