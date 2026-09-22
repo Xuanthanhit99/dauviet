@@ -2102,8 +2102,8 @@
       }
     },
     "pass7": {
-      "status": "BROWSER_QA_IMPLEMENTED_CI_PENDING",
-      "date": "2026-09-21",
+      "status": "CI_PENDING",
+      "date": "2026-09-22",
       "scope": "STORY_EXPLORER_V4",
       "route": "/stories/[slug]",
       "api": "GET /v1/stories/{slug}",
@@ -2125,8 +2125,22 @@
       ],
       "backendChanged": false,
       "next": "CONSUMER_QA_THEN_CLOSE_PASS_7",
-      "browserQA": {
+      "qaEvidence": "docs/brand/consumer-integration-pass-07-story-explorer-v4.md",
+      "additionalApi": "GET /v1/media/{id}",
+      "ci": {
         "status": "CI_PENDING",
+        "latestInspectedRunId": 35712769569,
+        "latestInspectedJobId": 106697054833,
+        "latestInspectedConclusion": "failure",
+        "reason": "Story selector ambiguity fixed and passed locally; updated frontend has not run in CI."
+      },
+      "browserQA": {
+        "status": "PASS",
+        "execution": "LOCAL_PRODUCTION_SERVER",
+        "suiteResult": "34/34 PASS",
+        "webTypecheck": "PASS",
+        "webBuild": "PASS",
+        "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON",
         "runner": "Playwright Chromium",
         "viewports": [
           "390x844",
@@ -2150,11 +2164,13 @@
       }
     },
     "pass8": {
-      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "status": "CI_PENDING",
       "date": "2026-09-22",
       "scope": "JOURNEY_DETAIL_V3",
       "route": "/journeys/[slug]",
       "api": "GET /v1/journeys/{slug}",
+      "additionalApi": "GET /v1/media/{id}",
+      "remoteBaselineCommit": "f2c62c3431c8e4a6835a9d82ba2f336dc04603bd",
       "implemented": [
         "editorial-journey-hero",
         "backend-only-journey-metrics",
@@ -2166,10 +2182,35 @@
         "hero-media-disclosure",
         "locale-fallback",
         "loading-error-empty-states",
-        "responsive-layout"
+        "responsive-layout",
+        "maplibre-real-stop-points",
+        "accessible-map-list-selection",
+        "exact-cms-media-resolution",
+        "keyboard-focus-and-reduced-motion",
+        "basemap-failure-list-alternative"
       ],
       "backendChanged": false,
-      "next": "CONSUMER_QA_AND_JOURNEY_BROWSER_QA"
+      "qaEvidence": "docs/brand/consumer-integration-pass-08-journey-detail-v3.md",
+      "browserQA": {
+        "status": "PASS",
+        "execution": "LOCAL_PRODUCTION_SERVER",
+        "suiteResult": "43/43 PASS",
+        "runner": "Playwright Chromium",
+        "webTypecheck": "PASS",
+        "webBuild": "PASS",
+        "viewports": ["390x844", "834x1112", "1536x960"],
+        "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON",
+        "evidenceDirectory": "apps/web/qa-evidence/pass-08"
+      },
+      "next": "CONSUMER_QA_THEN_CLOSE_PASS_8",
+      "nextLockedScreenAfterClosure": "COUNTRY_DETAIL_V1",
+      "ci": {
+        "status": "CI_PENDING",
+        "latestInspectedRunId": 35712769569,
+        "latestInspectedJobId": 106697054833,
+        "latestInspectedConclusion": "failure",
+        "reason": "Updated frontend and Journey browser tests have not run in CI."
+      }
     }
   }
 }
