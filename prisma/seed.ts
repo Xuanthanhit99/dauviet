@@ -58,6 +58,7 @@ import {
   GOLDEN_ERAS,
   GOLDEN_EVENTS,
   GOLDEN_COST_ASSUMPTIONS,
+  GOLDEN_INGESTION_SOURCES,
   GOLDEN_FACTS,
   GOLDEN_JOURNEYS,
   GOLDEN_PEOPLE,
@@ -1294,6 +1295,73 @@ async function main() {
     }
   }
   console.log(`G06 Cost Assumptions: ${GOLDEN_COST_ASSUMPTIONS.length} DRAFT-only GLOBAL fixture rows (never ACTIVE without explicit product/finance sign-off).`);
+
+  console.log('Seeding G06.5 Knowledge & Place Data Ingestion source/policy registry (see prisma/golden/knowledge-ingestion.ts)...');
+  for (const spec of GOLDEN_INGESTION_SOURCES) {
+    const source = await prisma.ingestionSource.upsert({
+      where: { code: spec.code },
+      update: { name: spec.name, sourceClass: spec.sourceClass as any, enabled: spec.enabled },
+      create: { code: spec.code, name: spec.name, sourceClass: spec.sourceClass as any, enabled: spec.enabled },
+    });
+    const policy = await prisma.ingestionSourcePolicy.upsert({
+      where: { sourceId: source.id },
+      update: {
+        enabled: spec.enabled,
+        transport: spec.policy.transport as any,
+        authRequired: spec.policy.authRequired,
+        rateLimitPerSecond: spec.policy.rateLimitPerSecond,
+        concurrencyLimit: spec.policy.concurrencyLimit,
+        maxRetries: spec.policy.maxRetries,
+        rawPayloadStorage: spec.policy.rawPayloadStorage as any,
+        normalizedStorageRight: spec.policy.normalizedStorageRight as any,
+        commercialUseRight: spec.policy.commercialUseRight as any,
+        mediaReusePolicy: spec.policy.mediaReusePolicy as any,
+        attributionRequirement: spec.policy.attributionRequirement as any,
+        licenseCode: spec.policy.licenseCode,
+        licenseUrl: spec.policy.licenseUrl,
+        sourceUrl: spec.policy.sourceUrl,
+        conditionalNotes: spec.policy.conditionalNotes,
+        retentionDays: spec.policy.retentionDays,
+        lastPolicyReviewAt: new Date(spec.evidence.accessedAt),
+      },
+      create: {
+        sourceId: source.id,
+        enabled: spec.enabled,
+        transport: spec.policy.transport as any,
+        authRequired: spec.policy.authRequired,
+        rateLimitPerSecond: spec.policy.rateLimitPerSecond,
+        concurrencyLimit: spec.policy.concurrencyLimit,
+        maxRetries: spec.policy.maxRetries,
+        rawPayloadStorage: spec.policy.rawPayloadStorage as any,
+        normalizedStorageRight: spec.policy.normalizedStorageRight as any,
+        commercialUseRight: spec.policy.commercialUseRight as any,
+        mediaReusePolicy: spec.policy.mediaReusePolicy as any,
+        attributionRequirement: spec.policy.attributionRequirement as any,
+        licenseCode: spec.policy.licenseCode,
+        licenseUrl: spec.policy.licenseUrl,
+        sourceUrl: spec.policy.sourceUrl,
+        conditionalNotes: spec.policy.conditionalNotes,
+        retentionDays: spec.policy.retentionDays,
+        lastPolicyReviewAt: new Date(spec.evidence.accessedAt),
+        policyVersion: 1,
+      },
+    });
+    const existingEvidence = await prisma.ingestionSourcePolicyEvidence.findFirst({
+      where: { sourcePolicyId: policy.id, sourceUrl: spec.evidence.sourceUrl },
+    });
+    if (!existingEvidence) {
+      await prisma.ingestionSourcePolicyEvidence.create({
+        data: {
+          sourcePolicyId: policy.id,
+          title: spec.evidence.title,
+          sourceUrl: spec.evidence.sourceUrl,
+          accessedAt: new Date(spec.evidence.accessedAt),
+          sourceType: spec.evidence.sourceType as any,
+        },
+      });
+    }
+  }
+  console.log(`G06.5 Knowledge Ingestion: ${GOLDEN_INGESTION_SOURCES.length} sources registered (${GOLDEN_INGESTION_SOURCES.filter((s) => s.enabled).length} enabled: ${GOLDEN_INGESTION_SOURCES.filter((s) => s.enabled).map((s) => s.code).join(', ')}).`);
 
   console.log(`Golden dataset seed complete (version ${GOLDEN_DATASET_VERSION}, reviewed ${GOLDEN_DATASET_REVIEWED_AT}).`);
   console.log(`Published ${publishedFactKeys.size}/${GOLDEN_FACTS.length + JAPAN_FACTS.length} golden historical facts (100% of published facts carry >=1 VERIFIED citation - see docs/backend/GOLDEN_DATASET.md).`);

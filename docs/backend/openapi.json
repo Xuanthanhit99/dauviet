@@ -40,7 +40,14 @@
                 "ATTRACTION",
                 "ACTIVITY",
                 "TRIP",
-                "TRIP_COST_ASSUMPTION"
+                "TRIP_COST_ASSUMPTION",
+                "INGESTION_SOURCE",
+                "INGESTION_JOB",
+                "INGESTION_RUN",
+                "INGESTION_CANDIDATE",
+                "TRIP_MEMBER",
+                "TRIP_INVITATION",
+                "TRIP_COLLABORATION_EVENT"
               ],
               "type": "string"
             }
@@ -5649,7 +5656,14 @@
                 "ATTRACTION",
                 "ACTIVITY",
                 "TRIP",
-                "TRIP_COST_ASSUMPTION"
+                "TRIP_COST_ASSUMPTION",
+                "INGESTION_SOURCE",
+                "INGESTION_JOB",
+                "INGESTION_RUN",
+                "INGESTION_CANDIDATE",
+                "TRIP_MEMBER",
+                "TRIP_INVITATION",
+                "TRIP_COLLABORATION_EVENT"
               ],
               "type": "string"
             }
@@ -10859,6 +10873,432 @@
         ]
       }
     },
+    "/v1/trips/{id}/members": {
+      "get": {
+        "operationId": "TripMembersController_listMembers",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/members/{memberId}": {
+      "patch": {
+        "operationId": "TripMembersController_updateMemberRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTripMemberRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "TripMembersController_removeMember",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveTripMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/leave": {
+      "post": {
+        "operationId": "TripMembersController_leave",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeaveTripDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/transfer-ownership": {
+      "post": {
+        "operationId": "TripMembersController_transferOwnership",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferTripOwnershipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/invitations": {
+      "post": {
+        "operationId": "TripMembersController_createInvitation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripInvitationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "TripMembersController_listInvitations",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/invitations/{invitationId}": {
+      "delete": {
+        "operationId": "TripMembersController_revokeInvitation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "invitationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/activity": {
+      "get": {
+        "operationId": "TripMembersController_listActivity",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trip-invitations/accept": {
+      "post": {
+        "operationId": "TripInvitationsController_accept",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptTripInvitationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trip-invitations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trip-invitations/decline": {
+      "post": {
+        "operationId": "TripInvitationsController_decline",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineTripInvitationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trip-invitations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/v1/admin/cost-assumptions": {
       "post": {
         "operationId": "CostAssumptionsController_create",
@@ -11062,6 +11502,547 @@
         },
         "tags": [
           "admin-cost-assumptions"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/sources": {
+      "get": {
+        "operationId": "IngestionAdminController_listSources",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "IngestionAdminController_createSource",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIngestionSourceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/sources/{id}": {
+      "get": {
+        "operationId": "IngestionAdminController_getSource",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/sources/{id}/enabled": {
+      "patch": {
+        "operationId": "IngestionAdminController_setEnabled",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetEnabledDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/sources/{id}/policy": {
+      "post": {
+        "operationId": "IngestionAdminController_upsertPolicy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertIngestionSourcePolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/sources/{id}/policy/evidence": {
+      "post": {
+        "operationId": "IngestionAdminController_addPolicyEvidence",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIngestionSourcePolicyEvidenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/jobs": {
+      "get": {
+        "operationId": "IngestionAdminController_listJobs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "IngestionAdminController_createJob",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIngestionJobDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/jobs/{id}": {
+      "get": {
+        "operationId": "IngestionAdminController_getJob",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/jobs/{id}/run": {
+      "post": {
+        "operationId": "IngestionAdminController_runJob",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/runs/{id}/cancel": {
+      "post": {
+        "operationId": "IngestionAdminController_cancelRun",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/candidates": {
+      "get": {
+        "operationId": "IngestionCandidatesController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "UNRESOLVED",
+                "AUTO_MATCHED",
+                "NEEDS_REVIEW",
+                "APPROVED",
+                "REJECTED",
+                "MERGED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceCode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion-candidates"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/candidates/{id}": {
+      "get": {
+        "operationId": "IngestionCandidatesController_getDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion-candidates"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/candidates/{id}/diff": {
+      "get": {
+        "operationId": "IngestionCandidatesController_getDiff",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion-candidates"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/candidates/{id}/approve": {
+      "post": {
+        "operationId": "IngestionCandidatesController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion-candidates"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/candidates/{id}/reject": {
+      "post": {
+        "operationId": "IngestionCandidatesController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCandidateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion-candidates"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/ingestion/candidates/{id}/merge": {
+      "post": {
+        "operationId": "IngestionCandidatesController_merge",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeCandidateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-ingestion-candidates"
         ],
         "security": [
           {
@@ -12883,7 +13864,14 @@
               "ATTRACTION",
               "ACTIVITY",
               "TRIP",
-              "TRIP_COST_ASSUMPTION"
+              "TRIP_COST_ASSUMPTION",
+              "INGESTION_SOURCE",
+              "INGESTION_JOB",
+              "INGESTION_RUN",
+              "INGESTION_CANDIDATE",
+              "TRIP_MEMBER",
+              "TRIP_INVITATION",
+              "TRIP_COLLABORATION_EVENT"
             ]
           },
           "entityId": {
@@ -13583,7 +14571,14 @@
               "ATTRACTION",
               "ACTIVITY",
               "TRIP",
-              "TRIP_COST_ASSUMPTION"
+              "TRIP_COST_ASSUMPTION",
+              "INGESTION_SOURCE",
+              "INGESTION_JOB",
+              "INGESTION_RUN",
+              "INGESTION_CANDIDATE",
+              "TRIP_MEMBER",
+              "TRIP_INVITATION",
+              "TRIP_COLLABORATION_EVENT"
             ]
           },
           "entityId": {
@@ -16202,6 +17197,110 @@
           "itemIds"
         ]
       },
+      "UpdateTripMemberRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "EDITOR",
+              "VIEWER"
+            ]
+          },
+          "expectedVersion": {
+            "type": "number",
+            "description": "Trip.version at read time - reuses G06 optimistic concurrency (spec section 27/36)."
+          }
+        },
+        "required": [
+          "role",
+          "expectedVersion"
+        ]
+      },
+      "RemoveTripMemberDto": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "number",
+            "description": "Trip.version at read time."
+          }
+        },
+        "required": [
+          "expectedVersion"
+        ]
+      },
+      "LeaveTripDto": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "number",
+            "description": "Trip.version at read time."
+          }
+        },
+        "required": [
+          "expectedVersion"
+        ]
+      },
+      "TransferTripOwnershipDto": {
+        "type": "object",
+        "properties": {
+          "newOwnerUserId": {
+            "type": "string",
+            "description": "userId of an existing ACCEPTED member - never a pending invitee, never a non-member (spec section 30/31)."
+          },
+          "expectedVersion": {
+            "type": "number",
+            "description": "Trip.version at read time."
+          }
+        },
+        "required": [
+          "newOwnerUserId",
+          "expectedVersion"
+        ]
+      },
+      "CreateTripInvitationDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "friend@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "EDITOR",
+              "VIEWER"
+            ]
+          }
+        },
+        "required": [
+          "email",
+          "role"
+        ]
+      },
+      "AcceptTripInvitationDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Raw bearer token from the invitation email - never accepted as a URL path/query parameter (see G07_PRE_IMPLEMENTATION_REPORT.md section 13)."
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "DeclineTripInvitationDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
       "CreateCostAssumptionDto": {
         "type": "object",
         "properties": {
@@ -16318,6 +17417,219 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "CreateIngestionSourceDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "WIKIDATA"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sourceClass": {
+            "type": "string",
+            "enum": [
+              "AUTHORITATIVE",
+              "STRUCTURED_KNOWLEDGE",
+              "GEOSPATIAL",
+              "MEDIA",
+              "OPERATIONAL_PROVIDER"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "sourceClass"
+        ]
+      },
+      "SetEnabledDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpsertIngestionSourcePolicyDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "API",
+              "DATASET",
+              "STRUCTURED_IMPORT"
+            ]
+          },
+          "authRequired": {
+            "type": "boolean"
+          },
+          "rateLimitPerSecond": {
+            "type": "number"
+          },
+          "rateLimitPerDay": {
+            "type": "number"
+          },
+          "concurrencyLimit": {
+            "type": "number"
+          },
+          "maxRetries": {
+            "type": "number"
+          },
+          "rawPayloadStorage": {
+            "type": "string",
+            "enum": [
+              "STORE_ALLOWED",
+              "STORE_LIMITED",
+              "REFERENCE_ONLY",
+              "PROHIBITED"
+            ]
+          },
+          "normalizedStorageRight": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "ALLOWED",
+              "PROHIBITED",
+              "CONDITIONAL"
+            ]
+          },
+          "commercialUseRight": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "ALLOWED",
+              "PROHIBITED",
+              "CONDITIONAL"
+            ]
+          },
+          "mediaReusePolicy": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "ALLOWED",
+              "PROHIBITED",
+              "CONDITIONAL"
+            ]
+          },
+          "attributionRequirement": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "REQUIRED",
+              "NOT_REQUIRED",
+              "CONDITIONAL"
+            ]
+          },
+          "licenseCode": {
+            "type": "string"
+          },
+          "licenseUrl": {
+            "type": "string"
+          },
+          "sourceUrl": {
+            "type": "string"
+          },
+          "conditionalNotes": {
+            "type": "string"
+          },
+          "cacheMaxAgeSeconds": {
+            "type": "number"
+          },
+          "retentionDays": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "transport",
+          "rawPayloadStorage",
+          "normalizedStorageRight",
+          "commercialUseRight",
+          "attributionRequirement"
+        ]
+      },
+      "CreateIngestionSourcePolicyEvidenceDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "sourceUrl": {
+            "type": "string"
+          },
+          "accessedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "sourceUrl",
+          "accessedAt",
+          "sourceType"
+        ]
+      },
+      "CreateIngestionJobDto": {
+        "type": "object",
+        "properties": {
+          "sourceCode": {
+            "type": "string",
+            "example": "WIKIDATA"
+          },
+          "scopeType": {
+            "type": "string",
+            "enum": [
+              "COUNTRY",
+              "REGION",
+              "CITY",
+              "DESTINATION",
+              "EXTERNAL_IDS",
+              "EXPLICIT_ENTITY_SET"
+            ]
+          },
+          "scopeParams": {
+            "type": "object",
+            "description": "Bounded scope payload, e.g. { \"ids\": [\"Q1858\"] } - never {} (spec section 18)."
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourceCode",
+          "scopeType",
+          "scopeParams"
+        ]
+      },
+      "ReviewCandidateDto": {
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "MergeCandidateDto": {
+        "type": "object",
+        "properties": {
+          "mergedIntoCandidateId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mergedIntoCandidateId"
         ]
       }
     }

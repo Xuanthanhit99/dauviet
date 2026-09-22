@@ -1199,3 +1199,45 @@ requests them. G05 offer-evidence integration into the Cost Engine, previously a
 **is no longer deferred** — see above.
 **G07 has not been started. "Backend V2 Freeze" has not been claimed by G06 or any phase before
 G12, consistent with every prior phase.**
+
+## G06.5 - Knowledge & Place Data Ingestion
+
+Status: **COMPLETE_WITH_ENVIRONMENT_BLOCKERS** (see `docs/backend/G06_5_FINAL_REPORT.md` for the
+full 105-gate audit — 105/105 PASS or PASS-NOT-APPLICABLE, 0 FAIL, 0 UNVERIFIED). Sits between G06
+and G07; does not reopen G00-G06, does not start G07, does not claim Backend V2 Freeze.
+
+Adds a bounded external-knowledge ingestion pipeline (`IngestionSource` →
+`IngestionSourcePolicy`-gated fetch → `IngestionRecord` → normalization → `IngestionCandidate` →
+`EntityResolution` → human review/promotion → `ExternalEntityIdentity`/provenance), entirely
+additive (12 new tables, zero relations into canonical Place/Person/Event/Fact/geography models —
+resolved entities are referenced the same generic, soft `(entityType, entityId)` way
+`EntityAlias`/`AuditLog` already do). Reuses G02's `ProviderRightState`/
+`ProviderAttributionRequirement` enums and fail-closed gate discipline, and the Phase 12.1
+transactional-audit pattern throughout.
+
+Three adapters are **live**: Wikidata (CC0, keyless), Wikimedia Commons (per-file license, keyless,
+metadata-only), UNESCO (`data.unesco.org`'s DataHub API, CC BY-SA 4.0, keyless — not the paid
+`whc.unesco.org` XML transport). Three are contract-complete but not live in this environment:
+GeoNames and Google Places (no real credential configured — fails closed, per spec, not a defect),
+and OpenStreetMap/Nominatim (permanently disabled by design — public usage policy prohibits the
+bulk use this pipeline would need).
+
+Live-verified end to end for the VN/JP pilot scope (Hà Nội, Hội An, Huế, Kyoto, Tokyo — Nara
+excluded, not present in the Golden Dataset): real Wikidata/Commons/UNESCO calls, real candidate
+resolution against existing canonical entities, real review/approval, and a real Commons media
+promotion (real file download, checksum, MinIO upload, `MediaAsset` row with correct license/
+attribution). Idempotency, change detection, ambiguity handling, checkpoint/resume after a
+simulated crash, RBAC, audit trail, and public-endpoint isolation during induced failures were all
+live-proven, not just unit-tested. Three real defects were found during the live pilot and fixed in
+the same pass (a promotion-atomicity gap, an SSRF redirect-bypass, and a seed-idempotency
+regression-guard gap) — see the Final Report's "Defects found and fixed live" section.
+
+Regression: 1022/1022 unit tests, 62/62 e2e tests (zero regression to any pre-existing suite,
+including G06's own `trips`/`cost-assumptions` e2e specs). OpenAPI regenerated clean, 287 path
+templates (+15 from G06's 272).
+
+**Known scope boundary, not a defect:** new-canonical-entity promotion is implemented for `PLACE`
+and `MEDIA` candidates only. `COUNTRY`/`REGION`/`CITY`/`DESTINATION`/`PERSON`/`EVENT`/
+`HISTORICAL_FACT` candidates can be resolved and identity-linked to an *existing* canonical entity
+(the dominant real case for this pilot, since the Golden Dataset already has VN/JP geography), but
+creating a brand-new one of these types is out of this phase's scope.

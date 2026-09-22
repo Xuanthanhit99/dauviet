@@ -466,6 +466,20 @@ enum EntityKind {
   // reordered.
   TRIP
   TRIP_COST_ASSUMPTION
+  // Added G06.5 (Global Backend V2 Extension, Knowledge & Place Data
+  // Ingestion) - additive-only, lets AuditLog point precisely at an
+  // ingestion-domain row. No existing value renamed/removed/reordered.
+  INGESTION_SOURCE
+  INGESTION_JOB
+  INGESTION_RUN
+  INGESTION_CANDIDATE
+  // Added G07 (Global Backend V2 Extension, Trip Collaboration) -
+  // additive-only, lets AuditLog point precisely at a membership/
+  // invitation/collaboration-activity row. No existing value renamed/
+  // removed/reordered.
+  TRIP_MEMBER
+  TRIP_INVITATION
+  TRIP_COLLABORATION_EVENT
 }
 
 enum CommunityStoryType {
@@ -667,9 +681,13 @@ model User {
   factReviews         FactReview[]
   thenNowComparisons  ThenNowComparison[]
   // Added G06 (Global Backend V2 Extension, Trip Planner + Cost Engine) -
-  // a Trip is private, single-owner planning data (spec section 9/59) - no
-  // TripMember/collaboration model yet (deferred to G07).
+  // a Trip is private, single-owner planning data (spec section 9/59).
   trips               Trip[]
+  // Added G07 (Global Backend V2 Extension, Trip Collaboration) - additive.
+  tripMemberships          TripMember[]
+  tripInvitationsSent      TripInvitation[]         @relation("TripInvitationInviter")
+  tripInvitationsAccepted  TripInvitation[]         @relation("TripInvitationAcceptedBy")
+  tripCollaborationEvents  TripCollaborationEvent[]
 
   avatarMedia MediaAsset? @relation("UserAvatar", fields: [avatarMediaId], references: [id])
 
@@ -4265,6 +4283,12 @@ model Trip {
   items               TripItem[]
   transportLegs       TripTransportLeg[]
   estimateGenerations TripCostEstimateGeneration[]
+  // G07 - Trip Collaboration (additive). Owner is NOT materialized as a
+  // TripMember row (see docs/backend/G07_PRE_IMPLEMENTATION_REPORT.md
+  // section 8) - Trip.ownerId remains the sole ownership authority.
+  members             TripMember[]
+  invitations         TripInvitation[]
+  collaborationEvents TripCollaborationEvent[]
 
   @@index([ownerId, archivedAt])
   @@index([ownerId, status])
@@ -4534,4 +4558,593 @@ model TripCostEstimateItem {
   @@index([tripItemId])
   @@index([transportLegId])
   @@index([assumptionId])
+}
+
+// =========================================================================
+// KNOWLEDGE & PLACE DATA INGESTION  (G06.5, Global Backend V2 Extension)
+// =========================================================================
+//
+// Design notes (full audit: docs/backend/G06_5_PRE_IMPLEMENTATION_REPORT.md):
+// - Canonical law (spec section 1): EXTERNAL RECORD != VERIFIED KNOWLEDGE,
+//   and INGESTION SOURCE != HISTORICAL SOURCE (`Source`) != COMMERCIAL
+//   PROVIDER (`ExternalProvider`). No model below has a Prisma relation to
+//   Place/Person/HistoricalEvent/HistoricalFact/Country/Region/City/
+//   Destination - a resolved/promoted entity is referenced the same
+//   generic, soft way EntityAlias/AuditLog already reference entities
+//   (a plain `entityType: EntityKind` + `String` id pair), never a foreign
+//   key. A candidate/record retention cleanup can therefore never cascade
+//   into canonical knowledge, and no canonical entity's lifecycle ever
+//   depends on an ingestion-domain row still existing - mirrors G02's
+//   identical choice for ExternalProvider vs. G01 geography.
+// - `ProviderRightState` / `ProviderAttributionRequirement` /
+//   `ProviderPolicyEvidenceSourceType` (all G02, defined above) are reused
+//   verbatim rather than redefined (spec section 4) - same tri/four-state,
+//   "UNKNOWN fails closed" discipline.
+// - `IngestionSourcePolicyEvidence` is a deliberate, separate model from
+//   `ProviderPolicyEvidence`, structurally identical but FK'd to
+//   `IngestionSourcePolicy` rather than `ProviderLicense` - a different
+//   trust domain (spec section 1), not merely a different shape.
+// - No adapter/service code ever writes `HistoricalFact` / `Source` /
+//   `Citation` / `MediaAsset` directly. `IngestionEvidence` is the only
+//   input a promotion transaction reads to construct/deduplicate those
+//   rows - promotion is always a separate, explicit, human-reviewed write
+//   path (spec sections 29-32), never an adapter side effect.
+// =========================================================================
+
+enum IngestionSourceClass {
+  AUTHORITATIVE
+  STRUCTURED_KNOWLEDGE
+  GEOSPATIAL
+  MEDIA
+  OPERATIONAL_PROVIDER
+}
+
+enum IngestionTransport {
+  API
+  DATASET
+  STRUCTURED_IMPORT
+}
+
+// Raw-payload storage right - distinct from ProviderRightState. This is
+// specifically about persisting an external system's raw response body,
+// not the broader legal right to use/display/commercialize the data (spec
+// section 21).
+enum RawPayloadStoragePolicy {
+  STORE_ALLOWED
+  STORE_LIMITED
+  REFERENCE_ONLY
+  PROHIBITED
+}
+
+enum IngestionScopeType {
+  COUNTRY
+  REGION
+  CITY
+  DESTINATION
+  EXTERNAL_IDS
+  EXPLICIT_ENTITY_SET
+}
+
+enum IngestionRunStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  PARTIAL
+  FAILED
+  CANCELLED
+}
+
+enum IngestionRunTrigger {
+  MANUAL
+  SCHEDULED
+  RETRY
+}
+
+enum NormalizationStatus {
+  PENDING
+  NORMALIZED
+  FAILED
+  SKIPPED
+}
+
+enum IngestionCandidateType {
+  COUNTRY
+  REGION
+  CITY
+  DESTINATION
+  PLACE
+  PERSON
+  EVENT
+  HISTORICAL_FACT
+  MEDIA
+}
+
+enum IngestionCandidateStatus {
+  UNRESOLVED
+  AUTO_MATCHED
+  NEEDS_REVIEW
+  APPROVED
+  REJECTED
+  MERGED
+}
+
+enum ExternalIdentityState {
+  ACTIVE
+  STALE
+  DISAPPEARED
+}
+
+enum ResolutionOutcome {
+  EXACT_MATCH
+  HIGH_CONFIDENCE_MATCH
+  AMBIGUOUS
+  NO_MATCH
+  CONFLICT
+}
+
+enum IngestionErrorClass {
+  TRANSIENT
+  PERMANENT
+  POLICY_REJECTED
+  AUTH_ERROR
+  VALIDATION_ERROR
+}
+
+// Acquisition-system registry root (spec section 17) - never overloaded
+// into Source (historical evidence) or ExternalProvider (commercial
+// provider). Stable `code` (e.g. "WIKIDATA"), same convention as
+// ExternalProvider.code - no adapter-specific logic is hardcoded against
+// anything but this string.
+model IngestionSource {
+  id          String               @id @default(cuid())
+  code        String               @unique
+  name        String
+  sourceClass IngestionSourceClass
+  enabled     Boolean              @default(false)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  policy             IngestionSourcePolicy?
+  jobs               IngestionJob[]
+  runs               IngestionRun[]
+  records            IngestionRecord[]
+  candidates         IngestionCandidate[]
+  externalIdentities ExternalEntityIdentity[]
+  evidence           IngestionEvidence[]
+
+  @@index([enabled])
+}
+
+// The fail-closed policy gate for a source (spec sections 4/53). Every
+// operation requiring storage/promotion rights must resolve this row fresh
+// - UNKNOWN/PROHIBITED block, CONDITIONAL blocks unless its condition is
+// explicitly verified elsewhere (mirrors G02's ProviderRegistryService
+// discipline of never caching the decision).
+model IngestionSourcePolicy {
+  id                     String                          @id @default(cuid())
+  sourceId               String                          @unique
+  enabled                Boolean                         @default(false)
+  transport              IngestionTransport
+  authRequired           Boolean                         @default(false)
+  rateLimitPerSecond     Int?
+  rateLimitPerDay        Int?
+  concurrencyLimit       Int                             @default(1)
+  maxRetries             Int                             @default(3)
+  rawPayloadStorage      RawPayloadStoragePolicy          @default(PROHIBITED)
+  normalizedStorageRight ProviderRightState               @default(UNKNOWN)
+  cacheMaxAgeSeconds     Int?
+  retentionDays          Int?
+  attributionRequirement ProviderAttributionRequirement   @default(UNKNOWN)
+  licenseCode            String?
+  licenseUrl             String?
+  sourceUrl              String?
+  commercialUseRight     ProviderRightState               @default(UNKNOWN)
+  mediaReusePolicy       ProviderRightState?
+  conditionalNotes       String?
+  lastPolicyReviewAt     DateTime?
+  policyVersion          Int                              @default(1)
+  createdById            String?
+  updatedAt              DateTime                         @updatedAt
+
+  source   IngestionSource                 @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  evidence IngestionSourcePolicyEvidence[]
+
+  @@index([enabled])
+}
+
+// Structurally identical to ProviderPolicyEvidence (metadata/URL/short
+// internal note only, never full copyrighted terms text - spec section
+// 18), but a separate model because it FKs into the ingestion trust
+// domain's own policy row, not a ProviderLicense.
+model IngestionSourcePolicyEvidence {
+  id             String                            @id @default(cuid())
+  sourcePolicyId String
+  title          String
+  sourceUrl      String
+  accessedAt     DateTime
+  sourceType     ProviderPolicyEvidenceSourceType
+  notes          String?
+  createdById    String?
+  createdAt      DateTime                          @default(now())
+
+  sourcePolicy IngestionSourcePolicy @relation(fields: [sourcePolicyId], references: [id], onDelete: Cascade)
+
+  @@index([sourcePolicyId])
+}
+
+// A bounded unit of intended work (spec section 18) - scopeParams is
+// always a concrete, bounded payload (e.g. {"countryCode":"VN"} or
+// {"qids":["Q1858"]}), never {} / unscoped. No WORLD scope exists in
+// IngestionScopeType by construction - an accidental global crawl is not
+// merely discouraged, it is unrepresentable.
+model IngestionJob {
+  id          String             @id @default(cuid())
+  sourceId    String
+  scopeType   IngestionScopeType
+  scopeParams Json
+  label       String?
+  createdById String
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  source     IngestionSource      @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  runs       IngestionRun[]
+  checkpoint IngestionCheckpoint?
+
+  @@index([sourceId])
+}
+
+// One auditable execution of a job (spec section 19). Never deleted in
+// normal operation - this is the audit trail for what was actually
+// fetched/attempted, mirroring AuditLog's append-only discipline.
+model IngestionRun {
+  id             String              @id @default(cuid())
+  jobId          String
+  sourceId       String
+  status         IngestionRunStatus  @default(QUEUED)
+  trigger        IngestionRunTrigger @default(MANUAL)
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  adapterVersion String
+  policyVersion  Int
+  // {"fetched": n, "normalized": n, "candidatesCreated": n, "matched": n,
+  // "errors": n} - a plain operational summary, not a query target.
+  counts         Json
+  cancelledById  String?
+  cancelledAt    DateTime?
+  createdById    String?
+  createdAt      DateTime            @default(now())
+
+  job         IngestionJob           @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  source      IngestionSource        @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  records     IngestionRecord[]
+  errors      IngestionError[]
+  checkpoints IngestionCheckpoint[]
+
+  @@index([jobId])
+  @@index([sourceId])
+  @@index([status])
+}
+
+// Raw per-external-record acquisition (spec section 20). Idempotent on
+// (sourceId, externalId, payloadHash) - a materially unchanged re-fetch of
+// the same external record never creates a duplicate row (spec sections
+// 36/37 - change detection, not silent duplication or silent overwrite).
+model IngestionRecord {
+  id                    String                   @id @default(cuid())
+  runId                 String
+  sourceId              String
+  externalId            String
+  retrievedAt           DateTime
+  payloadHash           String
+  storageClassification RawPayloadStoragePolicy
+  // Populated only when storageClassification is STORE_ALLOWED/
+  // STORE_LIMITED for this source's policy at retrieval time - null for
+  // REFERENCE_ONLY/PROHIBITED (enforced in the normalizer, never left to
+  // caller discretion; spec section 21).
+  rawPayload            Json?
+  normalizationStatus   NormalizationStatus      @default(PENDING)
+  createdAt             DateTime                 @default(now())
+
+  run        IngestionRun          @relation(fields: [runId], references: [id], onDelete: Restrict)
+  source     IngestionSource       @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  candidates IngestionCandidate[]
+  errors     IngestionError[]
+
+  @@unique([sourceId, externalId, payloadHash])
+  @@index([sourceId, externalId])
+  @@index([runId])
+}
+
+// Source-neutral, normalized, pre-canonical entity proposal (spec section
+// 23). NEVER exposed through public discovery APIs. resolvedEntityType/
+// resolvedEntityId are a soft reference only (spec section 1/24) - never a
+// Prisma relation to the canonical model itself.
+model IngestionCandidate {
+  id                     String                    @id @default(cuid())
+  recordId               String?
+  sourceId               String
+  candidateType          IngestionCandidateType
+  normalizationVersion   Int
+  // Source-neutral normalized shape (spec section 22) - review/promotion
+  // code never reads raw provider-specific field names directly.
+  normalizedData         Json
+  status                 IngestionCandidateStatus  @default(UNRESOLVED)
+  mergedIntoCandidateId  String?
+  resolvedEntityType     EntityKind?
+  resolvedEntityId       String?
+  reviewedById           String?
+  reviewedAt             DateTime?
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
+
+  record             IngestionRecord?          @relation(fields: [recordId], references: [id], onDelete: Restrict)
+  source             IngestionSource           @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  mergedInto         IngestionCandidate?       @relation("CandidateMerge", fields: [mergedIntoCandidateId], references: [id], onDelete: SetNull)
+  mergedFrom         IngestionCandidate[]      @relation("CandidateMerge")
+  evidence           IngestionEvidence[]
+  resolution         EntityResolution?
+  externalIdentities ExternalEntityIdentity[]
+
+  @@index([sourceId])
+  @@index([status])
+  @@index([candidateType])
+  @@index([resolvedEntityType, resolvedEntityId])
+}
+
+// Durable external-identity registry, namespaced by source (spec section
+// 24) - the unique constraint on (sourceId, externalId) structurally
+// prevents the same numeric/string id from two different sources ever
+// being assumed to be the same identity.
+model ExternalEntityIdentity {
+  id               String                @id @default(cuid())
+  sourceId         String
+  externalId       String
+  entityType       EntityKind
+  candidateId      String?
+  // Soft reference only, populated once resolution actually links this
+  // identity to a real canonical row (spec section 1/24).
+  resolvedEntityId String?
+  state            ExternalIdentityState @default(ACTIVE)
+  firstSeenAt      DateTime              @default(now())
+  lastSeenAt       DateTime              @default(now())
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  source    IngestionSource     @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  candidate IngestionCandidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+
+  @@unique([sourceId, externalId])
+  @@index([entityType, resolvedEntityId])
+}
+
+// One resolution attempt/outcome per candidate (spec sections 25/26).
+// Only EXACT_MATCH may ever have autoResolved: true - enforced in the
+// resolver service, not merely documented here; every other outcome
+// requires a human decidedById before a candidate can leave NEEDS_REVIEW.
+model EntityResolution {
+  id                String            @id @default(cuid())
+  candidateId       String            @unique
+  outcome           ResolutionOutcome
+  matchedEntityType EntityKind?
+  matchedEntityId   String?
+  // What actually matched (identity/coordinates/name/aliases/type) - an
+  // explainability record, not a black-box score alone (spec section 25).
+  signals           Json
+  confidenceScore   Float?
+  autoResolved      Boolean           @default(false)
+  decidedById       String?
+  decidedAt         DateTime?
+  createdAt         DateTime          @default(now())
+
+  candidate IngestionCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([outcome])
+}
+
+// Provenance backing a candidate - the ONLY input a promotion transaction
+// reads to construct/deduplicate a real Source/Citation (spec section 29).
+// Never itself treated as verified knowledge.
+model IngestionEvidence {
+  id               String   @id @default(cuid())
+  candidateId      String
+  sourceId         String
+  externalRecordId String
+  sourceUrl        String?
+  retrievedAt      DateTime
+  licenseCode      String?
+  licenseUrl       String?
+  attributionText  String?
+  adapterVersion   String
+  payloadHash      String
+  policyVersion    Int
+  createdAt        DateTime @default(now())
+
+  candidate IngestionCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  source    IngestionSource    @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  @@index([candidateId])
+  @@index([sourceId])
+}
+
+// Classified failure record (spec sections 41/44) - errorClass drives
+// retry behavior in the worker (TRANSIENT retries with backoff; PERMANENT/
+// POLICY_REJECTED/AUTH_ERROR/VALIDATION_ERROR never retried
+// indefinitely).
+model IngestionError {
+  id         String              @id @default(cuid())
+  runId      String
+  recordId   String?
+  externalId String?
+  errorClass IngestionErrorClass
+  message    String
+  retryCount Int                 @default(0)
+  createdAt  DateTime            @default(now())
+
+  run    IngestionRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+  record IngestionRecord? @relation(fields: [recordId], references: [id], onDelete: SetNull)
+
+  @@index([runId])
+  @@index([errorClass])
+}
+
+// Resumable cursor for a job (spec section 42) - one active checkpoint per
+// job. A worker crash/restart resumes from here instead of restarting a
+// large bounded job from zero.
+model IngestionCheckpoint {
+  id        String   @id @default(cuid())
+  jobId     String   @unique
+  runId     String?
+  // Adapter-defined resume cursor (e.g. {"offset": 4200} or
+  // {"lastQid": "Q123456"}) - opaque to the schema, meaningful only to the
+  // adapter/job that wrote it.
+  cursor    Json
+  updatedAt DateTime @updatedAt
+
+  job IngestionJob  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  run IngestionRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+
+  @@index([runId])
+}
+
+// =========================================================================
+// TRIP COLLABORATION  (G07, Global Backend V2 Extension)
+// =========================================================================
+//
+// Design notes (full audit: docs/backend/G07_PRE_IMPLEMENTATION_REPORT.md):
+// - Canonical law (spec section 1): TRIP OWNERSHIP != TRIP MEMBERSHIP !=
+//   INVITATION != PUBLIC SHARE LINK. `Trip.ownerId` remains the SOLE
+//   ownership authority - the owner is deliberately NOT materialized as a
+//   `TripMember` row (spec section 7/8), so `TripMemberRole` below has only
+//   two values (EDITOR/VIEWER), never OWNER. This keeps exactly one
+//   ownership truth rather than two rows that could ever disagree.
+// - Invitation tokens follow the EXACT pattern already used by
+//   `EmailVerificationToken`/`PasswordResetToken` (AuthService - Phase 02,
+//   locked): a high-entropy random token is generated, delivered once, and
+//   only its SHA-256 hash is ever persisted (`tokenHash String @unique`).
+//   The raw token is never stored, logged, or returned by any API after
+//   creation (spec section 15/16).
+// - `TripInvitationStatus` has 5 states (not a binary consumed flag) because
+//   PENDING/ACCEPTED/DECLINED/REVOKED/EXPIRED are genuinely distinct
+//   terminal/non-terminal states a reviewer needs to see (spec section 14).
+// - A partial unique index (hand-added to the generated migration SQL -
+//   Prisma's schema DSL has no native primitive for this) backstops "at
+//   most one PENDING invitation per (tripId, email)" at the database level
+//   (spec section 57), not just in application code (spec section 56).
+// - `TripCollaborationEvent` is member-facing activity history, explicitly
+//   NOT the security `AuditLog` (spec section 40) - `actorSnapshotName`
+//   captures the actor's display name AT WRITE TIME so history remains
+//   readable after that member leaves the trip (spec section 41), and
+//   `metadata` is deliberately a small structured object, never a full
+//   before/after Trip JSON dump (spec section 83).
+// =========================================================================
+
+enum TripMemberRole {
+  EDITOR
+  VIEWER
+}
+
+enum TripInvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+  EXPIRED
+}
+
+enum TripCollaborationEventType {
+  MEMBER_JOINED
+  MEMBER_LEFT
+  MEMBER_REMOVED
+  ROLE_CHANGED
+  OWNERSHIP_TRANSFERRED
+  INVITATION_ACCEPTED
+  TRIP_UPDATED
+  DESTINATION_CHANGED
+  DAY_CHANGED
+  ITEM_CHANGED
+  TRANSPORT_CHANGED
+}
+
+// An accepted collaborator's relationship to a Trip (spec section 6). The
+// owner never has a row here (see design notes above) - a user either owns
+// the trip (`Trip.ownerId`) or has an EDITOR/VIEWER row here, never both,
+// never neither-but-still-a-member.
+model TripMember {
+  id        String         @id @default(cuid())
+  tripId    String
+  userId    String
+  role      TripMemberRole
+  joinedAt  DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A user cannot have duplicate active membership (spec section 6) -
+  // backstops the application-level pre-check with a real DB constraint
+  // (spec section 56).
+  @@unique([tripId, userId])
+  @@index([userId])
+}
+
+// A pending-or-resolved offer of trip access (spec section 13/14) - never
+// itself a grant of access (spec section 1's "INVITATION != TRIP
+// MEMBERSHIP"). `email` is the normalized (lowercased/trimmed) target
+// address - the same normalization `AuthService.normalizeEmail` already
+// applies, duplicated locally rather than importing locked Phase-02 code.
+model TripInvitation {
+  id               String                @id @default(cuid())
+  tripId           String
+  inviterId        String
+  email            String
+  role             TripMemberRole
+  status           TripInvitationStatus  @default(PENDING)
+  // SHA-256(raw token) only - the raw bearer token is NEVER persisted
+  // (spec section 15/16).
+  tokenHash        String                @unique
+  expiresAt        DateTime
+  acceptedAt       DateTime?
+  acceptedByUserId String?
+  declinedAt       DateTime?
+  revokedAt        DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  trip           Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  inviter        User  @relation("TripInvitationInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  acceptedByUser User? @relation("TripInvitationAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+
+  // Backstops "at most one PENDING invitation per (tripId, email)" (spec
+  // section 18/57) at the application-constraint level; the actual
+  // database-enforced invariant is the hand-added partial unique index
+  // (WHERE status = 'PENDING') in this phase's migration SQL, since Prisma's
+  // schema DSL cannot express a partial index natively.
+  @@index([tripId, status])
+  @@index([email, status])
+}
+
+// Member-facing trip activity history (spec section 39/40) - distinct from
+// the security `AuditLog`. Every governance-relevant event (membership/
+// role/ownership/invitation) is written in the SAME transaction as its
+// triggering mutation (spec section 85).
+model TripCollaborationEvent {
+  id                String                      @id @default(cuid())
+  tripId            String
+  type              TripCollaborationEventType
+  // Soft reference, nullable (spec section 41) - history must remain
+  // readable even if the actor's account is later affected by a future
+  // user-lifecycle decision (not built in G07 - spec section 89).
+  actorUserId       String?
+  actorSnapshotName String
+  // Minimal structured data only, e.g. {"newRole":"EDITOR"} or
+  // {"previousOwnerId":"...","newOwnerId":"..."} - never a full Trip
+  // before/after dump (spec section 83).
+  metadata          Json?
+  createdAt         DateTime                    @default(now())
+
+  trip  Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([tripId, createdAt])
 }

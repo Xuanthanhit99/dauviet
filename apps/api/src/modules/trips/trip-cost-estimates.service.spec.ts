@@ -114,10 +114,10 @@ function assumptionRow(overrides: Partial<any> = {}) {
 }
 
 describe('TripCostEstimatesService.generate', () => {
-  it('is owner-gated and blocked once archived, via TripsService.getOwnedActiveOrThrow', async () => {
+  it('is capability-gated (GENERATE_ESTIMATE - owner or EDITOR, never VIEWER) and blocked once archived, via TripsService.getOwnedActiveOrThrow', async () => {
     const { service, tripsService } = makeService();
     await service.generate('t1', 'owner-1');
-    expect(tripsService.getOwnedActiveOrThrow).toHaveBeenCalledWith('t1', 'owner-1');
+    expect(tripsService.getOwnedActiveOrThrow).toHaveBeenCalledWith('t1', 'owner-1', 'GENERATE_ESTIMATE');
   });
 
   it('produces two FOOD and two local-TRANSPORT line items for a two-day trip with no itinerary at all - both UNKNOWN with no assumption seeded', async () => {

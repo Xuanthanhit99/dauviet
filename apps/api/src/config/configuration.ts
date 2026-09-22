@@ -29,6 +29,16 @@ export interface AppConfig {
   smtp: { host: string; port: number; secure: boolean; from: string };
   rateLimit: { ttl: number; max: number };
   locales: { canonical: string; supported: string[] };
+  ingestion: {
+    enabled: boolean;
+    wikimediaUserAgent: string;
+    wikimediaContact: string;
+    geonamesUsername: string;
+    googlePlacesApiKey: string;
+    workerConcurrency: number;
+    maxRetries: number;
+    rawRetentionDays: number;
+  };
 }
 
 export default (): AppConfig => ({
@@ -81,5 +91,19 @@ export default (): AppConfig => ({
   locales: {
     canonical: 'vi',
     supported: ['vi', 'en'],
+  },
+  // G06.5 - Knowledge & Place Data Ingestion. Default fail-closed: an
+  // unset optional credential (GEONAMES_USERNAME/GOOGLE_PLACES_API_KEY)
+  // produces a cleanly-disabled adapter, never a startup failure - see
+  // docs/backend/G06_5_SOURCE_POLICY_RESEARCH.md.
+  ingestion: {
+    enabled: (process.env.KNOWLEDGE_INGESTION_ENABLED ?? 'false') === 'true',
+    wikimediaUserAgent: process.env.WIKIMEDIA_USER_AGENT ?? '',
+    wikimediaContact: process.env.WIKIMEDIA_CONTACT ?? '',
+    geonamesUsername: process.env.GEONAMES_USERNAME ?? '',
+    googlePlacesApiKey: process.env.GOOGLE_PLACES_API_KEY ?? '',
+    workerConcurrency: parseInt(process.env.INGESTION_WORKER_CONCURRENCY ?? '1', 10),
+    maxRetries: parseInt(process.env.INGESTION_MAX_RETRIES ?? '3', 10),
+    rawRetentionDays: parseInt(process.env.INGESTION_RAW_RETENTION_DAYS ?? '90', 10),
   },
 });

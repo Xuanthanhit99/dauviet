@@ -50,6 +50,7 @@ import { AttractionsModule } from './modules/attractions/attractions.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
 import { TripsModule } from './modules/trips/trips.module';
 import { CostAssumptionsModule } from './modules/cost-assumptions/cost-assumptions.module';
+import { KnowledgeIngestionModule } from './modules/knowledge-ingestion/knowledge-ingestion.module';
 
 @Module({
   imports: [
@@ -131,6 +132,10 @@ import { CostAssumptionsModule } from './modules/cost-assumptions/cost-assumptio
     // not through DestinationsModule/CountriesModule's own services).
     TripsModule,
     CostAssumptionsModule,
+    // G06.5 - Global Backend V2 Extension, Knowledge & Place Data Ingestion.
+    // Imports MediaModule for S3Service (media candidate promotion only);
+    // otherwise self-contained - no relation to Trip/CostAssumption.
+    KnowledgeIngestionModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

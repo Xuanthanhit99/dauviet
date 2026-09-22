@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, PublicationStatus, Trip } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
@@ -6,6 +6,8 @@ import { TRIP_ERROR_CODES } from '../../common/errors/trip-error-codes';
 import { GEOGRAPHY_ERROR_CODES } from '../../common/errors/geography-error-codes';
 import { ArchiveTripDto, CreateTripDto, ListTripsQueryDto, UpdateTripDto } from './dto/trip.dto';
 import { enumerateDates } from './trip-dates.util';
+import { TripAuthorizationService, TripCapability } from './trip-authorization.service';
+import { TripCollaborationEventService } from './trip-collaboration-event.service';
 
 /**
  * Trip ownership + lifecycle (spec section 9/10/59/60, corrected per
@@ -16,19 +18,28 @@ import { enumerateDates } from './trip-dates.util';
  * it does not exist at all, then 403 if it exists but belongs to someone
  * else - existence is never hidden, matching this codebase's established
  * convention.
+ *
+ * G07 (docs/backend/G07_PRE_IMPLEMENTATION_REPORT.md section 10):
+ * `getOwnedOrThrow`/`getOwnedActiveOrThrow` are now thin wrappers around
+ * `TripAuthorizationService.authorize` - every call site's *capability*
+ * argument is what actually changed (view-only routes pass the default
+ * `VIEW_TRIP`; mutation routes pass `EDIT_TRIP`/`ARCHIVE_TRIP`/etc.), never
+ * the surrounding control flow. The old bare-ownerId-equality check is
+ * gone; a caller who is a `TripMember` (not just the owner) now passes
+ * exactly when their role grants the requested capability.
  */
 @Injectable()
 export class TripsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly authz: TripAuthorizationService,
+    private readonly collaborationEvents: TripCollaborationEventService,
   ) {}
 
-  /** The one shared "load and authorize" guard every Trip sub-resource route (destinations/days/items/transport/estimates - not yet implemented) will also call. */
-  async getOwnedOrThrow(tripId: string, userId: string): Promise<Trip> {
-    const trip = await this.prisma.trip.findUnique({ where: { id: tripId } });
-    if (!trip) throw new NotFoundException({ code: TRIP_ERROR_CODES.TRIP_NOT_FOUND, message: 'Trip not found.' });
-    if (trip.ownerId !== userId) throw new ForbiddenException({ code: TRIP_ERROR_CODES.TRIP_NOT_OWNER, message: 'You do not own this trip.' });
+  /** The one shared "load and authorize" guard every Trip sub-resource route (destinations/days/items/transport/estimates) also calls, now capability-parameterized (default VIEW_TRIP for plain reads). */
+  async getOwnedOrThrow(tripId: string, userId: string, capability: TripCapability = TripCapability.VIEW_TRIP): Promise<Trip> {
+    const { trip } = await this.authz.authorize(tripId, userId, capability);
     return trip;
   }
 
@@ -61,8 +72,8 @@ export class TripsService {
    * optimistic concurrency) but must still be blocked once archived (spec
    * correction: an archived trip is read-only).
    */
-  async getOwnedActiveOrThrow(tripId: string, userId: string): Promise<Trip> {
-    const trip = await this.getOwnedOrThrow(tripId, userId);
+  async getOwnedActiveOrThrow(tripId: string, userId: string, capability: TripCapability = TripCapability.VIEW_TRIP): Promise<Trip> {
+    const trip = await this.getOwnedOrThrow(tripId, userId, capability);
     this.assertNotArchived(trip);
     return trip;
   }
@@ -139,9 +150,23 @@ export class TripsService {
     });
   }
 
-  /** Owner-scoped list, paginated and bounded (spec section 87) - excludes archived trips by default (spec correction: an archived trip is not an active planning trip). */
-  async list(ownerId: string, query: ListTripsQueryDto) {
-    const where = { ownerId, archivedAt: null, status: query.status };
+  /**
+   * OWNED + accepted-MEMBER trips (spec section 12), paginated and bounded
+   * (spec section 87), excludes archived by default (spec correction: an
+   * archived trip is not an active planning trip). Each item carries a
+   * `relationship: 'OWNED' | 'MEMBER'` tag so a client can distinguish them
+   * without the response changing ownership semantics - a PENDING
+   * invitation is never included here (spec section 12 - "do not expose
+   * pending invitations as accepted trips"), only rows from `Trip.ownerId`
+   * or an existing `TripMember`.
+   */
+  async list(userId: string, query: ListTripsQueryDto) {
+    const memberTripIds = await this.prisma.tripMember.findMany({ where: { userId }, select: { tripId: true } });
+    const where: Prisma.TripWhereInput = {
+      archivedAt: null,
+      status: query.status,
+      OR: [{ ownerId: userId }, { id: { in: memberTripIds.map((m) => m.tripId) } }],
+    };
     const [total, trips] = await this.prisma.$transaction([
       this.prisma.trip.count({ where }),
       this.prisma.trip.findMany({
@@ -151,16 +176,17 @@ export class TripsService {
         take: query.pageSize,
       }),
     ]);
-    return { items: trips, total, page: query.page, pageSize: query.pageSize };
+    const items = trips.map((trip) => ({ ...trip, relationship: trip.ownerId === userId ? ('OWNED' as const) : ('MEMBER' as const) }));
+    return { items, total, page: query.page, pageSize: query.pageSize };
   }
 
-  /** Detail remains readable once archived (spec correction) - viewing history is exactly the use case archiving exists for. */
-  async findOwned(tripId: string, ownerId: string): Promise<Trip> {
-    return this.getOwnedOrThrow(tripId, ownerId);
+  /** Detail remains readable once archived (spec correction) - viewing history is exactly the use case archiving exists for. Owner and any accepted member (VIEW_TRIP) may read it. */
+  async findOwned(tripId: string, userId: string): Promise<Trip> {
+    return this.getOwnedOrThrow(tripId, userId, TripCapability.VIEW_TRIP);
   }
 
-  async update(tripId: string, ownerId: string, dto: UpdateTripDto): Promise<Trip> {
-    const trip = await this.getOwnedOrThrow(tripId, ownerId);
+  async update(tripId: string, userId: string, dto: UpdateTripDto): Promise<Trip> {
+    const trip = await this.getOwnedOrThrow(tripId, userId, TripCapability.EDIT_TRIP);
     this.assertNotArchived(trip);
     this.assertVersion(trip, dto.expectedVersion);
 
@@ -196,7 +222,8 @@ export class TripsService {
           version: { increment: 1 },
         },
       });
-      await this.audit.log({ actorId: ownerId, action: 'trip.updated', entityType: 'TRIP', entityId: tripId }, tx);
+      await this.audit.log({ actorId: userId, action: 'trip.updated', entityType: 'TRIP', entityId: tripId }, tx);
+      await this.collaborationEvents.record({ tripId, type: 'TRIP_UPDATED', actorUserId: userId }, tx);
       return updated;
     });
   }
@@ -239,8 +266,9 @@ export class TripsService {
     await Promise.all(finalDays.map((day, index) => tx.tripDay.update({ where: { id: day.id }, data: { dayNumber: index + 1 } })));
   }
 
-  async archive(tripId: string, ownerId: string, dto: ArchiveTripDto): Promise<Trip> {
-    const trip = await this.getOwnedOrThrow(tripId, ownerId);
+  /** Owner-only (spec section 32/78) - ARCHIVE_TRIP is not in EDITOR's/VIEWER's capability set. */
+  async archive(tripId: string, userId: string, dto: ArchiveTripDto): Promise<Trip> {
+    const trip = await this.getOwnedOrThrow(tripId, userId, TripCapability.ARCHIVE_TRIP);
     this.assertVersion(trip, dto.expectedVersion);
     if (trip.archivedAt) {
       throw new ConflictException({ code: TRIP_ERROR_CODES.TRIP_ARCHIVED, message: 'This trip is already archived.' });
@@ -251,7 +279,7 @@ export class TripsService {
         where: { id: tripId },
         data: { archivedAt: new Date(), version: { increment: 1 } },
       });
-      await this.audit.log({ actorId: ownerId, action: 'trip.archived', entityType: 'TRIP', entityId: tripId }, tx);
+      await this.audit.log({ actorId: userId, action: 'trip.archived', entityType: 'TRIP', entityId: tripId }, tx);
       return archived;
     });
   }

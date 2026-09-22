@@ -2102,8 +2102,8 @@
       }
     },
     "pass7": {
-      "status": "BROWSER_QA_IMPLEMENTED_CI_PENDING",
-      "date": "2026-09-21",
+      "status": "CLOSED_PRODUCTION_QA_PASS",
+      "date": "2026-09-22",
       "scope": "STORY_EXPLORER_V4",
       "route": "/stories/[slug]",
       "api": "GET /v1/stories/{slug}",
@@ -2124,9 +2124,24 @@
         "responsive-layout"
       ],
       "backendChanged": false,
-      "next": "CONSUMER_QA_THEN_CLOSE_PASS_7",
+      "next": "PASS_8_JOURNEY_DETAIL_V3_CLOSED",
+      "qaEvidence": "docs/brand/consumer-integration-pass-07-story-explorer-v4.md",
+      "additionalApi": "GET /v1/media/{id}",
+      "ci": {
+        "status": "PASS",
+        "workflowRunId": 35715276514,
+        "jobId": 106705186638,
+        "commitSha": "2387820c623fe5320accc1dee2c466886b261a99",
+        "conclusion": "success",
+        "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35715276514"
+      },
       "browserQA": {
-        "status": "CI_PENDING",
+        "status": "PASS",
+        "execution": "GITHUB_ACTIONS_AND_LOCAL_PRODUCTION_SERVER",
+        "suiteResult": "43/43 PASS",
+        "webTypecheck": "PASS",
+        "webBuild": "PASS",
+        "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON",
         "runner": "Playwright Chromium",
         "viewports": [
           "390x844",
@@ -2146,7 +2161,65 @@
           "api-error",
           "keyboard-focus",
           "reduced-motion"
-        ]
+        ],
+        "workflowRunId": 35715276514,
+        "jobId": 106705186638
+      }
+    },
+    "pass8": {
+      "status": "CLOSED_PRODUCTION_QA_PASS",
+      "date": "2026-09-22",
+      "scope": "JOURNEY_DETAIL_V3",
+      "route": "/journeys/[slug]",
+      "api": "GET /v1/journeys/{slug}",
+      "additionalApi": "GET /v1/media/{id}",
+      "remoteBaselineCommit": "f2c62c3431c8e4a6835a9d82ba2f336dc04603bd",
+      "implemented": [
+        "editorial-journey-hero",
+        "backend-only-journey-metrics",
+        "ordered-place-stops",
+        "stop-duration-and-coordinates",
+        "story-event-stop-links",
+        "route-provenance-disclosure",
+        "no-fabricated-route-geometry",
+        "hero-media-disclosure",
+        "locale-fallback",
+        "loading-error-empty-states",
+        "responsive-layout",
+        "maplibre-real-stop-points",
+        "accessible-map-list-selection",
+        "exact-cms-media-resolution",
+        "keyboard-focus-and-reduced-motion",
+        "basemap-failure-list-alternative"
+      ],
+      "backendChanged": false,
+      "qaEvidence": "docs/brand/consumer-integration-pass-08-journey-detail-v3.md",
+      "browserQA": {
+        "status": "PASS",
+        "execution": "GITHUB_ACTIONS_AND_LOCAL_PRODUCTION_SERVER",
+        "suiteResult": "43/43 PASS",
+        "runner": "Playwright Chromium",
+        "webTypecheck": "PASS",
+        "webBuild": "PASS",
+        "viewports": [
+          "390x844",
+          "834x1112",
+          "1536x960"
+        ],
+        "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON",
+        "evidenceDirectory": "apps/web/qa-evidence/pass-08",
+        "workflowRunId": 35715276514,
+        "jobId": 106705186638
+      },
+      "next": "COUNTRY_DETAIL_V1_NOT_STARTED",
+      "nextLockedScreenAfterClosure": "COUNTRY_DETAIL_V1",
+      "ci": {
+        "status": "PASS",
+        "workflowRunId": 35715276514,
+        "jobId": 106705186638,
+        "commitSha": "2387820c623fe5320accc1dee2c466886b261a99",
+        "conclusion": "success",
+        "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35715276514"
       }
     }
   }

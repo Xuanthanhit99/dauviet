@@ -3,11 +3,15 @@ import { PublicationStatus } from '@prisma/client';
 import { TripsService } from './trips.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { TripAuthorizationService } from './trip-authorization.service';
+import { TripCollaborationEventService } from './trip-collaboration-event.service';
 
 function makePrismaStub() {
   const prisma: any = {
     trip: { findUnique: jest.fn(), create: jest.fn(), update: jest.fn(), count: jest.fn(), findMany: jest.fn() },
     tripDay: { createMany: jest.fn().mockResolvedValue({ count: 0 }), findMany: jest.fn().mockResolvedValue([]), deleteMany: jest.fn(), update: jest.fn() },
+    tripMember: { findUnique: jest.fn().mockResolvedValue(null), findMany: jest.fn().mockResolvedValue([]) },
+    user: { findUnique: jest.fn().mockResolvedValue(null) },
     country: { findFirst: jest.fn() },
     region: { findFirst: jest.fn() },
     city: { findFirst: jest.fn() },
@@ -21,7 +25,19 @@ function makePrismaStub() {
 
 function makeService(prisma = makePrismaStub()) {
   const audit = { log: jest.fn() };
-  const service = new TripsService(prisma as unknown as PrismaService, audit as unknown as AuditService);
+  // Real TripAuthorizationService wired to the SAME mocked prisma, so the
+  // existing owner/non-owner 404-then-403 test behavior below is preserved
+  // exactly (G07 delegates authorization to this service - see
+  // docs/backend/G07_PRE_IMPLEMENTATION_REPORT.md section 10) rather than
+  // being re-mocked away from the real permission-matrix logic.
+  const authz = new TripAuthorizationService(prisma as unknown as PrismaService);
+  const collaborationEvents = { record: jest.fn() };
+  const service = new TripsService(
+    prisma as unknown as PrismaService,
+    audit as unknown as AuditService,
+    authz,
+    collaborationEvents as unknown as TripCollaborationEventService,
+  );
   return { service, prisma, audit };
 }
 
@@ -250,14 +266,37 @@ describe('TripsService.archive (spec correction - non-destructive archive semant
   });
 });
 
-describe('TripsService.list (spec correction - excludes archived by default)', () => {
-  it('filters by ownerId and archivedAt: null', async () => {
+describe('TripsService.list (spec correction - excludes archived by default; G07 - OWNED + MEMBER)', () => {
+  it('filters by (ownerId OR memberTripIds) and archivedAt: null', async () => {
     const { service, prisma } = makeService();
+    prisma.tripMember.findMany.mockResolvedValue([]);
     prisma.trip.count.mockResolvedValue(0);
     prisma.trip.findMany.mockResolvedValue([]);
 
     await service.list('owner-1', { page: 1, pageSize: 20 });
 
-    expect(prisma.trip.count).toHaveBeenCalledWith({ where: { ownerId: 'owner-1', archivedAt: null, status: undefined } });
+    expect(prisma.trip.count).toHaveBeenCalledWith({
+      where: { archivedAt: null, status: undefined, OR: [{ ownerId: 'owner-1' }, { id: { in: [] } }] },
+    });
+  });
+
+  it('includes trips where the user has an accepted TripMember row, distinct from owned trips (spec section 12)', async () => {
+    const { service, prisma } = makeService();
+    prisma.tripMember.findMany.mockResolvedValue([{ tripId: 'member-trip-1' }]);
+    prisma.trip.count.mockResolvedValue(2);
+    prisma.trip.findMany.mockResolvedValue([
+      { id: 't-owned', ownerId: 'owner-1' },
+      { id: 'member-trip-1', ownerId: 'someone-else' },
+    ]);
+
+    const result = await service.list('owner-1', { page: 1, pageSize: 20 });
+
+    expect(prisma.trip.count).toHaveBeenCalledWith({
+      where: { archivedAt: null, status: undefined, OR: [{ ownerId: 'owner-1' }, { id: { in: ['member-trip-1'] } }] },
+    });
+    expect(result.items).toEqual([
+      { id: 't-owned', ownerId: 'owner-1', relationship: 'OWNED' },
+      { id: 'member-trip-1', ownerId: 'someone-else', relationship: 'MEMBER' },
+    ]);
   });
 });

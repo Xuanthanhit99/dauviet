@@ -31,6 +31,23 @@ export class MailerService {
     await this.send(to, 'Dat lai mat khau Dau Viet', `<p>Nhan vao lien ket de dat lai mat khau: <a href="${link}">${link}</a></p>`);
   }
 
+  /**
+   * G07 - Trip Collaboration invitation. `appUrl` is the only source of the
+   * link's origin (spec section 96) - never a client-supplied callback URL,
+   * same discipline as the two methods above. `tripTitle` is escaped before
+   * interpolation (spec section 95 - server-owned template, no client HTML).
+   */
+  async sendTripInvitation(to: string, token: string, tripTitle: string) {
+    const appUrl = this.config.get('appUrl', { infer: true });
+    const link = `${appUrl}/trip-invitations/accept?token=${token}`;
+    const escapedTitle = tripTitle.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    await this.send(
+      to,
+      'Loi moi tham gia chuyen di tren Dau Viet',
+      `<p>Ban duoc moi tham gia chuyen di "${escapedTitle}" tren Dau Viet.</p><p>Nhan vao lien ket de xem loi moi: <a href="${link}">${link}</a></p>`,
+    );
+  }
+
   private async send(to: string, subject: string, html: string) {
     try {
       await this.transporter.sendMail({ from: this.from, to, subject, html });

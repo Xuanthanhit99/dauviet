@@ -20,3 +20,5 @@ export * from './destination-discovery';
 export * from './stay-food-activities';
 // G06 - Trip Planner + Cost Engine (DRAFT-only illustrative fixture).
 export * from './cost-assumptions';
+// G06.5 - Knowledge & Place Data Ingestion (source/policy registry only).
+export * from './knowledge-ingestion';

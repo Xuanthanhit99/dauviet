@@ -351,7 +351,18 @@ describe('Golden Dataset production-seed safety (spec sections 59/60)', () => {
  * full explanation of why the DB constraint alone is insufficient here).
  */
 describe('Golden Dataset idempotency (spec sections 45/76)', () => {
-  const ALLOWED_BARE_CREATE_MODELS = new Set(['user', 'providerAttributionRule', 'restaurantOperationalSnapshot', 'costAssumption']);
+  const ALLOWED_BARE_CREATE_MODELS = new Set([
+    'user',
+    'providerAttributionRule',
+    'restaurantOperationalSnapshot',
+    'costAssumption',
+    // G06.5 - find-then-create guarded (see the dedicated guard test below),
+    // same pattern as the other exceptions here: IngestionSourcePolicyEvidence
+    // has no natural single-column unique key to upsert() against (evidence
+    // is scoped by sourcePolicyId + sourceUrl together), so idempotency is
+    // enforced by an explicit existence check instead.
+    'ingestionSourcePolicyEvidence',
+  ]);
 
   it('every prisma.<model>.create( call in the seed script is either an allowed documented exception or does not exist - upsert() is used everywhere else', () => {
     const matches = [...seedSource.matchAll(/prisma\.(\w+)\.create\(/g)].map((m) => m[1]);
@@ -361,5 +372,9 @@ describe('Golden Dataset idempotency (spec sections 45/76)', () => {
 
   it('the one allowed bare create (User) is itself guarded by an explicit find-then-create idempotency check, not left bare', () => {
     expect(seedSource).toMatch(/const existing = await prisma\.user\.findUnique[\s\S]{0,80}if \(existing\) return existing;/);
+  });
+
+  it('the G06.5 IngestionSourcePolicyEvidence bare create is itself guarded by an explicit find-then-create idempotency check, not left bare', () => {
+    expect(seedSource).toMatch(/const existingEvidence = await prisma\.ingestionSourcePolicyEvidence\.findFirst[\s\S]{0,120}if \(!existingEvidence\) \{/);
   });
 });

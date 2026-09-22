@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { ProviderRegistryService } from '../providers/provider-registry.service';
 import { TripsService } from './trips.service';
+import { TripCapability } from './trip-authorization.service';
 import { resolveComponent } from './cost-engine/resolve-component';
 import { aggregateEstimate } from './cost-engine/aggregate-estimate';
 import { computeInputHash } from './cost-engine/input-hash';
@@ -154,8 +155,9 @@ export class TripCostEstimatesService {
     return undefined;
   }
 
+  /** GENERATE_ESTIMATE - owner or EDITOR, never a plain VIEWER (spec section 34). */
   async generate(tripId: string, ownerId: string) {
-    const trip = await this.trips.getOwnedActiveOrThrow(tripId, ownerId);
+    const trip = await this.trips.getOwnedActiveOrThrow(tripId, ownerId, TripCapability.GENERATE_ESTIMATE);
 
     const [tripDestinationRows, days, items, transportLegs] = await Promise.all([
       this.prisma.tripDestination.findMany({

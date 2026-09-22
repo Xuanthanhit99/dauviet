@@ -48,6 +48,8 @@ A `User.roles` is a Postgres array (`Role[]`) - one account can hold several rol
 | Attractions (G05) | `POST /attractions`, `PATCH /attractions/:id/translations/:locale`, `.../status`, `.../destinations` | `EDITOR`, `ADMIN` |
 | Activities (G05) | `POST /activities`, `PATCH /activities/:id/translations/:locale`, `.../status`, `.../destinations`, `POST /activities/provider-references`, `PATCH /activities/provider-references/:id/map` | `EDITOR`, `ADMIN` |
 | Admin/Cost Assumptions (G06) | every `/admin/cost-assumptions/**` route (create, list, detail, update, status) | `ADMIN` only - deliberately no `EDITOR` carve-out, same tier as Providers above (spec: a mistake here silently skews every owner's cost estimate, not just one piece of editorial copy - `HISTORIAN_REVIEWER`/`MODERATOR`/`EDITOR`/`USER` have no authority here at all) |
+| Knowledge Ingestion - sources/policy/jobs (G06.5) | every `/admin/ingestion/sources/**`, `/admin/ingestion/jobs/**`, `/admin/ingestion/runs/**` route | `ADMIN` only - deliberately no `EDITOR` carve-out, same tier as Providers/Cost Assumptions above (this configures rate limits, licensing classification, and which external systems get called - `HISTORIAN_REVIEWER`/`MODERATOR`/`EDITOR`/`CONTRIBUTOR`/`USER` have no authority here; live-proven: `USER`/`CONTRIBUTOR` tokens get `403` on every route in this group) |
+| Knowledge Ingestion - candidate review (G06.5) | every `/admin/ingestion/candidates/**` route (list, detail, diff, approve, reject, merge) | `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` - never `CONTRIBUTOR`/`USER` (candidates are pre-publication). Self-approval is additionally forbidden in service code for `PERSON`/`EVENT`/`HISTORICAL_FACT` candidate types when the approving actor is also who triggered the originating ingestion run, mirroring the `HistoricalFact` separation-of-duties rule below (`IngestionCandidatesService.approve`) |
 | Facts | every `/facts/**` route (create, link, editorial-status) | `CONTRIBUTOR`, `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` (module-level guard; see separation-of-duties note for the extra in-service checks on publishing, completing FACT_REVIEW, and retracting) |
 | Sources | `POST /sources` | `CONTRIBUTOR`, `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` |
 | Sources | `POST /sources/:id/documents` | `EDITOR`, `HISTORIAN_REVIEWER`, `ADMIN` |
@@ -90,20 +92,54 @@ Every route not listed above that still requires `@ApiBearerAuth()` (e.g. `GET /
 `.../:slug/operational-snapshot`, `GET /attractions`, `.../:slug`, `GET /activities`, `.../:slug`,
 `.../:slug/offers`) requires no authentication at all.
 
-## Owner-scoped authorization (G06 — a new pattern, not role-based)
+## Owner/capability-scoped authorization (G06, extended by G07 — a pattern distinct from role-based `@Roles()`)
 
-Every `/v1/trips/**` route (`Trip` create/list/get/update/archive, destinations, transport-legs,
-day items, reorder, estimates) carries **no `@Roles()` decorator at all** - it is not missing from
-this matrix by oversight, it is structurally a different authorization model than every other row
-above. Trip is private, single-owner planning data (no `TripMember`/collaboration exists - deferred
-to G07): any authenticated `USER` may create and manage their *own* Trips, and authorization is
-enforced entirely in service code (`TripsService.getOwnedOrThrow`), not by role. A request for a
-Trip that does not exist at all gets `404 TRIP_NOT_FOUND`; a request for a Trip that exists but
-belongs to a different authenticated user gets `403 TRIP_NOT_OWNER` - existence is never hidden,
-matching this codebase's established `Comment`/`Contribution` ownership convention exactly (see
-`G06_PRE_IMPLEMENTATION_REPORT.md` section 1.6/4.2 for the full precedent trace). **No role,
-including `ADMIN`, is given implicit read/write access to another user's private Trip** - this is a
-deliberate decision, not an oversight (`getOwnedOrThrow` performs no role check of any kind).
+Every `/v1/trips/**` route (`Trip` create/list/get/update/archive, destinations, transport-legs, day
+items, reorder, estimates, members, invitations, leave/transfer-ownership, activity) carries **no
+`@Roles()` decorator at all** - not missing from this matrix by oversight, it is structurally a
+different authorization model than every other row above. Trip is private (spec G07 section 1: a
+Trip is never made public by membership) - any authenticated `USER` may create and manage their own
+Trips, and authorization is enforced entirely in service code, not by platform role.
+
+**G06 baseline**: single-owner, `TripsService.getOwnedOrThrow` compared `Trip.ownerId` to the
+caller directly.
+
+**G07 extension** (`docs/backend/G07_PRE_IMPLEMENTATION_REPORT.md` section 8/10): `Trip.ownerId`
+remains the sole ownership authority - the owner is deliberately **not** materialized as a
+`TripMember` row, so there is still exactly one ownership truth, never two rows that could
+disagree. `getOwnedOrThrow` is now a thin wrapper around the new `TripAuthorizationService`, which
+resolves an effective role (`OWNER` virtual, or the caller's `TripMember.role` - `EDITOR`/`VIEWER`,
+or no relationship at all) and checks it against a fixed capability matrix
+(`VIEW_TRIP`/`EDIT_TRIP`/`GENERATE_ESTIMATE`/`MANAGE_MEMBERS`/`MANAGE_INVITATIONS`/
+`TRANSFER_OWNERSHIP`/`ARCHIVE_TRIP`) transcribed verbatim from the G07 brief's own permission table:
+
+| Capability | OWNER | EDITOR | VIEWER |
+|---|---|---|---|
+| VIEW_TRIP | yes | yes | yes |
+| EDIT_TRIP (itinerary/destinations/days/items/transport/metadata) | yes | yes | no |
+| GENERATE_ESTIMATE | yes | yes | no (may still view existing estimates via VIEW_TRIP) |
+| MANAGE_MEMBERS (role change/remove) | yes | no | no |
+| MANAGE_INVITATIONS (create/list/revoke) | yes | no | no |
+| TRANSFER_OWNERSHIP | yes | no | no |
+| ARCHIVE_TRIP | yes | no | no |
+
+Existence is never hidden: a Trip that does not exist at all gets `404 TRIP_NOT_FOUND`; a Trip that
+exists but the caller has no sufficient relationship to (unrelated user, or a member whose role
+lacks the needed capability) gets `403 TRIP_PERMISSION_DENIED` - the **same** code either way, so
+the response itself never reveals "you have some relationship to this trip, just not enough" versus
+"you have none at all." This exact indistinguishability is a deliberate continuation of this
+codebase's established `Comment`/`Contribution`/G06-Trip 404-then-403 convention (see
+`G06_PRE_IMPLEMENTATION_REPORT.md` section 1.6/4.2 for the original precedent trace). **No platform
+role, including `ADMIN`, is given implicit read/write access to another user's private Trip** - this
+remains a deliberate decision in G07 exactly as it was in G06 (`TripAuthorizationService.authorize`
+performs no platform-role check of any kind, only trip-scoped role resolution).
+
+**Self-service exception**: `POST /v1/trips/:id/leave` requires no capability at all (any accepted
+`EDITOR`/`VIEWER` may always leave their own membership) - but the trip's owner is explicitly
+blocked from calling it (`403 TRIP_OWNER_CANNOT_LEAVE`) since they must transfer ownership first
+(spec section 29). Self-promotion and self-removal-as-owner are both structurally impossible, not
+merely blocked by an extra check: `MANAGE_MEMBERS`-gated routes can never resolve a `TripMember` row
+for the owner, because the owner never has one.
 
 ## Separation of duties (spec Phase 02 section 20)
 
@@ -115,6 +151,7 @@ Two rules are enforced in *service* code, not just route-level `@Roles()`, becau
 4. **`Story` SOURCE_CHECK completion** (Phase 06, `StoriesService.setEditorialStatus`, unit-tested in `stories.service.spec.ts`): moving a Story from `SOURCE_CHECK` to `EDITORIAL_REVIEW` requires `HISTORIAN_REVIEWER`/`ADMIN` *only when the Story links at least one `HistoricalFact`* (`StoryFact`) - a Story making no factual claims can be moved through review by any `EDITOR`. Publication itself additionally refuses (regardless of role) if any linked Fact is not `PUBLISHED` (`STORY_FACT_NOT_PUBLISHABLE`) - see `docs/backend/EDITORIAL_CONTENT.md` section 6.
 5. **`CommunityStory`/`Comment` moderation and review, extended (Phase 08)**: `CommunityService.setReviewVerificationState` and `CommunityService.setModerationStatus` both refuse when `actorId === story.authorId`, and `CommentsService.moderate` refuses when `actorId === comment.authorId` - regardless of the actor's roles (unit-tested in `community.service.spec.ts`/`comments.service.spec.ts`). Holding `HISTORIAN_REVIEWER`/`EDITOR`/`MODERATOR`/`ADMIN` never overrides being an interested party in your *own* submission - the same principle as rule 1 above, extended from Fact review to community review/moderation. The new unified `POST /admin/moderation/actions` entrypoint (section below) delegates to these same two methods, so it inherits this refusal automatically rather than needing its own copy of the check.
 6. **`Contribution` review/rights-review/cataloguing (Phase 09)**: every reviewer/admin method on `ContributionsService` (`submitReview`, `setRightsReview`, `setProvenanceConfidence`, `setSensitivity`, `catalogueSource`, `catalogueDocument`, `catalogueMedia`) refuses when `actorId === contribution.contributorId` (`CONTRIBUTION_SELF_REVIEW_FORBIDDEN`), regardless of role - unit-tested in `contributions.service.spec.ts`. Completing `HISTORICAL_REVIEW -> ACCEPTED` additionally requires `HISTORIAN_REVIEWER`/`ADMIN` specifically (the historical-accuracy checkpoint, mirroring rule 3 above), and every catalogue action requires `HISTORIAN_REVIEWER`/`ADMIN` and `rightsReviewState = APPROVED_FOR_CATALOGUE` - a plain `EDITOR` can triage/provenance-review but never promote material into the trust layer. See `docs/backend/CONTRIBUTION_ARCHITECTURE.md` section 16.
+7. **`IngestionCandidate` approval for sensitive types (G06.5)**: `IngestionCandidatesService.approve` refuses (`INGESTION_CANDIDATE_SELF_APPROVAL_FORBIDDEN`) when the approving actor is the same user who triggered the `IngestionRun` that produced a `PERSON`/`EVENT`/`HISTORICAL_FACT` candidate, regardless of role - mirrors rule 1's `HistoricalFact` separation-of-duties rule, extended to the ingestion pipeline's equivalent case. `PLACE`/`MEDIA`/`COUNTRY`/`REGION`/`CITY`/`DESTINATION` candidates carry no such restriction (same tier as ordinary geography/place content editing).
 
 ## Privilege-escalation prevention (spec Phase 02 section 21)
 

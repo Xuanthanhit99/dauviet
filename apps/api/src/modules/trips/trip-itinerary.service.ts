@@ -3,6 +3,7 @@ import { PublicationStatus, TripItemType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TripsService } from './trips.service';
+import { TripCapability } from './trip-authorization.service';
 import { TRIP_ERROR_CODES } from '../../common/errors/trip-error-codes';
 import { GEOGRAPHY_ERROR_CODES } from '../../common/errors/geography-error-codes';
 import { STAY_FOOD_ACTIVITY_ERROR_CODES } from '../../common/errors/stay-food-activity-error-codes';
@@ -37,9 +38,9 @@ export class TripItineraryService {
     private readonly trips: TripsService,
   ) {}
 
-  /** Loads and authorizes the trip, then asserts it is neither archived nor stale-versioned - the one guard every itinerary mutation below shares. */
-  private async loadMutableTrip(tripId: string, ownerId: string, expectedVersion: number) {
-    const trip = await this.trips.getOwnedOrThrow(tripId, ownerId);
+  /** Loads and authorizes the trip (EDIT_TRIP - owner or EDITOR, never a plain VIEWER, spec section 33), then asserts it is neither archived nor stale-versioned - the one guard every itinerary mutation below shares. */
+  private async loadMutableTrip(tripId: string, userId: string, expectedVersion: number) {
+    const trip = await this.trips.getOwnedOrThrow(tripId, userId, TripCapability.EDIT_TRIP);
     this.trips.assertMutable(trip, expectedVersion);
     return trip;
   }

@@ -9,6 +9,7 @@ import { GEOGRAPHY_ERROR_CODES } from './geography-error-codes';
 import { PROVIDER_ERROR_CODES } from './provider-error-codes';
 import { STAY_FOOD_ACTIVITY_ERROR_CODES } from './stay-food-activity-error-codes';
 import { TRIP_ERROR_CODES } from './trip-error-codes';
+import { INGESTION_ERROR_CODES } from './ingestion-error-codes';
 
 /**
  * Phase 11 error-code inventory (spec section 9) - every domain error-code
@@ -36,6 +37,8 @@ const REGISTRIES: Record<string, Record<string, string>> = {
   STAY_FOOD_ACTIVITY: STAY_FOOD_ACTIVITY_ERROR_CODES,
   // Added G06 (Trip Planner + Cost Engine).
   TRIP: TRIP_ERROR_CODES,
+  // Added G06.5 (Knowledge & Place Data Ingestion).
+  INGESTION: INGESTION_ERROR_CODES,
 };
 
 // Generic per-HTTP-status codes AllExceptionsFilter falls back to when a

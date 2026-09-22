@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import maplibregl, { type GeoJSONSource, type Map as MapLibreMap } from "maplibre-gl";
+import maplibregl, { type GeoJSONSource, type GeoJSONSourceSpecification, type Map as MapLibreMap } from "maplibre-gl";
 
 type FeatureProperties = {
   entityType?: "PLACE" | "EVENT" | "TERRITORY";
@@ -14,8 +14,9 @@ type FeatureProperties = {
   importance?: number;
 };
 
-type DiscoveryFeature = GeoJSON.Feature<GeoJSON.Geometry, FeatureProperties>;
-type FeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Geometry, FeatureProperties>;
+type MapCollection = Extract<GeoJSONSourceSpecification["data"], { type: "FeatureCollection" }>;
+type DiscoveryFeature = Omit<MapCollection["features"][number], "properties"> & { properties: FeatureProperties };
+type FeatureCollection = Omit<MapCollection, "features"> & { features: DiscoveryFeature[] };
 type MapMeta = { truncated?: boolean; limit?: number; minImportance?: number };
 type ApiEnvelope = { success: boolean; data: FeatureCollection; meta?: MapMeta };
 

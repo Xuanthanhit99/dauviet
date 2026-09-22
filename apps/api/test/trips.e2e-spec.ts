@@ -113,12 +113,12 @@ describe('Trips (G06) - e2e', () => {
       expect(res.body.error.code).toBe('TRIP_NOT_FOUND');
     });
 
-    it("403s when a different authenticated user requests someone else's trip", async () => {
+    it("403s when a different authenticated user requests someone else's trip - TRIP_PERMISSION_DENIED (G07: the same code an under-privileged member would get, so the response never reveals 'you have some relationship, just not enough')", async () => {
       const createRes = await createTrip(ownerToken).expect(201);
       const tripId = createRes.body.data.id as string;
 
       const res = await request(app.getHttpServer()).get(`/v1/trips/${tripId}`).set('Authorization', `Bearer ${otherToken}`).expect(403);
-      expect(res.body.error.code).toBe('TRIP_NOT_OWNER');
+      expect(res.body.error.code).toBe('TRIP_PERMISSION_DENIED');
     });
   });
 
