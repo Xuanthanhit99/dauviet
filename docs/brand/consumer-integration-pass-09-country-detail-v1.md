@@ -1,7 +1,7 @@
 # Consumer Integration Pass #9 - Country Detail V1
 
 Date: 2026-09-22
-Status: **IMPLEMENTED_CI_BROWSER_QA_PENDING**
+Status: **CLOSED_PRODUCTION_QA_PASS**
 Route: `/countries/[slug]`
 
 ## Contract discovery
@@ -79,6 +79,14 @@ Local QA completed on 2026-09-22:
 
 Local QA does not close Pass #9.
 
-GitHub Consumer QA has not yet been run for this implementation commit. Pass #9 must remain **IMPLEMENTED_CI_BROWSER_QA_PENDING** until a real Consumer QA workflow passes and the registry is updated with the actual run ID, job ID, commit SHA, and checks.
+GitHub Consumer QA passed for the implementation commit:
+- Workflow: Consumer QA
+- Run ID: `35755595305`
+- Job ID: `106840425951`
+- Commit SHA: `5343b96f8d079001bf24166437c50ec43381bfcc`
+- Conclusion: `success`
+- URL: `https://github.com/Xuanthanhit99/dauviet/actions/runs/35755595305`
+
+Pass #9 is **CLOSED_PRODUCTION_QA_PASS**. The next locked candidate remains Region Detail V2, but it is not started in this pass.
 
 **BACKEND CHANGED: NO** by this task.

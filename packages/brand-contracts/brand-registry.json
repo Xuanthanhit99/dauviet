@@ -2223,7 +2223,7 @@
       }
     },
     "pass9": {
-      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "status": "CLOSED_PRODUCTION_QA_PASS",
       "date": "2026-09-22",
       "scope": "COUNTRY_DETAIL_V1",
       "route": "/countries/[slug]",
@@ -2260,7 +2260,7 @@
       "backendChanged": false,
       "qaEvidence": "docs/brand/consumer-integration-pass-09-country-detail-v1.md",
       "browserQA": {
-        "status": "LOCAL_PASS_CI_PENDING",
+        "status": "PASS",
         "runner": "Playwright browser QA",
         "suiteResult": "51/51 PASS full web suite; 8/8 PASS focused Country Detail V1",
         "webTypecheck": "PASS",
@@ -2286,16 +2286,20 @@
           "reduced-motion",
           "explicit-contract-gaps",
           "no-fabricated-boundaries-or-relationships"
-        ]
+        ],
+        "execution": "GITHUB_ACTIONS_AND_LOCAL_PRODUCTION_SERVER",
+        "workflowRunId": 35755595305,
+        "jobId": 106840425951
       },
       "ci": {
-        "status": "PENDING_REAL_CONSUMER_QA",
-        "workflowRunId": null,
-        "jobId": null,
-        "commitSha": null,
-        "conclusion": null
+        "status": "PASS",
+        "workflowRunId": 35755595305,
+        "jobId": 106840425951,
+        "commitSha": "5343b96f8d079001bf24166437c50ec43381bfcc",
+        "conclusion": "success",
+        "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35755595305"
       },
-      "next": "REGION_DETAIL_V2_AFTER_PASS_9_CLOSURE"
+      "next": "REGION_DETAIL_V2_NOT_STARTED"
     }
   }
 }
