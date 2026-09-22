@@ -1,12 +1,12 @@
 # Consumer Integration Pass #8 — Journey Detail V3
 
 Date: 2026-09-22
-Status: **CI_PENDING — LOCAL PRODUCTION QA PASS**
+Status: **CLOSED_PRODUCTION_QA_PASS**
 Route: `/journeys/[slug]`
 
 ## Baseline and contract
 
-Journey V3 follows Story Explorer V4 in the locked Web surface order in `consumer-integration-pass-01-inventory-mapping.md`. Pass #7 has a passing local production build, typecheck and 34/34 Chromium suite. Both passes remain CI_PENDING under the latest requirement for passing CI evidence. Existing brand colors/typography/motion, real-media rules and MapLibre/OpenFreeMap architecture are reused. The repository has the locked version inventory and brand contracts, but no standalone Journey V3 pixel reference board; no pixel-perfect claim is made.
+Journey V3 follows Story Explorer V4 in the locked Web surface order in `consumer-integration-pass-01-inventory-mapping.md`. Pass #7 has a passing local production build, typecheck and 34/34 Chromium suite. Both passes are CLOSED_PRODUCTION_QA_PASS with the new CI evidence below. Existing brand colors/typography/motion, real-media rules and MapLibre/OpenFreeMap architecture are reused. The repository has the locked version inventory and brand contracts, but no standalone Journey V3 pixel reference board; no pixel-perfect claim is made.
 
 Read-only contract evidence: `docs/backend/EDITORIAL_CONTENT.md` sections 9–11; `docs/backend/openapi.json`; existing Journey controller/service public DTO; existing Media controller/service public DTO. No backend implementation or generated contract changed.
 
@@ -46,4 +46,8 @@ Read GitHub main at f2c62c3431c8e4a6835a9d82ba2f336dc04603bd and all five commit
 
 No shared checkout pull/merge/reset or history operation was performed, because backend work is concurrently dirty. No newer remote backend files were restored into the workspace. The remote Pass #8 implementation metadata is retained and extended in the local registry.
 
-Latest inspected CI: [Consumer QA 35712769569](https://github.com/Xuanthanhit99/dauviet/actions/runs/35712769569), job 106697054833, conclusion failure at the pre-existing Story selector. Journey browser tests were not yet present in that run. Updated local source has no CI run; status remains CI_PENDING. Country Detail V1 is the next locked screen in the existing inventory, to begin after Pass #8's CI gate closes.
+## Verified publication and CI closure
+
+[Consumer QA 35715276514](https://github.com/Xuanthanhit99/dauviet/actions/runs/35715276514), job [106705186638](https://github.com/Xuanthanhit99/dauviet/actions/runs/35715276514/job/106705186638), passed on commit `2387820c623fe5320accc1dee2c466886b261a99`. All 43 Chromium tests passed (16.7 seconds), along with web typecheck/build/smoke, admin typecheck/build and mobile typecheck. This new run is the closure evidence.
+
+Pass #8: **CLOSED_PRODUCTION_QA_PASS**. Country Detail V1 remains unstarted, per the current publication-only instruction.

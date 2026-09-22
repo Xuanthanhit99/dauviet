@@ -1,7 +1,7 @@
 # Consumer Integration Pass #7 — Story Explorer V4
 
 Date: 2026-09-22
-Status: **CI_PENDING — LOCAL PRODUCTION QA PASS**
+Status: **CLOSED_PRODUCTION_QA_PASS**
 
 Route: `/stories/[slug]`. Existing APIs: `GET /v1/stories/{slug}?locale=vi` and `GET /v1/media/{id}`.
 
@@ -31,15 +31,17 @@ This is local production-server QA, not a newly executed GitHub Actions run or p
 - Audio transcripts and per-stop locale metadata are not supplied. Media without publishable rights/provenance stays unavailable.
 - The repository identifies locked screen versions and brand rules but does not contain standalone Story V4/Journey V3 pixel reference boards; exact pixel equivalence is not claimed.
 
-**PASS #7 — STORY EXPLORER V4: CI_PENDING.**
+**PASS #7 — STORY EXPLORER V4: CLOSED_PRODUCTION_QA_PASS.**
 Next: **Pass #8 — Journey Detail V3**, confirmed by the ordered locked-surface mapping in `consumer-integration-pass-01-inventory-mapping.md` and this registry transition.
 
 **BACKEND CHANGED: NO** by this frontend task. The shared working tree already contains unrelated backend changes; they are preserved.
 
-## CI reconciliation with current main
+## Verified publication and CI closure
 
-GitHub main was inspected at f2c62c3431c8e4a6835a9d82ba2f336dc04603bd; local shared checkout HEAD remains 9a16e4a9880c38a1ff973ec1dd1fb069b1445c01. Latest Consumer QA run [35712769569](https://github.com/Xuanthanhit99/dauviet/actions/runs/35712769569), job 106697054833, failed in the Story test because the co-loa selector matched both Place and Event links (26 passed / 1 failed). Run 35630183490 on the local base commit also failed in browser QA. Earlier successful runs predate addition of the Story browser gate and cannot close Pass #7. The selector corrections pass locally, but this updated working tree has not been committed/pushed or tested in CI. The latest user instruction requires passing CI before closure, so the registry remains CI_PENDING despite local QA passing. No existing failing CI run was relabeled or rerun against unchanged code.
+[Consumer QA 35715276514](https://github.com/Xuanthanhit99/dauviet/actions/runs/35715276514), job [106705186638](https://github.com/Xuanthanhit99/dauviet/actions/runs/35715276514/job/106705186638), passed on commit `2387820c623fe5320accc1dee2c466886b261a99`. All 43 Chromium tests passed (16.7 seconds), along with web typecheck/build/smoke, admin typecheck/build and mobile typecheck. This new run is the closure evidence.
+
+Publication used an isolated checkout based on current origin/main and only the 23 task-owned files. Claude’s shared backend working-tree changes were not staged or modified.
 
 ## Final regression result
 
-After Journey refinements, the full local Chromium suite passed **43/43**, 1.1 minutes, zero failures/retries. Final web typecheck/build and HTTP smoke checks passed. Pass #7 remains CI_PENDING until the updated code passes GitHub Consumer QA.
+After Journey refinements, the full local Chromium suite passed **43/43**, 1.1 minutes, zero failures/retries. Final web typecheck/build and HTTP smoke checks passed. Pass #7 is CLOSED_PRODUCTION_QA_PASS based on the new successful Consumer QA run.

@@ -1,7 +1,7 @@
 # Dấu Việt Global — Frontend Pass #7 / #8 final report
 
 Date: 2026-09-22
-Result: **LOCAL QA PASS; PASS #7 / #8 CI_PENDING**
+Result: **PASS #7 / #8 CLOSED_PRODUCTION_QA_PASS**
 
 ## Existing work and current repository
 
@@ -46,23 +46,24 @@ Browser tests use deterministic API fixtures; Journey screenshots use a neutral 
 
 ## CI evidence and pass states
 
-Inspected [Consumer QA 35712769569](https://github.com/Xuanthanhit99/dauviet/actions/runs/35712769569), job [106697054833](https://github.com/Xuanthanhit99/dauviet/actions/runs/35712769569/job/106697054833), at remote main `f2c62c3`: **failure**, 26 browser tests passed and one Story test failed because `/co-loa/` matched both Place and Event links. Its install, web typecheck, web build and smoke steps passed. That selector and another overlapping source-title selector are now corrected locally. The older run `35630183490` on local base `9a16e4a` also failed at browser QA. Earlier passing runs predate the Story browser gate and do not justify closure.
+[Consumer QA 35715276514](https://github.com/Xuanthanhit99/dauviet/actions/runs/35715276514), job [106705186638](https://github.com/Xuanthanhit99/dauviet/actions/runs/35715276514/job/106705186638), passed on commit `2387820c623fe5320accc1dee2c466886b261a99`. All 43 Chromium tests passed (16.7 seconds), along with web typecheck/build/smoke, admin typecheck/build and mobile typecheck. This new run is the closure evidence.
 
-No CI run includes these uncommitted local refinements. Accordingly:
-- **Pass #7: CI_PENDING; local production QA PASS.**
-- **Pass #8: CI_PENDING; local production QA PASS.**
-
-No failed run was relabeled as success. Registry and pass documents distinguish local evidence from CI.
+- **Pass #7: CLOSED_PRODUCTION_QA_PASS.**
+- **Pass #8: CLOSED_PRODUCTION_QA_PASS.**
+- Published branch: **main**, normal push, no force.
+- Implementation commit: `2387820c623fe5320accc1dee2c466886b261a99`.
+- Exact committed file list: the 23 frontend-owned files below. The closure follow-up changes only this report, both pass documents and the registry.
+- Shared checkout branch/index and Claude’s backend working-tree changes remain untouched; publication used an isolated checkout based on remote main.
 
 ## Remaining frontend dependencies and next screen
 
-Passing Consumer QA on the updated frontend is required before closing either pass. Journey has no route geometry, dedicated citation list, bookings, practical service data or stop-specific translation metadata in the consumed contract. Story relationships expose slugs rather than localized names; Person/Event detail routes remain later frontend work. Audio transcripts are not supplied. Media missing rights/provenance remains intentionally unavailable.
+The updated frontend passed Consumer QA and both passes are closed. Journey has no route geometry, dedicated citation list, bookings, practical service data or stop-specific translation metadata in the consumed contract. Story relationships expose slugs rather than localized names; Person/Event detail routes remain later frontend work. Audio transcripts are not supplied. Media missing rights/provenance remains intentionally unavailable.
 
-The next locked screen after Pass #8 closure is **Country Detail V1**, as ordered in the existing canonical surface inventory. It was not started while the explicit CI gate remains pending.
+The next locked screen after Pass #8 closure is **Country Detail V1**, as ordered in the existing canonical surface inventory. It remains unstarted under the current publication-only instruction.
 
 ## Frontend-owned changed/new files
 
-The following includes untracked frontend files, which `git diff --name-only` alone omits:
+The implementation commit contains exactly these 23 files:
 
 ```text
 apps/web/.gitignore
