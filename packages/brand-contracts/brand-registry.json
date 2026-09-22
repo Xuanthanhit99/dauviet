@@ -2211,7 +2211,7 @@
         "workflowRunId": 35715276514,
         "jobId": 106705186638
       },
-      "next": "COUNTRY_DETAIL_V1_NOT_STARTED",
+      "next": "PASS_9_COUNTRY_DETAIL_V1_IMPLEMENTED_CI_PENDING",
       "nextLockedScreenAfterClosure": "COUNTRY_DETAIL_V1",
       "ci": {
         "status": "PASS",
@@ -2221,6 +2221,81 @@
         "conclusion": "success",
         "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35715276514"
       }
+    },
+    "pass9": {
+      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "date": "2026-09-22",
+      "scope": "COUNTRY_DETAIL_V1",
+      "route": "/countries/[slug]",
+      "apis": [
+        "GET /v1/countries/{slug}",
+        "GET /v1/countries/{slug}/regions",
+        "GET /v1/countries/{slug}/cities",
+        "GET /v1/countries/{slug}/destinations"
+      ],
+      "implemented": [
+        "country-identity-hero-with-no-media-state",
+        "world-country-region-hierarchy",
+        "published-regions-discovery",
+        "published-destinations-discovery",
+        "city-geographic-context",
+        "translation-fallback-disclosure",
+        "representative-point-spatial-context-only",
+        "explicit-contract-gap-disclosure",
+        "loading-error-empty-states",
+        "responsive-layout",
+        "keyboard-focus-and-reduced-motion"
+      ],
+      "notExposedByBackend": [
+        "country-hero-media",
+        "country-citations-or-sources",
+        "country-boundary-geometry",
+        "country-places",
+        "country-stories",
+        "country-journeys",
+        "country-people",
+        "country-events",
+        "country-culture-theme-relationships"
+      ],
+      "backendChanged": false,
+      "qaEvidence": "docs/brand/consumer-integration-pass-09-country-detail-v1.md",
+      "browserQA": {
+        "status": "LOCAL_PASS_CI_PENDING",
+        "runner": "Playwright browser QA",
+        "suiteResult": "51/51 PASS full web suite; 8/8 PASS focused Country Detail V1",
+        "webTypecheck": "PASS",
+        "webBuild": "PASS",
+        "viewports": [
+          "390x844",
+          "834x1112",
+          "1536x960"
+        ],
+        "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON",
+        "evidenceDirectory": "apps/web/qa-evidence/pass-09",
+        "checks": [
+          "responsive-no-overflow",
+          "country-identity-hierarchy",
+          "regions",
+          "destinations",
+          "cities-context",
+          "no-media-behavior",
+          "locale-fallback",
+          "empty-states",
+          "api-error-retry",
+          "keyboard-focus",
+          "reduced-motion",
+          "explicit-contract-gaps",
+          "no-fabricated-boundaries-or-relationships"
+        ]
+      },
+      "ci": {
+        "status": "PENDING_REAL_CONSUMER_QA",
+        "workflowRunId": null,
+        "jobId": null,
+        "commitSha": null,
+        "conclusion": null
+      },
+      "next": "REGION_DETAIL_V2_AFTER_PASS_9_CLOSURE"
     }
   }
 }
