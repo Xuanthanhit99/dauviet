@@ -2148,6 +2148,28 @@
           "reduced-motion"
         ]
       }
+    },
+    "pass8": {
+      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "date": "2026-09-22",
+      "scope": "JOURNEY_DETAIL_V3",
+      "route": "/journeys/[slug]",
+      "api": "GET /v1/journeys/{slug}",
+      "implemented": [
+        "editorial-journey-hero",
+        "backend-only-journey-metrics",
+        "ordered-place-stops",
+        "stop-duration-and-coordinates",
+        "story-event-stop-links",
+        "route-provenance-disclosure",
+        "no-fabricated-route-geometry",
+        "hero-media-disclosure",
+        "locale-fallback",
+        "loading-error-empty-states",
+        "responsive-layout"
+      ],
+      "backendChanged": false,
+      "next": "CONSUMER_QA_AND_JOURNEY_BROWSER_QA"
     }
   }
 }
