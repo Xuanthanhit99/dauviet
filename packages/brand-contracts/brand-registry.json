@@ -2331,7 +2331,7 @@
       "remaining": ["PERSON_DETAIL_V2_PARTIALLY_READY", "CULTURE_V2_PUBLIC_DETAIL_CONTRACT_BLOCKED"]
     },
     "pass12": {
-      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "status": "CLOSED_PRODUCTION_QA_PASS",
       "date": "2026-09-23",
       "scope": "PERSON_DETAIL_V2",
       "route": "/people/[slug]",
@@ -2371,12 +2371,12 @@
       "backendChanged": false,
       "qaEvidence": "docs/brand/consumer-integration-pass-12-person-detail-v2.md",
       "browserQA": {
-        "status": "LOCAL_PASS_CI_PENDING",
+        "status": "PASS",
         "suiteResult": "22/22 Person; 20/20 Event; 15/15 Story; 105/105 full Chromium",
         "webTypecheck": "PASS",
         "webBuild": "PASS",
         "diffCheck": "PASS",
-        "execution": "LOCAL_PRODUCTION_SERVER",
+        "execution": "GITHUB_ACTIONS_AND_LOCAL_PRODUCTION_SERVER",
         "screenshotReview": "THREE_VIEWPORTS_AND_MEDIA_EMPTY_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON",
         "viewports": [
           "390x844",
@@ -2386,7 +2386,13 @@
         "evidenceDirectory": "apps/web/qa-evidence/pass-12"
       },
       "ci": {
-        "status": "PENDING"
+        "status": "PASS",
+        "workflowRunId": 35846285728,
+        "jobId": 107133134990,
+        "commitSha": "bdf41e0d0c0cdbc15857b2f8730c59fbe0e05e28",
+        "conclusion": "success",
+        "suiteResult": "105/105 full web; 22/22 Person; 20/20 Event; 15/15 Story",
+        "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35846285728"
       },
       "next": "CULTURE_V2_BLOCKED_PUBLIC_DETAIL_CONTRACT_REQUIRED_NO_AUTOMATIC_IMPLEMENTATION"
     }
