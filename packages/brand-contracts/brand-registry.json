@@ -2302,7 +2302,7 @@
       "next": "REGION_DETAIL_V2_NOT_STARTED"
     },
     "pass10": {
-      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "status": "CLOSED_PRODUCTION_QA_PASS",
       "date": "2026-09-23",
       "scope": "REGION_DETAIL_V2",
       "route": "/regions/[slug]",
@@ -2311,8 +2311,8 @@
       "notExposedByBackend": ["region-media-provenance", "region-citations-facts-certainty", "region-boundary-route-geometry", "child-list-coordinates-media", "region-places-stories-journeys", "region-people-events-culture", "per-item-list-locale-metadata"],
       "backendChanged": false,
       "qaEvidence": "docs/brand/consumer-integration-pass-10-region-detail-v2.md",
-      "browserQA": { "status": "PASS", "suiteResult": "12/12 focused; 63/63 full Chromium", "webTypecheck": "PASS", "webBuild": "PASS", "diffCheck": "PASS", "execution": "LOCAL_PRODUCTION_SERVER", "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON", "viewports": ["390x844", "834x1112", "1536x960"], "evidenceDirectory": "apps/web/qa-evidence/pass-10" },
-      "ci": { "status": "PENDING" },
+      "browserQA": { "status": "PASS", "suiteResult": "12/12 focused; 63/63 full Chromium", "webTypecheck": "PASS", "webBuild": "PASS", "diffCheck": "PASS", "execution": "GITHUB_ACTIONS_AND_LOCAL_PRODUCTION_SERVER", "workflowRunId": 35809512762, "jobId": 107017678184, "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON", "viewports": ["390x844", "834x1112", "1536x960"], "evidenceDirectory": "apps/web/qa-evidence/pass-10" },
+      "ci": { "status": "PASS", "workflowRunId": 35809512762, "jobId": 107017678184, "commitSha": "315b35db20582f6b49ad68397fdbf174af889544", "conclusion": "success", "suiteResult": "63/63 PASS full web; 12/12 Region", "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35809512762" },
       "next": "POST_REGION_ORDER_NOT_SPECIFIED_IN_CANONICAL_INVENTORY"
     }
   }
