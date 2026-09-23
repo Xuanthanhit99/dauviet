@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useResource, RelatedStories, RelatedSources } from "../../components/editorial-related";
 import PublishedMedia from "../../components/published-media";
 import { eventCopy, type EventLocale } from "./event-copy";
 
@@ -17,38 +17,6 @@ type EventProfile = {
   era?: Entity | null; territory?: Entity | null;
   meta: { requestedLocale: string; resolvedLocale: string | null; fallbackApplied: boolean };
 };
-type Story = { id: string; slug: string; type?: string; title?: string | null };
-type Source = { id: string; title?: string | null; sourceType?: string; author?: string | null; organization?: string | null; publisher?: string | null; publicationYear?: number | null; url?: string | null; credibilityLevel?: string | null };
-const API = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
-
-/** A failed supporting resource never replaces the primary event or another resource. */
-function useResource<T>(path: string) {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<number | null>(null);
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true); setError(null); setData(null);
-    fetch(`${API}${path}`, { signal: controller.signal, credentials: "include" })
-      .then(async response => {
-        if (!response.ok) throw response.status;
-        const payload = await response.json();
-        if (!controller.signal.aborted) setData(payload.data ?? payload);
-      })
-      .catch(reason => { if (!controller.signal.aborted) setError(typeof reason === "number" ? reason : 0); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [path, attempt]);
-  return { data, loading, error, retry: () => setAttempt(value => value + 1) };
-}
-
-/** Only explicit absolute web links are offered; no inferred Source detail route. */
-function sourceHref(value?: string | null): string | null {
-  if (!value || !/^https?:\/\//i.test(value)) return null;
-  try { const parsed = new URL(value); return parsed.username || parsed.password ? null : parsed.href; } catch { return null; }
-}
-
 export default function EventDetail({ slug, locale }: { slug: string; locale: EventLocale }) {
   const t = eventCopy[locale];
   const resource = useResource<EventProfile>(`/v1/events/${encodeURIComponent(slug)}?locale=${locale}`);
@@ -79,29 +47,13 @@ export default function EventDetail({ slug, locale }: { slug: string; locale: Ev
         <section aria-labelledby="event-countries-title"><h3 id="event-countries-title">{t.countries}</h3>{countries.length ? <ul className="event-link-list">{countries.map(country => <li key={country.id}><a href={`/countries/${encodeURIComponent(country.slug)}`}><span><strong>{country.iso2 || country.slug}</strong><small>{t.role}: {country.role || t.unknown}</small></span><span aria-hidden="true">↗</span></a></li>)}</ul> : <p className="event-empty">{t.noCountries}</p>}</section>
       </div></div></section>
       <section className="event-wrap event-section event-split" aria-labelledby="event-context-title"><div><p className="event-kicker">{t.context}</p><h2 id="event-context-title">{t.context}</h2><p className="event-small">{t.contextNote}</p></div><div>{hasContext ? <div className="event-context-grid">
-        {!!people.length && <div><h3>{t.people}</h3><ul className="event-context-list">{people.map(person => <li key={person.id}>{person.displayName || person.slug}</li>)}</ul></div>}
+        {!!people.length && <div><h3>{t.people}</h3><ul className="event-context-list">{people.map(person => <li key={person.id}>{person.slug ? <a href={`/people/${encodeURIComponent(person.slug)}?locale=${locale}`}>{person.displayName || person.slug}</a> : person.displayName}</li>)}</ul></div>}
         {!!themes.length && <div><h3>{t.themes}</h3><ul className="event-context-list">{themes.map(theme => <li key={theme.id}>{theme.name || theme.slug}{theme.category && <small>{theme.category}</small>}</li>)}</ul></div>}
         {event.era && <div><h3>{t.era}</h3><p>{event.era.slug}</p></div>}{event.territory && <div><h3>{t.territory}</h3><p>{event.territory.slug}</p></div>}
       </div> : <p className="event-empty">{t.noContext}</p>}<p className="event-small event-context-note">{t.relationLocale}</p></div></section>
-      <EventStories key={`stories-${event.slug}-${locale}`} slug={event.slug || slug} locale={locale} />
-      <EventSources key={`sources-${event.slug}`} slug={event.slug || slug} locale={locale} />
+      <RelatedStories entity="events" prefix="event" copy={t} key={`stories-${event.slug}-${locale}`} slug={event.slug || slug} locale={locale} />
+      <RelatedSources entity="events" prefix="event" copy={t} key={`sources-${event.slug}`} slug={event.slug || slug} locale={locale} />
       <footer className="event-end"><div className="event-wrap"><p className="event-kicker">{t.continue}</p><a href="#event-stories">{t.backStories}<span aria-hidden="true">↑</span></a><a href="/map">{t.map}<span aria-hidden="true">↗</span></a><p>DẤU VIỆT GLOBAL · Explore Places. Understand Stories.</p></div></footer>
     </main>
   </div>;
-}
-
-function EventStories({ slug, locale }: { slug: string; locale: EventLocale }) {
-  const t = eventCopy[locale];
-  const { data, loading, error, retry } = useResource<Story[]>(`/v1/events/${encodeURIComponent(slug)}/stories?locale=${locale}`);
-  return <section id="event-stories" className="event-stories" aria-labelledby="event-stories-title"><div className="event-wrap event-section event-split"><div><p className="event-kicker">Story Explorer</p><h2 id="event-stories-title">{t.stories}</h2><p>{t.storiesNote}</p></div><div aria-busy={loading}>{loading ? <p role="status">{t.supportLoading}</p> : error !== null ? <><p role="status">{t.storiesError}</p><button onClick={retry}>{t.retry}</button></> : data?.length ? <ul className="event-story-list">{data.map(story => <li key={story.id}><a href={`/stories/${encodeURIComponent(story.slug)}`}><div>{story.type && <small>{story.type}</small>}<h3>{story.title || story.slug}</h3></div><span aria-hidden="true">↗</span></a></li>)}</ul> : <p className="event-empty">{t.noStories}</p>}</div></div></section>;
-}
-
-function EventSources({ slug, locale }: { slug: string; locale: EventLocale }) {
-  const t = eventCopy[locale];
-  const { data, loading, error, retry } = useResource<Source[]>(`/v1/events/${encodeURIComponent(slug)}/sources`);
-  return <section id="event-sources" className="event-wrap event-section" aria-labelledby="event-sources-title"><div className="event-section-head"><div><p className="event-kicker">{t.sources}</p><h2 id="event-sources-title">{t.sources}</h2></div><p>{t.sourceIntro}</p></div><div aria-busy={loading}>{loading ? <p role="status">{t.supportLoading}</p> : error !== null ? <><p role="status">{t.sourcesError}</p><button onClick={retry}>{t.retry}</button></> : data?.length ? <ul className="event-source-list">{data.map(source => {
-    const href = sourceHref(source.url);
-    const metadata = [[t.sourceType, source.sourceType], [t.author, source.author], [t.organization, source.organization], [t.publisher, source.publisher], [t.year, source.publicationYear], [t.credibility, source.credibilityLevel || t.unknownCredibility]];
-    return <li key={source.id}><article><h3>{source.title || t.sourceUntitled}</h3><dl>{metadata.filter(([, value]) => value !== null && value !== undefined && value !== "").map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>{href ? <a className="event-source-link" href={href} target="_blank" rel="noopener noreferrer" aria-label={`${t.external}: ${source.title || t.sourceUntitled}`}>{source.url}<span aria-hidden="true">↗</span></a> : source.url ? <p className="event-small">{t.sourceUrlUnavailable}</p> : null}</article></li>;
-  })}</ul> : <p className="event-empty">{t.noSources}</p>}</div><aside className="event-trust" aria-labelledby="event-trust-title"><h3 id="event-trust-title">{t.trust}</h3><p>{t.trustNote}</p></aside></section>;
 }

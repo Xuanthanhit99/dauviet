@@ -44,7 +44,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 834, height: 1112 
   });
 }
 
-test("narrative, country roles, actual links and non-link context", async ({ page }) => {
+test("narrative, country roles, actual Person links and remaining non-link context", async ({ page }) => {
   const requests: string[] = []; page.on("request", req => { if (req.url().includes("/v1/")) requests.push(new URL(req.url()).pathname); });
   await mock(page); await page.goto(routePath);
   await expect(page.getByText(event.translation.summary, { exact: true })).toBeVisible();
@@ -59,8 +59,8 @@ test("narrative, country roles, actual links and non-link context", async ({ pag
   await expect(context.getByText(event.themes[0].name, { exact: false })).toBeVisible();
   await expect(context.getByText(event.era.slug, { exact: true })).toBeVisible();
   await expect(context.getByText(event.territory.slug, { exact: true })).toBeVisible();
-  await expect(context.getByRole("link")).toHaveCount(0);
-  await expect(page.locator('a[href^="/people/"],a[href^="/themes/"],a[href^="/cultures/"],a[href^="/eras/"],a[href^="/territories/"]')).toHaveCount(0);
+  await expect(context.getByRole("link", { name: event.people[0].displayName, exact: true })).toHaveAttribute("href", "/people/nhan-vat-qa?locale=vi");
+  await expect(page.locator('a[href^="/themes/"],a[href^="/cultures/"],a[href^="/eras/"],a[href^="/territories/"]')).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Đọc tiếp câu chuyện", exact: true }).getByRole("link").first()).toHaveAttribute("href", "/stories/cau-chuyen-qa");
   await expect(page.locator("canvas,.maplibregl-map,main img")).toHaveCount(0);
   expect(new Set(requests)).toEqual(new Set(["/v1/events/su-kien-thu-nghiem", "/v1/events/su-kien-thu-nghiem/stories", "/v1/events/su-kien-thu-nghiem/sources"]));

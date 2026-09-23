@@ -2329,6 +2329,66 @@
       "ci": { "status": "PASS", "workflowRunId": 35839617761, "jobId": 107111287826, "commitSha": "3d6ea5f97e6c19340bdcc04b7b426fd80ca35614", "conclusion": "success", "suiteResult": "83/83 full web; 20/20 Event", "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35839617761" },
       "next": "PERSON_DETAIL_V2_CANDIDATE_NOT_STARTED_CANONICAL_ORDER_UNSPECIFIED",
       "remaining": ["PERSON_DETAIL_V2_PARTIALLY_READY", "CULTURE_V2_PUBLIC_DETAIL_CONTRACT_BLOCKED"]
+    },
+    "pass12": {
+      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "date": "2026-09-23",
+      "scope": "PERSON_DETAIL_V2",
+      "route": "/people/[slug]",
+      "preflight": "PERSON_CONTRACT_UNCHANGED",
+      "startingHead": "b33c8ffc3a6b8e6dffcf86a3ccb1f29e4dc7039c",
+      "apis": [
+        "GET /v1/people/{slug}?locale=vi|en",
+        "GET /v1/people/{slug}/timeline?locale=vi|en",
+        "GET /v1/people/{slug}/stories?locale=vi|en",
+        "GET /v1/people/{slug}/sources",
+        "GET /v1/media/{id} (exact heroMedia.id only)"
+      ],
+      "implemented": [
+        "editorial-person-identity-and-alternate-names",
+        "verbatim-birth-death-display-no-age",
+        "supplied-biographical-narrative",
+        "place-role-links",
+        "backend-ordered-event-timeline",
+        "capped-related-stories",
+        "source-metadata-without-inferred-citations-certainty",
+        "exact-id-published-media-provenance",
+        "vi-en-fallback",
+        "independent-supporting-endpoint-retry",
+        "event-to-person-navigation",
+        "responsive-keyboard-touch-reduced-motion"
+      ],
+      "notExposedByBackend": [
+        "person-coordinates-map",
+        "person-country-dynasty-era-culture-journeys",
+        "overall-person-certainty",
+        "public-fact-text-certainty-citation-locators",
+        "timeline-participation-role",
+        "per-related-item-locale",
+        "per-place-publication-metadata",
+        "stories-continuation"
+      ],
+      "backendChanged": false,
+      "qaEvidence": "docs/brand/consumer-integration-pass-12-person-detail-v2.md",
+      "browserQA": {
+        "status": "LOCAL_PASS_CI_PENDING",
+        "suiteResult": "22/22 Person; 20/20 Event; 15/15 Story; 105/105 full Chromium",
+        "webTypecheck": "PASS",
+        "webBuild": "PASS",
+        "diffCheck": "PASS",
+        "execution": "LOCAL_PRODUCTION_SERVER",
+        "screenshotReview": "THREE_VIEWPORTS_AND_MEDIA_EMPTY_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON",
+        "viewports": [
+          "390x844",
+          "834x1112",
+          "1536x960"
+        ],
+        "evidenceDirectory": "apps/web/qa-evidence/pass-12"
+      },
+      "ci": {
+        "status": "PENDING"
+      },
+      "next": "CULTURE_V2_BLOCKED_PUBLIC_DETAIL_CONTRACT_REQUIRED_NO_AUTOMATIC_IMPLEMENTATION"
     }
   }
 }
