@@ -2314,6 +2314,21 @@
       "browserQA": { "status": "PASS", "suiteResult": "12/12 focused; 63/63 full Chromium", "webTypecheck": "PASS", "webBuild": "PASS", "diffCheck": "PASS", "execution": "GITHUB_ACTIONS_AND_LOCAL_PRODUCTION_SERVER", "workflowRunId": 35809512762, "jobId": 107017678184, "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON", "viewports": ["390x844", "834x1112", "1536x960"], "evidenceDirectory": "apps/web/qa-evidence/pass-10" },
       "ci": { "status": "PASS", "workflowRunId": 35809512762, "jobId": 107017678184, "commitSha": "315b35db20582f6b49ad68397fdbf174af889544", "conclusion": "success", "suiteResult": "63/63 PASS full web; 12/12 Region", "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35809512762" },
       "next": "POST_REGION_ORDER_NOT_SPECIFIED_IN_CANONICAL_INVENTORY"
+    },
+    "pass11": {
+      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "date": "2026-09-23",
+      "scope": "EVENT_DETAIL_V2",
+      "route": "/events/[slug]",
+      "apis": ["GET /v1/events/{slug}", "GET /v1/events/{slug}/stories", "GET /v1/events/{slug}/sources", "GET /v1/media/{id} (exact heroMedia.id only)"],
+      "implemented": ["editorial-event-identity", "verbatim-historical-date-display", "supplied-narrative", "country-role-and-place-links", "non-link-people-theme-era-territory-context", "capped-related-stories", "source-metadata-without-fabricated-citation-mapping", "exact-id-published-media-provenance", "vi-en-fallback-semantics", "independent-supporting-endpoint-retry", "responsive-keyboard-touch-reduced-motion"],
+      "notExposedByBackend": ["event-timeline", "event-journeys-related-events", "event-coordinates-geometry", "overall-event-certainty", "public-fact-text-paragraph-citation-locators", "per-relationship-publication-locale-metadata", "stories-continuation"],
+      "backendChanged": false,
+      "qaEvidence": "docs/brand/consumer-integration-pass-11-event-detail-v2.md",
+      "browserQA": { "status": "PASS", "suiteResult": "20/20 focused; 83/83 full Chromium", "webTypecheck": "PASS", "webBuild": "PASS", "diffCheck": "PASS", "execution": "LOCAL_PRODUCTION_SERVER", "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON", "viewports": ["390x844", "834x1112", "1536x960"], "evidenceDirectory": "apps/web/qa-evidence/pass-11" },
+      "ci": { "status": "PENDING" },
+      "next": "PERSON_DETAIL_V2_CANDIDATE_NOT_STARTED_CANONICAL_ORDER_UNSPECIFIED",
+      "remaining": ["PERSON_DETAIL_V2_PARTIALLY_READY", "CULTURE_V2_PUBLIC_DETAIL_CONTRACT_BLOCKED"]
     }
   }
 }
