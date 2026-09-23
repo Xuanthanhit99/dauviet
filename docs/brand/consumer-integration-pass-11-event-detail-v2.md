@@ -3,7 +3,7 @@
 Date: 2026-09-23
 Starting remote main / isolated frontend HEAD: `befc25c48d41504a5abf7cd0e87f99637a04c8c5`.
 Shared backend checkout remains separately owned; it started at `9931a163234561fef53944d9c900e1518ce4f328` with active backend changes.
-Status: **IMPLEMENTED_CI_BROWSER_QA_PENDING**.
+Status: **CLOSED_PRODUCTION_QA_PASS**.
 Route: `/events/[slug]`.
 
 ## Verified contract
@@ -62,7 +62,16 @@ Local QA completed:
 - Additional media screenshot reviewed: uncropped aspect ratio, readable classification/rights/provenance. Empty-state mobile layout reviewed separately.
 - No package install/update; reused installed Node binaries and existing dependency junctions in the isolated checkout. Existing Next workspace-root/browser-baseline warnings did not fail build.
 
-GitHub Consumer QA is PENDING. Local QA does not close this pass.
+Implementation GitHub Consumer QA: **PASS**.
+- Commit: `3d6ea5f97e6c19340bdcc04b7b426fd80ca35614`
+- Workflow run: `35839617761`
+- Job: `107111287826`
+- Run and job conclusion: `success`
+- Job log: `83 passed (27.1s)`, including all 20 Event cases.
+- URL: https://github.com/Xuanthanhit99/dauviet/actions/runs/35839617761
+- Web typecheck/build/browser QA, Admin typecheck/build and Mobile typecheck passed.
+
+Pass #11 is closed on actual implementation CI evidence, not local QA alone. A separate closure commit will be pushed and its Consumer QA SHA/run/job/result verified in the final task report.
 
 Required screenshots: `apps/web/qa-evidence/pass-11/event-390.png`, `event-834.png`, `event-1536.png`. Deterministic fixtures are synthetic QA data only, never production content. Screenshot review is manual layout inspection, not a pixel-baseline comparison.
 

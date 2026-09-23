@@ -2316,7 +2316,7 @@
       "next": "POST_REGION_ORDER_NOT_SPECIFIED_IN_CANONICAL_INVENTORY"
     },
     "pass11": {
-      "status": "IMPLEMENTED_CI_BROWSER_QA_PENDING",
+      "status": "CLOSED_PRODUCTION_QA_PASS",
       "date": "2026-09-23",
       "scope": "EVENT_DETAIL_V2",
       "route": "/events/[slug]",
@@ -2325,8 +2325,8 @@
       "notExposedByBackend": ["event-timeline", "event-journeys-related-events", "event-coordinates-geometry", "overall-event-certainty", "public-fact-text-paragraph-citation-locators", "per-relationship-publication-locale-metadata", "stories-continuation"],
       "backendChanged": false,
       "qaEvidence": "docs/brand/consumer-integration-pass-11-event-detail-v2.md",
-      "browserQA": { "status": "PASS", "suiteResult": "20/20 focused; 83/83 full Chromium", "webTypecheck": "PASS", "webBuild": "PASS", "diffCheck": "PASS", "execution": "LOCAL_PRODUCTION_SERVER", "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON", "viewports": ["390x844", "834x1112", "1536x960"], "evidenceDirectory": "apps/web/qa-evidence/pass-11" },
-      "ci": { "status": "PENDING" },
+      "browserQA": { "status": "PASS", "suiteResult": "20/20 focused; 83/83 full Chromium", "webTypecheck": "PASS", "webBuild": "PASS", "diffCheck": "PASS", "execution": "GITHUB_ACTIONS_AND_LOCAL_PRODUCTION_SERVER", "workflowRunId": 35839617761, "jobId": 107111287826, "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON", "viewports": ["390x844", "834x1112", "1536x960"], "evidenceDirectory": "apps/web/qa-evidence/pass-11" },
+      "ci": { "status": "PASS", "workflowRunId": 35839617761, "jobId": 107111287826, "commitSha": "3d6ea5f97e6c19340bdcc04b7b426fd80ca35614", "conclusion": "success", "suiteResult": "83/83 full web; 20/20 Event", "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35839617761" },
       "next": "PERSON_DETAIL_V2_CANDIDATE_NOT_STARTED_CANONICAL_ORDER_UNSPECIFIED",
       "remaining": ["PERSON_DETAIL_V2_PARTIALLY_READY", "CULTURE_V2_PUBLIC_DETAIL_CONTRACT_BLOCKED"]
     }
