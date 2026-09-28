@@ -7,8 +7,6 @@ import { S3Service } from '../media/s3.service';
 import { OutboundHttpService } from './outbound-http.service';
 import { INGESTION_ERROR_CODES } from '../../common/errors/ingestion-error-codes';
 
-type Db = PrismaService | Prisma.TransactionClient;
-
 /**
  * Transactional candidate -> canonical-entity promotion (spec sections 29-
  * 32/34). Every write in a single promotion happens inside ONE

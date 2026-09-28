@@ -113,12 +113,12 @@ export class CreateContributionDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   approxDateStart?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   approxDateEnd?: string;
 
   @ApiPropertyOptional({ type: [String] })
@@ -216,12 +216,12 @@ export class UpdateContributionDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   approxDateStart?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   approxDateEnd?: string;
 
   @ApiPropertyOptional({ type: [String] })
@@ -503,12 +503,12 @@ export class ContributionQueueQueryDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   from?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   to?: string;
 
   @ApiPropertyOptional({ default: 1 })

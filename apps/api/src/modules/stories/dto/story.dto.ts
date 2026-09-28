@@ -117,7 +117,7 @@ export class SetStoryEditorialStatusDto {
 
   @ApiPropertyOptional({ description: 'Required only when transitioning to SCHEDULED - must be in the future.' })
   @IsOptional()
-  @IsISO8601()
+  @IsISO8601({ strict: true })
   scheduledAt?: string;
 
   @ApiPropertyOptional({ description: 'Optimistic concurrency (spec section 60) - the version this edit was read at.' })

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
@@ -6,6 +6,8 @@ import { TripMembersService } from './trip-members.service';
 import { TripInvitationsService } from './trip-invitations.service';
 import { TripCollaborationEventService } from './trip-collaboration-event.service';
 import { TripAuthorizationService, TripCapability } from './trip-authorization.service';
+import { TripLocationSharingService } from './trip-location-sharing.service';
+import { TripLocationsService } from './trip-locations.service';
 import {
   CreateTripInvitationDto,
   LeaveTripDto,
@@ -15,6 +17,7 @@ import {
   TransferTripOwnershipDto,
   UpdateTripMemberRoleDto,
 } from './dto/trip-collaboration.dto';
+import { StartTripLocationSharingDto, UpdateTripLocationDto } from './dto/trip-location.dto';
 
 /**
  * Trip membership/invitation/activity - private trip-scoped sub-resources
@@ -30,6 +33,8 @@ export class TripMembersController {
     private readonly invitations: TripInvitationsService,
     private readonly activity: TripCollaborationEventService,
     private readonly authz: TripAuthorizationService,
+    private readonly locationSharing: TripLocationSharingService,
+    private readonly locations: TripLocationsService,
   ) {}
 
   @Get(':id/members')
@@ -79,5 +84,36 @@ export class TripMembersController {
   async listActivity(@CurrentUser() user: AuthUser, @Param('id') id: string, @Query() query: ListTripActivityQuery) {
     await this.authz.authorize(id, user.id, TripCapability.VIEW_TRIP);
     return this.activity.list(id, query.page, query.pageSize);
+  }
+
+  // G08 - Trip Location Sharing (spec section 62). Self-consent only - none
+  // of these routes accept a target member id; the acting user always
+  // starts/stops/updates their OWN sharing/location (spec section 8/20/61).
+
+  @Post(':id/location-sharing/start')
+  startLocationSharing(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: StartTripLocationSharingDto) {
+    return this.locationSharing.start(id, user.id, dto);
+  }
+
+  @Post(':id/location-sharing/stop')
+  stopLocationSharing(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.locationSharing.stop(id, user.id);
+  }
+
+  @Get(':id/location-sharing/me')
+  myLocationSharingStatus(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.locationSharing.me(id, user.id);
+  }
+
+  /** Mobile GPS ping cadence, not a governance action (spec section 42/43) - generous enough for smooth live tracking (up to ~1/sec) while still a finite, bounded ceiling, distinct from the invitation-email throttle above. */
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  @Put(':id/location')
+  updateLocation(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateTripLocationDto) {
+    return this.locations.update(id, user.id, dto);
+  }
+
+  @Get(':id/locations')
+  listLocations(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.locations.list(id, user.id);
   }
 }

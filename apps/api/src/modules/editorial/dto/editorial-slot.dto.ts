@@ -23,11 +23,11 @@ export class UpsertEditorialSlotDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsISO8601()
+  @IsISO8601({ strict: true })
   startsAt?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsISO8601()
+  @IsISO8601({ strict: true })
   endsAt?: string;
 }

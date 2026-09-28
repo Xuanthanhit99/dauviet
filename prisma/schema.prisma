@@ -480,6 +480,30 @@ enum EntityKind {
   TRIP_MEMBER
   TRIP_INVITATION
   TRIP_COLLABORATION_EVENT
+  // Added G08 (Global Backend V2 Extension, Trip Location Sharing) -
+  // additive-only, lets AuditLog point precisely at a
+  // TripLocationSharing consent-lifecycle row. No existing value
+  // renamed/removed/reordered. No separate value is added for
+  // TripMemberLocation - individual coordinate updates are never audited
+  // (docs/backend/G08_PRE_IMPLEMENTATION_REPORT.md section 9/13).
+  TRIP_LOCATION_SHARING
+  // Added G09 (Global Backend V2 Extension, Trip Expense & Settlement) -
+  // additive-only, lets AuditLog point precisely at a TripExpense or
+  // TripSettlement row. No existing value renamed/removed/reordered. No
+  // separate value is added for TripExpenseShare - shares are always
+  // audited as part of their parent TripExpense's create/edit event, never
+  // individually (docs/backend/G09_PRE_IMPLEMENTATION_REPORT.md).
+  TRIP_EXPENSE
+  TRIP_SETTLEMENT
+  // Added G10 (Global Backend V2 Extension, Affiliate & Commercial
+  // Attribution) - additive-only, lets AuditLog point precisely at an
+  // AffiliateConversion row (ingestion/status-update/reconciliation
+  // events). No existing value renamed/removed/reordered. No separate
+  // value for AffiliateSession/AffiliateClick/ProviderBookingReference -
+  // a click is never individually audited (spec section 54), and session/
+  // booking-reference events are audited as part of their related
+  // conversion's own entry (docs/backend/G10_PRE_IMPLEMENTATION_REPORT.md).
+  AFFILIATE_CONVERSION
 }
 
 enum CommunityStoryType {
@@ -660,34 +684,52 @@ model User {
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
 
-  authIdentities      AuthIdentity[]
-  sessions            Session[]
-  emailVerifications  EmailVerificationToken[]
-  passwordResets      PasswordResetToken[]
-  comments            Comment[]
-  commentVotes        CommentVote[]
-  bookmarks           Bookmark[]
-  reports             Report[]                 @relation("ReportsFiled")
-  resolvedReports     Report[]                 @relation("ReportsResolved")
-  placeVisits         PlaceVisit[]
-  communityStories    CommunityStory[]
-  storyVotes          StoryVote[]
-  badges              UserBadge[]
-  badgesGranted       UserBadge[]              @relation("BadgesGranted")
-  contributions       Contribution[]
-  contributionReviews ContributionReviewNote[]
-  auditLogs           AuditLog[]
-  revisionsAuthored   Revision[]
-  factReviews         FactReview[]
-  thenNowComparisons  ThenNowComparison[]
+  authIdentities          AuthIdentity[]
+  sessions                Session[]
+  emailVerifications      EmailVerificationToken[]
+  passwordResets          PasswordResetToken[]
+  comments                Comment[]
+  commentVotes            CommentVote[]
+  bookmarks               Bookmark[]
+  reports                 Report[]                 @relation("ReportsFiled")
+  resolvedReports         Report[]                 @relation("ReportsResolved")
+  placeVisits             PlaceVisit[]
+  communityStories        CommunityStory[]
+  storyVotes              StoryVote[]
+  badges                  UserBadge[]
+  badgesGranted           UserBadge[]              @relation("BadgesGranted")
+  contributions           Contribution[]
+  contributionReviews     ContributionReviewNote[]
+  auditLogs               AuditLog[]
+  revisionsAuthored       Revision[]
+  factReviews             FactReview[]
+  thenNowComparisons      ThenNowComparison[]
   // Added G06 (Global Backend V2 Extension, Trip Planner + Cost Engine) -
   // a Trip is private, single-owner planning data (spec section 9/59).
-  trips               Trip[]
+  trips                   Trip[]
   // Added G07 (Global Backend V2 Extension, Trip Collaboration) - additive.
-  tripMemberships          TripMember[]
-  tripInvitationsSent      TripInvitation[]         @relation("TripInvitationInviter")
-  tripInvitationsAccepted  TripInvitation[]         @relation("TripInvitationAcceptedBy")
-  tripCollaborationEvents  TripCollaborationEvent[]
+  tripMemberships         TripMember[]
+  tripInvitationsSent     TripInvitation[]         @relation("TripInvitationInviter")
+  tripInvitationsAccepted TripInvitation[]         @relation("TripInvitationAcceptedBy")
+  tripCollaborationEvents TripCollaborationEvent[]
+  // G08 - Trip Location Sharing (additive).
+  tripLocationSharings    TripLocationSharing[]
+  tripMemberLocations     TripMemberLocation[]
+  // G09 - Trip Expense & Settlement (additive). Four separate relation
+  // names on the SAME TripExpense/TripSettlement models (payer/creator,
+  // settlement from/to/creator) - see the models below for why each needs
+  // its own named relation.
+  tripExpensesPaid        TripExpense[]            @relation("TripExpensePayer")
+  tripExpensesCreated     TripExpense[]            @relation("TripExpenseCreatedBy")
+  tripExpenseShares       TripExpenseShare[]
+  tripSettlementsFrom     TripSettlement[]         @relation("TripSettlementFrom")
+  tripSettlementsTo       TripSettlement[]         @relation("TripSettlementTo")
+  tripSettlementsCreated  TripSettlement[]         @relation("TripSettlementCreatedBy")
+  // G10 - Affiliate & Commercial Attribution (additive, all nullable/SetNull
+  // on the model side - see docs/backend/G10_PRE_IMPLEMENTATION_REPORT.md
+  // section 5).
+  affiliateSessions       AffiliateSession[]
+  affiliateClicks         AffiliateClick[]
 
   avatarMedia MediaAsset? @relation("UserAvatar", fields: [avatarMediaId], references: [id])
 
@@ -1224,6 +1266,9 @@ model Destination {
   tripDestinations      TripDestination[]
   tripTransportLegsFrom TripTransportLeg[]            @relation("TripTransportLegFrom")
   tripTransportLegsTo   TripTransportLeg[]            @relation("TripTransportLegTo")
+  // G10 (Affiliate & Commercial Attribution) - additive-only.
+  affiliateSessions     AffiliateSession[]
+  affiliateClicks       AffiliateClick[]
 
   @@index([countryId])
   @@index([regionId])
@@ -1607,15 +1652,20 @@ model ExternalProvider {
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
 
-  capabilities            ProviderCapability[]
-  integrations            ProviderIntegration[]
-  licenses                ProviderLicense[]
-  dataPolicies            ProviderDataPolicy[]
-  attributionRules        ProviderAttributionRule[]
+  capabilities              ProviderCapability[]
+  integrations              ProviderIntegration[]
+  licenses                  ProviderLicense[]
+  dataPolicies              ProviderDataPolicy[]
+  attributionRules          ProviderAttributionRule[]
   // G05 (Stay + Food + Activities) - additive-only reverse relations.
-  accommodationReferences ProviderAccommodationReference[]
-  restaurantReferences    ProviderRestaurantReference[]
-  activityReferences      ProviderActivityReference[]
+  accommodationReferences   ProviderAccommodationReference[]
+  restaurantReferences      ProviderRestaurantReference[]
+  activityReferences        ProviderActivityReference[]
+  // G10 (Affiliate & Commercial Attribution) - additive-only reverse relations.
+  affiliateSessions         AffiliateSession[]
+  affiliateClicks           AffiliateClick[]
+  affiliateConversions      AffiliateConversion[]
+  providerBookingReferences ProviderBookingReference[]
 
   @@index([status])
 }
@@ -4289,6 +4339,21 @@ model Trip {
   members             TripMember[]
   invitations         TripInvitation[]
   collaborationEvents TripCollaborationEvent[]
+  // G08 - Trip Location Sharing (additive). Consent and latest-location are
+  // separate concerns from TripMember by design - see
+  // docs/backend/G08_PRE_IMPLEMENTATION_REPORT.md section 9.
+  locationSharings    TripLocationSharing[]
+  memberLocations     TripMemberLocation[]
+  // G09 - Trip Expense & Settlement (additive). No FK from either model to
+  // TripMember (see docs/backend/G09_PRE_IMPLEMENTATION_REPORT.md section
+  // 10) - financial history survives member removal/leave/role-change/
+  // ownership-transfer structurally, not by a runtime check.
+  expenses            TripExpense[]
+  settlements         TripSettlement[]
+  // G10 - Affiliate & Commercial Attribution (additive). Nullable, SetNull -
+  // see docs/backend/G10_PRE_IMPLEMENTATION_REPORT.md section 5.
+  affiliateSessions   AffiliateSession[]
+  affiliateClicks     AffiliateClick[]
 
   @@index([ownerId, archivedAt])
   @@index([ownerId, status])
@@ -4721,30 +4786,30 @@ model IngestionSource {
 // explicitly verified elsewhere (mirrors G02's ProviderRegistryService
 // discipline of never caching the decision).
 model IngestionSourcePolicy {
-  id                     String                          @id @default(cuid())
-  sourceId               String                          @unique
-  enabled                Boolean                         @default(false)
+  id                     String                         @id @default(cuid())
+  sourceId               String                         @unique
+  enabled                Boolean                        @default(false)
   transport              IngestionTransport
-  authRequired           Boolean                         @default(false)
+  authRequired           Boolean                        @default(false)
   rateLimitPerSecond     Int?
   rateLimitPerDay        Int?
-  concurrencyLimit       Int                             @default(1)
-  maxRetries             Int                             @default(3)
-  rawPayloadStorage      RawPayloadStoragePolicy          @default(PROHIBITED)
-  normalizedStorageRight ProviderRightState               @default(UNKNOWN)
+  concurrencyLimit       Int                            @default(1)
+  maxRetries             Int                            @default(3)
+  rawPayloadStorage      RawPayloadStoragePolicy        @default(PROHIBITED)
+  normalizedStorageRight ProviderRightState             @default(UNKNOWN)
   cacheMaxAgeSeconds     Int?
   retentionDays          Int?
-  attributionRequirement ProviderAttributionRequirement   @default(UNKNOWN)
+  attributionRequirement ProviderAttributionRequirement @default(UNKNOWN)
   licenseCode            String?
   licenseUrl             String?
   sourceUrl              String?
-  commercialUseRight     ProviderRightState               @default(UNKNOWN)
+  commercialUseRight     ProviderRightState             @default(UNKNOWN)
   mediaReusePolicy       ProviderRightState?
   conditionalNotes       String?
   lastPolicyReviewAt     DateTime?
-  policyVersion          Int                              @default(1)
+  policyVersion          Int                            @default(1)
   createdById            String?
-  updatedAt              DateTime                         @updatedAt
+  updatedAt              DateTime                       @updatedAt
 
   source   IngestionSource                 @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   evidence IngestionSourcePolicyEvidence[]
@@ -4757,7 +4822,7 @@ model IngestionSourcePolicy {
 // 18), but a separate model because it FKs into the ingestion trust
 // domain's own policy row, not a ProviderLicense.
 model IngestionSourcePolicyEvidence {
-  id             String                            @id @default(cuid())
+  id             String                           @id @default(cuid())
   sourcePolicyId String
   title          String
   sourceUrl      String
@@ -4765,7 +4830,7 @@ model IngestionSourcePolicyEvidence {
   sourceType     ProviderPolicyEvidenceSourceType
   notes          String?
   createdById    String?
-  createdAt      DateTime                          @default(now())
+  createdAt      DateTime                         @default(now())
 
   sourcePolicy IngestionSourcePolicy @relation(fields: [sourcePolicyId], references: [id], onDelete: Cascade)
 
@@ -4815,8 +4880,8 @@ model IngestionRun {
   createdById    String?
   createdAt      DateTime            @default(now())
 
-  job         IngestionJob           @relation(fields: [jobId], references: [id], onDelete: Restrict)
-  source      IngestionSource        @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  job         IngestionJob          @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  source      IngestionSource       @relation(fields: [sourceId], references: [id], onDelete: Restrict)
   records     IngestionRecord[]
   errors      IngestionError[]
   checkpoints IngestionCheckpoint[]
@@ -4831,7 +4896,7 @@ model IngestionRun {
 // the same external record never creates a duplicate row (spec sections
 // 36/37 - change detection, not silent duplication or silent overwrite).
 model IngestionRecord {
-  id                    String                   @id @default(cuid())
+  id                    String                  @id @default(cuid())
   runId                 String
   sourceId              String
   externalId            String
@@ -4843,11 +4908,11 @@ model IngestionRecord {
   // REFERENCE_ONLY/PROHIBITED (enforced in the normalizer, never left to
   // caller discretion; spec section 21).
   rawPayload            Json?
-  normalizationStatus   NormalizationStatus      @default(PENDING)
-  createdAt             DateTime                 @default(now())
+  normalizationStatus   NormalizationStatus     @default(PENDING)
+  createdAt             DateTime                @default(now())
 
-  run        IngestionRun          @relation(fields: [runId], references: [id], onDelete: Restrict)
-  source     IngestionSource       @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  run        IngestionRun         @relation(fields: [runId], references: [id], onDelete: Restrict)
+  source     IngestionSource      @relation(fields: [sourceId], references: [id], onDelete: Restrict)
   candidates IngestionCandidate[]
   errors     IngestionError[]
 
@@ -4861,27 +4926,27 @@ model IngestionRecord {
 // resolvedEntityId are a soft reference only (spec section 1/24) - never a
 // Prisma relation to the canonical model itself.
 model IngestionCandidate {
-  id                     String                    @id @default(cuid())
-  recordId               String?
-  sourceId               String
-  candidateType          IngestionCandidateType
-  normalizationVersion   Int
+  id                    String                   @id @default(cuid())
+  recordId              String?
+  sourceId              String
+  candidateType         IngestionCandidateType
+  normalizationVersion  Int
   // Source-neutral normalized shape (spec section 22) - review/promotion
   // code never reads raw provider-specific field names directly.
-  normalizedData         Json
-  status                 IngestionCandidateStatus  @default(UNRESOLVED)
-  mergedIntoCandidateId  String?
-  resolvedEntityType     EntityKind?
-  resolvedEntityId       String?
-  reviewedById           String?
-  reviewedAt             DateTime?
-  createdAt              DateTime                  @default(now())
-  updatedAt              DateTime                  @updatedAt
+  normalizedData        Json
+  status                IngestionCandidateStatus @default(UNRESOLVED)
+  mergedIntoCandidateId String?
+  resolvedEntityType    EntityKind?
+  resolvedEntityId      String?
+  reviewedById          String?
+  reviewedAt            DateTime?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
 
-  record             IngestionRecord?          @relation(fields: [recordId], references: [id], onDelete: Restrict)
-  source             IngestionSource           @relation(fields: [sourceId], references: [id], onDelete: Restrict)
-  mergedInto         IngestionCandidate?       @relation("CandidateMerge", fields: [mergedIntoCandidateId], references: [id], onDelete: SetNull)
-  mergedFrom         IngestionCandidate[]      @relation("CandidateMerge")
+  record             IngestionRecord?         @relation(fields: [recordId], references: [id], onDelete: Restrict)
+  source             IngestionSource          @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  mergedInto         IngestionCandidate?      @relation("CandidateMerge", fields: [mergedIntoCandidateId], references: [id], onDelete: SetNull)
+  mergedFrom         IngestionCandidate[]     @relation("CandidateMerge")
   evidence           IngestionEvidence[]
   resolution         EntityResolution?
   externalIdentities ExternalEntityIdentity[]
@@ -5064,6 +5129,19 @@ enum TripCollaborationEventType {
   DAY_CHANGED
   ITEM_CHANGED
   TRANSPORT_CHANGED
+  // Added G08 (Trip Location Sharing) - additive-only. Metadata never
+  // carries coordinates (spec section 34) - just the fact that sharing
+  // started/stopped, exactly like every other event in this enum only
+  // records "what changed," never the changed value's sensitive payload.
+  LOCATION_SHARING_STARTED
+  LOCATION_SHARING_STOPPED
+  // Added G09 (Trip Expense & Settlement) - additive-only. Metadata never
+  // carries the exact monetary amount (spec section 61) - just the fact
+  // that an expense/settlement changed.
+  EXPENSE_ADDED
+  EXPENSE_UPDATED
+  EXPENSE_DELETED
+  SETTLEMENT_RECORDED
 }
 
 // An accepted collaborator's relationship to a Trip (spec section 6). The
@@ -5094,22 +5172,22 @@ model TripMember {
 // address - the same normalization `AuthService.normalizeEmail` already
 // applies, duplicated locally rather than importing locked Phase-02 code.
 model TripInvitation {
-  id               String                @id @default(cuid())
+  id               String               @id @default(cuid())
   tripId           String
   inviterId        String
   email            String
   role             TripMemberRole
-  status           TripInvitationStatus  @default(PENDING)
+  status           TripInvitationStatus @default(PENDING)
   // SHA-256(raw token) only - the raw bearer token is NEVER persisted
   // (spec section 15/16).
-  tokenHash        String                @unique
+  tokenHash        String               @unique
   expiresAt        DateTime
   acceptedAt       DateTime?
   acceptedByUserId String?
   declinedAt       DateTime?
   revokedAt        DateTime?
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
   trip           Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
   inviter        User  @relation("TripInvitationInviter", fields: [inviterId], references: [id], onDelete: Cascade)
@@ -5129,7 +5207,7 @@ model TripInvitation {
 // role/ownership/invitation) is written in the SAME transaction as its
 // triggering mutation (spec section 85).
 model TripCollaborationEvent {
-  id                String                      @id @default(cuid())
+  id                String                     @id @default(cuid())
   tripId            String
   type              TripCollaborationEventType
   // Soft reference, nullable (spec section 41) - history must remain
@@ -5141,10 +5219,586 @@ model TripCollaborationEvent {
   // {"previousOwnerId":"...","newOwnerId":"..."} - never a full Trip
   // before/after dump (spec section 83).
   metadata          Json?
-  createdAt         DateTime                    @default(now())
+  createdAt         DateTime                   @default(now())
 
   trip  Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
   actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
 
   @@index([tripId, createdAt])
+}
+
+// G08 - Trip Location Sharing. Status of a member's explicit,
+// self-granted, finite-duration consent to share their live location within
+// ONE trip (see docs/backend/G08_TRIP_LOCATION_SHARING.md). Deliberately a
+// SINGLE MUTABLE row per (tripId, userId), not an append-only session log
+// (docs/backend/G08_PRE_IMPLEMENTATION_REPORT.md section 9/80) - starting a
+// new session after a prior STOPPED/EXPIRED one updates this same row
+// in place. The durable evidence trail is the append-only AuditLog
+// (`tripLocationSharing.started`/`.stopped`/etc.), not this row's history -
+// this row is current state only, exactly the same "operational state vs.
+// audit trail" split TripMember/AuditLog already use for membership.
+//
+// TRIP MEMBERSHIP != LOCATION CONSENT: no row here is ever created as a
+// side effect of accepting an invitation, joining, a role change, or an
+// ownership transfer - only an explicit authenticated
+// POST .../location-sharing/start by that exact user creates/reactivates
+// one (spec section 7/8/33).
+model TripLocationSharing {
+  id        String                    @id @default(cuid())
+  tripId    String
+  userId    String
+  status    TripLocationSharingStatus
+  startedAt DateTime
+  // Finite by construction (spec section 6) - always > startedAt, capped by
+  // AppConfig.tripLocation.sharing (min/max duration), enforced at the
+  // service layer exactly like Trip.startDate/endDate ordering is (no
+  // cross-column DB constraint exists anywhere else in this schema either).
+  expiresAt DateTime
+  stoppedAt DateTime?
+  createdAt DateTime                  @default(now())
+  updatedAt DateTime                  @updatedAt
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // At most one consent row per member per trip (spec section 79 extended
+  // to consent itself) - also the row every concurrent
+  // start/stop/update/remove/leave/archive transaction locks first (`SELECT
+  // ... FOR UPDATE` or a conditional `UPDATE ... WHERE status = 'ACTIVE'`)
+  // as their shared serialization point (spec sections 73-77).
+  @@unique([tripId, userId])
+  @@index([tripId, status])
+  @@index([expiresAt])
+}
+
+enum TripLocationSharingStatus {
+  ACTIVE
+  STOPPED
+  EXPIRED
+}
+
+// G08 - Trip Location Sharing. The LATEST operational location only for a
+// sharing member within ONE trip - never a GPS trail/history (spec sections
+// 13/19/109). `@@unique([tripId, userId])` is the database backstop (spec
+// section 79) behind the same conditional-upsert discipline
+// TripLocationSharing's serialization point protects
+// (docs/backend/G08_PRE_IMPLEMENTATION_REPORT.md section 11): newer
+// `capturedAt` always wins regardless of HTTP arrival order, an equal
+// `capturedAt` is an idempotent no-op (safe mobile retry), and an older one
+// is rejected without ever touching the stored row.
+//
+// `expiresAt` here is a SEPARATE clock from TripLocationSharing.expiresAt
+// (spec section 53) - this is coordinate freshness/retention
+// (`receivedAt + AppConfig.tripLocation.ttlSeconds`), not consent duration.
+// A read never discloses a location whose `expiresAt` has passed, even if
+// the owning TripLocationSharing row is still nominally ACTIVE.
+model TripMemberLocation {
+  id             String   @id @default(cuid())
+  tripId         String
+  userId         String
+  latitude       Float
+  longitude      Float
+  accuracyMeters Float
+  // Device-reported evidence, never blindly trusted (spec section 16) -
+  // rejected outright if it claims an unreasonable future relative to
+  // server time; NEVER used as this row's audit/ordering authority in place
+  // of `receivedAt`.
+  capturedAt     DateTime
+  // Server-owned instant this update was accepted (spec section 16).
+  receivedAt     DateTime
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId])
+  @@index([tripId])
+  @@index([expiresAt])
+}
+
+// =========================================================================
+// TRIP EXPENSE & SETTLEMENT  (G09, Global Backend V2 Extension)
+// =========================================================================
+//
+// PLANNED COST != ACTUAL EXPENSE. TripCostEstimate/CostAssumption (G06)
+// remain completely untouched by this section - no relation, no shared
+// table, no automatic conversion in either direction (spec section 2/6/7).
+//
+// EXPENSE != PAYMENT. No Wallet/Payment/PaymentIntent/Charge/Capture/Payout
+// model exists anywhere in this schema, and G09 does not add one (spec
+// section 112).
+
+enum TripExpenseSplitMode {
+  EQUAL
+  EXACT
+  PERCENTAGE
+}
+
+// An actual, user-entered trip expense (spec section 5). Money follows the
+// exact same `Decimal @db.Decimal(12, 2)` convention as every other
+// monetary column in this schema (Trip.targetBudgetAmount/CostAssumption's
+// three amounts/TripCostEstimate.totalAmount) - a uniform 2-decimal-place
+// scale for every currency, since no per-currency ISO 4217 minor-unit
+// metadata table exists anywhere in this codebase (see
+// docs/backend/G09_PRE_IMPLEMENTATION_REPORT.md section 3 for why this is a
+// deliberate, documented reuse of G06's own precedent, not a new gap).
+//
+// No FK to TripMember anywhere in this model or TripExpenseShare/
+// TripSettlement below (spec section 22/23) - `payerUserId`/`createdByUserId`
+// point straight at `User`, which this codebase never hard-deletes through
+// any existing route. This is what makes former-member financial-history
+// preservation structural rather than a runtime safeguard: there is no
+// relation path through which a TripMember row's deletion (remove/leave)
+// could ever cascade into this table.
+model TripExpense {
+  id              String               @id @default(cuid())
+  tripId          String
+  title           String
+  category        CostCategory
+  amount          Decimal              @db.Decimal(12, 2)
+  currency        String
+  payerUserId     String
+  splitMode       TripExpenseSplitMode
+  // Local calendar date the expense actually occurred on (spec section 53) -
+  // deliberately never equated with `createdAt`, and deliberately never
+  // hard-validated against `Trip.startDate/endDate` (bookings and post-trip
+  // adjustments legitimately fall outside travel dates).
+  occurredOn      DateTime             @db.Date
+  note            String?
+  createdByUserId String
+  // Soft delete (spec section 31) - a `DELETE` sets this instead of
+  // physically removing the row; deleted expenses are excluded from every
+  // balance/summary/suggestion projection but remain queryable for audit.
+  deletedAt       DateTime?
+  // Optimistic concurrency (spec section 33/34) - unlike the pre-check-only
+  // convention most other Trip sub-resource edits use, TripExpense mutations
+  // use a true conditional `updateMany` (`WHERE id=$1 AND version=$2 AND
+  // deletedAt IS NULL`) as their actual atomicity mechanism, matching
+  // `TripMembersService.transferOwnership`'s proven pattern - see
+  // pre-implementation report section 5.
+  version         Int                  @default(0)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  trip    Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  payer   User @relation("TripExpensePayer", fields: [payerUserId], references: [id], onDelete: Cascade)
+  creator User @relation("TripExpenseCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  shares TripExpenseShare[]
+
+  @@index([tripId, deletedAt, occurredOn])
+  @@index([tripId, payerUserId])
+  @@index([tripId, currency])
+}
+
+// One resolved monetary allocation of a TripExpense to one participant
+// (spec section 16). `amount` is always the final resolved share regardless
+// of `TripExpense.splitMode` - `percentage` is populated only for
+// PERCENTAGE-mode shares, preserving the user's original input alongside
+// the resolved amount (spec section 19). At most one share per user per
+// expense (spec section 16), DB-backed.
+model TripExpenseShare {
+  id         String   @id @default(cuid())
+  expenseId  String
+  userId     String
+  amount     Decimal  @db.Decimal(12, 2)
+  percentage Decimal? @db.Decimal(5, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  expense TripExpense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, userId])
+  @@index([expenseId])
+  @@index([userId])
+}
+
+// A user-declared record that money was settled OUTSIDE Dấu Việt (spec
+// section 46/51) - never a payment transaction, never routed through any
+// payment provider. Append-only by design (spec section 13's own decision
+// note): the conceptual API (spec section 67) is GET+POST only, no edit/
+// delete route exists, so no `version`/soft-delete metadata is needed here
+// the way TripExpense needs it.
+model TripSettlement {
+  id              String   @id @default(cuid())
+  tripId          String
+  fromUserId      String
+  toUserId        String
+  amount          Decimal  @db.Decimal(12, 2)
+  currency        String
+  settledAt       DateTime @db.Date
+  note            String?
+  createdByUserId String
+  createdAt       DateTime @default(now())
+
+  trip     Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  fromUser User @relation("TripSettlementFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("TripSettlementTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  creator  User @relation("TripSettlementCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, currency])
+  @@index([tripId, settledAt])
+}
+
+// =========================================================================
+// AFFILIATE & COMMERCIAL ATTRIBUTION  (G10, Global Backend V2 Extension)
+// =========================================================================
+//
+// DISCOVERY/TRIP -> G05 PROVIDER OFFER -> G02 POLICY GATE -> AffiliateSession
+// -> AffiliateClick -> validated provider redirect -> external provider ->
+// provider-supplied evidence -> AffiliateConversion -> optional
+// ProviderBookingReference (spec section 0). Every commercial action goes
+// through the existing G02 `ProviderRegistryService.getExecutionContext` -
+// no duplicate authorization/licensing universe is created here (spec
+// section 16/19).
+//
+// PROVIDER OFFER != AFFILIATE CLICK. AFFILIATE CLICK != BOOKING. CLICK !=
+// CONVERSION. CONVERSION != PAYMENT. No Wallet/Payment/PaymentIntent/
+// Charge/Capture/Payout model exists anywhere in this schema, and G10 does
+// not add one (spec section 111).
+//
+// No FK from any model below to `TripMember` or `TripExpense`/
+// `TripSettlement` (spec section 47/93) - commission is platform revenue,
+// never a user trip expense, and G09's ledger is never touched. `userId`/
+// `tripId`/`destinationId` are all nullable, `onDelete: SetNull` (never
+// Cascade) - this codebase has no user hard-delete endpoint anywhere (see
+// docs/backend/G10_PRE_IMPLEMENTATION_REPORT.md section 5), so this is a
+// forward-looking safe default matching spec section 55's "prefer detach/
+// pseudonymize over cascade-delete of commercial evidence."
+
+enum AffiliateSourceSurface {
+  DESTINATION_STAY
+  TRIP_STAY
+  DESTINATION_RESTAURANT
+  TRIP_RESTAURANT
+  DESTINATION_ACTIVITY
+  TRIP_ACTIVITY
+  EDITORIAL_ACTIVITY
+}
+
+enum AffiliatePlacement {
+  PRIMARY_CTA
+  OFFER_CARD
+  COMPARE_LIST
+  ITINERARY
+}
+
+enum AffiliateConversionStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REVERSED
+}
+
+// Conceptual evidence tiers (spec section 28) - a browser return from the
+// provider is NEVER treated as proof of booking (spec section 29); no
+// status here is ever reachable from a plain HTTP redirect/return.
+enum AffiliateEvidenceType {
+  PROVIDER_API
+  PROVIDER_REPORT
+  PROVIDER_WEBHOOK
+  APPROVED_IMPORT
+  // Test/e2e only - never a real economic event (spec section 63).
+  FIXTURE
+}
+
+// Attribution context (spec section 5) - explicitly NOT an auth session
+// (spec section 1/3). Anonymous-friendly: `userId` is optional (spec
+// section 6). Deliberately minimal - no GPS/location history/device
+// fingerprint/full browsing history/cross-site profile/passport/phone/
+// payment data (spec section 7) is representable by this model at all.
+model AffiliateSession {
+  id            String                 @id @default(cuid())
+  providerId    String
+  userId        String?
+  tripId        String?
+  destinationId String?
+  sourceSurface AffiliateSourceSurface
+  // Opaque, server-generated, pseudonymous (spec section 76) - never a raw
+  // email/userId/tripId. Echoed back to the provider as the label/
+  // campaign-value where a real adapter supports it (spec section 20/21) -
+  // none does in this phase (no real provider is wired, see
+  // docs/backend/G10_PRE_IMPLEMENTATION_REPORT.md section 6/12).
+  campaignKey   String                 @unique
+  createdAt     DateTime               @default(now())
+  // Plain browsing-session-length TTL (spec section 33) - deliberately NOT
+  // equal to any provider's own attribution/cookie window, which is
+  // provider policy tracked separately via ProviderAttributionRule.
+  expiresAt     DateTime
+
+  provider    ExternalProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user        User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  trip        Trip?            @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  destination Destination?     @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+
+  clicks      AffiliateClick[]
+  conversions AffiliateConversion[]
+
+  @@index([providerId])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Append-oriented server-side commercial redirect event (spec section 8) -
+// no PATCH/DELETE route exists anywhere for this model (spec section 9).
+// `providerEntityReferenceId`/`providerOfferId` are deliberate plain soft
+// pointers, never a DB relation (matches `TripCostEstimateItem.offerId`'s
+// own established precedent in this schema) - so a future G05 offer-
+// retention-policy deletion can never cascade into or be blocked by click
+// history, and the full offer payload is never copied here (spec section
+// 23), only enough to identify which offer a click was about.
+model AffiliateClick {
+  id                        String                 @id @default(cuid())
+  affiliateSessionId        String?
+  providerId                String
+  environment               ProviderEnvironment
+  // Which G05 reference-table family `providerEntityReferenceId` belongs to
+  // (ACCOMMODATION/RESTAURANT/ACTIVITY) - informational only, never a DB
+  // relation, so admin reporting can join back to the right table without
+  // this row depending on that row's continued existence.
+  entityKind                EntityKind?
+  providerEntityReferenceId String?
+  providerOfferId           String?
+  surface                   AffiliateSourceSurface
+  placement                 AffiliatePlacement?
+  tripId                    String?
+  destinationId             String?
+  userId                    String?
+  // The exact pseudonymous value actually sent to the provider as label/
+  // campaign-value (spec section 76) - copied from the owning session's
+  // `campaignKey` at click time so a click's provenance is self-contained
+  // even if the session later expires.
+  campaignKey               String
+  // The exact, already-validated destination URL this click redirected to
+  // (spec section 8's "safe destination metadata") - always server-built by
+  // a trusted adapter, never client input (spec section 10-12).
+  redirectUrl               String
+  redirectTokenHash         String                 @unique
+  redirectTokenExpiresAt    DateTime
+  clickedAt                 DateTime               @default(now())
+
+  session     AffiliateSession? @relation(fields: [affiliateSessionId], references: [id], onDelete: SetNull)
+  provider    ExternalProvider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  trip        Trip?             @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  destination Destination?      @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  user        User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  conversions AffiliateConversion[]
+
+  @@index([affiliateSessionId])
+  @@index([providerId, clickedAt])
+  @@index([redirectTokenExpiresAt])
+}
+
+// External provider-side booking/order reference observed through provider
+// evidence (spec section 25) - NEVER a Dấu Việt booking. No traveler PII
+// (spec section 25/45) - just enough to identify the external record.
+model ProviderBookingReference {
+  id                       String   @id @default(cuid())
+  providerId               String
+  externalBookingReference String
+  observedAt               DateTime
+  // Minimal provider-reported status text, kept separately from
+  // AffiliateConversion's own normalized lifecycle (spec section 25 - "provider
+  // status/reference metadata minimum").
+  rawStatus                String?
+  createdAt                DateTime @default(now())
+
+  provider    ExternalProvider      @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  conversions AffiliateConversion[]
+
+  @@unique([providerId, externalBookingReference])
+  @@index([providerId])
+}
+
+// Exists ONLY from provider-supplied/approved evidence (spec section 27,
+// 29) - a click or a successful redirect never creates one (live-proven in
+// e2e). `@@unique([providerId, providerConversionId])` is the DB-enforced
+// idempotency key (spec section 36); repeated evidence updates this SAME
+// row in place via a conditional `INSERT ... ON CONFLICT ... WHERE
+// providerOccurredAt <=` (the exact newer-wins pattern G08/G09 already
+// established) rather than creating a duplicate economic event (spec
+// section 37/38/39).
+model AffiliateConversion {
+  id                         String                    @id @default(cuid())
+  providerId                 String
+  providerConversionId       String
+  affiliateClickId           String?
+  affiliateSessionId         String?
+  providerBookingReferenceId String?
+  status                     AffiliateConversionStatus
+  // Provider's own raw status string, preserved alongside the normalized
+  // lifecycle (spec section 30) - never invented, never silently coerced.
+  rawProviderStatus          String?
+  bookingAmount              Decimal?                  @db.Decimal(12, 2)
+  bookingCurrency            String?
+  // May be null - never computed by a hard-coded percentage when the
+  // provider has not reported/contractually supplied it (spec section 31).
+  commissionAmount           Decimal?                  @db.Decimal(12, 2)
+  commissionCurrency         String?
+  // The instant the underlying economic event actually happened per the
+  // provider (spec section 77) - the authoritative ordering key for
+  // out-of-order evidence (spec section 38), never `reportedAt`/`ingestedAt`.
+  providerOccurredAt         DateTime
+  // When the provider reported this evidence to us.
+  reportedAt                 DateTime
+  // Server-owned instant WE ingested it (spec section 77).
+  ingestedAt                 DateTime                  @default(now())
+  evidenceType               AffiliateEvidenceType
+  // Provider report id / webhook delivery id / import batch reference -
+  // never the raw payload itself (spec section 43).
+  evidenceReference          String
+  // Optional integrity hash of the raw evidence payload, kept instead of
+  // the payload (spec section 43).
+  evidenceHash               String?
+  // A license/attribution-rule id snapshot - enough to explain which
+  // provider policy governed this record, never the full provider terms
+  // text (spec section 78). Never rewritten after the fact when policy
+  // later changes (spec section 79).
+  policyVersionRef           String?
+  createdAt                  DateTime                  @default(now())
+  updatedAt                  DateTime                  @updatedAt
+
+  provider                 ExternalProvider          @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  affiliateClick           AffiliateClick?           @relation(fields: [affiliateClickId], references: [id], onDelete: SetNull)
+  affiliateSession         AffiliateSession?         @relation(fields: [affiliateSessionId], references: [id], onDelete: SetNull)
+  providerBookingReference ProviderBookingReference? @relation(fields: [providerBookingReferenceId], references: [id], onDelete: SetNull)
+
+  @@unique([providerId, providerConversionId])
+  @@index([affiliateClickId])
+  @@index([status])
+  @@index([providerId, providerOccurredAt])
+}
+
+// =========================================================================
+// G11 - GLOBAL SEARCH & MAP (Global Backend V2 Extension)
+//
+// Design notes (docs/backend/G11_GLOBAL_SEARCH_MAP.md has the full rationale):
+// - SEARCH INDEX != SOURCE OF TRUTH. Everything below is a rebuildable
+//   PROJECTION over canonical public entities. Deleting every row in these
+//   four tables never deletes or alters canonical content; `rebuildAll`
+//   restores them deterministically.
+// - SearchDocument holds one row per PUBLIC (entityKind, entityId); an entity
+//   that stops being public has its row deleted (no ghost result).
+// - SearchTerm keeps canonical titles, other-locale titles and aliases as
+//   DISTINCT kinds (ALIAS != TRANSLATION). Aliases are never collapsed.
+// - `geom` (4326) is used only for the optional search `bbox` filter; the map
+//   endpoint reads canonical geometry directly (MAP FEATURE != SEARCH DOCUMENT).
+// - SearchProjectionQueue is filled by AFTER row triggers installed in the
+//   migration; the queue insert is a trivial upsert so a projection problem
+//   can never fail a canonical write.
+// =========================================================================
+
+enum SearchEntityKind {
+  COUNTRY
+  REGION
+  CITY
+  DESTINATION
+  PLACE
+  PERSON
+  EVENT
+  ERA
+  DYNASTY
+  TERRITORY
+  THEME
+  STORY
+  JOURNEY
+  SOURCE
+  COMMUNITY_STORY
+}
+
+enum SearchTermKind {
+  CANONICAL_TITLE
+  LOCALIZED_TITLE
+  ALIAS
+}
+
+// Provenance class of a search result. Deliberately NOT a "verified" flag:
+// nothing in the projection can promote a community story or a provider record
+// to verified knowledge.
+enum SearchTrustClass {
+  CANONICAL
+  EDITORIAL
+  SOURCE_RECORD
+  COMMUNITY
+}
+
+model SearchDocument {
+  id                   String                                   @id @default(cuid())
+  entityKind           SearchEntityKind
+  entityId             String
+  canonicalSlug        String
+  trustClass           SearchTrustClass
+  // placeType / destinationType / themeCategory / storyType ... (display semantics only)
+  subtype              String?
+  // Reuses the accepted historicalImportance / importance value as-is (no new scale).
+  importance           Int                                      @default(0)
+  // { "<locale>": "<title>" } - only locales that actually have a translation row.
+  titles               Json
+  summaries            Json
+  normalizedNames      String
+  normalizedSearchText String
+  countryIds           String[]
+  regionIds            String[]
+  cityIds              String[]
+  // Authoritative G03 chronology ordinals; NULL = unknown (never "every period").
+  chronologyStart      Int?
+  chronologyEnd        Int?
+  geom                 Unsupported("geometry(Geometry, 4326)")?
+  projectedAt          DateTime                                 @default(now())
+
+  terms SearchTerm[]
+
+  @@unique([entityKind, entityId])
+  @@index([entityKind])
+  @@index([chronologyStart, chronologyEnd])
+}
+
+model SearchTerm {
+  id             String           @id @default(cuid())
+  documentId     String
+  termKind       SearchTermKind
+  // "" for locale-agnostic (aliases), same convention as EntityAlias.locale.
+  locale         String           @default("")
+  // Preserved from EntityAlias so the semantic (historical name vs romanization ...) survives.
+  aliasType      AliasType?
+  text           String
+  normalizedText String
+
+  document SearchDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, termKind, locale, normalizedText])
+  @@index([documentId])
+}
+
+model SearchProjectionQueue {
+  entityKind SearchEntityKind
+  entityId   String
+  enqueuedAt DateTime         @default(now())
+  lockedAt   DateTime?
+  attempts   Int              @default(0)
+  lastError  String?
+
+  @@id([entityKind, entityId])
+  @@index([enqueuedAt])
+}
+
+model SearchProjectionRun {
+  id         String    @id @default(cuid())
+  // REBUILD | DRAIN
+  mode       String
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  // RUNNING | SUCCEEDED | FAILED
+  status     String
+  processed  Int       @default(0)
+  upserted   Int       @default(0)
+  deleted    Int       @default(0)
+  failed     Int       @default(0)
+  error      String?
+
+  @@index([startedAt])
 }

@@ -1,6 +1,8 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { OpenStreetMapAdapter } from './openstreetmap.adapter';
+import { IngestionAdapter } from './adapter.types';
+import { GOLDEN_INGESTION_SOURCES } from '../../../../../../prisma/golden/knowledge-ingestion';
 
 /** Recursively lists every .ts source file under `dir`, skipping this spec file itself and node_modules/dist. */
 function listSourceFiles(dir: string): string[] {
@@ -17,7 +19,8 @@ function listSourceFiles(dir: string): string[] {
 
 describe('OpenStreetMap/Nominatim safety (spec sections 10/96 - binding, not a default)', () => {
   it('fetchByIds NEVER issues a live request - throws immediately regardless of input', async () => {
-    const adapter = new OpenStreetMapAdapter();
+    // Typed as the pipeline sees it (IngestionRunService calls adapter.fetchByIds(ids)).
+    const adapter: IngestionAdapter = new OpenStreetMapAdapter();
     await expect(adapter.fetchByIds(['123'])).rejects.toThrow(/permanently disabled/i);
     await expect(adapter.fetchByIds([])).rejects.toThrow(/permanently disabled/i);
   });
@@ -35,9 +38,9 @@ describe('OpenStreetMap/Nominatim safety (spec sections 10/96 - binding, not a d
   });
 
   it('the seeded OPENSTREETMAP IngestionSource policy is disabled with PROHIBITED storage rights (defense in depth alongside the adapter-level hard refusal)', () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { GOLDEN_INGESTION_SOURCES } = require('../../../../../../prisma/golden/knowledge-ingestion');
-    const osm = GOLDEN_INGESTION_SOURCES.find((s: { code: string }) => s.code === 'OPENSTREETMAP');
+    const found = GOLDEN_INGESTION_SOURCES.find((s) => s.code === 'OPENSTREETMAP');
+    expect(found).toBeDefined();
+    const osm = found!;
     expect(osm.enabled).toBe(false);
     expect(osm.policy.rawPayloadStorage).toBe('PROHIBITED');
     expect(osm.policy.normalizedStorageRight).toBe('PROHIBITED');

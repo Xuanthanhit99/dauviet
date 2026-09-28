@@ -13,12 +13,18 @@ describe('MapService.getFeatures', () => {
   let prisma: any;
   let service: MapService;
 
-  const makePrisma = () => ({
-    $queryRaw: jest.fn().mockResolvedValue([]),
-    placeTranslation: { findMany: jest.fn().mockResolvedValue([]) },
-    territoryTranslation: { findMany: jest.fn().mockResolvedValue([]) },
-    historicalEventTranslation: { findMany: jest.fn().mockResolvedValue([]) },
-  });
+  const makePrisma = () => {
+    const p: any = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      $executeRaw: jest.fn().mockResolvedValue(1),
+      placeTranslation: { findMany: jest.fn().mockResolvedValue([]) },
+      territoryTranslation: { findMany: jest.fn().mockResolvedValue([]) },
+      historicalEventTranslation: { findMany: jest.fn().mockResolvedValue([]) },
+    };
+    // G11: MapService now runs its queries in one short transaction (custom plans); the mock just passes itself through.
+    p.$transaction = jest.fn((fn: (tx: unknown) => unknown) => fn(p));
+    return p;
+  };
 
   beforeEach(() => {
     prisma = makePrisma();

@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsEnum, IsInt, IsOptional, IsString, Matches, Max, Min, ValidateNested } from 'class-validator';
 import { AccommodationType, TranslationMethod } from '@prisma/client';
+import { IsCalendarDate } from '../../../common/validators/is-calendar-date';
 
 export class AccommodationTranslationInputDto {
   @ApiProperty({ example: 'vi' })
@@ -195,11 +196,11 @@ export class MapProviderAccommodationReferenceDto {
 /** Local calendar dates (spec section 98) - `YYYY-MM-DD`, never a timestamp. */
 export class GetAccommodationOffersDto {
   @ApiProperty({ example: '2026-12-01' })
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'checkIn must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'checkIn must be YYYY-MM-DD' })
   checkIn!: string;
 
   @ApiProperty({ example: '2026-12-03' })
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'checkOut must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'checkOut must be YYYY-MM-DD' })
   checkOut!: string;
 
   @ApiProperty({ minimum: 1 })

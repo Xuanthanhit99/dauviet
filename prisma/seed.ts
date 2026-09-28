@@ -79,14 +79,47 @@ import {
   STAY_FOOD_ACTIVITY_FIXTURE_PROVIDER_CODE,
   slug,
   sortBounds,
+  chronologyForDate,
+  chronologyForPeriod,
 } from './golden';
 import type { StoryBlockSeed } from './golden/stories';
 
 const prisma = new PrismaClient();
 
+/**
+ * G12 production-seed safety. The `development` profile (the default outside
+ * NODE_ENV=production, and the only profile every earlier phase ran) is
+ * unchanged: six loginable dev accounts sharing `DevPassword123!` and the
+ * ACTIVE G05 fixture provider with its fixture offers/snapshots. Neither may
+ * reach a real deployment: a known-password ADMIN is an account takeover, and
+ * G05 offer display evaluates the SANDBOX integration, so fixture prices would
+ * be served publicly. The `production` profile (the default under
+ * NODE_ENV=production; SEED_PROFILE overrides either way) seeds the same
+ * canonical Golden Dataset, but:
+ * - only the two authorship accounts the trust workflow references
+ *   (editor = fact/source creator, historian = sensitive-fact reviewer, kept
+ *   distinct for separation of duties) are created, with NO password identity,
+ *   so they cannot log in; no ADMIN/MODERATOR/CONTRIBUTOR/USER account is
+ *   created (the first admin is provisioned by the deployment runbook);
+ * - the G05 fixture provider, its provider references, offers and operational
+ *   snapshots are skipped (the canonical accommodations/restaurants/activities
+ *   are still seeded).
+ */
+type SeedProfile = 'development' | 'production';
+function resolveSeedProfile(): SeedProfile {
+  const explicit = process.env.SEED_PROFILE;
+  if (explicit === 'development' || explicit === 'production') return explicit;
+  if (explicit) throw new Error(`SEED_PROFILE must be "development" or "production" (got "${explicit}").`);
+  return process.env.NODE_ENV === 'production' ? 'production' : 'development';
+}
+const SEED_PROFILE = resolveSeedProfile();
+
 async function upsertDevUser(email: string, displayName: string, roles: Role[]) {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return existing;
+  if (SEED_PROFILE === 'production') {
+    return prisma.user.create({ data: { email, displayName, roles, emailVerifiedAt: new Date() } });
+  }
   const passwordHash = await argon2.hash('DevPassword123!', { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 });
   return prisma.user.create({
     data: {
@@ -99,14 +132,74 @@ async function upsertDevUser(email: string, displayName: string, roles: Role[]) 
   });
 }
 
+/** G05 fixture provider (development profile only - see the G12 note on resolveSeedProfile). */
+async function seedG05FixtureProvider() {
+  console.log('Seeding G05 Stay + Food + Activities provider fixture (see prisma/golden/stay-food-activities.ts)...');
+  const g05Provider = await prisma.externalProvider.upsert({
+    where: { code: STAY_FOOD_ACTIVITY_FIXTURE_PROVIDER_CODE },
+    update: {},
+    create: { code: STAY_FOOD_ACTIVITY_FIXTURE_PROVIDER_CODE, name: 'G05 Fixture Provider (internal test only, never a real vendor)', status: 'ACTIVE', credentialMode: 'NONE', supportedEnvironments: ['SANDBOX'] },
+  });
+  const G05_CAPABILITIES = ['ACCOMMODATION_SEARCH', 'ACCOMMODATION_DETAIL', 'LIVE_PRICE', 'AVAILABILITY', 'RESTAURANT_SEARCH', 'RESTAURANT_DETAIL', 'ACTIVITY_SEARCH', 'ACTIVITY_DETAIL'] as const;
+  for (const capability of G05_CAPABILITIES) {
+    await prisma.providerCapability.upsert({ where: { providerId_capability: { providerId: g05Provider.id, capability } }, update: {}, create: { providerId: g05Provider.id, capability } });
+  }
+  const g05Integration = await prisma.providerIntegration.upsert({
+    where: { providerId_environment: { providerId: g05Provider.id, environment: 'SANDBOX' } },
+    update: {},
+    create: { providerId: g05Provider.id, environment: 'SANDBOX', status: 'ACTIVE', credentialReference: 'G05_FIXTURE_KEY_REF', lastVerifiedAt: new Date() },
+  });
+  for (const capability of G05_CAPABILITIES) {
+    await prisma.providerIntegrationCapability.upsert({
+      where: { integrationId_capability: { integrationId: g05Integration.id, capability } },
+      update: {},
+      create: { integrationId: g05Integration.id, capability, approvedAt: new Date() },
+    });
+  }
+  const g05License = await prisma.providerLicense.upsert({
+    where: { id: (await prisma.providerLicense.findFirst({ where: { providerId: g05Provider.id, datasetOrProduct: 'G05 fixture dataset' }, select: { id: true } }))?.id ?? '__none__' },
+    update: {},
+    create: {
+      providerId: g05Provider.id,
+      datasetOrProduct: 'G05 fixture dataset',
+      capability: null,
+      status: 'APPROVED',
+      rightsDisplay: 'ALLOWED',
+      rightsCache: 'ALLOWED',
+      rightsStore: 'PROHIBITED',
+      rightsModify: 'PROHIBITED',
+      rightsRedistribute: 'PROHIBITED',
+      rightsCommercialUse: 'ALLOWED',
+      attributionRequirement: 'REQUIRED',
+      termsUrl: 'https://example.test/g05-fixture-terms',
+    },
+  });
+  for (const capability of G05_CAPABILITIES) {
+    await prisma.providerDataPolicy.upsert({
+      where: { licenseId_capability: { licenseId: g05License.id, capability } },
+      update: {},
+      create: { providerId: g05Provider.id, licenseId: g05License.id, capability, cacheAllowed: 'ALLOWED', maxCacheSeconds: 3600, storeContentAllowed: 'PROHIBITED', persistentIdentifierAllowed: 'ALLOWED' },
+    });
+  }
+  const existingAttributionRule = await prisma.providerAttributionRule.findFirst({ where: { providerId: g05Provider.id, licenseId: g05License.id } });
+  if (!existingAttributionRule) {
+    await prisma.providerAttributionRule.create({
+      data: { providerId: g05Provider.id, licenseId: g05License.id, requirement: 'REQUIRED', displayText: `Data (c) ${STAY_FOOD_ACTIVITY_FIXTURE_PROVIDER_CODE} (internal test fixture)`, logoRequired: false },
+    });
+  }
+  return g05Provider;
+}
+
 async function main() {
-  console.log(`Seeding dev/test accounts (Golden Dataset ${GOLDEN_DATASET_VERSION})...`);
-  await upsertDevUser('admin@dauviet.vn', 'Dau Viet Admin', [Role.ADMIN]);
+  console.log(`Seeding ${SEED_PROFILE === 'production' ? 'credential-less authorship' : 'dev/test'} accounts (Golden Dataset ${GOLDEN_DATASET_VERSION}, seed profile ${SEED_PROFILE})...`);
+  if (SEED_PROFILE === 'development') await upsertDevUser('admin@dauviet.vn', 'Dau Viet Admin', [Role.ADMIN]);
   const editor = await upsertDevUser('editor@dauviet.vn', 'Dau Viet Editor', [Role.EDITOR]);
   const historian = await upsertDevUser('historian@dauviet.vn', 'Dau Viet Historian Reviewer', [Role.HISTORIAN_REVIEWER]);
-  await upsertDevUser('moderator@dauviet.vn', 'Dau Viet Moderator', [Role.MODERATOR]);
-  await upsertDevUser('contributor@dauviet.vn', 'Dau Viet Contributor', [Role.CONTRIBUTOR]);
-  await upsertDevUser('user@dauviet.vn', 'Dau Viet Reader', [Role.USER]);
+  if (SEED_PROFILE === 'development') {
+    await upsertDevUser('moderator@dauviet.vn', 'Dau Viet Moderator', [Role.MODERATOR]);
+    await upsertDevUser('contributor@dauviet.vn', 'Dau Viet Contributor', [Role.CONTRIBUTOR]);
+    await upsertDevUser('user@dauviet.vn', 'Dau Viet Reader', [Role.USER]);
+  }
 
   // -----------------------------------------------------------------------
   // Eras / Dynasties / Themes
@@ -134,6 +227,8 @@ async function main() {
         endQualifier: spec.end?.qualifier ?? (spec.end ? 'EXACT' : undefined),
         sortStart: startSort.start,
         sortEnd: endSort ? endSort.end : new Date(Date.UTC(9999, 11, 31)),
+        chronologyStart: chronologyForPeriod(spec.start, spec.end).start,
+        chronologyEnd: chronologyForPeriod(spec.start, spec.end).end,
         translations: {
           create: [
             { locale: 'vi', name: spec.vi.name, slug: canonicalSlug, summary: spec.vi.summary, method: 'ORIGINAL' },
@@ -168,6 +263,8 @@ async function main() {
         endQualifier: spec.end?.qualifier ?? (spec.end ? 'EXACT' : undefined),
         sortStart: startSort.start,
         sortEnd: endSort ? endSort.end : new Date(Date.UTC(9999, 11, 31)),
+        chronologyStart: chronologyForPeriod(spec.start, spec.end).start,
+        chronologyEnd: chronologyForPeriod(spec.start, spec.end).end,
         translations: {
           create: [
             { locale: 'vi', name: spec.vi.name, slug: canonicalSlug, summary: spec.vi.summary, method: 'ORIGINAL' },
@@ -271,6 +368,8 @@ async function main() {
         birthQualifier: birth.qualifier ?? 'EXACT',
         birthSortStart: birthSort.start,
         birthSortEnd: birthSort.end,
+        birthChronologyStart: chronologyForDate(birth as HistoricalDateSeed).start,
+        birthChronologyEnd: chronologyForDate(birth as HistoricalDateSeed).end,
         deathYear: death.year,
         deathMonth: death.month,
         deathDay: death.day,
@@ -278,6 +377,8 @@ async function main() {
         deathQualifier: death.qualifier ?? 'EXACT',
         deathSortStart: deathSort.start,
         deathSortEnd: deathSort.end,
+        deathChronologyStart: chronologyForDate(death as HistoricalDateSeed).start,
+        deathChronologyEnd: chronologyForDate(death as HistoricalDateSeed).end,
         translations: {
           create: [
             { locale: 'vi', displayName: spec.vi.name, slug: canonicalSlug, summary: spec.vi.summary, method: 'ORIGINAL' },
@@ -333,6 +434,8 @@ async function main() {
         dateEndYear: spec.rangeEndYear,
         dateSortStart: sort.start,
         dateSortEnd: sortEnd,
+        dateChronologyStart: chronologyForDate(spec.date, spec.rangeEndYear).start,
+        dateChronologyEnd: chronologyForDate(spec.date, spec.rangeEndYear).end,
         importance: spec.importance ?? 5,
         eraId: era?.id,
         translations: {
@@ -384,6 +487,8 @@ async function main() {
         dateQualifier: spec.date.qualifier ?? 'EXACT',
         dateSortStart: sort.start,
         dateSortEnd: sort.end,
+        dateChronologyStart: chronologyForDate(spec.date).start,
+        dateChronologyEnd: chronologyForDate(spec.date).end,
         importance: spec.importance ?? 5,
         eraId: era?.id,
         translations: {
@@ -464,6 +569,8 @@ async function main() {
         dateQualifier: spec.date.qualifier ?? 'EXACT',
         dateSortStart: sort.start,
         dateSortEnd: sort.end,
+        dateChronologyStart: chronologyForDate(spec.date).start,
+        dateChronologyEnd: chronologyForDate(spec.date).end,
         certainty: spec.certainty,
         sensitivity,
         createdById,
@@ -527,10 +634,16 @@ async function main() {
     // VERIFIED, and (for sensitive facts) a reviewer distinct from the
     // creator. A fact whose evidence didn't clear this bar stays DRAFT.
     if (spec.publish && allVerified) {
-      await prisma.historicalFact.update({
-        where: { id: fact.id },
-        data: { editorialStatus: FactEditorialStatus.PUBLISHED, reviewedById: reviewedById ?? createdById, reviewedAt: new Date() },
-      });
+      // G12 seed determinism: publish (and stamp reviewedAt) only when the fact has never been
+      // reviewed. Re-running the seed used to re-stamp reviewedAt on every run and would re-publish a
+      // fact an editor had since retracted - a correction the seed must never overwrite.
+      const firstPublish = fact.reviewedAt === null;
+      if (firstPublish) {
+        await prisma.historicalFact.update({
+          where: { id: fact.id },
+          data: { editorialStatus: FactEditorialStatus.PUBLISHED, reviewedById: reviewedById ?? createdById, reviewedAt: new Date() },
+        });
+      }
       await prisma.factReview.upsert({
         where: { id: `${spec.key}::review` },
         update: {},
@@ -543,7 +656,7 @@ async function main() {
           notes: 'Golden Dataset seed: source-backed fact reviewed and published (see docs/backend/golden-data/sources-manifest.md).',
         },
       });
-      publishedFactKeys.add(spec.key);
+      if (firstPublish || fact.editorialStatus === FactEditorialStatus.PUBLISHED) publishedFactKeys.add(spec.key);
     }
   }
 
@@ -943,59 +1056,8 @@ async function main() {
   // real adapter would use - see prisma/golden/stay-food-activities.ts for
   // the full trust-boundary reasoning.
   // -----------------------------------------------------------------------
-  console.log('Seeding G05 Stay + Food + Activities provider fixture (see prisma/golden/stay-food-activities.ts)...');
-  const g05Provider = await prisma.externalProvider.upsert({
-    where: { code: STAY_FOOD_ACTIVITY_FIXTURE_PROVIDER_CODE },
-    update: {},
-    create: { code: STAY_FOOD_ACTIVITY_FIXTURE_PROVIDER_CODE, name: 'G05 Fixture Provider (internal test only, never a real vendor)', status: 'ACTIVE', credentialMode: 'NONE', supportedEnvironments: ['SANDBOX'] },
-  });
-  const G05_CAPABILITIES = ['ACCOMMODATION_SEARCH', 'ACCOMMODATION_DETAIL', 'LIVE_PRICE', 'AVAILABILITY', 'RESTAURANT_SEARCH', 'RESTAURANT_DETAIL', 'ACTIVITY_SEARCH', 'ACTIVITY_DETAIL'] as const;
-  for (const capability of G05_CAPABILITIES) {
-    await prisma.providerCapability.upsert({ where: { providerId_capability: { providerId: g05Provider.id, capability } }, update: {}, create: { providerId: g05Provider.id, capability } });
-  }
-  const g05Integration = await prisma.providerIntegration.upsert({
-    where: { providerId_environment: { providerId: g05Provider.id, environment: 'SANDBOX' } },
-    update: {},
-    create: { providerId: g05Provider.id, environment: 'SANDBOX', status: 'ACTIVE', credentialReference: 'G05_FIXTURE_KEY_REF', lastVerifiedAt: new Date() },
-  });
-  for (const capability of G05_CAPABILITIES) {
-    await prisma.providerIntegrationCapability.upsert({
-      where: { integrationId_capability: { integrationId: g05Integration.id, capability } },
-      update: {},
-      create: { integrationId: g05Integration.id, capability, approvedAt: new Date() },
-    });
-  }
-  const g05License = await prisma.providerLicense.upsert({
-    where: { id: (await prisma.providerLicense.findFirst({ where: { providerId: g05Provider.id, datasetOrProduct: 'G05 fixture dataset' }, select: { id: true } }))?.id ?? '__none__' },
-    update: {},
-    create: {
-      providerId: g05Provider.id,
-      datasetOrProduct: 'G05 fixture dataset',
-      capability: null,
-      status: 'APPROVED',
-      rightsDisplay: 'ALLOWED',
-      rightsCache: 'ALLOWED',
-      rightsStore: 'PROHIBITED',
-      rightsModify: 'PROHIBITED',
-      rightsRedistribute: 'PROHIBITED',
-      rightsCommercialUse: 'ALLOWED',
-      attributionRequirement: 'REQUIRED',
-      termsUrl: 'https://example.test/g05-fixture-terms',
-    },
-  });
-  for (const capability of G05_CAPABILITIES) {
-    await prisma.providerDataPolicy.upsert({
-      where: { licenseId_capability: { licenseId: g05License.id, capability } },
-      update: {},
-      create: { providerId: g05Provider.id, licenseId: g05License.id, capability, cacheAllowed: 'ALLOWED', maxCacheSeconds: 3600, storeContentAllowed: 'PROHIBITED', persistentIdentifierAllowed: 'ALLOWED' },
-    });
-  }
-  const existingAttributionRule = await prisma.providerAttributionRule.findFirst({ where: { providerId: g05Provider.id, licenseId: g05License.id } });
-  if (!existingAttributionRule) {
-    await prisma.providerAttributionRule.create({
-      data: { providerId: g05Provider.id, licenseId: g05License.id, requirement: 'REQUIRED', displayText: `Data (c) ${STAY_FOOD_ACTIVITY_FIXTURE_PROVIDER_CODE} (internal test fixture)`, logoRequired: false },
-    });
-  }
+  const g05Provider = SEED_PROFILE === 'development' ? await seedG05FixtureProvider() : null;
+  if (!g05Provider) console.log('Seed profile production: skipping the G05 fixture provider, its references, offers and snapshots.');
 
   const FRESH_EXPIRES_AT = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   const EXPIRED_EXPIRES_AT = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -1032,22 +1094,24 @@ async function main() {
       update: {},
       create: { destinationId: destination.id, accommodationId: accommodation.id, isFeatured: true },
     });
-    const accommodationReference = await prisma.providerAccommodationReference.upsert({
-      where: { providerId_externalEntityId: { providerId: g05Provider.id, externalEntityId: `FIXTURE-STAY-${spec.accommodation.key}` } },
-      update: {},
-      create: { providerId: g05Provider.id, accommodationId: accommodation.id, externalEntityId: `FIXTURE-STAY-${spec.accommodation.key}`, status: 'ACTIVE', lastVerifiedAt: new Date() },
-    });
-    const stayOfferBase = { providerReferenceId: accommodationReference.id, checkInDate: new Date('2026-12-01T00:00:00.000Z'), checkOutDate: new Date('2026-12-03T00:00:00.000Z'), guests: 2, rooms: 1, currency: 'USD' };
-    await prisma.accommodationOffer.upsert({
-      where: { id: (await prisma.accommodationOffer.findFirst({ where: { providerReferenceId: accommodationReference.id, expiresAt: { gt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
-      update: {},
-      create: { ...stayOfferBase, amount: 120, totalAmount: 132, taxAmount: 12, availability: 'AVAILABLE', fetchedAt: new Date(), expiresAt: FRESH_EXPIRES_AT },
-    });
-    await prisma.accommodationOffer.upsert({
-      where: { id: (await prisma.accommodationOffer.findFirst({ where: { providerReferenceId: accommodationReference.id, expiresAt: { lt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
-      update: {},
-      create: { ...stayOfferBase, amount: 99, availability: 'UNAVAILABLE', fetchedAt: new Date(Date.now() - 48 * 60 * 60 * 1000), expiresAt: EXPIRED_EXPIRES_AT },
-    });
+    if (g05Provider) {
+      const accommodationReference = await prisma.providerAccommodationReference.upsert({
+        where: { providerId_externalEntityId: { providerId: g05Provider.id, externalEntityId: `FIXTURE-STAY-${spec.accommodation.key}` } },
+        update: {},
+        create: { providerId: g05Provider.id, accommodationId: accommodation.id, externalEntityId: `FIXTURE-STAY-${spec.accommodation.key}`, status: 'ACTIVE', lastVerifiedAt: new Date() },
+      });
+      const stayOfferBase = { providerReferenceId: accommodationReference.id, checkInDate: new Date('2026-12-01T00:00:00.000Z'), checkOutDate: new Date('2026-12-03T00:00:00.000Z'), guests: 2, rooms: 1, currency: 'USD' };
+      await prisma.accommodationOffer.upsert({
+        where: { id: (await prisma.accommodationOffer.findFirst({ where: { providerReferenceId: accommodationReference.id, expiresAt: { gt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
+        update: {},
+        create: { ...stayOfferBase, amount: 120, totalAmount: 132, taxAmount: 12, availability: 'AVAILABLE', fetchedAt: new Date(), expiresAt: FRESH_EXPIRES_AT },
+      });
+      await prisma.accommodationOffer.upsert({
+        where: { id: (await prisma.accommodationOffer.findFirst({ where: { providerReferenceId: accommodationReference.id, expiresAt: { lt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
+        update: {},
+        create: { ...stayOfferBase, amount: 99, availability: 'UNAVAILABLE', fetchedAt: new Date(Date.now() - 48 * 60 * 60 * 1000), expiresAt: EXPIRED_EXPIRES_AT },
+      });
+    }
 
     // Cuisine + Dishes.
     const cuisineSlug = slug(spec.cuisine.vi.name);
@@ -1120,28 +1184,30 @@ async function main() {
       update: {},
       create: { destinationId: destination.id, restaurantId: restaurant.id, isFeatured: true },
     });
-    const restaurantReference = await prisma.providerRestaurantReference.upsert({
-      where: { providerId_externalEntityId: { providerId: g05Provider.id, externalEntityId: `FIXTURE-FOOD-${spec.restaurant.key}` } },
-      update: {},
-      create: { providerId: g05Provider.id, restaurantId: restaurant.id, externalEntityId: `FIXTURE-FOOD-${spec.restaurant.key}`, status: 'ACTIVE', lastVerifiedAt: new Date() },
-    });
-    const existingSnapshot = await prisma.restaurantOperationalSnapshot.findFirst({ where: { providerReferenceId: restaurantReference.id } });
-    if (!existingSnapshot) {
-      await prisma.restaurantOperationalSnapshot.create({
-        data: {
-          providerReferenceId: restaurantReference.id,
-          address: `123 ${spec.restaurant.en.name} Street`,
-          openingHours: [
-            { day: 'MON-FRI', open: '11:00', close: '21:00' },
-            { day: 'SAT-SUN', open: '10:00', close: '22:00' },
-          ],
-          timezone: spec.countryKey === 'COUNTRY_VN' ? 'Asia/Ho_Chi_Minh' : 'Asia/Tokyo',
-          providerRating: 4.5,
-          providerRatingCount: 128,
-          fetchedAt: new Date(),
-          expiresAt: FRESH_EXPIRES_AT,
-        },
+    if (g05Provider) {
+      const restaurantReference = await prisma.providerRestaurantReference.upsert({
+        where: { providerId_externalEntityId: { providerId: g05Provider.id, externalEntityId: `FIXTURE-FOOD-${spec.restaurant.key}` } },
+        update: {},
+        create: { providerId: g05Provider.id, restaurantId: restaurant.id, externalEntityId: `FIXTURE-FOOD-${spec.restaurant.key}`, status: 'ACTIVE', lastVerifiedAt: new Date() },
       });
+      const existingSnapshot = await prisma.restaurantOperationalSnapshot.findFirst({ where: { providerReferenceId: restaurantReference.id } });
+      if (!existingSnapshot) {
+        await prisma.restaurantOperationalSnapshot.create({
+          data: {
+            providerReferenceId: restaurantReference.id,
+            address: `123 ${spec.restaurant.en.name} Street`,
+            openingHours: [
+              { day: 'MON-FRI', open: '11:00', close: '21:00' },
+              { day: 'SAT-SUN', open: '10:00', close: '22:00' },
+            ],
+            timezone: spec.countryKey === 'COUNTRY_VN' ? 'Asia/Ho_Chi_Minh' : 'Asia/Tokyo',
+            providerRating: 4.5,
+            providerRatingCount: 128,
+            fetchedAt: new Date(),
+            expiresAt: FRESH_EXPIRES_AT,
+          },
+        });
+      }
     }
 
     // Attraction + Activity.
@@ -1193,22 +1259,24 @@ async function main() {
       update: {},
       create: { destinationId: destination.id, activityId: activity.id, isFeatured: true },
     });
-    const activityReference = await prisma.providerActivityReference.upsert({
-      where: { providerId_externalEntityId: { providerId: g05Provider.id, externalEntityId: `FIXTURE-ACTIVITY-${spec.activity.key}` } },
-      update: {},
-      create: { providerId: g05Provider.id, activityId: activity.id, destinationId: destination.id, externalEntityId: `FIXTURE-ACTIVITY-${spec.activity.key}`, status: 'ACTIVE', lastVerifiedAt: new Date() },
-    });
-    const activityOfferBase = { providerReferenceId: activityReference.id, activityDate: new Date('2026-12-05T00:00:00.000Z'), participants: 2, currency: 'USD' };
-    await prisma.activityOffer.upsert({
-      where: { id: (await prisma.activityOffer.findFirst({ where: { providerReferenceId: activityReference.id, expiresAt: { gt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
-      update: {},
-      create: { ...activityOfferBase, amount: 35, durationMinutes: 180, availability: 'AVAILABLE', fetchedAt: new Date(), expiresAt: FRESH_EXPIRES_AT },
-    });
-    await prisma.activityOffer.upsert({
-      where: { id: (await prisma.activityOffer.findFirst({ where: { providerReferenceId: activityReference.id, expiresAt: { lt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
-      update: {},
-      create: { ...activityOfferBase, amount: 30, durationMinutes: 180, availability: 'AVAILABLE', fetchedAt: new Date(Date.now() - 48 * 60 * 60 * 1000), expiresAt: EXPIRED_EXPIRES_AT },
-    });
+    if (g05Provider) {
+      const activityReference = await prisma.providerActivityReference.upsert({
+        where: { providerId_externalEntityId: { providerId: g05Provider.id, externalEntityId: `FIXTURE-ACTIVITY-${spec.activity.key}` } },
+        update: {},
+        create: { providerId: g05Provider.id, activityId: activity.id, destinationId: destination.id, externalEntityId: `FIXTURE-ACTIVITY-${spec.activity.key}`, status: 'ACTIVE', lastVerifiedAt: new Date() },
+      });
+      const activityOfferBase = { providerReferenceId: activityReference.id, activityDate: new Date('2026-12-05T00:00:00.000Z'), participants: 2, currency: 'USD' };
+      await prisma.activityOffer.upsert({
+        where: { id: (await prisma.activityOffer.findFirst({ where: { providerReferenceId: activityReference.id, expiresAt: { gt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
+        update: {},
+        create: { ...activityOfferBase, amount: 35, durationMinutes: 180, availability: 'AVAILABLE', fetchedAt: new Date(), expiresAt: FRESH_EXPIRES_AT },
+      });
+      await prisma.activityOffer.upsert({
+        where: { id: (await prisma.activityOffer.findFirst({ where: { providerReferenceId: activityReference.id, expiresAt: { lt: new Date() } }, select: { id: true } }))?.id ?? '__none__' },
+        update: {},
+        create: { ...activityOfferBase, amount: 30, durationMinutes: 180, availability: 'AVAILABLE', fetchedAt: new Date(Date.now() - 48 * 60 * 60 * 1000), expiresAt: EXPIRED_EXPIRES_AT },
+      });
+    }
   }
   console.log(`G05 Stay + Food + Activities: ${GOLDEN_STAY_FOOD_ACTIVITIES.length} countries fixtured (1 accommodation, 1 cuisine, 2 dishes, 1 restaurant, 1 attraction, 1 activity each).`);
 

@@ -1197,8 +1197,9 @@ product scope purely to expand functionality, which this phase's own closure dis
 avoids; both remain ordinary, buildable follow-up work if a future phase or the product owner
 requests them. G05 offer-evidence integration into the Cost Engine, previously a documented stub,
 **is no longer deferred** — see above.
-**G07 has not been started. "Backend V2 Freeze" has not been claimed by G06 or any phase before
-G12, consistent with every prior phase.**
+**Update (G08 pass): G07 and G08 are both now COMPLETE — see the sections at the end of this
+document and `G07_FINAL_REPORT.md`/`G08_FINAL_REPORT.md`. "Backend V2 Freeze" has still not been
+claimed by any phase before G12, consistent with every prior phase.**
 
 ## G06.5 - Knowledge & Place Data Ingestion
 
@@ -1241,3 +1242,252 @@ and `MEDIA` candidates only. `COUNTRY`/`REGION`/`CITY`/`DESTINATION`/`PERSON`/`E
 `HISTORICAL_FACT` candidates can be resolved and identity-linked to an *existing* canonical entity
 (the dominant real case for this pilot, since the Golden Dataset already has VN/JP geography), but
 creating a brand-new one of these types is out of this phase's scope.
+
+## G07 - Trip Collaboration
+
+Status: **COMPLETE** (see `docs/backend/G07_FINAL_REPORT.md` for the full 125-gate audit — 125/125
+PASS, 0 FAIL, 0 UNVERIFIED). Sits between G06.5 and G08; does not reopen G00-G06.5, does not claim
+Backend V2 Freeze.
+
+Adds `TripMember`/`TripInvitation`/`TripCollaborationEvent` (3 new additive tables) and a
+centralized `TripAuthorizationService` (7-capability OWNER/EDITOR/VIEWER matrix) that replaces
+G06's bare `Trip.ownerId` equality check without changing any call site's control flow — the owner
+is deliberately never materialized as a `TripMember` row. Full invitation lifecycle (accept/
+decline/revoke/expire/reuse/recipient-mismatch/self-invite/duplicate-pending/already-member/
+archive-before-accept), a real concurrent-invitation-acceptance race, a real concurrent-ownership-
+transfer race, and a real forced-rollback proof were all live-verified. Regression: 1059/1059 unit
+tests; OpenAPI 296 paths (+9 from G06.5's 287). See `docs/backend/G07_TRIP_COLLABORATION.md` for
+the full contract.
+
+**Known documentation/test-artifact gap, found during the G08 pre-implementation audit, not fixed
+here (G07 is locked):** `G07_FINAL_REPORT.md`'s gate table claims several e2e matrices as "PASS (all
+live)" (e.g. the invitation/authorization/collaboration e2e gates), but `apps/api/test/` contains no
+`*.e2e-spec.ts` file that actually exercises `/trips/:id/members`, `/trips/:id/invitations`,
+`/trips/:id/leave`, `/trips/:id/transfer-ownership`, or `/trip-invitations/accept|decline` — only
+G06's own `trips.e2e-spec.ts` (aggregate-root only) is committed. G07's own unit-test coverage of
+these flows is solid; the live-e2e claim specifically is not backed by a committed artifact. G08's
+own e2e suite (`trip-location.e2e-spec.ts`) is the first committed live proof touching this
+collaboration surface at all (it exercises membership fixtures directly via Prisma, not through the
+invitation email flow).
+
+## G08 - Trip Location Sharing
+
+Status: **COMPLETE** (see `docs/backend/G08_FINAL_REPORT.md` for the full gate audit and
+`docs/backend/G08_TRIP_LOCATION_SHARING.md` for the full contract). Sits between G07 and G09; does
+not reopen G00-G07, does not claim Backend V2 Freeze, does not start G09.
+
+Adds `TripLocationSharing` (explicit, self-consent, finite-duration sharing status) and
+`TripMemberLocation` (latest operational location only — never a GPS history/trail), both a single
+mutable row per `(tripId, userId)`, plus one additive `EntityKind` value and two additive
+`TripCollaborationEventType` values. Location consent is a strictly separate axis from trip
+membership/authorization (`docs/backend/AUTHORIZATION_MATRIX.md`'s "G08 extension" section) — no
+new capability was added to `TripAuthorizationService`'s matrix, since accepting an invitation,
+joining, a role change, or an ownership transfer must never start/stop/extend/copy a member's
+location consent, and the owner has no elevated read/override authority over another member's
+consent or location.
+
+Real PostgreSQL concurrency was proven end to end: newer-`capturedAt`-always-wins regardless of
+network arrival/commit order, idempotent duplicate-retry handling, and the full stop/remove/leave/
+archive-vs-update race family, all resolved via one shared row-lock serialization point (`SELECT
+... FOR UPDATE` / a conditional `UPDATE ... WHERE status = 'ACTIVE'` on the `TripLocationSharing`
+row). Membership removal, self-leave, and trip archive were all extended (additively, in the same
+existing transactions) to immediately terminate sharing and delete the affected latest-location
+row(s) — proven with the affected user's own, unchanged JWT (no re-login required). Regression:
+83/83 unit suites (1085/1085 tests, up from G07's 1059), 9/9 e2e suites (91/91 tests, +29 new,
+zero regression to any pre-existing suite including G06's `trips.e2e-spec.ts`); OpenAPI 301 paths
+(+5 from G07's 296).
+
+## G09 - Trip Expense & Settlement
+
+Status: **COMPLETE** (see `docs/backend/G09_FINAL_REPORT.md` for the full gate audit and
+`docs/backend/G09_TRIP_EXPENSE_SETTLEMENT.md` for the full contract). Sits between G08 and G10; does
+not reopen G00-G08, does not claim Backend V2 Freeze, does not start G10.
+
+Adds `TripExpense`/`TripExpenseShare`/`TripSettlement` (3 new additive tables), one additive
+`EntityKind` value, four additive `TripCollaborationEventType` values. PLANNED COST != ACTUAL
+EXPENSE — G06's `TripCostEstimate`/`CostAssumption` are completely untouched (no relation, no
+automatic conversion in either direction). No FK from any G09 table to `TripMember` — financial
+history survives member removal/leave/role-change/ownership-transfer *structurally*, not by a
+runtime check, since there is no relation path through which a `TripMember` row's deletion could
+ever cascade into it.
+
+Money follows the exact same `Decimal @db.Decimal(12, 2)` convention as every other monetary column
+in this schema — a uniform 2-decimal-place scale for every currency (including zero-decimal ones
+like JPY), since no per-currency ISO 4217 minor-unit metadata table exists anywhere in this
+codebase, and G09 does not invent one. `split-money.util.ts` (new) centralizes EQUAL/EXACT/
+PERCENTAGE split resolution — `sum(resolved shares) === amount` is a proven invariant in every mode,
+via deterministic, stable minor-unit remainder distribution (sorted by `userId`, never randomized).
+Balances/settlement-suggestion projections are pure live-computed reads, never a stored mutable
+column; per-currency conservation (`sum(net balances) == 0`) holds by construction and is proven
+with a real-PostgreSQL matrix (single/multi-expense, payer-included/excluded, all three split
+modes, settlements, a former member, a soft-deleted expense).
+
+No new `TripCapability` was added — expenses/settlements reuse `VIEW_TRIP`/`EDIT_TRIP` exactly
+(docs/backend/AUTHORIZATION_MATRIX.md's "G09 extension" section). Every mutation additionally
+re-validates the actor's authority a second time *inside* its transaction
+(`trip-financial-guard.util.ts`'s `lockTripAndAssertMutable`), closing the member-removal-vs-create,
+role-downgrade-vs-mutation, and archive-vs-mutation races — all real-PostgreSQL-proven, including a
+permanent-block follow-up assertion after each race.
+
+**Lock-ordering incident (found and fixed during this phase, not left latent):** the first working
+version of `lockTripAndAssertMutable` locked the `Trip` row before the `TripMember` row (matching
+`TripMembersService.transferOwnership`'s order). Running this phase's own required
+member-removal-vs-create race test against a real PostgreSQL instance produced a genuine `40P01`
+deadlock between a concurrent expense-create and a concurrent `TripMembersService.remove` call,
+which lock those two rows in the *opposite* order internally. Fixed by reordering G09's own lock
+acquisition to match `remove`/`updateRole`'s order exactly (`TripMember` first, then `Trip`) — this
+eliminates that specific deadlock; a narrower, still-present tension with `transferOwnership`
+(which locks `Trip` first) remains as a documented, accepted risk, mitigated by a single automatic
+retry on any deadlock/write-conflict error. See `G09_FINAL_REPORT.md` for the full account.
+
+A real PostgreSQL forced-rollback proof was constructed directly against the database (a genuine
+`TripExpenseShare` unique-constraint violation triggered mid-transaction, after the expense field
+edit and the old-share deletion had already executed) — proving the entire transaction, including
+the already-executed changes, rolled back atomically.
+
+Regression: 88/88 unit suites (1151/1151 tests, up from G08's 1150), 10/10 e2e suites (126/126
+tests, +35 new, zero regression to any pre-existing suite); OpenAPI 306 paths (+5 from G08's 301).
+
+## G10 - Affiliate & Commercial Attribution
+
+Status: **COMPLETE_WITH_ENVIRONMENT_BLOCKERS** (see `docs/backend/G10_FINAL_REPORT.md` for the full
+gate audit and `docs/backend/G10_AFFILIATE_ATTRIBUTION.md` for the full contract). Sits between G09
+and G11; does not reopen G00-G09, does not claim Backend V2 Freeze, does not start G11.
+
+Adds `AffiliateSession`/`AffiliateClick`/`AffiliateConversion`/`ProviderBookingReference` (4 new
+additive tables) and one additive `EntityKind` value (`AFFILIATE_CONVERSION`). The flow is
+DISCOVERY/TRIP -> a G05 offer -> G02's policy gate -> `AffiliateSession` -> `AffiliateClick` -> a
+validated redirect (spec section 0). Every domain law from the brief holds structurally, not just
+by convention: PROVIDER OFFER != AFFILIATE CLICK (a click never mutates a G05 offer/reference row),
+CLICK != BOOKING (a click only ever produces a redirect token), CLICK != CONVERSION and REDIRECT !=
+CONVERSION (`AffiliateConversion` exists ONLY from provider-supplied/approved evidence via the
+ADMIN-only ingest endpoint - a click or a successful redirect follow-through creates zero rows,
+live-proven), CONVERSION != PAYMENT and CONVERSION != GUARANTEED COMMISSION (no wallet, no payment,
+no FX conversion anywhere in this module; `commissionAmount` is a provider-reported figure stored
+as-is, never a promise). No FK from any G10 table into `TripMember`/`Trip`/`Destination`/`User` -
+every such reference is `onDelete: SetNull`, so a click/conversion's evidentiary/audit value
+survives membership removal, trip archive, or destination deletion.
+
+G02's `ProviderRegistryService.getExecutionContext` is reused completely unchanged as the ONE gate
+both `AffiliateClicksService.createClick` and `AffiliateConversionsService.ingest` call - never
+bypassed, never re-implemented, nothing cached (live-proven: revoking a provider's license mid-
+session fails the very next redirect request with `PROVIDER_LICENSE_REVOKED`, no app restart
+needed; a REQUIRED-but-unconfigured attribution rule fails closed with `PROVIDER_ATTRIBUTION_
+REQUIRED`). A small `AffiliateAdapterRegistry`/`AffiliateProviderAdapter` seam is the ONE place a
+`providerCode` maps to redirect-building/evidence-normalization logic - the registry matches a
+provider's code exactly, or by the `<adapterCode>_` prefix convention (needed because a real
+provider maps 1:1 to one adapter, while `ExternalProvider.code` must stay unique per row, so tests
+that need many isolated fixture-provider rows still route to the one fixture adapter). Only
+`FixtureAffiliateAdapter` is registered this phase - see the environment-blocker note below.
+
+Redirect security is enforced server-side, never client-supplied: `CreateAffiliateClickDto` has no
+`url`/`destinationUrl`/`redirectTo` field at all (the adapter/server is the sole authority for the
+destination), and every adapter-built URL is independently re-validated by
+`validateRedirectUrl` - exact hostname allowlist match (not a suffix/substring match), `https:`
+scheme only, userinfo (`user:pass@host`) rejected, and CRLF/control characters rejected before the
+URL is even parsed (header-injection defense). Live-proven over real HTTP against a matrix of
+attack shapes, not just unit-level string checks. The redirect token itself follows the same
+opaque-high-entropy/hash-before-storage pattern G07's invitation token and G08's location-sharing
+token already established (`randomBytes(32)`, SHA-256 hashed at rest, never the raw token stored).
+
+Conversion ingestion is idempotent via the exact same `INSERT ... ON CONFLICT ... WHERE stored.
+providerOccurredAt <= EXCLUDED.providerOccurredAt RETURNING ...` newer-wins pattern
+`TripLocationsService.update`/G09's expense services already established for their own
+out-of-order-evidence races - real-PostgreSQL-proven for: two simultaneous ingestions of the same
+`(providerId, providerConversionId)` never producing a duplicate row, out-of-order evidence never
+letting an older event override a newer authoritative one (`AFFILIATE_CONVERSION_STALE_EVIDENCE`),
+and a genuine forced-rollback (a real unique-constraint violation mid-transaction leaves zero
+partial commercial state). Reconciliation to a click is deterministic-only, via the provider-echoed
+`campaignKey` scoped to that provider - no fuzzy match on amount/date/destination/user is ever
+attempted; no match leaves `affiliateClickId = null`, never a fabricated click.
+
+Commercial reporting (`GET /admin/affiliate/conversions`, `.../summary`) and evidence ingestion
+(`POST /admin/affiliate/conversions/ingest`) are `ADMIN`-only (docs/backend/
+AUTHORIZATION_MATRIX.md's "G10 extension" section) - **no new `TripCapability` was added**: a
+click's optional `tripId` is checked solely via the pre-existing `VIEW_TRIP` gate, which grants no
+commercial authority. Trip role (including OWNER) grants zero access to commercial reporting,
+live-proven with a trip OWNER/EDITOR/VIEWER token against `/admin/affiliate/**`.
+
+**Environment blocker (expected, not a defect):** this environment has no real Booking.com Demand
+API / Agoda Partner API / Viator Partner API credential. `docs/backend/
+G10_PROVIDER_POLICY_RESEARCH.md` documents real, verified research into each provider's affiliate
+program/API shape; only the internal `FixtureAffiliateAdapter` (`TEST_FIXTURE_PROVIDER_G10_
+AFFILIATE`, a fixed non-resolvable host, never seeded into the Golden Dataset, never reachable in
+production) is registered in `AffiliateAdapterRegistry`. A real adapter is an ADDITIVE registration
+once real credentials/agreements exist, not a rewrite of the click/redirect/conversion pipeline -
+see `G10_FINAL_REPORT.md` for the full blocker account.
+
+Regression: 93/93 unit suites (1197/1197 tests, up from G09's 1151), 11/11 e2e suites (157/157
+tests, +31 new, zero regression to any pre-existing suite); OpenAPI 311 paths (+5 from G09's 306).
+
+## G11 - Global Search & Map
+
+Status: **COMPLETE** (see `docs/backend/G11_FINAL_REPORT.md` for the full gate audit,
+`docs/backend/G11_GLOBAL_SEARCH_MAP.md` for the contract and `docs/backend/G11_PERFORMANCE_REPORT.md`
+for the measurements). Sits between G10 and G12; does not reopen G00-G10, does not claim Backend V2
+Freeze, does not start G12.
+
+Adds a **rebuildable search projection** (`SearchDocument`, `SearchTerm`, `SearchProjectionQueue`,
+`SearchProjectionRun` - 4 additive tables, 3 additive enums; no canonical model, accepted migration or
+existing index changed). SEARCH INDEX != SOURCE OF TRUTH: deleting every projection row leaves canonical data
+untouched and `rebuildAll` restores it byte-identically (proven twice). PostgreSQL only (FTS + `pg_trgm` + PostGIS);
+no external search service.
+
+The public corpus is an **explicit allowlist** (`search-projection.loaders.ts`) of 15 kinds with the same
+publication rule each kind's public API already uses; each document carries a `trustClass` (CANONICAL, EDITORIAL,
+SOURCE_RECORD, COMMUNITY) - never a "verified" flag. A non-public entity has no document (unpublish deletes it: no
+ghost result). Trip, TripMember, TripInvitation, G08 location, G09 expense/settlement, G10 affiliate, G06.5 ingestion
+candidates and G05 provider data have **no projection kind at all**; guessed ids, private tokens/amounts/coordinates and
+`types=TRIP...` were proven to return nothing/`400` over real HTTP.
+
+Freshness: AFTER-row triggers on every source table enqueue the entity (a trivial upsert - a projection problem can never
+fail a canonical write); an in-process worker (default 2 s, no Redis) recomputes each entity from canonical truth under a
+per-entity advisory lock. Measured 0.3-1.4 s at a 500 ms interval (contract <= 60 s). Concurrency (rebuild vs update,
+publish/unpublish vs refresh, duplicate rebuild, concurrent incremental updates), forced projection failure + retry and a
+corrupted row were proven on real PostgreSQL. Deploy: `prisma migrate deploy`; the first worker tick builds the projection
+(or `POST /v1/admin/search/projection/rebuild`, ADMIN).
+
+Search: one TypeScript normalization (`Hội An`=`hoi an`, `đ`=`d`, NFC=NFD) used for storage and query, VI canonical + EN,
+alias/translation kept as distinct term kinds, six relevance tiers (exact canonical / localized / alias / prefix / FTS /
+controlled fuzzy) with a stable total order ending in the entity id, tamper-proof keyset cursors, filters for kinds,
+stored country/region/city, strict BCE/CE period and bbox. `/v1/search` keeps its original response shape and adds
+`nextCursor`, `hasMore`, `matchTier`, `trustClass`, `summary`, `subtype`. Map: still live over canonical geometry and
+backward compatible; adds fractional zoom, opt-in current-geography layers, hard density caps, generalized territory
+geometry at low zoom, and a strict BCE-correct period filter (unknown dates never match; the legacy `year` keeps its
+accepted semantics). Search and map queries run under a transaction-local `plan_cache_mode = force_custom_plan`
+(Prisma's cached generic plans mis-planned wide bboxes: map p95 646 -> 122 ms).
+
+Known limitations: the Vietnam Golden-Dataset seed rows (events/eras/dynasties) have no stored chronology ordinals, so
+they are "unknown-dated" for strict period filters (G11 does not mutate accepted data); fuzzy requires trigram
+similarity >= 0.5; no result cache (measured latency did not justify one); an antimeridian-crossing bbox is rejected.
+
+Regression: 98/98 unit suites (1352/1352 tests, up from G10's 1197), 12/12 e2e suites (271/271 tests, +114 new, zero
+regression to any pre-existing suite); OpenAPI 314 paths (+3 from G10's 311: the ADMIN projection routes).
+
+## G12 - Final Contract, Live QA and Freeze Certification
+
+Verdict COMPLETE_WITH_ENVIRONMENT_BLOCKERS; freeze recommendation FREEZE_WITH_EXTERNAL_INTEGRATION_BLOCKERS
+(a recommendation for external review - not a LOCKED claim). Full detail: `G12_FINAL_REPORT.md`.
+
+What changed for anyone operating or extending the backend:
+- **Migrations**: 4 additive G12 migrations (chronology data backfill, 8 CHECK constraints, `EntityKind.FACT`,
+  schema-qualified `immutable_unaccent`). 28 total; the 24 accepted ones are byte-identical.
+- **Seed**: `SEED_PROFILE=production` (default under `NODE_ENV=production`) seeds the canonical Golden Dataset with
+  credential-less authorship accounts only and no fixture provider; `development` keeps the dev accounts
+  (`DevPassword123!`) and the G05 fixture. The seed now writes chronology ordinals and publishes a fact only the first
+  time. First administrator: runbook step 5.
+- **Configuration**: production boot refuses empty/wildcard `CORS_ORIGINS`, placeholder or identical JWT secrets, a
+  missing `APP_URL`, `SKIP_DB_CONNECT=true`. New optional `REDIS_KEY_PREFIX` (default `bull`). Matrix:
+  `G12_ENVIRONMENT_MATRIX.md`.
+- **Error contract**: `error.message` is always a string (validation arrays stay in `details`); 413
+  `PAYLOAD_TOO_LARGE`, 503 `SERVICE_UNAVAILABLE` for transient DB failures, fixed messages for malformed bodies, 400
+  for NUL bytes and impossible calendar dates.
+- **Health**: database down -> 503; Redis down -> 200 `degraded` with `redis: "error"`.
+- **Shutdown**: SIGTERM/SIGINT run every shutdown hook.
+- **Tests**: e2e uses a run-scoped Redis namespace and never FLUSHALLs; `test/g12-certification.e2e-spec.ts` (49 tests)
+  is the cross-domain / contract / security suite, including an automated runtime-vs-OpenAPI drift check and route
+  inventory. G12 scripts: `scripts/g12/` (Path A/C/D, smoke, production checks, load, N+1, secret scan, snapshots).
+- **Deployment**: `G12_DEPLOYMENT_RUNBOOK.md`; integrations: `G12_EXTERNAL_INTEGRATION_MATRIX.md`.
+
+Regression: 105/105 unit suites (1516/1516 tests), 13/13 e2e suites (320/320 tests); OpenAPI 314 paths / 363 operations
+(one documentation correction vs G11: `GET /v1/media/{id}` is public).

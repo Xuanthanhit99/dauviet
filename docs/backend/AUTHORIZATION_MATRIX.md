@@ -85,6 +85,8 @@ A `User.roles` is a Postgres array (`Role[]`) - one account can hold several rol
 | Users | `POST /admin/users/:id/badges`, `DELETE /admin/users/:id/badges/:type` (Phase 08) | `ADMIN` only - badges are rule/editorial-based, never self-awarded (spec section 28) |
 | Moderation | `GET /admin/moderation/queue`, `GET /admin/moderation/:targetType/:targetId`, `POST /admin/moderation/actions` (Phase 08) | `MODERATOR`, `ADMIN` - a unified, audited entrypoint that delegates to the existing `CommunityService`/`CommentsService` setters (spec section 40/47/48/69), never publicly reachable |
 | Admin/Audit | `GET /admin/audit` | `ADMIN`, `MODERATOR`, `HISTORIAN_REVIEWER` |
+| Admin/Search projection (G11) | `GET /admin/search/projection/status`, `POST /admin/search/projection/drain`, `POST /admin/search/projection/rebuild` | `ADMIN` only - operational (counts, queue depth, timings, latency metrics without any query text); none of them returns or searches unpublished content, and no `includeUnpublished` flag exists anywhere |
+| Admin/Affiliate (G10) | `GET /admin/affiliate/conversions`, `GET /admin/affiliate/summary`, `POST /admin/affiliate/conversions/ingest` | `ADMIN` only - commercial conversion/revenue reporting and evidence ingestion, no `EDITOR`/`HISTORIAN_REVIEWER`/`MODERATOR` carve-out, same tier as Providers/Cost Assumptions/Knowledge Ingestion above |
 
 Every route not listed above that still requires `@ApiBearerAuth()` (e.g. `GET /auth/sessions`, `POST /comments`, `POST /bookmarks`, `POST /places/:slug/visits`, `POST /community/stories`, `PATCH/DELETE /community/stories/:id`, `POST/DELETE /community/stories/:id/vote`, `PATCH /comments/:id`, `POST /comments/:id/vote`, `POST /reports`) requires only a valid session - any authenticated role (suspended/disabled accounts are already rejected at the `JwtStrategy` layer before reaching any controller - see `docs/backend/COMMUNITY_ARCHITECTURE.md` section 15). Every route not listed and marked `@Public()` (all `GET` list/detail endpoints for Places/People/Events/Eras/Dynasties/Territories/Stories/Journeys/Sources/Community, `/map/features`, `/timeline`, `/search`, `/health`, and, as of G01, Countries/Regions/Cities/Destinations - `GET /countries`, `.../:slug`, `.../:slug/regions`, `.../:slug/cities`, `.../:slug/destinations`, `GET /regions`, `.../:slug`, `GET /cities`, `.../:slug`, `.../:slug/destinations`, `GET /destinations`, `.../:slug`, `.../:slug/related` (G04), `GET /destination-collections`,
 `.../:slug` (G04), and, as of G05, `GET /accommodations`, `.../:slug`, `.../:slug/offers`, `GET
@@ -140,6 +142,118 @@ blocked from calling it (`403 TRIP_OWNER_CANNOT_LEAVE`) since they must transfer
 (spec section 29). Self-promotion and self-removal-as-owner are both structurally impossible, not
 merely blocked by an extra check: `MANAGE_MEMBERS`-gated routes can never resolve a `TripMember` row
 for the owner, because the owner never has one.
+
+## G08 extension: location consent is a SEPARATE axis from trip authorization
+
+`/v1/trips/:id/location-sharing/**` and `/v1/trips/:id/location(s)` reuse `TripAuthorizationService`
+for exactly one thing - the `VIEW_TRIP` membership gate (owner/EDITOR/VIEWER alike, unrelated/
+pending-invite users get the same `403 TRIP_PERMISSION_DENIED` as everywhere else in this table) -
+but **no new capability was added to the matrix above** (docs/backend/
+G08_PRE_IMPLEMENTATION_REPORT.md section 3): location consent is deliberately never
+governance-gated. TRIP MEMBERSHIP != LOCATION CONSENT means membership only ever proves "you are
+allowed to know this trip's location-sharing state exists"; it never proves "you may act on
+someone else's consent."
+
+| Action | Who may perform it | Enforced by |
+|---|---|---|
+| Start/stop MY OWN sharing | any accepted participant (OWNER/EDITOR/VIEWER), self only | `TripLocationSharingService` - no route accepts a target member id at all |
+| Update MY OWN location | any accepted participant with an ACTIVE, unexpired session, self only | `TripLocationsService.update` - `userId` always comes from the JWT, never the body |
+| Read own status (`.../me`) | any accepted participant, self only | `VIEW_TRIP` gate + always resolves the caller's own row |
+| Read all participants' currently-shareable locations | any accepted participant (OWNER/EDITOR/VIEWER alike) | `VIEW_TRIP` gate; identical read access regardless of role - **OWNER has no elevated read/override authority over another member's consent or location** (spec section 10/68, live-proven in `trip-location.e2e-spec.ts`'s "owner privacy boundary" block) |
+
+No platform role (including `ADMIN`) and no trip role (including `OWNER`) can force-start another
+member's sharing, read a STOPPED/EXPIRED coordinate, or cancel another member's privacy choice in
+order to expose their location. The owner can only cause sharing to terminate *indirectly*, through
+legitimate governance already covered above (`MANAGE_MEMBERS` remove, or `ARCHIVE_TRIP`) - both of
+which the G08 integration extends to also delete the affected latest-location row(s) in the very
+same transaction.
+
+## G09 extension: expenses/settlements reuse VIEW_TRIP/EDIT_TRIP, no new capability
+
+`/v1/trips/:id/expenses/**`, `/v1/trips/:id/settlement-suggestions`, and `/v1/trips/:id/settlements`
+reuse the SAME two capabilities every other Trip sub-resource already uses (docs/backend/
+G09_PRE_IMPLEMENTATION_REPORT.md section 14) - **no new `TripCapability` was added**:
+
+| Action | Capability | Notes |
+|---|---|---|
+| List/read expenses, detail, summary, suggestions, settlements-list | `VIEW_TRIP` | owner/EDITOR/VIEWER alike - VIEWER may read every financial view, same as every other read |
+| Create/edit/delete an expense | `EDIT_TRIP` | same tier as itinerary edits - EDITOR has the "same financial mutation permissions as EDIT_TRIP" per the brief's own baseline table |
+| Record a settlement | `EDIT_TRIP` | treated as one more financial mutation, not an OWNER-exclusive governance action |
+
+Every mutation ALSO re-validates the actor's authority a second time, **inside** the transaction
+(`lockTripAndAssertMutable`, `trip-financial-guard.util.ts`) - a pre-transaction
+`TripAuthorizationService.authorize` call alone cannot close the member-removal-vs-create/role-
+downgrade-vs-mutation/archive-vs-mutation races (spec sections 36-38), since that call reads state
+*before* the transaction that might invalidate it. This is real-PostgreSQL-proven in
+`trip-expense.e2e-spec.ts`'s race-test block, including the follow-up assertion that the block is
+*permanent*, not just won-this-one-race.
+
+Trip membership itself carries no financial authority beyond the two capabilities above - there is
+no `TripCapability.MANAGE_FINANCES` or equivalent, and OWNER holds no special financial power a
+current EDITOR does not also hold (unlike G07's MANAGE_MEMBERS/ARCHIVE_TRIP, which remain
+OWNER-exclusive as before, untouched by G09).
+
+## G10 extension: click/redirect is public-or-anonymous, commercial reporting is ADMIN-only, trip role grants neither
+
+`POST /affiliate/clicks` and `GET /affiliate/r/:token` are `@Public()`, guarded only by
+`OptionalJwtAuthGuard` (docs/backend/G10_PRE_IMPLEMENTATION_REPORT.md section 8) - a caller
+identity is captured on the click when a valid JWT is present, but authentication is never
+required to follow a redirect (spec section 6). `/admin/affiliate/**` (table above) is `ADMIN`
+only - **no new `TripCapability` was added, and no existing one applies here**: a click's optional
+`tripId` is checked SOLELY via the pre-existing `VIEW_TRIP` gate (`TripAuthorizationService`,
+reused unchanged) to confirm the caller has a real relationship to that trip before it is attached
+as tracking context - it grants no commercial authority whatsoever.
+
+| Action | Who may perform it | Enforced by |
+|---|---|---|
+| Create a click / follow a redirect | anyone, authenticated or not | `@Public()` + `OptionalJwtAuthGuard`; a `tripId` on the click additionally requires the caller to be a current accepted participant (`VIEW_TRIP`) of that trip |
+| List/summarize conversions, ingest conversion evidence | `ADMIN` only | `@Roles(Role.ADMIN)` on every `/admin/affiliate/**` route - live-proven: a trip OWNER/EDITOR/VIEWER token, even for a trip the click itself references, gets the same `403` as an unrelated `USER` (spec section 49, `affiliate.e2e-spec.ts`'s authorization-matrix block) |
+
+TRIP ROLE != COMMERCIAL REPORTING ACCESS, the converse of G09's rule: holding any role (including
+OWNER) on the trip a click happens to reference proves nothing about the right to read/ingest that
+provider's commission data - the two are governed by completely separate gates (`VIEW_TRIP` for the
+click's trip-context check; `Role.ADMIN` for every commercial-reporting route), and neither gate
+can satisfy the other.
+
+## G11 extension: public search and map are read-only projections with a structural privacy boundary
+
+`GET /v1/search`, `GET /v1/search/suggestions` and `GET /v1/map/features` are `@Public()` (no authentication, no
+identity captured, no per-user search history). The boundary is structural, not a request-time filter:
+
+| Concern | Enforced by |
+|---|---|
+| Only public/published content is searchable | `search-projection.loaders.ts` is an explicit allowlist of public tables and per-kind eligibility rules; a non-public entity has NO `SearchDocument` (unpublish deletes it, so there is no ghost result). Unit-tested to read no Trip*/Affiliate*/Ingestion*/Provider*/Expense*/Location tables |
+| Private domains cannot be enumerated or guessed | Trip, TripMember, TripInvitation, TripLocationSharing, TripMemberLocation (G07/G08), TripExpense/TripSettlement (G09), AffiliateSession/Click/Conversion (G10) and IngestionCandidate (G06.5) have no projection kind; `types=TRIP...` / `kinds=TRIP_MEMBER_LOCATION` are `400`; live-proven with guessed ids and known private rows (`search-map.e2e-spec.ts`) |
+| No unpublished/admin flags on public routes | `forbidNonWhitelisted` rejects `includeUnpublished`, `status`, `sort`, `orderBy` with `400` |
+| Provider data is not canonical knowledge | provider entities (G05) are not projected at all; the map never reads them |
+| Community content is never verified knowledge | `trustClass = COMMUNITY`, ranked after non-community results of the same tier; only `VISIBLE/LIMITED/LOCKED` stories, titles only |
+| Commercial signals are not ranking inputs | the projection has no affiliate/commission/click/conversion column (asserted against `information_schema`); search/map never create an `AffiliateClick` |
+| Abuse resistance | search is throttled (default 60/min/IP, `SEARCH_RATE_LIMIT_MAX`), limits on `q`/`types`/`limit`/filters, all values bound parameters, tsquery built from sanitized tokens, no user-controlled ORDER BY |
+
+No new `TripCapability` and no new platform role were added.
+
+## G12 certification: every route classified, enforced by an automated test
+
+G12 adds no route and no role. `apps/api/test/g12-certification.e2e-spec.ts` now derives the class of
+every runtime route from its real guard metadata and fails if the result drifts from
+`docs/backend/g12-evidence/route-inventory.json`: 363 operations = 91 PUBLIC, 37 AUTHENTICATED,
+35 TRIP_CAPABILITY (`/trips/:id/**`, `/trip-invitations/**`, authorized in-service), 199 ADMIN
+(any `@Roles()` without `USER` — staff and admin roles), 1 PROVIDER_CALLBACK
+(`GET /auth/google/callback`), 0 INTERNAL. Live sweeps prove anonymous → 401 on every non-public
+route and a plain USER → 403 on every role-gated route; a trip-role holder has no admin, commercial,
+search-admin or audit access. IDOR: unrelated users, pending invitees and removed members get
+`403 TRIP_PERMISSION_DENIED` on every trip route with known ids; sub-resource ids of one trip are
+`404` through another trip's path.
+
+Behavioural changes in G12 (no new capability):
+- `GET /v1/affiliate/r/:token` re-evaluates the G02 gate on every redirect, so a token issued before a
+  provider disable / license revocation is refused on its next use (was: honoured for its TTL).
+- `POST /v1/trips/:id/transfer-ownership` locks the target TripMember row before the Trip row (the
+  order `remove`/`updateRole`/`leave` and G09 already use) — authorization unchanged, deadlock removed.
+- `GET /v1/media/:id` was always `@Public()`; its OpenAPI entry no longer claims bearer auth.
+- Known P3: `POST /v1/trips/:id/leave` checks the version before membership, so a non-member gets 409
+  (stale version) or 404 (not a member) — self-scoped, no mutation, but it reveals the trip's version
+  counter. Left unchanged because an accepted G07 unit test asserts this order.
 
 ## Separation of duties (spec Phase 02 section 20)
 

@@ -37,7 +37,8 @@ class AttachMediaDto {
 }
 
 @ApiTags('media')
-@ApiBearerAuth()
+// G12: bearer auth is declared per role-gated method, not on the class - GET /media/:id is
+// @Public() and the class-level declaration made OpenAPI claim it required a bearer token.
 @Controller('media')
 export class MediaController {
   constructor(private readonly media: MediaService) {}
@@ -48,48 +49,56 @@ export class MediaController {
     return this.media.findPublicById(id);
   }
 
+  @ApiBearerAuth()
   @Roles(Role.CONTRIBUTOR, Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN)
   @Post('uploads')
   requestUpload(@CurrentUser() user: AuthUser, @Body() dto: RequestUploadDto) {
     return this.media.requestUpload(dto, user.id);
   }
 
+  @ApiBearerAuth()
   @Roles(Role.CONTRIBUTOR, Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN)
   @Post('uploads/:id/confirm')
   confirmUpload(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: ConfirmUploadDto) {
     return this.media.confirmUpload(id, dto, user);
   }
 
+  @ApiBearerAuth()
   @Roles(Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN)
   @Post('attach')
   attach(@Body() dto: AttachMediaDto) {
     return this.media.attachToEntity(dto.entityType, dto.entityId, dto.mediaAssetId, dto.role, dto.order);
   }
 
+  @ApiBearerAuth()
   @Roles(Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN)
   @Patch(':id/rights')
   updateRights(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateMediaRightsDto) {
     return this.media.updateRights(id, dto, user.id);
   }
 
+  @ApiBearerAuth()
   @Roles(Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN)
   @Patch(':id/translations/:locale')
   setTranslation(@CurrentUser() user: AuthUser, @Param('id') id: string, @Param('locale') locale: string, @Body() dto: SetMediaTranslationDto) {
     return this.media.setTranslation(id, locale, dto.caption, dto.altText, user.id);
   }
 
+  @ApiBearerAuth()
   @Roles(Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN)
   @Patch(':id/access-policy')
   updateAccessPolicy(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateAccessPolicyDto) {
     return this.media.updateAccessPolicy(id, dto, user.id);
   }
 
+  @ApiBearerAuth()
   @Roles(Role.MODERATOR, Role.ADMIN)
   @Patch(':id/quarantine')
   quarantine(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: QuarantineMediaDto) {
     return this.media.quarantine(id, dto, user.id);
   }
 
+  @ApiBearerAuth()
   @Roles(Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN)
   @Patch(':id/archive')
   archive(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: ArchiveMediaDto) {
@@ -97,6 +106,7 @@ export class MediaController {
   }
 
   /** Orphan-upload cleanup (spec section 40) - triggered on demand since no cron runner is wired up in this build. */
+  @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @Post('admin/cleanup-expired-uploads')
   cleanupExpiredUploads(@CurrentUser() user: AuthUser) {

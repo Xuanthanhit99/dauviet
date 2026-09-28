@@ -2,10 +2,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsInt, IsNumberString, IsOptional, IsString, IsIn, Matches, Max, MaxLength, Min, ValidateNested } from 'class-validator';
 import { TripItemType, TripStatus, TripTransportMode } from '@prisma/client';
+import { IsCalendarDate } from '../../../common/validators/is-calendar-date';
 
 const upper = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim().toUpperCase() : value);
 
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const CURRENCY_CODE = /^[A-Z]{3}$/;
 
 /**
@@ -23,11 +23,11 @@ export class CreateTripDto {
   title!: string;
 
   @ApiProperty({ example: '2026-11-01', description: 'Local calendar date, YYYY-MM-DD - never a UTC instant.' })
-  @Matches(DATE_ONLY, { message: 'startDate must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'startDate must be YYYY-MM-DD' })
   startDate!: string;
 
   @ApiProperty({ example: '2026-11-05', description: 'Local calendar date, YYYY-MM-DD. Must be >= startDate; equal is a valid one-day trip.' })
-  @Matches(DATE_ONLY, { message: 'endDate must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'endDate must be YYYY-MM-DD' })
   endDate!: string;
 
   @ApiProperty({ example: 'JPY', description: 'ISO 4217 currency code, uppercase.' })
@@ -116,12 +116,12 @@ export class UpdateTripDto {
 
   @ApiPropertyOptional({ example: '2026-11-01' })
   @IsOptional()
-  @Matches(DATE_ONLY, { message: 'startDate must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'startDate must be YYYY-MM-DD' })
   startDate?: string;
 
   @ApiPropertyOptional({ example: '2026-11-05' })
   @IsOptional()
-  @Matches(DATE_ONLY, { message: 'endDate must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'endDate must be YYYY-MM-DD' })
   endDate?: string;
 
   @ApiPropertyOptional({ example: 'JPY' })
@@ -236,12 +236,12 @@ export class TripDestinationInputDto {
 
   @ApiPropertyOptional({ example: '2026-11-01' })
   @IsOptional()
-  @Matches(DATE_ONLY, { message: 'arrivalDate must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'arrivalDate must be YYYY-MM-DD' })
   arrivalDate?: string;
 
   @ApiPropertyOptional({ example: '2026-11-03' })
   @IsOptional()
-  @Matches(DATE_ONLY, { message: 'departureDate must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'departureDate must be YYYY-MM-DD' })
   departureDate?: string;
 
   @ApiPropertyOptional()
@@ -412,7 +412,7 @@ export class TripTransportLegInputDto {
 
   @ApiPropertyOptional({ example: '2026-11-03' })
   @IsOptional()
-  @Matches(DATE_ONLY, { message: 'plannedDate must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'plannedDate must be YYYY-MM-DD' })
   plannedDate?: string;
 
   @ApiPropertyOptional({ description: 'User-entered or rule-based planning estimate - never a fabricated live fare (spec section 41).' })

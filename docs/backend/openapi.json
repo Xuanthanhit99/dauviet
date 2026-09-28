@@ -47,7 +47,11 @@
                 "INGESTION_CANDIDATE",
                 "TRIP_MEMBER",
                 "TRIP_INVITATION",
-                "TRIP_COLLABORATION_EVENT"
+                "TRIP_COLLABORATION_EVENT",
+                "TRIP_LOCATION_SHARING",
+                "TRIP_EXPENSE",
+                "TRIP_SETTLEMENT",
+                "AFFILIATE_CONVERSION"
               ],
               "type": "string"
             }
@@ -3731,11 +3735,6 @@
         },
         "tags": [
           "media"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
         ]
       }
     },
@@ -4307,6 +4306,69 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "locale",
+            "required": false,
+            "in": "query",
+            "description": "Requested response locale (vi | en). Also honored from the Accept-Language header.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kinds",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated map layers to return: PLACE, EVENT, TERRITORY (historical) and COUNTRY, REGION, CITY, DESTINATION (current geography). Omitted = the pre-G11 default set (PLACE, EVENT, and TERRITORY when `year` is given); current geography is opt-in.",
+            "schema": {
+              "example": "CITY,DESTINATION",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fromYear",
+            "required": false,
+            "in": "query",
+            "description": "Strict period start (in-era year). Only TERRITORY/EVENT with a KNOWN chronology overlapping the period are returned; undated entities never match.",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "fromEra",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "CE",
+              "enum": [
+                "BCE",
+                "CE"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "toYear",
+            "required": false,
+            "in": "query",
+            "description": "Strict period end (in-era year).",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "toEra",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "CE",
+              "enum": [
+                "BCE",
+                "CE"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4427,8 +4489,18 @@
             "name": "q",
             "required": false,
             "in": "query",
+            "description": "Free text (max 200 chars). Diacritic-insensitive; NFC/NFD equivalent.",
             "schema": {
-              "example": "Hue",
+              "example": "Hội An",
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "required": false,
+            "in": "query",
+            "description": "Requested response locale (vi | en). Also honored from the Accept-Language header.",
+            "schema": {
               "type": "string"
             }
           },
@@ -4436,9 +4508,110 @@
             "name": "types",
             "required": false,
             "in": "query",
-            "description": "Comma-separated entity types to restrict to",
+            "description": "Comma-separated entity kinds to restrict to.",
+            "schema": {
+              "example": "PLACE,CITY",
+              "type": "string"
+            }
+          },
+          {
+            "name": "countryId",
+            "required": false,
+            "in": "query",
+            "description": "Restrict to documents stored under this current Country id.",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "regionId",
+            "required": false,
+            "in": "query",
+            "description": "Restrict to documents stored under this current Region id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cityId",
+            "required": false,
+            "in": "query",
+            "description": "Restrict to documents stored under this current City id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fromYear",
+            "required": false,
+            "in": "query",
+            "description": "Period start (in-era year, 1-based). Entities with an UNKNOWN date never match a period filter.",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "fromEra",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "CE",
+              "enum": [
+                "BCE",
+                "CE"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "toYear",
+            "required": false,
+            "in": "query",
+            "description": "Period end (in-era year, 1-based).",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "toEra",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "CE",
+              "enum": [
+                "BCE",
+                "CE"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "bbox",
+            "required": false,
+            "in": "query",
+            "description": "west,south,east,north (EPSG:4326). Antimeridian-crossing boxes are rejected.",
+            "schema": {
+              "example": "105.7,20.9,105.9,21.1",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Opaque cursor from a previous nextCursor; bound to the exact query, filters and locale.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
             }
           }
         ],
@@ -4464,6 +4637,15 @@
               "example": "Hue",
               "type": "string"
             }
+          },
+          {
+            "name": "locale",
+            "required": false,
+            "in": "query",
+            "description": "Requested response locale (vi | en).",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4473,6 +4655,63 @@
         },
         "tags": [
           "search"
+        ]
+      }
+    },
+    "/v1/admin/search/projection/status": {
+      "get": {
+        "operationId": "AdminSearchController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-search"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/search/projection/drain": {
+      "post": {
+        "operationId": "AdminSearchController_drain",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-search"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/search/projection/rebuild": {
+      "post": {
+        "operationId": "AdminSearchController_rebuild",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-search"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
         ]
       }
     },
@@ -5663,7 +5902,11 @@
                 "INGESTION_CANDIDATE",
                 "TRIP_MEMBER",
                 "TRIP_INVITATION",
-                "TRIP_COLLABORATION_EVENT"
+                "TRIP_COLLABORATION_EVENT",
+                "TRIP_LOCATION_SHARING",
+                "TRIP_EXPENSE",
+                "TRIP_SETTLEMENT",
+                "AFFILIATE_CONVERSION"
               ],
               "type": "string"
             }
@@ -10873,6 +11116,352 @@
         ]
       }
     },
+    "/v1/trips/{id}/expenses/summary": {
+      "get": {
+        "operationId": "TripsController_expensesSummary",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/settlement-suggestions": {
+      "get": {
+        "operationId": "TripsController_settlementSuggestions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/settlements": {
+      "get": {
+        "operationId": "TripsController_listSettlements",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "TripsController_createSettlement",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripSettlementDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/expenses": {
+      "get": {
+        "operationId": "TripsController_listExpenses",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "TripsController_createExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripExpenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/expenses/{expenseId}": {
+      "get": {
+        "operationId": "TripsController_expenseDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expenseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "TripsController_updateExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expenseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTripExpenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "TripsController_deleteExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expenseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteTripExpenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/v1/trips/{id}/members": {
       "get": {
         "operationId": "TripMembersController_listMembers",
@@ -11223,6 +11812,166 @@
               "maximum": 100,
               "default": 20,
               "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/location-sharing/start": {
+      "post": {
+        "operationId": "TripMembersController_startLocationSharing",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartTripLocationSharingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/location-sharing/stop": {
+      "post": {
+        "operationId": "TripMembersController_stopLocationSharing",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/location-sharing/me": {
+      "get": {
+        "operationId": "TripMembersController_myLocationSharingStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/location": {
+      "put": {
+        "operationId": "TripMembersController_updateLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTripLocationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/trips/{id}/locations": {
+      "get": {
+        "operationId": "TripMembersController_listLocations",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -12043,6 +12792,170 @@
         },
         "tags": [
           "admin-ingestion-candidates"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/affiliate/clicks": {
+      "post": {
+        "operationId": "AffiliateController_createClick",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAffiliateClickDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "affiliate"
+        ]
+      }
+    },
+    "/v1/affiliate/r/{token}": {
+      "get": {
+        "operationId": "AffiliateController_redirect",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "affiliate"
+        ]
+      }
+    },
+    "/v1/admin/affiliate/conversions": {
+      "get": {
+        "operationId": "AdminAffiliateController_listConversions",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "providerCode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "PENDING",
+                "CONFIRMED",
+                "CANCELLED",
+                "REVERSED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "currency",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-affiliate"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/affiliate/summary": {
+      "get": {
+        "operationId": "AdminAffiliateController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-affiliate"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/admin/affiliate/conversions/ingest": {
+      "post": {
+        "operationId": "AdminAffiliateController_ingest",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestAffiliateConversionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin-affiliate"
         ],
         "security": [
           {
@@ -13871,7 +14784,11 @@
               "INGESTION_CANDIDATE",
               "TRIP_MEMBER",
               "TRIP_INVITATION",
-              "TRIP_COLLABORATION_EVENT"
+              "TRIP_COLLABORATION_EVENT",
+              "TRIP_LOCATION_SHARING",
+              "TRIP_EXPENSE",
+              "TRIP_SETTLEMENT",
+              "AFFILIATE_CONVERSION"
             ]
           },
           "entityId": {
@@ -14578,7 +15495,11 @@
               "INGESTION_CANDIDATE",
               "TRIP_MEMBER",
               "TRIP_INVITATION",
-              "TRIP_COLLABORATION_EVENT"
+              "TRIP_COLLABORATION_EVENT",
+              "TRIP_LOCATION_SHARING",
+              "TRIP_EXPENSE",
+              "TRIP_SETTLEMENT",
+              "AFFILIATE_CONVERSION"
             ]
           },
           "entityId": {
@@ -17197,6 +18118,212 @@
           "itemIds"
         ]
       },
+      "CreateTripSettlementDto": {
+        "type": "object",
+        "properties": {
+          "fromUserId": {
+            "type": "string",
+            "description": "The current trip participant who paid / is declaring the settlement."
+          },
+          "toUserId": {
+            "type": "string",
+            "description": "The current trip participant who received it. Must differ from fromUserId."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Decimal string, > 0, at most 2 decimal places.",
+            "example": "100.00"
+          },
+          "currency": {
+            "type": "string",
+            "example": "JPY"
+          },
+          "settledAt": {
+            "type": "string",
+            "example": "2026-11-05",
+            "description": "Local calendar date the external settlement occurred on."
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fromUserId",
+          "toUserId",
+          "amount",
+          "currency",
+          "settledAt"
+        ]
+      },
+      "TripExpenseShareInputDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Must be a current accepted trip participant (owner or TripMember) at mutation time - see spec section 22/24."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Required for splitMode=EXACT, forbidden otherwise."
+          },
+          "percentage": {
+            "type": "string",
+            "description": "Required for splitMode=PERCENTAGE, forbidden otherwise. E.g. \"33.34\"."
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "CreateTripExpenseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Ryokan dinner"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "STAY",
+              "FOOD",
+              "ACTIVITY",
+              "TRANSPORT",
+              "OTHER"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "description": "Decimal string, > 0, at most 2 decimal places - never a JS number (spec section 9/56).",
+            "example": "4500.00"
+          },
+          "currency": {
+            "type": "string",
+            "example": "JPY",
+            "description": "ISO 4217 currency code, uppercase. Independent of Trip.primaryCurrency (spec section 11/13) - never assumed to match it."
+          },
+          "payerUserId": {
+            "type": "string",
+            "description": "A current accepted trip participant (owner or TripMember) - validated at mutation time."
+          },
+          "splitMode": {
+            "type": "string",
+            "enum": [
+              "EQUAL",
+              "EXACT",
+              "PERCENTAGE"
+            ]
+          },
+          "occurredOn": {
+            "type": "string",
+            "example": "2026-11-02",
+            "description": "Local calendar date the expense actually occurred on - never equated with createdAt (spec section 53). Not required to fall within the trip's own date range."
+          },
+          "note": {
+            "type": "string"
+          },
+          "shares": {
+            "description": "The full participant/share list for this expense - always a complete replace, never a partial patch.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TripExpenseShareInputDto"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "category",
+          "amount",
+          "currency",
+          "payerUserId",
+          "splitMode",
+          "occurredOn",
+          "shares"
+        ]
+      },
+      "UpdateTripExpenseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Ryokan dinner"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "STAY",
+              "FOOD",
+              "ACTIVITY",
+              "TRANSPORT",
+              "OTHER"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "description": "Decimal string, > 0, at most 2 decimal places - never a JS number (spec section 9/56).",
+            "example": "4500.00"
+          },
+          "currency": {
+            "type": "string",
+            "example": "JPY",
+            "description": "ISO 4217 currency code, uppercase. Independent of Trip.primaryCurrency (spec section 11/13) - never assumed to match it."
+          },
+          "payerUserId": {
+            "type": "string",
+            "description": "A current accepted trip participant (owner or TripMember) - validated at mutation time."
+          },
+          "splitMode": {
+            "type": "string",
+            "enum": [
+              "EQUAL",
+              "EXACT",
+              "PERCENTAGE"
+            ]
+          },
+          "occurredOn": {
+            "type": "string",
+            "example": "2026-11-02",
+            "description": "Local calendar date the expense actually occurred on - never equated with createdAt (spec section 53). Not required to fall within the trip's own date range."
+          },
+          "note": {
+            "type": "string"
+          },
+          "shares": {
+            "description": "The full participant/share list for this expense - always a complete replace, never a partial patch.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TripExpenseShareInputDto"
+            }
+          },
+          "expectedVersion": {
+            "type": "number",
+            "description": "TripExpense.version at read time - optimistic concurrency (spec section 33/34)."
+          }
+        },
+        "required": [
+          "title",
+          "category",
+          "amount",
+          "currency",
+          "payerUserId",
+          "splitMode",
+          "occurredOn",
+          "shares",
+          "expectedVersion"
+        ]
+      },
+      "DeleteTripExpenseDto": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "number",
+            "description": "TripExpense.version at read time."
+          }
+        },
+        "required": [
+          "expectedVersion"
+        ]
+      },
       "UpdateTripMemberRoleDto": {
         "type": "object",
         "properties": {
@@ -17276,6 +18403,48 @@
         "required": [
           "email",
           "role"
+        ]
+      },
+      "StartTripLocationSharingDto": {
+        "type": "object",
+        "properties": {
+          "durationMinutes": {
+            "type": "number",
+            "description": "Requested sharing duration in minutes - validated against the server-configured min/max at request time.",
+            "example": 60
+          }
+        },
+        "required": [
+          "durationMinutes"
+        ]
+      },
+      "UpdateTripLocationDto": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "accuracyMeters": {
+            "type": "number",
+            "description": "Device-reported horizontal accuracy radius in meters. Never negative/NaN/Infinite."
+          },
+          "capturedAt": {
+            "type": "string",
+            "description": "Device-reported ISO 8601 instant the coordinate was captured. Rejected if it claims an unreasonable future relative to server time (see AppConfig.tripLocation.maxFutureClockSkewSeconds). Never trusted as audit time - see `receivedAt` in the stored row, which is server-owned."
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude",
+          "accuracyMeters",
+          "capturedAt"
         ]
       },
       "AcceptTripInvitationDto": {
@@ -17630,6 +18799,138 @@
         },
         "required": [
           "mergedIntoCandidateId"
+        ]
+      },
+      "CreateAffiliateClickDto": {
+        "type": "object",
+        "properties": {
+          "providerCode": {
+            "type": "string",
+            "example": "TEST_FIXTURE_PROVIDER_G10_AFFILIATE"
+          },
+          "providerEntityReferenceId": {
+            "type": "string",
+            "description": "The G05 provider-reference id this click is about, if any. Never a full offer payload."
+          },
+          "providerOfferId": {
+            "type": "string",
+            "description": "The G05 provider-offer id this click is about, if any."
+          },
+          "entityKind": {
+            "type": "string",
+            "enum": [
+              "PLACE",
+              "PERSON",
+              "EVENT",
+              "ERA",
+              "DYNASTY",
+              "TERRITORY",
+              "FACT",
+              "STORY",
+              "JOURNEY",
+              "COMMUNITY_STORY",
+              "SOURCE",
+              "SOURCE_DOCUMENT",
+              "CONTRIBUTION",
+              "MEDIA_ASSET",
+              "COMMENT",
+              "COUNTRY",
+              "REGION",
+              "CITY",
+              "DESTINATION",
+              "PROVIDER",
+              "PROVIDER_LICENSE",
+              "PROVIDER_INTEGRATION",
+              "ACCOMMODATION",
+              "RESTAURANT",
+              "CUISINE",
+              "DISH",
+              "ATTRACTION",
+              "ACTIVITY",
+              "TRIP",
+              "TRIP_COST_ASSUMPTION",
+              "INGESTION_SOURCE",
+              "INGESTION_JOB",
+              "INGESTION_RUN",
+              "INGESTION_CANDIDATE",
+              "TRIP_MEMBER",
+              "TRIP_INVITATION",
+              "TRIP_COLLABORATION_EVENT",
+              "TRIP_LOCATION_SHARING",
+              "TRIP_EXPENSE",
+              "TRIP_SETTLEMENT",
+              "AFFILIATE_CONVERSION"
+            ],
+            "description": "Which G05 reference-table family providerEntityReferenceId belongs to."
+          },
+          "surface": {
+            "type": "string",
+            "enum": [
+              "DESTINATION_STAY",
+              "TRIP_STAY",
+              "DESTINATION_RESTAURANT",
+              "TRIP_RESTAURANT",
+              "DESTINATION_ACTIVITY",
+              "TRIP_ACTIVITY",
+              "EDITORIAL_ACTIVITY"
+            ]
+          },
+          "placement": {
+            "type": "string",
+            "enum": [
+              "PRIMARY_CTA",
+              "OFFER_CARD",
+              "COMPARE_LIST",
+              "ITINERARY"
+            ]
+          },
+          "tripId": {
+            "type": "string"
+          },
+          "destinationId": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "A previous response's sessionId, for attribution continuity across multiple clicks in the same browsing session. Omit to start a new session."
+          }
+        },
+        "required": [
+          "providerCode",
+          "surface"
+        ]
+      },
+      "IngestAffiliateConversionDto": {
+        "type": "object",
+        "properties": {
+          "providerCode": {
+            "type": "string",
+            "example": "TEST_FIXTURE_PROVIDER_G10_AFFILIATE"
+          },
+          "evidenceType": {
+            "type": "string",
+            "enum": [
+              "PROVIDER_API",
+              "PROVIDER_REPORT",
+              "PROVIDER_WEBHOOK",
+              "APPROVED_IMPORT",
+              "FIXTURE"
+            ]
+          },
+          "evidenceReference": {
+            "type": "string",
+            "description": "The provider report id / webhook delivery id / import batch reference this evidence came from - never the raw payload itself in the audit trail."
+          },
+          "evidence": {
+            "type": "object",
+            "description": "Provider-shaped raw evidence, normalized via the adapter and never persisted verbatim."
+          }
+        },
+        "required": [
+          "providerCode",
+          "evidenceType",
+          "evidenceReference",
+          "evidence"
         ]
       }
     }

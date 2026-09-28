@@ -73,7 +73,7 @@ export class CreateSourceDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   accessedAt?: string;
 
   @ApiPropertyOptional({ enum: SourceCredibility })

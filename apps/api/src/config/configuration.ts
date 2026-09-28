@@ -5,7 +5,10 @@ export interface AppConfig {
   appUrl: string;
   corsOrigins: string[];
   database: { url: string };
-  redis: { url: string };
+  // G12: `prefix` namespaces every BullMQ key (`<prefix>:<queue>:...`). Defaults to BullMQ's own
+  // default `bull`, so an existing deployment's keys are unchanged; the e2e harness sets a unique
+  // per-run prefix so its cleanup can delete exactly the keys it owns (never FLUSHALL).
+  redis: { url: string; prefix: string };
   jwt: {
     accessSecret: string;
     accessTtl: string;
@@ -39,6 +42,39 @@ export interface AppConfig {
     maxRetries: number;
     rawRetentionDays: number;
   };
+  // G08 - Trip Location Sharing. Two independently-configurable clocks
+  // (docs/backend/G08_PRE_IMPLEMENTATION_REPORT.md section 10) - consent
+  // DURATION (how long a sharing session may remain ACTIVE) is never
+  // confused with location TTL/freshness (how long a single coordinate may
+  // be disclosed before it goes stale/unavailable).
+  tripLocation: {
+    sharingMinDurationMinutes: number;
+    sharingMaxDurationMinutes: number;
+    ttlSeconds: number;
+    freshnessSeconds: number;
+    maxFutureClockSkewSeconds: number;
+  };
+  // G10 - Affiliate & Commercial Attribution. `sessionTtlMinutes` is a
+  // plain browsing-session-length window - deliberately NOT the same
+  // config as any provider's own attribution/cookie window (spec section
+  // 33), which is provider policy (ProviderAttributionRule), never a
+  // backend constant. `redirectTokenTtlSeconds` is short-lived by design
+  // (spec section 14).
+  affiliate: {
+    sessionTtlMinutes: number;
+    redirectTokenTtlSeconds: number;
+    defaultEnvironment: 'SANDBOX' | 'PRODUCTION';
+  };
+  // G11 Global Search & Map. The projection worker drains the trigger-fed
+  // queue; `projectionIntervalMs` (default 2 s) is the dominant term of the
+  // <= 60 s public freshness contract. `claimTimeoutSeconds` lets another
+  // worker retry an entity whose claimant crashed mid-refresh.
+  search: {
+    projectionWorkerEnabled: boolean;
+    projectionIntervalMs: number;
+    claimTimeoutSeconds: number;
+    drainBatchSize: number;
+  };
 }
 
 export default (): AppConfig => ({
@@ -48,7 +84,7 @@ export default (): AppConfig => ({
   appUrl: process.env.APP_URL ?? 'http://localhost:3000',
   corsOrigins: (process.env.CORS_ORIGINS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
   database: { url: process.env.DATABASE_URL ?? '' },
-  redis: { url: process.env.REDIS_URL ?? 'redis://localhost:6379' },
+  redis: { url: process.env.REDIS_URL ?? 'redis://localhost:6379', prefix: process.env.REDIS_KEY_PREFIX || 'bull' },
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET ?? '',
     accessTtl: process.env.JWT_ACCESS_TTL ?? '15m',
@@ -105,5 +141,27 @@ export default (): AppConfig => ({
     workerConcurrency: parseInt(process.env.INGESTION_WORKER_CONCURRENCY ?? '1', 10),
     maxRetries: parseInt(process.env.INGESTION_MAX_RETRIES ?? '3', 10),
     rawRetentionDays: parseInt(process.env.INGESTION_RAW_RETENTION_DAYS ?? '90', 10),
+  },
+  // G08 - Trip Location Sharing. Conservative documented defaults (spec
+  // section 52/63) - never an indefinite session, never a long-lived stale
+  // coordinate. All five are overridable per-environment, never hardcoded
+  // product policy baked directly into the service layer.
+  tripLocation: {
+    sharingMinDurationMinutes: parseInt(process.env.TRIP_LOCATION_SHARING_MIN_DURATION_MINUTES ?? '5', 10),
+    sharingMaxDurationMinutes: parseInt(process.env.TRIP_LOCATION_SHARING_MAX_DURATION_MINUTES ?? '720', 10),
+    ttlSeconds: parseInt(process.env.TRIP_LOCATION_TTL_SECONDS ?? '300', 10),
+    freshnessSeconds: parseInt(process.env.TRIP_LOCATION_FRESHNESS_SECONDS ?? '90', 10),
+    maxFutureClockSkewSeconds: parseInt(process.env.TRIP_LOCATION_MAX_FUTURE_CLOCK_SKEW_SECONDS ?? '120', 10),
+  },
+  affiliate: {
+    sessionTtlMinutes: parseInt(process.env.AFFILIATE_SESSION_TTL_MINUTES ?? '30', 10),
+    redirectTokenTtlSeconds: parseInt(process.env.AFFILIATE_REDIRECT_TOKEN_TTL_SECONDS ?? '300', 10),
+    defaultEnvironment: (process.env.AFFILIATE_DEFAULT_ENVIRONMENT ?? (process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'SANDBOX')) as 'SANDBOX' | 'PRODUCTION',
+  },
+  search: {
+    projectionWorkerEnabled: (process.env.SEARCH_PROJECTION_WORKER_ENABLED ?? 'true') !== 'false',
+    projectionIntervalMs: parseInt(process.env.SEARCH_PROJECTION_INTERVAL_MS ?? '2000', 10),
+    claimTimeoutSeconds: parseInt(process.env.SEARCH_PROJECTION_CLAIM_TIMEOUT_SECONDS ?? '60', 10),
+    drainBatchSize: parseInt(process.env.SEARCH_PROJECTION_DRAIN_BATCH_SIZE ?? '200', 10),
   },
 });

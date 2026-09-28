@@ -26,7 +26,7 @@ export class OpenStreetMapAdapter implements IngestionAdapter {
   readonly adapterVersion = '1.0.0';
   readonly normalizationVersion = 1;
 
-  async fetchByIds(_ids: string[]): Promise<FetchedRecord[]> {
+  async fetchByIds(): Promise<FetchedRecord[]> {
     throw new Error(
       'OpenStreetMap/Nominatim live ingestion is permanently disabled in this codebase - public Nominatim usage policy ' +
         'prohibits the bulk/systematic use this pipeline would otherwise require. See ' +
@@ -34,7 +34,7 @@ export class OpenStreetMapAdapter implements IngestionAdapter {
     );
   }
 
-  normalize(_record: FetchedRecord): NormalizedCandidate[] {
+  normalize(): NormalizedCandidate[] {
     return [];
   }
 }

@@ -275,6 +275,29 @@ export class TripsService {
     }
 
     return this.prisma.$transaction(async (tx) => {
+      // G08 integration (docs/backend/G08_PRE_IMPLEMENTATION_REPORT.md
+      // section 12) - archiving must immediately, atomically terminate
+      // EVERY member's location sharing and delete EVERY latest-location
+      // row for this trip, before/prevent-future-start is enforced (spec
+      // section 32). A single bulk conditional `UPDATE ... WHERE tripId =
+      // $1 AND status = 'ACTIVE'` both locks every affected row and
+      // performs the transition - the same "lock via the transitioning
+      // statement itself" pattern used everywhere else in this
+      // integration, just trip-wide instead of per-user. One summary audit
+      // entry is written (not one per affected member - spec section 35's
+      // "no per-event audit spam" principle extended to bulk archive).
+      const stoppedCount = await tx.$executeRaw`
+        UPDATE "TripLocationSharing" SET "status" = 'STOPPED', "stoppedAt" = NOW(), "updatedAt" = NOW()
+        WHERE "tripId" = ${tripId} AND "status" = 'ACTIVE'
+      `;
+      await tx.tripMemberLocation.deleteMany({ where: { tripId } });
+      if (stoppedCount > 0) {
+        await this.audit.log(
+          { actorId: userId, action: 'tripLocationSharing.terminated', entityType: 'TRIP', entityId: tripId, metadata: { reason: 'TRIP_ARCHIVED', count: stoppedCount } },
+          tx,
+        );
+      }
+
       const archived = await tx.trip.update({
         where: { id: tripId },
         data: { archivedAt: new Date(), version: { increment: 1 } },

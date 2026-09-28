@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { TripMembersService } from './trip-members.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
@@ -7,8 +7,14 @@ import { TripCollaborationEventService } from './trip-collaboration-event.servic
 
 function makeHarness() {
   const prisma: any = {
-    trip: { findUnique: jest.fn(), updateMany: jest.fn(), findUniqueOrThrow: jest.fn() },
+    trip: { findUnique: jest.fn(), updateMany: jest.fn(), findUniqueOrThrow: jest.fn(), update: jest.fn() },
     tripMember: { findUnique: jest.fn(), findFirst: jest.fn(), delete: jest.fn(), create: jest.fn(), update: jest.fn() },
+    // G08 - remove()/leave() location-sharing termination hook (see
+    // docs/backend/G08_PRE_IMPLEMENTATION_REPORT.md section 12). Default:
+    // no ACTIVE sharing existed for the affected member.
+    $executeRaw: jest.fn().mockResolvedValue(0),
+    tripLocationSharing: { findUnique: jest.fn().mockResolvedValue(null) },
+    tripMemberLocation: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
     $transaction: jest.fn((arg: unknown) => (typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(prisma) : Promise.all(arg as Promise<unknown>[]))),
   };
   const audit = { log: jest.fn() } as unknown as AuditService;
@@ -39,6 +45,68 @@ describe('TripMembersService.leave (spec section 29)', () => {
     prisma.trip.findUnique.mockResolvedValue({ id: 't1', ownerId: 'owner-1', version: 5 });
     await expect(service.leave('t1', 'editor-1', { expectedVersion: 3 })).rejects.toMatchObject({ response: { code: 'TRIP_VERSION_CONFLICT' } });
     expect(prisma.tripMember.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('on success: removes the TripMember row (G08 - also terminates location sharing for the leaving user first, in the same transaction; a no-op here since none was ACTIVE)', async () => {
+    const { service, prisma, collaborationEvents } = makeHarness();
+    prisma.trip.findUnique.mockResolvedValue({ id: 't1', ownerId: 'owner-1', version: 0 });
+    prisma.tripMember.findUnique.mockResolvedValue({ id: 'm1', tripId: 't1', userId: 'editor-1', role: 'EDITOR' });
+
+    const result = await service.leave('t1', 'editor-1', { expectedVersion: 0 });
+
+    expect(prisma.$executeRaw).toHaveBeenCalled();
+    expect(prisma.tripMemberLocation.deleteMany).toHaveBeenCalledWith({ where: { tripId: 't1', userId: 'editor-1' } });
+    // No TripLocationSharing row existed - $executeRaw returned 0 - so no
+    // extra tripLocationSharing.terminated audit entry is written.
+    expect(prisma.tripLocationSharing.findUnique).not.toHaveBeenCalled();
+    expect(prisma.tripMember.delete).toHaveBeenCalledWith({ where: { id: 'm1' } });
+    expect(collaborationEvents.record).toHaveBeenCalledWith(expect.objectContaining({ type: 'MEMBER_LEFT' }), prisma);
+    expect(result).toEqual({ left: true });
+  });
+
+  it('G08: when the leaving user had an ACTIVE sharing session, it is stopped and audited in the same transaction as the leave', async () => {
+    const { service, prisma, audit } = makeHarness();
+    prisma.trip.findUnique.mockResolvedValue({ id: 't1', ownerId: 'owner-1', version: 0 });
+    prisma.tripMember.findUnique.mockResolvedValue({ id: 'm1', tripId: 't1', userId: 'editor-1', role: 'EDITOR' });
+    prisma.$executeRaw.mockResolvedValue(1); // one ACTIVE TripLocationSharing row was stopped
+    prisma.tripLocationSharing.findUnique.mockResolvedValue({ id: 'sharing-1', tripId: 't1', userId: 'editor-1' });
+
+    await service.leave('t1', 'editor-1', { expectedVersion: 0 });
+
+    expect(prisma.tripMemberLocation.deleteMany).toHaveBeenCalledWith({ where: { tripId: 't1', userId: 'editor-1' } });
+    expect(audit.log).toHaveBeenCalledWith(
+      expect.objectContaining({ actorId: 'editor-1', action: 'tripLocationSharing.terminated', entityId: 'sharing-1', metadata: { reason: 'MEMBER_LEFT' } }),
+      prisma,
+    );
+  });
+});
+
+describe('TripMembersService.remove (spec sections 27/87 - owner-only)', () => {
+  it('on success: removes the target TripMember row (G08 - also terminates their location sharing first, in the same transaction)', async () => {
+    const { service, prisma, collaborationEvents } = makeHarness();
+    prisma.tripMember.findFirst.mockResolvedValue({ id: 'm1', tripId: 't1', userId: 'editor-1', role: 'EDITOR' });
+
+    const result = await service.remove('t1', 'm1', 'owner-1', { expectedVersion: 0 });
+
+    expect(prisma.$executeRaw).toHaveBeenCalled();
+    expect(prisma.tripMemberLocation.deleteMany).toHaveBeenCalledWith({ where: { tripId: 't1', userId: 'editor-1' } });
+    expect(prisma.tripMember.delete).toHaveBeenCalledWith({ where: { id: 'm1' } });
+    expect(collaborationEvents.record).toHaveBeenCalledWith(expect.objectContaining({ type: 'MEMBER_REMOVED' }), prisma);
+    expect(result).toEqual({ removed: true });
+  });
+
+  it('G08: when the removed member had an ACTIVE sharing session, it is stopped and audited with reason MEMBER_REMOVED, actor is the remover (not the removed member)', async () => {
+    const { service, prisma, audit } = makeHarness();
+    prisma.tripMember.findFirst.mockResolvedValue({ id: 'm1', tripId: 't1', userId: 'editor-1', role: 'EDITOR' });
+    prisma.$executeRaw.mockResolvedValue(1);
+    prisma.tripLocationSharing.findUnique.mockResolvedValue({ id: 'sharing-1', tripId: 't1', userId: 'editor-1' });
+
+    await service.remove('t1', 'm1', 'owner-1', { expectedVersion: 0 });
+
+    expect(audit.log).toHaveBeenCalledWith(
+      expect.objectContaining({ actorId: 'owner-1', action: 'tripLocationSharing.terminated', entityId: 'sharing-1', metadata: { reason: 'MEMBER_REMOVED' } }),
+      prisma,
+    );
   });
 });
 

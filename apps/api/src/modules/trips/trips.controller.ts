@@ -1,10 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 import { TripsService } from './trips.service';
 import { TripItineraryService } from './trip-itinerary.service';
 import { TripCostEstimatesService } from './trip-cost-estimates.service';
+import { TripExpensesService } from './trip-expenses.service';
+import { TripSettlementsService } from './trip-settlements.service';
+import { TripFinanceSummaryService } from './trip-finance-summary.service';
 import {
   ArchiveTripDto,
   CreateTripDto,
@@ -16,6 +19,7 @@ import {
   ReplaceTripTransportLegsDto,
   UpdateTripDto,
 } from './dto/trip.dto';
+import { CreateTripExpenseDto, CreateTripSettlementDto, DeleteTripExpenseDto, ListTripExpensesQueryDto, ListTripSettlementsQueryDto, UpdateTripExpenseDto } from './dto/trip-expense.dto';
 
 /**
  * Trip is private, owner-only planning data (spec section 59) - no
@@ -30,6 +34,9 @@ export class TripsController {
     private readonly trips: TripsService,
     private readonly itinerary: TripItineraryService,
     private readonly estimates: TripCostEstimatesService,
+    private readonly expenses: TripExpensesService,
+    private readonly settlements: TripSettlementsService,
+    private readonly financeSummary: TripFinanceSummaryService,
   ) {}
 
   @Post()
@@ -92,5 +99,55 @@ export class TripsController {
   @Get(':id/estimates')
   listEstimates(@CurrentUser() user: AuthUser, @Param('id') id: string, @Query() query: ListTripCostEstimatesQueryDto) {
     return this.estimates.list(id, user.id, query.page, query.pageSize);
+  }
+
+  // G09 - Trip Expense & Settlement (spec section 68). Static-path routes
+  // (`summary`, `settlement-suggestions`, `settlements`) are declared
+  // BEFORE the dynamic `:expenseId` routes below, so Nest's first-match
+  // route resolution never swallows one of them as an expense id.
+
+  @Get(':id/expenses/summary')
+  expensesSummary(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.financeSummary.summary(id, user.id);
+  }
+
+  @Get(':id/settlement-suggestions')
+  settlementSuggestions(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.financeSummary.suggestions(id, user.id);
+  }
+
+  @Get(':id/settlements')
+  listSettlements(@CurrentUser() user: AuthUser, @Param('id') id: string, @Query() query: ListTripSettlementsQueryDto) {
+    return this.settlements.list(id, user.id, query);
+  }
+
+  @Post(':id/settlements')
+  createSettlement(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: CreateTripSettlementDto) {
+    return this.settlements.create(id, user.id, dto);
+  }
+
+  @Get(':id/expenses')
+  listExpenses(@CurrentUser() user: AuthUser, @Param('id') id: string, @Query() query: ListTripExpensesQueryDto) {
+    return this.expenses.list(id, user.id, query);
+  }
+
+  @Post(':id/expenses')
+  createExpense(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: CreateTripExpenseDto) {
+    return this.expenses.create(id, user.id, dto);
+  }
+
+  @Get(':id/expenses/:expenseId')
+  expenseDetail(@CurrentUser() user: AuthUser, @Param('id') id: string, @Param('expenseId') expenseId: string) {
+    return this.expenses.detail(id, expenseId, user.id);
+  }
+
+  @Patch(':id/expenses/:expenseId')
+  updateExpense(@CurrentUser() user: AuthUser, @Param('id') id: string, @Param('expenseId') expenseId: string, @Body() dto: UpdateTripExpenseDto) {
+    return this.expenses.update(id, expenseId, user.id, dto);
+  }
+
+  @Delete(':id/expenses/:expenseId')
+  deleteExpense(@CurrentUser() user: AuthUser, @Param('id') id: string, @Param('expenseId') expenseId: string, @Body() dto: DeleteTripExpenseDto) {
+    return this.expenses.delete(id, expenseId, user.id, dto);
   }
 }

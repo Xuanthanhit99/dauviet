@@ -57,6 +57,10 @@ const RESERVED_GENERIC_CODES = new Set([
   'ERROR',
   'CONFLICT',
   'DATABASE_ERROR',
+  // G12 generic codes (body-parser client errors, transient infrastructure failures).
+  'PAYLOAD_TOO_LARGE',
+  'UNSUPPORTED_MEDIA_TYPE',
+  'SERVICE_UNAVAILABLE',
 ]);
 
 describe('Domain error code inventory (spec Phase 11 section 9)', () => {

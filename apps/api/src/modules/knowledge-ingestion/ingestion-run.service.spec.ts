@@ -1,5 +1,4 @@
 import { IngestionRunService } from './ingestion-run.service';
-import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { IngestionPolicyService } from './ingestion-policy.service';
 import { EntityResolutionService } from './entity-resolution.service';

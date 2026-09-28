@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { AppConfig } from '../../../config/configuration';
+import { AUTH_ERROR_CODES } from '../auth-error-codes';
 
 /**
  * Only registers if Google credentials are configured, so the API still boots
@@ -22,6 +23,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
   validate(_accessToken: string, _refreshToken: string, profile: any, done: VerifyCallback) {
     const email = profile.emails?.[0]?.value;
+    // G12: AuthService.findOrCreateGoogleUser links a Google identity to an existing account by
+    // email, so the email must be one Google itself has verified - otherwise an unverified
+    // address would be enough to attach a Google login to someone else's account.
+    const verified = profile.emails?.[0]?.verified === true || profile._json?.email_verified === true;
+    if (!email || !verified) {
+      return done(new UnauthorizedException({ code: AUTH_ERROR_CODES.GOOGLE_EMAIL_UNVERIFIED, message: 'Google account email is missing or unverified.' }), false);
+    }
     const user = {
       googleId: profile.id,
       email,

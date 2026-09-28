@@ -39,12 +39,12 @@ export class CreateProviderLicenseDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   effectiveFrom?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   effectiveUntil?: string;
 
   @ApiPropertyOptional()
@@ -81,12 +81,12 @@ export class UpdateProviderLicenseDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   effectiveFrom?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   effectiveUntil?: string;
 
   @ApiPropertyOptional()
@@ -220,7 +220,7 @@ export class CreateProviderAttributionRuleDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   expiresAt?: string;
 }
 
@@ -234,7 +234,7 @@ export class CreateProviderPolicyEvidenceDto {
   sourceUrl!: string;
 
   @ApiProperty()
-  @IsDateString()
+  @IsDateString({ strict: true })
   accessedAt!: string;
 
   @ApiProperty({ enum: ProviderPolicyEvidenceSourceType })

@@ -53,6 +53,11 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JwtAuthGuard(reflector), new RolesGuard(reflector));
 
+  // G12 graceful shutdown: on SIGTERM/SIGINT Nest stops accepting connections and runs every
+  // OnModuleDestroy/OnApplicationShutdown hook (search projection worker waits for its in-flight
+  // drain, BullMQ workers close, PrismaService disconnects) instead of the process simply dying.
+  app.enableShutdownHooks();
+
   const document = SwaggerModule.createDocument(app, buildSwaggerConfig());
   SwaggerModule.setup('docs', app, document);
 

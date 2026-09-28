@@ -131,6 +131,6 @@ export class SetJourneyEditorialStatusDto {
 
 export class ScheduleJourneyDto {
   @ApiProperty({ description: 'Must be in the future. Data-model only in this build - automatic execution at this time requires a scheduler that is not wired up (spec section 23), classified UNVERIFIED_LIVE_DB.' })
-  @IsISO8601()
+  @IsISO8601({ strict: true })
   scheduledAt!: string;
 }

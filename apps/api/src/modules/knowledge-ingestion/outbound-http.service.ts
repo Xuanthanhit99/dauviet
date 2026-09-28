@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { BlockList, isIP } from 'node:net';
 import { AppConfig } from '../../config/configuration';
 import { INGESTION_ERROR_CODES } from '../../common/errors/ingestion-error-codes';
 
@@ -74,9 +75,30 @@ const PRIVATE_HOSTNAME_PATTERNS: RegExp[] = [
   /^\[?fd00:/i,
 ];
 
+/**
+ * G12 SSRF re-audit: the hostname patterns above missed IP literals the WHATWG URL parser does NOT
+ * rewrite into dotted IPv4 - IPv4-mapped IPv6 (`[::ffff:127.0.0.1]` becomes `[::ffff:7f00:1]`), the
+ * unspecified address `[::]`, 0.0.0.0/8, CGNAT, benchmarking and multicast/reserved ranges. Every IP
+ * literal is now classified with a BlockList instead. (Decimal/octal/hex IPv4 forms such as
+ * `http://2130706433/` are already normalized to `127.0.0.1` by the URL parser and caught either way.)
+ */
+const RESERVED = new BlockList();
+for (const [net, prefix] of [
+  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16], ['172.16.0.0', 12],
+  ['192.0.0.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15], ['224.0.0.0', 4], ['240.0.0.0', 4],
+] as const) RESERVED.addSubnet(net, prefix, 'ipv4');
+for (const [net, prefix] of [['::', 128], ['::1', 128], ['::ffff:0:0', 96], ['64:ff9b::', 96], ['fc00::', 7], ['fe80::', 10], ['ff00::', 8]] as const) {
+  RESERVED.addSubnet(net, prefix, 'ipv6');
+}
+
 function isDisallowedTarget(url: URL): boolean {
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return true;
-  return PRIVATE_HOSTNAME_PATTERNS.some((re) => re.test(url.hostname));
+  if (PRIVATE_HOSTNAME_PATTERNS.some((re) => re.test(url.hostname))) return true;
+  const host = url.hostname.replace(/^\[|\]$/g, '');
+  const family = isIP(host);
+  if (family === 4) return RESERVED.check(host, 'ipv4');
+  if (family === 6) return RESERVED.check(host, 'ipv6');
+  return false;
 }
 
 @Injectable()

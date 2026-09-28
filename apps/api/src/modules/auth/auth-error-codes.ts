@@ -20,4 +20,6 @@ export const AUTH_ERROR_CODES = {
   REFRESH_REUSE_DETECTED: 'AUTH_REFRESH_REUSE_DETECTED',
   REFRESH_TOKEN_MISSING: 'AUTH_REFRESH_TOKEN_MISSING',
   CSRF_INVALID: 'AUTH_CSRF_INVALID',
+  // G12 - a Google profile whose email Google has not verified is never linked or created.
+  GOOGLE_EMAIL_UNVERIFIED: 'AUTH_GOOGLE_EMAIL_UNVERIFIED',
 } as const;

@@ -16,7 +16,7 @@ describe('OutboundHttpService (spec sections 56/57/87 - security proof)', () => 
     service = new OutboundHttpService(fakeConfig());
   });
 
-  it.each(['http://localhost:9000/x', 'http://127.0.0.1/x', 'http://169.254.169.254/latest/meta-data/', 'http://10.0.0.5/x', 'http://192.168.1.1/x', 'ftp://example.com/x'])(
+  it.each(['http://localhost:9000/x', 'http://127.0.0.1/x', 'http://169.254.169.254/latest/meta-data/', 'http://10.0.0.5/x', 'http://192.168.1.1/x', 'ftp://example.com/x', 'http://[::ffff:127.0.0.1]/x', 'http://[::ffff:a9fe:a9fe]/latest/meta-data/', 'http://[::]/x', 'http://2130706433/x', 'http://0x7f.0.0.1/x', 'http://0177.0.0.1/x', 'http://0.0.0.1/x', 'http://100.64.0.1/x', 'http://[fd12::1]/x', 'http://[::1]:8080/x'])(
     'refuses disallowed/SSRF-style target %s before making any request',
     async (url) => {
       await expect(service.get(url)).rejects.toMatchObject({ code: 'INGESTION_OUTBOUND_URL_REJECTED' });

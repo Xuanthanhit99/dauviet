@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsEnum, IsInt, IsOptional, IsString, Matches, Max, Min, ValidateNested } from 'class-validator';
 import { TranslationMethod } from '@prisma/client';
+import { IsCalendarDate } from '../../../common/validators/is-calendar-date';
 
 export class ActivityTranslationInputDto {
   @ApiProperty({ example: 'vi' })
@@ -121,7 +122,7 @@ export class MapProviderActivityReferenceDto {
 /** Local calendar date (spec section 99) - never assumes UTC == local attraction time. */
 export class GetActivityOffersDto {
   @ApiProperty({ example: '2026-12-01' })
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'date must be YYYY-MM-DD' })
   date!: string;
 
   @ApiProperty({ minimum: 1 })

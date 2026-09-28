@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { EntityKind } from '@prisma/client';
+import { EntityKind, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TRIP_ERROR_CODES } from '../../common/errors/trip-error-codes';
@@ -24,6 +24,34 @@ export class TripMembersService {
     private readonly authz: TripAuthorizationService,
     private readonly collaborationEvents: TripCollaborationEventService,
   ) {}
+
+  /**
+   * G08 integration (docs/backend/G08_PRE_IMPLEMENTATION_REPORT.md section
+   * 12) - membership removal/leave must immediately, atomically terminate
+   * that user's location sharing and delete their latest-location row
+   * (spec sections 30/31). The conditional `UPDATE ... WHERE status =
+   * 'ACTIVE'` is both the lock and the transition (same pattern
+   * `TripLocationSharingService.stop` uses) - it is this same row lock that
+   * a concurrent `TripLocationsService.update` also acquires first, which
+   * is what makes the remove-vs-update / leave-vs-update race proofs hold.
+   * A no-op (no ACTIVE session existed) is not an error - most
+   * members never shared at all.
+   */
+  private async terminateLocationSharing(tx: Prisma.TransactionClient, tripId: string, userId: string, actorId: string, reason: 'MEMBER_REMOVED' | 'MEMBER_LEFT') {
+    const stoppedCount = await tx.$executeRaw`
+      UPDATE "TripLocationSharing" SET "status" = 'STOPPED', "stoppedAt" = NOW(), "updatedAt" = NOW()
+      WHERE "tripId" = ${tripId} AND "userId" = ${userId} AND "status" = 'ACTIVE'
+    `;
+    // Unconditional - a lingering (lazily-unexpired) location row must never
+    // survive removal/leave even if the sharing row itself was not ACTIVE.
+    await tx.tripMemberLocation.deleteMany({ where: { tripId, userId } });
+    if (stoppedCount > 0) {
+      const sharing = await tx.tripLocationSharing.findUnique({ where: { tripId_userId: { tripId, userId } } });
+      if (sharing) {
+        await this.audit.log({ actorId, action: 'tripLocationSharing.terminated', entityType: EntityKind.TRIP_LOCATION_SHARING, entityId: sharing.id, metadata: { reason } }, tx);
+      }
+    }
+  }
 
   /** Accepted members + owner may view the list (spec section 26) - VIEW_TRIP is the lowest capability, held by everyone with any relationship to the trip. */
   async list(tripId: string, userId: string) {
@@ -63,6 +91,12 @@ export class TripMembersService {
     if (!member) throw new NotFoundException({ code: TRIP_ERROR_CODES.TRIP_MEMBER_NOT_FOUND, message: 'Trip member not found.' });
 
     return this.prisma.$transaction(async (tx) => {
+      // G08: terminate the removed member's location sharing BEFORE
+      // deleting their TripMember row (order does not affect correctness
+      // here - both happen in the same transaction - but matches the
+      // "consent/location first, membership row last" reading order used
+      // throughout this integration).
+      await this.terminateLocationSharing(tx, tripId, member.userId, userId, 'MEMBER_REMOVED');
       await tx.tripMember.delete({ where: { id: memberId } });
       await tx.trip.update({ where: { id: tripId }, data: { version: { increment: 1 } } });
       await this.audit.log({ actorId: userId, action: 'tripMember.removed', entityType: EntityKind.TRIP_MEMBER, entityId: memberId, metadata: { removedUserId: member.userId } }, tx);
@@ -89,6 +123,7 @@ export class TripMembersService {
     if (!member) throw new NotFoundException({ code: TRIP_ERROR_CODES.TRIP_MEMBER_NOT_FOUND, message: 'You are not a member of this trip.' });
 
     return this.prisma.$transaction(async (tx) => {
+      await this.terminateLocationSharing(tx, tripId, userId, userId, 'MEMBER_LEFT');
       await tx.tripMember.delete({ where: { id: member.id } });
       await tx.trip.update({ where: { id: tripId }, data: { version: { increment: 1 } } });
       await this.audit.log({ actorId: userId, action: 'tripMember.left', entityType: EntityKind.TRIP_MEMBER, entityId: member.id }, tx);
@@ -119,6 +154,11 @@ export class TripMembersService {
     // 7/31) - surfaced with the same not-a-member code rather than inventing
     // an "idempotent no-op" branch the brief did not ask for.
     return this.prisma.$transaction(async (tx) => {
+      // G12 lock order: TripMember row first, Trip row second - the order remove/updateRole/leave and
+      // G09's lockTripAndAssertMutable already use. Taking Trip first here (the updateMany below) while
+      // a concurrent remove() of the same member held that member row and waited for Trip was a real
+      // PostgreSQL deadlock (40P01 -> 500), reproduced by the G12 transfer-vs-removal race test.
+      await tx.$executeRaw`SELECT 1 FROM "TripMember" WHERE "tripId" = ${tripId} AND "userId" = ${dto.newOwnerUserId} FOR UPDATE`;
       const targetMember = await tx.tripMember.findUnique({ where: { tripId_userId: { tripId, userId: dto.newOwnerUserId } } });
       if (!targetMember) {
         throw new BadRequestException({

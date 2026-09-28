@@ -15,6 +15,12 @@ function makePrismaStub() {
     country: { findFirst: jest.fn() },
     region: { findFirst: jest.fn() },
     city: { findFirst: jest.fn() },
+    // G08 - TripsService.archive's bulk location-sharing termination (see
+    // docs/backend/G08_PRE_IMPLEMENTATION_REPORT.md section 12). Default:
+    // no ACTIVE sharing existed, matching every pre-G08 test fixture below
+    // (none of them ever created a TripLocationSharing row).
+    $executeRaw: jest.fn().mockResolvedValue(0),
+    tripMemberLocation: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
     $transaction: jest.fn((arg: unknown) => {
       if (Array.isArray(arg)) return Promise.all(arg as Promise<unknown>[]);
       return (arg as (tx: unknown) => Promise<unknown>)(prisma);

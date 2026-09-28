@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { NullByteGuardMiddleware } from './common/middleware/null-byte-guard.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bullmq';
@@ -51,6 +52,7 @@ import { ActivitiesModule } from './modules/activities/activities.module';
 import { TripsModule } from './modules/trips/trips.module';
 import { CostAssumptionsModule } from './modules/cost-assumptions/cost-assumptions.module';
 import { KnowledgeIngestionModule } from './modules/knowledge-ingestion/knowledge-ingestion.module';
+import { AffiliateModule } from './modules/affiliate/affiliate.module';
 
 @Module({
   imports: [
@@ -70,6 +72,7 @@ import { KnowledgeIngestionModule } from './modules/knowledge-ingestion/knowledg
       inject: [ConfigService],
       useFactory: (config: ConfigService<AppConfig, true>) => ({
         connection: { url: config.get('redis', { infer: true }).url },
+        prefix: config.get('redis', { infer: true }).prefix,
       }),
     }),
     PrismaModule,
@@ -136,11 +139,17 @@ import { KnowledgeIngestionModule } from './modules/knowledge-ingestion/knowledg
     // Imports MediaModule for S3Service (media candidate promotion only);
     // otherwise self-contained - no relation to Trip/CostAssumption.
     KnowledgeIngestionModule,
+    // G10 - Global Backend V2 Extension, Affiliate & Commercial Attribution.
+    // Imports ProvidersModule (G02 policy gate) and TripsModule (ordinary
+    // VIEW_TRIP access for a click that references a trip) - otherwise
+    // self-contained.
+    AffiliateModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware).forRoutes('*');
+    // RequestIdMiddleware first so a rejected request still carries its correlation id.
+    consumer.apply(RequestIdMiddleware, NullByteGuardMiddleware).forRoutes('*');
   }
 }

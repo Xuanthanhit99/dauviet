@@ -2,9 +2,9 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsIn, IsInt, IsNumberString, IsOptional, IsString, Matches, Max, MaxLength, Min } from 'class-validator';
 import { CostAssumptionScope, CostAssumptionStatus, CostCategory, CostUnit } from '@prisma/client';
+import { IsCalendarDate } from '../../../common/validators/is-calendar-date';
 
 const upper = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim().toUpperCase() : value);
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const CURRENCY_CODE = /^[A-Z]{3}$/;
 
 /**
@@ -52,12 +52,12 @@ export class CreateCostAssumptionDto {
   highAmount!: string;
 
   @ApiProperty({ example: '2026-01-01' })
-  @Matches(DATE_ONLY, { message: 'effectiveFrom must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'effectiveFrom must be YYYY-MM-DD' })
   effectiveFrom!: string;
 
   @ApiPropertyOptional({ example: '2026-12-31' })
   @IsOptional()
-  @Matches(DATE_ONLY, { message: 'effectiveTo must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'effectiveTo must be YYYY-MM-DD' })
   effectiveTo?: string;
 
   @ApiProperty({ description: 'Provenance note (e.g. "editorial estimate" or a cited source) - never fabricated by an LLM (spec section 51).' })
@@ -91,7 +91,7 @@ export class UpdateCostAssumptionDto {
 
   @ApiPropertyOptional({ example: '2026-12-31' })
   @IsOptional()
-  @Matches(DATE_ONLY, { message: 'effectiveTo must be YYYY-MM-DD' })
+  @IsCalendarDate({ message: 'effectiveTo must be YYYY-MM-DD' })
   effectiveTo?: string;
 
   @ApiPropertyOptional()
