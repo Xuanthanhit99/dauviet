@@ -2300,6 +2300,101 @@
         "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35755595305"
       },
       "next": "REGION_DETAIL_V2_NOT_STARTED"
+    },
+    "pass10": {
+      "status": "CLOSED_PRODUCTION_QA_PASS",
+      "date": "2026-09-23",
+      "scope": "REGION_DETAIL_V2",
+      "route": "/regions/[slug]",
+      "apis": ["GET /v1/regions/{slug}", "GET /v1/destinations?region={slug}", "GET /v1/cities?region={slug}", "GET /v1/regions?parentRegion={slug}"],
+      "implemented": ["editorial-no-media-hero", "world-country-region-hierarchy", "supplied-summary-description", "paginated-destinations-cities-subregions", "representative-point-map-with-readable-coordinates", "independent-collection-error-retry", "vi-en-interface-and-backend-fallback-disclosure", "responsive-keyboard-touch-reduced-motion"],
+      "notExposedByBackend": ["region-media-provenance", "region-citations-facts-certainty", "region-boundary-route-geometry", "child-list-coordinates-media", "region-places-stories-journeys", "region-people-events-culture", "per-item-list-locale-metadata"],
+      "backendChanged": false,
+      "qaEvidence": "docs/brand/consumer-integration-pass-10-region-detail-v2.md",
+      "browserQA": { "status": "PASS", "suiteResult": "12/12 focused; 63/63 full Chromium", "webTypecheck": "PASS", "webBuild": "PASS", "diffCheck": "PASS", "execution": "GITHUB_ACTIONS_AND_LOCAL_PRODUCTION_SERVER", "workflowRunId": 35809512762, "jobId": 107017678184, "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON", "viewports": ["390x844", "834x1112", "1536x960"], "evidenceDirectory": "apps/web/qa-evidence/pass-10" },
+      "ci": { "status": "PASS", "workflowRunId": 35809512762, "jobId": 107017678184, "commitSha": "315b35db20582f6b49ad68397fdbf174af889544", "conclusion": "success", "suiteResult": "63/63 PASS full web; 12/12 Region", "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35809512762" },
+      "next": "POST_REGION_ORDER_NOT_SPECIFIED_IN_CANONICAL_INVENTORY"
+    },
+    "pass11": {
+      "status": "CLOSED_PRODUCTION_QA_PASS",
+      "date": "2026-09-23",
+      "scope": "EVENT_DETAIL_V2",
+      "route": "/events/[slug]",
+      "apis": ["GET /v1/events/{slug}", "GET /v1/events/{slug}/stories", "GET /v1/events/{slug}/sources", "GET /v1/media/{id} (exact heroMedia.id only)"],
+      "implemented": ["editorial-event-identity", "verbatim-historical-date-display", "supplied-narrative", "country-role-and-place-links", "non-link-people-theme-era-territory-context", "capped-related-stories", "source-metadata-without-fabricated-citation-mapping", "exact-id-published-media-provenance", "vi-en-fallback-semantics", "independent-supporting-endpoint-retry", "responsive-keyboard-touch-reduced-motion"],
+      "notExposedByBackend": ["event-timeline", "event-journeys-related-events", "event-coordinates-geometry", "overall-event-certainty", "public-fact-text-paragraph-citation-locators", "per-relationship-publication-locale-metadata", "stories-continuation"],
+      "backendChanged": false,
+      "qaEvidence": "docs/brand/consumer-integration-pass-11-event-detail-v2.md",
+      "browserQA": { "status": "PASS", "suiteResult": "20/20 focused; 83/83 full Chromium", "webTypecheck": "PASS", "webBuild": "PASS", "diffCheck": "PASS", "execution": "GITHUB_ACTIONS_AND_LOCAL_PRODUCTION_SERVER", "workflowRunId": 35839617761, "jobId": 107111287826, "screenshotReview": "THREE_VIEWPORTS_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON", "viewports": ["390x844", "834x1112", "1536x960"], "evidenceDirectory": "apps/web/qa-evidence/pass-11" },
+      "ci": { "status": "PASS", "workflowRunId": 35839617761, "jobId": 107111287826, "commitSha": "3d6ea5f97e6c19340bdcc04b7b426fd80ca35614", "conclusion": "success", "suiteResult": "83/83 full web; 20/20 Event", "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35839617761" },
+      "next": "PERSON_DETAIL_V2_CANDIDATE_NOT_STARTED_CANONICAL_ORDER_UNSPECIFIED",
+      "remaining": ["PERSON_DETAIL_V2_PARTIALLY_READY", "CULTURE_V2_PUBLIC_DETAIL_CONTRACT_BLOCKED"]
+    },
+    "pass12": {
+      "status": "CLOSED_PRODUCTION_QA_PASS",
+      "date": "2026-09-23",
+      "scope": "PERSON_DETAIL_V2",
+      "route": "/people/[slug]",
+      "preflight": "PERSON_CONTRACT_UNCHANGED",
+      "startingHead": "b33c8ffc3a6b8e6dffcf86a3ccb1f29e4dc7039c",
+      "apis": [
+        "GET /v1/people/{slug}?locale=vi|en",
+        "GET /v1/people/{slug}/timeline?locale=vi|en",
+        "GET /v1/people/{slug}/stories?locale=vi|en",
+        "GET /v1/people/{slug}/sources",
+        "GET /v1/media/{id} (exact heroMedia.id only)"
+      ],
+      "implemented": [
+        "editorial-person-identity-and-alternate-names",
+        "verbatim-birth-death-display-no-age",
+        "supplied-biographical-narrative",
+        "place-role-links",
+        "backend-ordered-event-timeline",
+        "capped-related-stories",
+        "source-metadata-without-inferred-citations-certainty",
+        "exact-id-published-media-provenance",
+        "vi-en-fallback",
+        "independent-supporting-endpoint-retry",
+        "event-to-person-navigation",
+        "responsive-keyboard-touch-reduced-motion"
+      ],
+      "notExposedByBackend": [
+        "person-coordinates-map",
+        "person-country-dynasty-era-culture-journeys",
+        "overall-person-certainty",
+        "public-fact-text-certainty-citation-locators",
+        "timeline-participation-role",
+        "per-related-item-locale",
+        "per-place-publication-metadata",
+        "stories-continuation"
+      ],
+      "backendChanged": false,
+      "qaEvidence": "docs/brand/consumer-integration-pass-12-person-detail-v2.md",
+      "browserQA": {
+        "status": "PASS",
+        "suiteResult": "22/22 Person; 20/20 Event; 15/15 Story; 105/105 full Chromium",
+        "webTypecheck": "PASS",
+        "webBuild": "PASS",
+        "diffCheck": "PASS",
+        "execution": "GITHUB_ACTIONS_AND_LOCAL_PRODUCTION_SERVER",
+        "screenshotReview": "THREE_VIEWPORTS_AND_MEDIA_EMPTY_REVIEWED_NOT_PIXEL_BASELINE_COMPARISON",
+        "viewports": [
+          "390x844",
+          "834x1112",
+          "1536x960"
+        ],
+        "evidenceDirectory": "apps/web/qa-evidence/pass-12"
+      },
+      "ci": {
+        "status": "PASS",
+        "workflowRunId": 35846285728,
+        "jobId": 107133134990,
+        "commitSha": "bdf41e0d0c0cdbc15857b2f8730c59fbe0e05e28",
+        "conclusion": "success",
+        "suiteResult": "105/105 full web; 22/22 Person; 20/20 Event; 15/15 Story",
+        "url": "https://github.com/Xuanthanhit99/dauviet/actions/runs/35846285728"
+      },
+      "next": "CULTURE_V2_BLOCKED_PUBLIC_DETAIL_CONTRACT_REQUIRED_NO_AUTOMATIC_IMPLEMENTATION"
     }
   }
 }
