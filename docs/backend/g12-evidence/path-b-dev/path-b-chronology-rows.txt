@@ -1,0 +1,89 @@
+    k    |                 slug                  |  y   |    p    |     q     |  ey  |   cs   |   ce    
+---------+---------------------------------------+------+---------+-----------+------+--------+---------
+ DYNASTY | nha-ly                                | 1009 | YEAR    | EXACT     | 1225 | 375348 |  456071
+ DYNASTY | nha-nguyen                            | 1802 | YEAR    | EXACT     | 1945 | 670344 |  723911
+ DYNASTY | nha-tran                              | 1225 | YEAR    | EXACT     | 1400 | 455700 |  521171
+ ERA     | thoi-ky-edo-mac-phu-tokugawa          | 1603 | YEAR    | EXACT     | 1867 | 596316 |  694895
+ ERA     | thoi-ky-heian-nhat-ban                |  794 | YEAR    | EXACT     | 1185 | 295368 |  441191
+ ERA     | thoi-ky-hien-dai                      | 1945 | YEAR    | EXACT     |      | 723540 | 3720000
+ ERA     | thoi-ky-nara-nhat-ban                 |  710 | YEAR    | EXACT     |  784 | 264120 |  292019
+ ERA     | thoi-le-so                            | 1428 | YEAR    | EXACT     | 1527 | 531216 |  568415
+ ERA     | thoi-ly                               | 1009 | YEAR    | EXACT     | 1225 | 375348 |  456071
+ ERA     | thoi-nguyen                           | 1802 | YEAR    | EXACT     | 1945 | 670344 |  723911
+ ERA     | thoi-tay-son                          | 1778 | YEAR    | EXACT     | 1802 | 661416 |  670715
+ ERA     | thoi-tran                             | 1225 | YEAR    | EXACT     | 1400 | 455700 |  521171
+ ERA     | zqmueygcag17                          |      | UNKNOWN | UNCERTAIN |      |        |        
+ ERA     | zqmueyld3s17                          |      | UNKNOWN | UNCERTAIN |      |        |        
+ ERA     | zqmueyopdc17                          |      | UNKNOWN | UNCERTAIN |      |        |        
+ ERA     | zqmufe38c417                          |      | UNKNOWN | UNCERTAIN |      |        |        
+ ERA     | zqmufecfpk17                          |      | UNKNOWN | UNCERTAIN |      |        |        
+ ERA     | zqmufehfc117                          |      | UNKNOWN | UNCERTAIN |      |        |        
+ EVENT   | 30-thang-4-nam-1975                   | 1975 | DAY     | EXACT     |      | 734822 |  734822
+ EVENT   | chien-thang-bach-dang-nam-1288        | 1288 | DAY     | EXACT     |      | 479237 |  479237
+ EVENT   | chien-thang-dien-bien-phu-nam-1954    | 1954 | DAY     | EXACT     |      | 727018 |  727018
+ EVENT   | chien-thang-ngoc-hoi-dong-da-nam-1789 | 1789 | DAY     | EXACT     |      | 665537 |  665537
+ EVENT   | doi-do-ve-heian-kyo-kyoto-nam-794     |  794 | YEAR    | EXACT     |      | 295368 |  295739
+ EVENT   | doi-do-ve-heijo-kyo-nara-nam-710      |  710 | YEAR    | EXACT     |      | 264120 |  264491
+ EVENT   | doi-do-ve-thang-long-nam-1010         | 1010 | YEAR    | EXACT     |      | 375720 |  376091
+ EVENT   | khoi-nghia-lam-son                    | 1418 | YEAR    | BETWEEN   | 1427 | 527496 |  531215
+ EVENT   | minh-tri-duy-tan-nam-1868             | 1868 | DAY     | EXACT     |      | 694898 |  694898
+ EVENT   | thanh-lap-mac-phu-tokugawa-nam-1603   | 1603 | YEAR    | EXACT     |      | 596316 |  596687
+ EVENT   | thanh-lap-trieu-nguyen                | 1802 | YEAR    | EXACT     |      | 670344 |  670715
+ EVENT   | tran-sekigahara-nam-1600              | 1600 | DAY     | EXACT     |      | 595499 |  595499
+ EVENT   | tuyen-ngon-doc-lap-1945               | 1945 | DAY     | EXACT     |      | 723789 |  723789
+(31 rows)
+
+         canonicalSlug          | birthYear | birthPrecision | birthChronologyStart | birthChronologyEnd | deathYear | deathPrecision | deathChronologyStart | deathChronologyEnd 
+--------------------------------+-----------+----------------+----------------------+--------------------+-----------+----------------+----------------------+--------------------
+ gia-long                       |      1762 | YEAR           |               655464 |             655835 |      1820 | YEAR           |               677040 |             677411
+ ho-chi-minh                    |      1890 | DAY            |               703222 |             703222 |      1969 | DAY            |               732717 |             732717
+ le-loi                         |      1385 | YEAR           |               515220 |             515591 |      1433 | YEAR           |               533076 |             533447
+ ly-cong-uan                    |       974 | YEAR           |               362328 |             362699 |      1028 | YEAR           |               382416 |             382787
+ minh-mang                      |      1791 | YEAR           |               666252 |             666623 |      1841 | YEAR           |               684852 |             685223
+ quang-trung                    |      1753 | YEAR           |               652116 |             652487 |      1792 | DAY            |               666887 |             666887
+ thien-hoang-minh-tri-mutsuhito |      1852 | DAY            |               689256 |             689256 |      1912 | DAY            |               711479 |             711479
+ tokugawa-ieyasu                |      1543 | DAY            |               574026 |             574026 |      1616 | DAY            |               601307 |             601307
+ tran-hung-dao                  |      1228 | YEAR           |               456816 |             457187 |      1300 | YEAR           |               483600 |             483971
+ vo-nguyen-giap                 |      1911 | DAY            |               711133 |             711133 |      2013 | DAY            |               749118 |             749118
+(10 rows)
+
+                id                 | dateYear | datePrecision | dateQualifier | dateChronologyStart | dateChronologyEnd 
+-----------------------------------+----------+---------------+---------------+---------------------+-------------------
+ FACT_30_THANG_4_1975              |     1975 | DAY           | EXACT         |              734822 |            734822
+ FACT_BACH_DANG_1288               |     1288 | DAY           | EXACT         |              479237 |            479237
+ FACT_CO_LOA_CAPITAL               |          | UNKNOWN       | UNCERTAIN     |                     |                  
+ FACT_CO_LOA_RELIC_STATUS          |     1962 | YEAR          | EXACT         |              729864 |            730235
+ FACT_CU_CHI_RELIC_STATUS          |     2015 | DAY           | EXACT         |              749943 |            749943
+ FACT_DIEN_BIEN_PHU_1954           |     1954 | DAY           | EXACT         |              727018 |            727018
+ FACT_DOC_LAP_RELIC_STATUS         |     2009 | DAY           | EXACT         |              747576 |            747576
+ FACT_DOI_DO_1010                  |     1010 | YEAR          | EXACT         |              375720 |            376091
+ FACT_HOA_LU_CAPITAL               |      968 | YEAR          | EXACT         |              360096 |            360467
+ FACT_HOI_AN_UNESCO                |     1999 | DAY           | EXACT         |              743972 |            743972
+ FACT_HS_PARACELS_1974_BATTLE      |     1974 | DAY           | EXACT         |              734346 |            734346
+ FACT_HS_TS_CURRENT_ADMINISTRATION |          | UNKNOWN       | UNCERTAIN     |                     |                  
+ FACT_HS_TS_HISTORICAL_DOCUMENTS   |          | UNKNOWN       | UNCERTAIN     |                     |                  
+ FACT_HUE_CAPITAL_PERIOD           |     1802 | YEAR          | EXACT         |              670344 |            670715
+ FACT_HUE_UNESCO                   |     1993 | YEAR          | EXACT         |              741396 |            741767
+ FACT_JP_EMPEROR_MEIJI_IDENTITY    |     1852 | DAY           | EXACT         |              689256 |            689256
+ FACT_JP_HEIAN_CAPITAL_794         |      794 | YEAR          | EXACT         |              295368 |            295739
+ FACT_JP_MEIJI_RESTORATION_1868    |     1868 | DAY           | EXACT         |              694898 |            694898
+ FACT_JP_NARA_CAPITAL_710          |      710 | YEAR          | EXACT         |              264120 |            264491
+ FACT_JP_SEKIGAHARA_1600           |     1600 | DAY           | EXACT         |              595499 |            595499
+ FACT_JP_TOKUGAWA_IEYASU_LIFE      |     1543 | DAY           | EXACT         |              574026 |            574026
+ FACT_JP_TOKUGAWA_SHOGUNATE_1603   |     1603 | YEAR          | EXACT         |              596316 |            596687
+ FACT_JP_WWII_SURRENDER_1945       |     1945 | DAY           | EXACT         |              723789 |            723789
+ FACT_LAM_SON_UPRISING             |     1418 | YEAR          | EXACT         |              527496 |            527867
+ FACT_LE_LOI_FOUNDING              |     1428 | YEAR          | EXACT         |              531216 |            531587
+ FACT_MINH_MANG_REIGN              |     1820 | YEAR          | EXACT         |              677040 |            677411
+ FACT_MY_SON_CHAMPA_PERIOD         |          | UNKNOWN       | UNCERTAIN     |                     |                  
+ FACT_MY_SON_UNESCO                |     1999 | DAY           | EXACT         |              743969 |            743969
+ FACT_NGOC_HOI_DONG_DA             |     1789 | DAY           | EXACT         |              665537 |            665537
+ FACT_NGUYEN_FOUNDING              |     1802 | YEAR          | EXACT         |              670344 |            670715
+ FACT_QUANG_TRUNG_DEATH            |     1792 | DAY           | EXACT         |              666887 |            666887
+ FACT_QUOC_TU_GIAM_FOUNDING        |     1076 | YEAR          | EXACT         |              400272 |            400643
+ FACT_THANG_LONG_UNESCO            |     2010 | YEAR          | EXACT         |              747720 |            748091
+ FACT_TS_MULTIPLE_CLAIMANTS        |          | UNKNOWN       | UNCERTAIN     |                     |                  
+ FACT_TUYEN_NGON_1945              |     1945 | DAY           | EXACT         |              723789 |            723789
+ FACT_VAN_MIEU_FOUNDING            |     1070 | YEAR          | EXACT         |              398040 |            398411
+(36 rows)
+

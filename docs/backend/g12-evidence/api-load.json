@@ -1,0 +1,410 @@
+{
+ "sequential": {
+  "CONTROL GET /health": {
+   "n": 100,
+   "p50": 5.7,
+   "p95": 34.5,
+   "p99": 57.2,
+   "max": 57.2
+  },
+  "auth/session GET /users/me": {
+   "n": 100,
+   "p50": 14.2,
+   "p95": 29.4,
+   "p99": 62.7,
+   "max": 62.7
+  },
+  "auth/session GET /auth/sessions": {
+   "n": 100,
+   "p50": 12.3,
+   "p95": 25.4,
+   "p99": 45.8,
+   "max": 45.8
+  },
+  "trip read GET /trips/:id": {
+   "n": 100,
+   "p50": 11,
+   "p95": 19.1,
+   "p99": 27,
+   "max": 27
+  },
+  "trip list GET /trips": {
+   "n": 100,
+   "p50": 18,
+   "p95": 29.1,
+   "p99": 37.6,
+   "max": 37.6
+  },
+  "trip mutation PATCH /trips/:id": {
+   "n": 100,
+   "p50": 25.8,
+   "p95": 38.8,
+   "p99": 65.9,
+   "max": 65.9
+  },
+  "expense create POST": {
+   "n": 100,
+   "p50": 33.2,
+   "p95": 74.3,
+   "p99": 82.8,
+   "max": 82.8
+  },
+  "expense summary GET": {
+   "n": 100,
+   "p50": 19.4,
+   "p95": 29.2,
+   "p99": 42.8,
+   "max": 42.8
+  },
+  "location update PUT": {
+   "n": 100,
+   "p50": 16.3,
+   "p95": 34.1,
+   "p99": 49.4,
+   "max": 49.4
+  },
+  "location read GET": {
+   "n": 100,
+   "p50": 14.7,
+   "p95": 22.2,
+   "p99": 30.9,
+   "max": 30.9
+  }
+ },
+ "sequentialErrors": [
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429",
+  "location update PUT 429"
+ ],
+ "concurrency": {
+  "workers": 20,
+  "seconds": 90,
+  "requests": 5880,
+  "throughputRps": 65.3,
+  "statuses": {
+   "0": 1,
+   "200": 4259,
+   "201": 841,
+   "429": 779
+  }
+ },
+ "concurrentLatency": {
+  "trip read": {
+   "n": 842,
+   "p50": 149.2,
+   "p95": 1164.8,
+   "p99": 2112.3,
+   "max": 5008
+  },
+  "location update": {
+   "n": 839,
+   "p50": 29.5,
+   "p95": 202.7,
+   "p99": 1396.9,
+   "max": 4649.4
+  },
+  "session": {
+   "n": 841,
+   "p50": 112.3,
+   "p95": 483.6,
+   "p99": 2161.2,
+   "max": 4910.1
+  },
+  "expense summary": {
+   "n": 842,
+   "p50": 198.9,
+   "p95": 1349.4,
+   "p99": 4224.7,
+   "max": 5031.5
+  },
+  "search": {
+   "n": 839,
+   "p50": 140.7,
+   "p95": 1243.4,
+   "p99": 2402.4,
+   "max": 4607.5
+  },
+  "location read": {
+   "n": 836,
+   "p50": 183.4,
+   "p95": 1304.6,
+   "p99": 2203.8,
+   "max": 2539.9
+  },
+  "expense create": {
+   "n": 841,
+   "p50": 426.4,
+   "p95": 1681.5,
+   "p99": 2663.2,
+   "max": 5410.4
+  }
+ },
+ "resources": {
+  "dbConnectionsMax": 10,
+  "redisClientsMax": 8,
+  "apiMemMbFirst": 161,
+  "apiMemMbMax": 266,
+  "apiMemMbLast": 266,
+  "projectionQueueMax": 0,
+  "healthMsMax": 113,
+  "pgDeadlocksTotalForDb": 0
+ },
+ "ledgerInvariantViolations": 0,
+ "samples": [
+  {
+   "t": 0,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 161,
+   "healthMs": 43
+  },
+  {
+   "t": 2,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 163,
+   "healthMs": 54
+  },
+  {
+   "t": 4,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 166,
+   "healthMs": 67
+  },
+  {
+   "t": 6,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 168,
+   "healthMs": 59
+  },
+  {
+   "t": 8,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 169,
+   "healthMs": 63
+  },
+  {
+   "t": 10,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 169,
+   "healthMs": 74
+  },
+  {
+   "t": 12,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 170,
+   "healthMs": 23
+  },
+  {
+   "t": 14,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 173,
+   "healthMs": 39
+  },
+  {
+   "t": 16,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 174,
+   "healthMs": 26
+  },
+  {
+   "t": 18,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 183,
+   "healthMs": 56
+  },
+  {
+   "t": 20,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 195,
+   "healthMs": 63
+  },
+  {
+   "t": 22,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 199,
+   "healthMs": 43
+  },
+  {
+   "t": 24,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 200,
+   "healthMs": 32
+  },
+  {
+   "t": 26,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 200,
+   "healthMs": 24
+  },
+  {
+   "t": 28,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 200,
+   "healthMs": 44
+  },
+  {
+   "t": 30,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 200,
+   "healthMs": 30
+  },
+  {
+   "t": 32,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 199,
+   "healthMs": 33
+  },
+  {
+   "t": 34,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 201,
+   "healthMs": 20
+  },
+  {
+   "t": 36,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 206,
+   "healthMs": 42
+  },
+  {
+   "t": 38,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 215,
+   "healthMs": 48
+  },
+  {
+   "t": 40,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 227,
+   "healthMs": 53
+  },
+  {
+   "t": 42,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 236,
+   "healthMs": 42
+  },
+  {
+   "t": 44,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 246,
+   "healthMs": 54
+  },
+  {
+   "t": 46,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 256,
+   "healthMs": 61
+  },
+  {
+   "t": 48,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 261,
+   "healthMs": 113
+  },
+  {
+   "t": 50,
+   "dbConnections": 10,
+   "projectionQueue": 0,
+   "redisClients": 8,
+   "apiMemMb": 266,
+   "healthMs": 37
+  }
+ ]
+}

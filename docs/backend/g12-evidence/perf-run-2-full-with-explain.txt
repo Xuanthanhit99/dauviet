@@ -1,0 +1,629 @@
+canonical rows: Place=50000 Territory=2000 HistoricalEvent=10000 City=5000 Person=10000 Story=3000
+projection: 78110 documents, 112663 terms
+
+LATENCY (ms; 6 interleaved rounds x 60 sequential warm requests per class over the real HTTP stack)
+CONTROL: GET /v1/health (noise floor)      n=360 p50=9.8 p95=22.1 p99=38.3 max=67.9 | round-p95 min/median/max=11/14/41 | bytes=129 results=0
+search: exact canonical                    n=360 p50=54.5 p95=103.3 p99=125.7 max=136.6 | round-p95 min/median/max=72/99/123 | bytes=1635 results=4
+search: accent-insensitive                 n=360 p50=52.5 p95=139.7 p99=212.2 max=270.0 | round-p95 min/median/max=69/89/230 | bytes=1635 results=4
+search: exact alias                        n=360 p50=92.3 p95=218.5 p99=861.4 max=1859.2 | round-p95 min/median/max=145/232/960 | bytes=4076 results=8
+search: prefix (3 tokens of 4)             n=360 p50=28.2 p95=60.7 p99=84.6 max=135.9 | round-p95 min/median/max=42/60/94 | bytes=6328 results=20
+search: FTS multi-token (out of order)     n=360 p50=50.6 p95=137.9 p99=188.0 max=717.7 | round-p95 min/median/max=78/148/176 | bytes=1411 results=3
+search: fuzzy (one-character typo)         n=360 p50=44.5 p95=101.4 p99=154.8 max=200.6 | round-p95 min/median/max=47/88/151 | bytes=658 results=1
+search: common short prefix ("ha")         n=360 p50=41.1 p95=74.9 p99=106.8 max=111.1 | round-p95 min/median/max=40/70/108 | bytes=6416 results=20
+search: filtered types+country             n=360 p50=55.4 p95=131.4 p99=181.9 max=238.1 | round-p95 min/median/max=96/131/159 | bytes=6414 results=20
+search: period filter (CE)                 n=360 p50=35.5 p95=63.3 p99=89.2 max=124.7 | round-p95 min/median/max=51/67/76 | bytes=5030 results=20
+search: bbox filter                        n=360 p50=38.6 p95=79.9 p99=103.7 max=192.3 | round-p95 min/median/max=67/77/99 | bytes=6375 results=20
+search: page 2 (cursor)                    n=360 p50=155.0 p95=309.5 p99=465.1 max=527.4 | round-p95 min/median/max=233/365/376 | bytes=5908 results=20
+suggestions                                n=360 p50=48.0 p95=116.5 p99=227.5 max=374.7 | round-p95 min/median/max=70/95/229 | bytes=803 results=0
+map: world zoom 2 (bbox world)             n=360 p50=61.4 p95=125.2 p99=163.6 max=176.9 | round-p95 min/median/max=68/133/164 | bytes=84112 results=200
+map: country zoom 5                        n=360 p50=52.3 p95=95.8 p99=137.8 max=164.5 | round-p95 min/median/max=61/86/138 | bytes=84007 results=200
+map: regional zoom 8                       n=360 p50=56.0 p95=120.5 p99=174.1 max=214.8 | round-p95 min/median/max=72/108/176 | bytes=118157 results=279
+map: city zoom 12                          n=360 p50=20.9 p95=30.0 p99=41.7 max=56.2 | round-p95 min/median/max=24/30/39 | bytes=1083 results=5
+map: dense street zoom 15                  n=360 p50=16.5 p95=28.8 p99=37.4 max=85.9 | round-p95 min/median/max=19/30/41 | bytes=190 results=0
+map: geography layers zoom 6               n=360 p50=38.5 p95=59.8 p99=70.9 max=86.0 | round-p95 min/median/max=46/63/71 | bytes=60067 results=175
+map: territories zoom 5 (generalized)      n=360 p50=33.9 p95=78.6 p99=135.1 max=170.3 | round-p95 min/median/max=44/80/131 | bytes=28964 results=39
+map: strict period events+territories      n=360 p50=90.5 p95=246.5 p99=322.6 max=449.6 | round-p95 min/median/max=132/171/355 | bytes=175612 results=140
+
+### EXPLAIN ANALYZE exact / accent-insensitive
+Limit  (cost=1907.93..1907.96 rows=14 width=241) (actual time=31.763..31.779 rows=2 loops=1)
+  Buffers: shared hit=838
+  CTE strong
+    ->  GroupAggregate  (cost=187.50..187.56 rows=3 width=31) (actual time=1.107..1.119 rows=2 loops=1)
+          Group Key: t_1."documentId"
+          Buffers: shared hit=58
+          ->  Sort  (cost=187.50..187.51 rows=3 width=31) (actual time=1.101..1.111 rows=4 loops=1)
+                Sort Key: t_1."documentId"
+                Sort Method: quicksort  Memory: 25kB
+                Buffers: shared hit=58
+                ->  Append  (cost=16.88..187.48 rows=3 width=31) (actual time=0.073..1.093 rows=4 loops=1)
+                      Buffers: shared hit=58
+                      ->  GroupAggregate  (cost=16.88..16.92 rows=1 width=31) (actual time=0.072..0.075 rows=1 loops=1)
+                            Group Key: t_1."documentId"
+                            Buffers: shared hit=9
+                            ->  Sort  (cost=16.88..16.89 rows=1 width=32) (actual time=0.063..0.065 rows=1 loops=1)
+                                  Sort Key: t_1."documentId"
+                                  Sort Method: quicksort  Memory: 25kB
+                                  Buffers: shared hit=9
+                                  ->  Nested Loop  (cost=0.83..16.87 rows=1 width=32) (actual time=0.049..0.051 rows=1 loops=1)
+                                        Buffers: shared hit=9
+                                        ->  Index Scan using "SearchTerm_normalizedText_c" on "SearchTerm" t_1  (cost=0.42..8.44 rows=1 width=32) (actual time=0.023..0.025 rows=1 loops=1)
+                                              Index Cond: (("normalizedText")::text = 'binh gon chua 11723'::text)
+                                              Buffers: shared hit=4
+                                        ->  Index Only Scan using "SearchDocument_pkey" on "SearchDocument" d_2  (cost=0.42..8.44 rows=1 width=26) (actual time=0.022..0.022 rows=1 loops=1)
+                                              Index Cond: (id = t_1."documentId")
+                                              Heap Fetches: 1
+                                              Buffers: shared hit=5
+                      ->  Subquery Scan on p  (cost=16.89..16.93 rows=1 width=31) (actual time=0.046..0.049 rows=1 loops=1)
+                            Buffers: shared hit=8
+                            ->  Limit  (cost=16.89..16.92 rows=1 width=31) (actual time=0.045..0.047 rows=1 loops=1)
+                                  Buffers: shared hit=8
+                                  ->  GroupAggregate  (cost=16.89..16.92 rows=1 width=31) (actual time=0.044..0.046 rows=1 loops=1)
+                                        Group Key: d_3.importance, t_2."documentId"
+                                        Buffers: shared hit=8
+                                        ->  Sort  (cost=16.89..16.90 rows=1 width=32) (actual time=0.041..0.043 rows=1 loops=1)
+                                              Sort Key: d_3.importance DESC, t_2."documentId"
+                                              Sort Method: quicksort  Memory: 25kB
+                                              Buffers: shared hit=8
+                                              ->  Nested Loop  (cost=0.83..16.88 rows=1 width=32) (actual time=0.031..0.033 rows=1 loops=1)
+                                                    Buffers: shared hit=8
+                                                    ->  Index Scan using "SearchTerm_normalizedText_c" on "SearchTerm" t_2  (cost=0.42..8.45 rows=1 width=28) (actual time=0.016..0.017 rows=1 loops=1)
+                                                          Index Cond: ((("normalizedText")::text >= 'binh gon chua 11723'::text) AND (("normalizedText")::text < 'binh gon chua 11723􏿿'::text))
+                                                          Filter: (("termKind")::text = ANY ('{CANONICAL_TITLE,LOCALIZED_TITLE}'::text[]))
+                                                          Buffers: shared hit=4
+                                                    ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d_3  (cost=0.42..8.44 rows=1 width=30) (actual time=0.012..0.013 rows=1 loops=1)
+                                                          Index Cond: (id = t_2."documentId")
+                                                          Buffers: shared hit=4
+                      ->  Subquery Scan on "*SELECT* 3"  (cost=153.61..153.62 rows=1 width=31) (actual time=0.963..0.966 rows=2 loops=1)
+                            Buffers: shared hit=41
+                            ->  Limit  (cost=153.61..153.61 rows=1 width=35) (actual time=0.961..0.964 rows=2 loops=1)
+                                  Buffers: shared hit=41
+                                  ->  Sort  (cost=153.61..153.61 rows=1 width=35) (actual time=0.961..0.962 rows=2 loops=1)
+                                        Sort Key: d_4.importance DESC, d_4.id
+                                        Sort Method: quicksort  Memory: 25kB
+                                        Buffers: shared hit=41
+                                        ->  Bitmap Heap Scan on "SearchDocument" d_4  (cost=149.34..153.60 rows=1 width=35) (actual time=0.918..0.920 rows=2 loops=1)
+                                              Recheck Cond: (to_tsvector('simple'::regconfig, "normalizedSearchText") @@ '''binh'' & ''gon'' & ''chua'' & ''11723'':*'::tsquery)
+                                              Heap Blocks: exact=2
+                                              Buffers: shared hit=41
+                                              ->  Bitmap Index Scan on "SearchDocument_fts_idx"  (cost=0.00..149.33 rows=1 width=0) (actual time=0.911..0.911 rows=2 loops=1)
+                                                    Index Cond: (to_tsvector('simple'::regconfig, "normalizedSearchText") @@ '''binh'' & ''gon'' & ''chua'' & ''11723'':*'::tsquery)
+                                                    Buffers: shared hit=39
+  ->  Sort  (cost=1720.37..1720.40 rows=14 width=241) (actual time=31.761..31.767 rows=2 loops=1)
+        Sort Key: (min(strong.tier)), (CASE WHEN ((d."trustClass")::text = 'COMMUNITY'::text) THEN 1 ELSE 0 END), (CASE WHEN (((min(strong.tier)) = 5) AND (NOT (to_tsvector('simple'::regconfig, d."normalizedNames") @@ '''binh'' & ''gon'' & ''chua'' & ''11723'':*'::tsquery))) THEN 1 ELSE 0 END), ((- d.importance)), (CASE WHEN (bool_or(strong.locale_hit)) THEN 0 ELSE 1 END), (CASE (d."entityKind")::text WHEN 'COUNTRY'::text THEN 1 WHEN 'REGION'::text THEN 2 WHEN 'CITY'::text THEN 3 WHEN 'DESTINATION'::text THEN 4 WHEN 'PLACE'::text THEN 5 WHEN 'PERSON'::text THEN 6 WHEN 'EVENT'::text THEN 7 WHEN 'ERA'::text THEN 8 WHEN 'DYNASTY'::text THEN 9 WHEN 'TERRITORY'::text THEN 10 WHEN 'THEME'::text THEN 11 WHEN 'STORY'::text THEN 12 WHEN 'JOURNEY'::text THEN 13 WHEN 'SOURCE'::text THEN 14 WHEN 'COMMUNITY_STORY'::text THEN 15 ELSE 99 END), d."entityId"
+        Sort Method: quicksort  Memory: 25kB
+        Buffers: shared hit=838
+        ->  Nested Loop  (cost=1597.56..1720.10 rows=14 width=241) (actual time=31.731..31.750 rows=2 loops=1)
+              Buffers: shared hit=838
+              ->  GroupAggregate  (cost=1597.15..1597.43 rows=14 width=32) (actual time=31.649..31.658 rows=2 loops=1)
+                    Group Key: strong.id
+                    Buffers: shared hit=830
+                    ->  Sort  (cost=1597.15..1597.18 rows=14 width=32) (actual time=31.643..31.648 rows=3 loops=1)
+                          Sort Key: strong.id
+                          Sort Method: quicksort  Memory: 25kB
+                          Buffers: shared hit=830
+                          ->  Append  (cost=0.00..1596.88 rows=14 width=32) (actual time=1.110..31.634 rows=3 loops=1)
+                                Buffers: shared hit=830
+                                ->  CTE Scan on strong  (cost=0.00..0.06 rows=3 width=37) (actual time=1.109..1.113 rows=2 loops=1)
+                                      Buffers: shared hit=58
+                                ->  Subquery Scan on f  (cost=1596.61..1596.75 rows=11 width=31) (actual time=30.512..30.517 rows=1 loops=1)
+                                      Buffers: shared hit=772
+                                      ->  Limit  (cost=1596.61..1596.64 rows=11 width=30) (actual time=30.510..30.514 rows=1 loops=1)
+                                            Buffers: shared hit=772
+                                            InitPlan 2 (returns $3)
+                                              ->  Aggregate  (cost=0.07..0.08 rows=1 width=8) (actual time=0.003..0.004 rows=1 loops=1)
+                                                    ->  CTE Scan on strong strong_1  (cost=0.00..0.06 rows=3 width=0) (actual time=0.000..0.001 rows=2 loops=1)
+                                            ->  Sort  (cost=1596.53..1596.56 rows=11 width=30) (actual time=30.509..30.511 rows=1 loops=1)
+                                                  Sort Key: (max(similarity(t."normalizedText", 'binh gon chua 11723'::text))) DESC, t."documentId"
+                                                  Sort Method: quicksort  Memory: 25kB
+                                                  Buffers: shared hit=772
+                                                  ->  GroupAggregate  (cost=1596.12..1596.34 rows=11 width=30) (actual time=30.498..30.500 rows=1 loops=1)
+                                                        Group Key: t."documentId"
+                                                        Buffers: shared hit=772
+                                                        ->  Sort  (cost=1596.12..1596.15 rows=11 width=49) (actual time=30.477..30.479 rows=1 loops=1)
+                                                              Sort Key: t."documentId"
+                                                              Sort Method: quicksort  Memory: 25kB
+                                                              Buffers: shared hit=772
+                                                              ->  Result  (cost=1477.50..1595.93 rows=11 width=49) (actual time=29.631..30.468 rows=1 loops=1)
+                                                                    One-Time Filter: ($3 < '10'::bigint)
+                                                                    Buffers: shared hit=772
+                                                                    ->  Nested Loop  (cost=1477.50..1595.93 rows=11 width=49) (actual time=29.625..30.461 rows=1 loops=1)
+                                                                          Buffers: shared hit=772
+                                                                          ->  Bitmap Heap Scan on "SearchTerm" t  (cost=1477.08..1519.04 rows=11 width=49) (actual time=29.564..30.398 rows=1 loops=1)
+                                                                                Recheck Cond: ("normalizedText" % 'binh gon chua 11723'::text)
+                                                                                Rows Removed by Index Recheck: 316
+                                                                                Heap Blocks: exact=322
+                                                                                Buffers: shared hit=767
+                                                                                ->  Bitmap Index Scan on "SearchTerm_normalizedText_trgm"  (cost=0.00..1477.08 rows=11 width=0) (actual time=26.845..26.845 rows=377 loops=1)
+                                                                                      Index Cond: ("normalizedText" % 'binh gon chua 11723'::text)
+                                                                                      Buffers: shared hit=445
+                                                                          ->  Index Only Scan using "SearchDocument_pkey" on "SearchDocument" d_1  (cost=0.42..6.98 rows=1 width=26) (actual time=0.053..0.053 rows=1 loops=1)
+                                                                                Index Cond: (id = t."documentId")
+                                                                                Heap Fetches: 1
+                                                                                Buffers: shared hit=5
+              ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d  (cost=0.42..8.44 rows=1 width=220) (actual time=0.025..0.025 rows=1 loops=2)
+                    Index Cond: (id = strong.id)
+                    Buffers: shared hit=8
+Planning:
+  Buffers: shared hit=62
+Planning Time: 3.259 ms
+Execution Time: 32.628 ms
+
+### EXPLAIN ANALYZE prefix + FTS
+Limit  (cost=4092.24..4092.29 rows=21 width=241) (actual time=31.833..31.860 rows=21 loops=1)
+  Buffers: shared hit=4015
+  CTE strong
+    ->  GroupAggregate  (cost=932.02..936.11 rows=200 width=31) (actual time=7.095..7.741 rows=790 loops=1)
+          Group Key: t_1."documentId"
+          Buffers: shared hit=848
+          ->  Sort  (cost=932.02..932.54 rows=209 width=31) (actual time=7.079..7.156 rows=806 loops=1)
+                Sort Key: t_1."documentId"
+                Sort Method: quicksort  Memory: 75kB
+                Buffers: shared hit=848
+                ->  Append  (cost=16.88..923.97 rows=209 width=31) (actual time=0.240..5.726 rows=806 loops=1)
+                      Buffers: shared hit=848
+                      ->  GroupAggregate  (cost=16.88..16.92 rows=1 width=31) (actual time=0.048..0.050 rows=0 loops=1)
+                            Group Key: t_1."documentId"
+                            Buffers: shared hit=3
+                            ->  Sort  (cost=16.88..16.89 rows=1 width=32) (actual time=0.047..0.049 rows=0 loops=1)
+                                  Sort Key: t_1."documentId"
+                                  Sort Method: quicksort  Memory: 25kB
+                                  Buffers: shared hit=3
+                                  ->  Nested Loop  (cost=0.83..16.87 rows=1 width=32) (actual time=0.019..0.020 rows=0 loops=1)
+                                        Buffers: shared hit=3
+                                        ->  Index Scan using "SearchTerm_normalizedText_c" on "SearchTerm" t_1  (cost=0.42..8.44 rows=1 width=32) (actual time=0.018..0.019 rows=0 loops=1)
+                                              Index Cond: (("normalizedText")::text = 'binh gon'::text)
+                                              Buffers: shared hit=3
+                                        ->  Index Only Scan using "SearchDocument_pkey" on "SearchDocument" d_2  (cost=0.42..8.44 rows=1 width=26) (never executed)
+                                              Index Cond: (id = t_1."documentId")
+                                              Heap Fetches: 0
+                      ->  Subquery Scan on p  (cost=16.89..16.93 rows=1 width=31) (actual time=0.192..0.214 rows=16 loops=1)
+                            Buffers: shared hit=83
+                            ->  Limit  (cost=16.89..16.92 rows=1 width=31) (actual time=0.191..0.209 rows=16 loops=1)
+                                  Buffers: shared hit=83
+                                  ->  GroupAggregate  (cost=16.89..16.92 rows=1 width=31) (actual time=0.190..0.205 rows=16 loops=1)
+                                        Group Key: d_3.importance, t_2."documentId"
+                                        Buffers: shared hit=83
+                                        ->  Sort  (cost=16.89..16.90 rows=1 width=32) (actual time=0.181..0.185 rows=16 loops=1)
+                                              Sort Key: d_3.importance DESC, t_2."documentId"
+                                              Sort Method: quicksort  Memory: 26kB
+                                              Buffers: shared hit=83
+                                              ->  Nested Loop  (cost=0.83..16.88 rows=1 width=32) (actual time=0.039..0.167 rows=16 loops=1)
+                                                    Buffers: shared hit=83
+                                                    ->  Index Scan using "SearchTerm_normalizedText_c" on "SearchTerm" t_2  (cost=0.42..8.45 rows=1 width=28) (actual time=0.019..0.042 rows=16 loops=1)
+                                                          Index Cond: ((("normalizedText")::text >= 'binh gon'::text) AND (("normalizedText")::text < 'binh gon􏿿'::text))
+                                                          Filter: (("termKind")::text = ANY ('{CANONICAL_TITLE,LOCALIZED_TITLE}'::text[]))
+                                                          Buffers: shared hit=19
+                                                    ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d_3  (cost=0.42..8.44 rows=1 width=30) (actual time=0.007..0.007 rows=1 loops=16)
+                                                          Index Cond: (id = t_2."documentId")
+                                                          Buffers: shared hit=64
+                      ->  Subquery Scan on "*SELECT* 3"  (cost=886.49..889.08 rows=207 width=31) (actual time=5.028..5.359 rows=790 loops=1)
+                            Buffers: shared hit=762
+                            ->  Limit  (cost=886.49..887.01 rows=207 width=35) (actual time=5.026..5.190 rows=790 loops=1)
+                                  Buffers: shared hit=762
+                                  ->  Sort  (cost=886.49..887.01 rows=207 width=35) (actual time=5.025..5.087 rows=790 loops=1)
+                                        Sort Key: d_4.importance DESC, d_4.id
+                                        Sort Method: quicksort  Memory: 80kB
+                                        Buffers: shared hit=762
+                                        ->  Bitmap Heap Scan on "SearchDocument" d_4  (cost=124.50..878.53 rows=207 width=35) (actual time=2.953..3.882 rows=790 loops=1)
+                                              Recheck Cond: (to_tsvector('simple'::regconfig, "normalizedSearchText") @@ '''binh'' & ''gon'':*'::tsquery)
+                                              Heap Blocks: exact=724
+                                              Buffers: shared hit=762
+                                              ->  Bitmap Index Scan on "SearchDocument_fts_idx"  (cost=0.00..124.45 rows=207 width=0) (actual time=2.777..2.777 rows=797 loops=1)
+                                                    Index Cond: (to_tsvector('simple'::regconfig, "normalizedSearchText") @@ '''binh'' & ''gon'':*'::tsquery)
+                                                    Buffers: shared hit=38
+  ->  Sort  (cost=3156.13..3156.63 rows=200 width=241) (actual time=31.832..31.841 rows=21 loops=1)
+        Sort Key: (min(strong.tier)), (CASE WHEN ((d."trustClass")::text = 'COMMUNITY'::text) THEN 1 ELSE 0 END), (CASE WHEN (((min(strong.tier)) = 5) AND (NOT (to_tsvector('simple'::regconfig, d."normalizedNames") @@ '''binh'' & ''gon'':*'::tsquery))) THEN 1 ELSE 0 END), ((- d.importance)), (CASE WHEN (bool_or(strong.locale_hit)) THEN 0 ELSE 1 END), (CASE (d."entityKind")::text WHEN 'COUNTRY'::text THEN 1 WHEN 'REGION'::text THEN 2 WHEN 'CITY'::text THEN 3 WHEN 'DESTINATION'::text THEN 4 WHEN 'PLACE'::text THEN 5 WHEN 'PERSON'::text THEN 6 WHEN 'EVENT'::text THEN 7 WHEN 'ERA'::text THEN 8 WHEN 'DYNASTY'::text THEN 9 WHEN 'TERRITORY'::text THEN 10 WHEN 'THEME'::text THEN 11 WHEN 'STORY'::text THEN 12 WHEN 'JOURNEY'::text THEN 13 WHEN 'SOURCE'::text THEN 14 WHEN 'COMMUNITY_STORY'::text THEN 15 ELSE 99 END), d."entityId"
+        Sort Method: top-N heapsort  Memory: 34kB
+        Buffers: shared hit=4015
+        ->  Nested Loop  (cost=1494.54..3150.74 rows=200 width=241) (actual time=8.668..30.337 rows=790 loops=1)
+              Buffers: shared hit=4015
+              ->  GroupAggregate  (cost=1494.12..1498.23 rows=200 width=37) (actual time=8.599..9.728 rows=790 loops=1)
+                    Group Key: strong.id
+                    Buffers: shared hit=848
+                    ->  Sort  (cost=1494.12..1494.65 rows=211 width=37) (actual time=8.594..8.723 rows=790 loops=1)
+                          Sort Key: strong.id
+                          Sort Method: quicksort  Memory: 74kB
+                          Buffers: shared hit=848
+                          ->  Append  (cost=0.00..1485.98 rows=211 width=37) (actual time=7.098..8.332 rows=790 loops=1)
+                                Buffers: shared hit=848
+                                ->  CTE Scan on strong  (cost=0.00..4.00 rows=200 width=37) (actual time=7.097..8.052 rows=790 loops=1)
+                                      Buffers: shared hit=848
+                                ->  Subquery Scan on f  (cost=1480.79..1480.92 rows=11 width=31) (actual time=0.175..0.180 rows=0 loops=1)
+                                      ->  Limit  (cost=1480.79..1480.81 rows=11 width=30) (actual time=0.174..0.179 rows=0 loops=1)
+                                            InitPlan 2 (returns $3)
+                                              ->  Aggregate  (cost=4.50..4.51 rows=1 width=8) (actual time=0.155..0.157 rows=1 loops=1)
+                                                    ->  CTE Scan on strong strong_1  (cost=0.00..4.00 rows=200 width=0) (actual time=0.000..0.093 rows=790 loops=1)
+                                            ->  Sort  (cost=1476.28..1476.30 rows=11 width=30) (actual time=0.173..0.175 rows=0 loops=1)
+                                                  Sort Key: (max(similarity(t."normalizedText", 'binh gon'::text))) DESC, t."documentId"
+                                                  Sort Method: quicksort  Memory: 25kB
+                                                  ->  GroupAggregate  (cost=1475.87..1476.09 rows=11 width=30) (actual time=0.165..0.167 rows=0 loops=1)
+                                                        Group Key: t."documentId"
+                                                        ->  Sort  (cost=1475.87..1475.89 rows=11 width=49) (actual time=0.164..0.166 rows=0 loops=1)
+                                                              Sort Key: t."documentId"
+                                                              Sort Method: quicksort  Memory: 25kB
+                                                              ->  Result  (cost=1357.25..1475.68 rows=11 width=49) (actual time=0.158..0.160 rows=0 loops=1)
+                                                                    One-Time Filter: ($3 < '10'::bigint)
+                                                                    ->  Nested Loop  (cost=1357.25..1475.68 rows=11 width=49) (never executed)
+                                                                          ->  Bitmap Heap Scan on "SearchTerm" t  (cost=1356.83..1398.78 rows=11 width=49) (never executed)
+                                                                                Recheck Cond: ("normalizedText" % 'binh gon'::text)
+                                                                                ->  Bitmap Index Scan on "SearchTerm_normalizedText_trgm"  (cost=0.00..1356.82 rows=11 width=0) (never executed)
+                                                                                      Index Cond: ("normalizedText" % 'binh gon'::text)
+                                                                          ->  Index Only Scan using "SearchDocument_pkey" on "SearchDocument" d_1  (cost=0.42..6.98 rows=1 width=26) (never executed)
+                                                                                Index Cond: (id = t."documentId")
+                                                                                Heap Fetches: 0
+              ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d  (cost=0.42..7.94 rows=1 width=220) (actual time=0.007..0.007 rows=1 loops=790)
+                    Index Cond: (id = strong.id)
+                    Buffers: shared hit=3164
+Planning:
+  Buffers: shared hit=62
+Planning Time: 3.015 ms
+Execution Time: 32.557 ms
+
+### EXPLAIN ANALYZE fuzzy
+Limit  (cost=1907.92..1907.96 rows=14 width=241) (actual time=38.373..38.391 rows=1 loops=1)
+  Buffers: shared hit=503
+  CTE strong
+    ->  GroupAggregate  (cost=187.50..187.56 rows=3 width=31) (actual time=1.486..1.497 rows=0 loops=1)
+          Group Key: t_1."documentId"
+          Buffers: shared hit=43
+          ->  Sort  (cost=187.50..187.50 rows=3 width=31) (actual time=1.485..1.495 rows=0 loops=1)
+                Sort Key: t_1."documentId"
+                Sort Method: quicksort  Memory: 25kB
+                Buffers: shared hit=43
+                ->  Append  (cost=16.88..187.47 rows=3 width=31) (actual time=1.480..1.489 rows=0 loops=1)
+                      Buffers: shared hit=43
+                      ->  GroupAggregate  (cost=16.88..16.92 rows=1 width=31) (actual time=0.064..0.066 rows=0 loops=1)
+                            Group Key: t_1."documentId"
+                            Buffers: shared hit=3
+                            ->  Sort  (cost=16.88..16.89 rows=1 width=32) (actual time=0.063..0.065 rows=0 loops=1)
+                                  Sort Key: t_1."documentId"
+                                  Sort Method: quicksort  Memory: 25kB
+                                  Buffers: shared hit=3
+                                  ->  Nested Loop  (cost=0.83..16.87 rows=1 width=32) (actual time=0.058..0.060 rows=0 loops=1)
+                                        Buffers: shared hit=3
+                                        ->  Index Scan using "SearchTerm_normalizedText_c" on "SearchTerm" t_1  (cost=0.42..8.44 rows=1 width=32) (actual time=0.058..0.058 rows=0 loops=1)
+                                              Index Cond: (("normalizedText")::text = 'bxnh gon chua 11723'::text)
+                                              Buffers: shared hit=3
+                                        ->  Index Only Scan using "SearchDocument_pkey" on "SearchDocument" d_2  (cost=0.42..8.44 rows=1 width=26) (never executed)
+                                              Index Cond: (id = t_1."documentId")
+                                              Heap Fetches: 0
+                      ->  Subquery Scan on p  (cost=16.89..16.93 rows=1 width=31) (actual time=0.039..0.042 rows=0 loops=1)
+                            Buffers: shared hit=3
+                            ->  Limit  (cost=16.89..16.92 rows=1 width=31) (actual time=0.038..0.040 rows=0 loops=1)
+                                  Buffers: shared hit=3
+                                  ->  GroupAggregate  (cost=16.89..16.92 rows=1 width=31) (actual time=0.037..0.039 rows=0 loops=1)
+                                        Group Key: d_3.importance, t_2."documentId"
+                                        Buffers: shared hit=3
+                                        ->  Sort  (cost=16.89..16.90 rows=1 width=32) (actual time=0.036..0.038 rows=0 loops=1)
+                                              Sort Key: d_3.importance DESC, t_2."documentId"
+                                              Sort Method: quicksort  Memory: 25kB
+                                              Buffers: shared hit=3
+                                              ->  Nested Loop  (cost=0.83..16.88 rows=1 width=32) (actual time=0.024..0.025 rows=0 loops=1)
+                                                    Buffers: shared hit=3
+                                                    ->  Index Scan using "SearchTerm_normalizedText_c" on "SearchTerm" t_2  (cost=0.42..8.45 rows=1 width=28) (actual time=0.024..0.024 rows=0 loops=1)
+                                                          Index Cond: ((("normalizedText")::text >= 'bxnh gon chua 11723'::text) AND (("normalizedText")::text < 'bxnh gon chua 11723􏿿'::text))
+                                                          Filter: (("termKind")::text = ANY ('{CANONICAL_TITLE,LOCALIZED_TITLE}'::text[]))
+                                                          Buffers: shared hit=3
+                                                    ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d_3  (cost=0.42..8.44 rows=1 width=30) (never executed)
+                                                          Index Cond: (id = t_2."documentId")
+                      ->  Subquery Scan on "*SELECT* 3"  (cost=153.60..153.62 rows=1 width=31) (actual time=1.375..1.378 rows=0 loops=1)
+                            Buffers: shared hit=37
+                            ->  Limit  (cost=153.60..153.61 rows=1 width=35) (actual time=1.375..1.377 rows=0 loops=1)
+                                  Buffers: shared hit=37
+                                  ->  Sort  (cost=153.60..153.61 rows=1 width=35) (actual time=1.374..1.375 rows=0 loops=1)
+                                        Sort Key: d_4.importance DESC, d_4.id
+                                        Sort Method: quicksort  Memory: 25kB
+                                        Buffers: shared hit=37
+                                        ->  Bitmap Heap Scan on "SearchDocument" d_4  (cost=149.33..153.59 rows=1 width=35) (actual time=1.362..1.363 rows=0 loops=1)
+                                              Recheck Cond: (to_tsvector('simple'::regconfig, "normalizedSearchText") @@ '''bxnh'' & ''gon'' & ''chua'' & ''11723'':*'::tsquery)
+                                              Buffers: shared hit=37
+                                              ->  Bitmap Index Scan on "SearchDocument_fts_idx"  (cost=0.00..149.33 rows=1 width=0) (actual time=1.354..1.355 rows=0 loops=1)
+                                                    Index Cond: (to_tsvector('simple'::regconfig, "normalizedSearchText") @@ '''bxnh'' & ''gon'' & ''chua'' & ''11723'':*'::tsquery)
+                                                    Buffers: shared hit=37
+  ->  Sort  (cost=1720.37..1720.40 rows=14 width=241) (actual time=38.371..38.378 rows=1 loops=1)
+        Sort Key: (min(strong.tier)), (CASE WHEN ((d."trustClass")::text = 'COMMUNITY'::text) THEN 1 ELSE 0 END), (CASE WHEN (((min(strong.tier)) = 5) AND (NOT (to_tsvector('simple'::regconfig, d."normalizedNames") @@ '''bxnh'' & ''gon'' & ''chua'' & ''11723'':*'::tsquery))) THEN 1 ELSE 0 END), ((- d.importance)), (CASE WHEN (bool_or(strong.locale_hit)) THEN 0 ELSE 1 END), (CASE (d."entityKind")::text WHEN 'COUNTRY'::text THEN 1 WHEN 'REGION'::text THEN 2 WHEN 'CITY'::text THEN 3 WHEN 'DESTINATION'::text THEN 4 WHEN 'PLACE'::text THEN 5 WHEN 'PERSON'::text THEN 6 WHEN 'EVENT'::text THEN 7 WHEN 'ERA'::text THEN 8 WHEN 'DYNASTY'::text THEN 9 WHEN 'TERRITORY'::text THEN 10 WHEN 'THEME'::text THEN 11 WHEN 'STORY'::text THEN 12 WHEN 'JOURNEY'::text THEN 13 WHEN 'SOURCE'::text THEN 14 WHEN 'COMMUNITY_STORY'::text THEN 15 ELSE 99 END), d."entityId"
+        Sort Method: quicksort  Memory: 25kB
+        Buffers: shared hit=503
+        ->  Nested Loop  (cost=1597.56..1720.10 rows=14 width=241) (actual time=38.361..38.368 rows=1 loops=1)
+              Buffers: shared hit=503
+              ->  GroupAggregate  (cost=1597.15..1597.43 rows=14 width=32) (actual time=38.266..38.272 rows=1 loops=1)
+                    Group Key: strong.id
+                    Buffers: shared hit=499
+                    ->  Sort  (cost=1597.15..1597.18 rows=14 width=32) (actual time=38.260..38.266 rows=1 loops=1)
+                          Sort Key: strong.id
+                          Sort Method: quicksort  Memory: 25kB
+                          Buffers: shared hit=499
+                          ->  Append  (cost=0.00..1596.88 rows=14 width=32) (actual time=38.252..38.259 rows=1 loops=1)
+                                Buffers: shared hit=499
+                                ->  CTE Scan on strong  (cost=0.00..0.06 rows=3 width=37) (actual time=1.488..1.489 rows=0 loops=1)
+                                      Buffers: shared hit=43
+                                ->  Subquery Scan on f  (cost=1596.61..1596.75 rows=11 width=31) (actual time=36.761..36.766 rows=1 loops=1)
+                                      Buffers: shared hit=456
+                                      ->  Limit  (cost=1596.61..1596.64 rows=11 width=30) (actual time=36.758..36.762 rows=1 loops=1)
+                                            Buffers: shared hit=456
+                                            InitPlan 2 (returns $3)
+                                              ->  Aggregate  (cost=0.07..0.08 rows=1 width=8) (actual time=0.003..0.004 rows=1 loops=1)
+                                                    ->  CTE Scan on strong strong_1  (cost=0.00..0.06 rows=3 width=0) (actual time=0.001..0.001 rows=0 loops=1)
+                                            ->  Sort  (cost=1596.53..1596.56 rows=11 width=30) (actual time=36.756..36.758 rows=1 loops=1)
+                                                  Sort Key: (max(similarity(t."normalizedText", 'bxnh gon chua 11723'::text))) DESC, t."documentId"
+                                                  Sort Method: quicksort  Memory: 25kB
+                                                  Buffers: shared hit=456
+                                                  ->  GroupAggregate  (cost=1596.12..1596.34 rows=11 width=30) (actual time=36.744..36.746 rows=1 loops=1)
+                                                        Group Key: t."documentId"
+                                                        Buffers: shared hit=456
+                                                        ->  Sort  (cost=1596.12..1596.15 rows=11 width=49) (actual time=36.722..36.724 rows=1 loops=1)
+                                                              Sort Key: t."documentId"
+                                                              Sort Method: quicksort  Memory: 25kB
+                                                              Buffers: shared hit=456
+                                                              ->  Result  (cost=1477.50..1595.93 rows=11 width=49) (actual time=36.550..36.711 rows=1 loops=1)
+                                                                    One-Time Filter: ($3 < '10'::bigint)
+                                                                    Buffers: shared hit=456
+                                                                    ->  Nested Loop  (cost=1477.50..1595.93 rows=11 width=49) (actual time=36.541..36.701 rows=1 loops=1)
+                                                                          Buffers: shared hit=456
+                                                                          ->  Bitmap Heap Scan on "SearchTerm" t  (cost=1477.08..1519.04 rows=11 width=49) (actual time=36.460..36.619 rows=1 loops=1)
+                                                                                Recheck Cond: ("normalizedText" % 'bxnh gon chua 11723'::text)
+                                                                                Rows Removed by Index Recheck: 29
+                                                                                Heap Blocks: exact=33
+                                                                                Buffers: shared hit=451
+                                                                                ->  Bitmap Index Scan on "SearchTerm_normalizedText_trgm"  (cost=0.00..1477.08 rows=11 width=0) (actual time=36.066..36.066 rows=36 loops=1)
+                                                                                      Index Cond: ("normalizedText" % 'bxnh gon chua 11723'::text)
+                                                                                      Buffers: shared hit=418
+                                                                          ->  Index Only Scan using "SearchDocument_pkey" on "SearchDocument" d_1  (cost=0.42..6.98 rows=1 width=26) (actual time=0.072..0.072 rows=1 loops=1)
+                                                                                Index Cond: (id = t."documentId")
+                                                                                Heap Fetches: 1
+                                                                                Buffers: shared hit=5
+              ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d  (cost=0.42..8.44 rows=1 width=220) (actual time=0.035..0.035 rows=1 loops=1)
+                    Index Cond: (id = strong.id)
+                    Buffers: shared hit=4
+Planning:
+  Buffers: shared hit=62
+Planning Time: 4.274 ms
+Execution Time: 39.227 ms
+
+### EXPLAIN ANALYZE period filter
+Limit  (cost=3895.13..3895.14 rows=4 width=241) (actual time=26.320..26.349 rows=21 loops=1)
+  Buffers: shared hit=6520
+  CTE strong
+    ->  GroupAggregate  (cost=2410.83..2410.89 rows=3 width=31) (actual time=22.664..22.761 rows=83 loops=1)
+          Group Key: t_1."documentId"
+          Buffers: shared hit=6182
+          ->  Sort  (cost=2410.83..2410.84 rows=3 width=31) (actual time=22.654..22.674 rows=83 loops=1)
+                Sort Key: t_1."documentId"
+                Sort Method: quicksort  Memory: 30kB
+                Buffers: shared hit=6182
+                ->  Append  (cost=22.24..2410.81 rows=3 width=31) (actual time=22.404..22.510 rows=83 loops=1)
+                      Buffers: shared hit=6182
+                      ->  GroupAggregate  (cost=22.24..22.28 rows=1 width=31) (actual time=0.043..0.045 rows=0 loops=1)
+                            Group Key: t_1."documentId"
+                            Buffers: shared hit=3
+                            ->  Sort  (cost=22.24..22.25 rows=1 width=32) (actual time=0.042..0.043 rows=0 loops=1)
+                                  Sort Key: t_1."documentId"
+                                  Sort Method: quicksort  Memory: 25kB
+                                  Buffers: shared hit=3
+                                  ->  Nested Loop  (cost=0.83..22.23 rows=1 width=32) (actual time=0.028..0.029 rows=0 loops=1)
+                                        Buffers: shared hit=3
+                                        ->  Index Scan using "SearchTerm_normalizedText_c" on "SearchTerm" t_1  (cost=0.42..8.44 rows=1 width=32) (actual time=0.027..0.027 rows=0 loops=1)
+                                              Index Cond: (("normalizedText")::text = 'binh'::text)
+                                              Buffers: shared hit=3
+                                        ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d_2  (cost=0.42..8.45 rows=1 width=26) (never executed)
+                                              Index Cond: (id = t_1."documentId")
+                                              Filter: (("chronologyStart" IS NOT NULL) AND ("chronologyStart" <= '483971'::bigint) AND (COALESCE("chronologyEnd", "chronologyStart") >= '372000'::bigint) AND (("entityKind")::text = ANY ('{EVENT}'::text[])))
+                      ->  Subquery Scan on p  (cost=2174.34..2174.38 rows=1 width=31) (actual time=12.409..12.413 rows=0 loops=1)
+                            Buffers: shared hit=5531
+                            ->  Limit  (cost=2174.34..2174.37 rows=1 width=31) (actual time=12.408..12.412 rows=0 loops=1)
+                                  Buffers: shared hit=5531
+                                  ->  GroupAggregate  (cost=2174.34..2174.37 rows=1 width=31) (actual time=12.407..12.409 rows=0 loops=1)
+                                        Group Key: d_3.importance, t_2."documentId"
+                                        Buffers: shared hit=5531
+                                        ->  Sort  (cost=2174.34..2174.35 rows=1 width=32) (actual time=12.405..12.407 rows=0 loops=1)
+                                              Sort Key: d_3.importance DESC, t_2."documentId"
+                                              Sort Method: quicksort  Memory: 25kB
+                                              Buffers: shared hit=5531
+                                              ->  Nested Loop  (cost=51.99..2174.33 rows=1 width=32) (actual time=12.393..12.394 rows=0 loops=1)
+                                                    Buffers: shared hit=5531
+                                                    ->  Bitmap Heap Scan on "SearchTerm" t_2  (cost=51.57..2076.07 rows=11 width=28) (actual time=0.615..2.718 rows=1180 loops=1)
+                                                          Recheck Cond: ((("normalizedText")::text >= 'binh'::text) AND (("normalizedText")::text < 'binh􏿿'::text))
+                                                          Filter: (("termKind")::text = ANY ('{CANONICAL_TITLE,LOCALIZED_TITLE}'::text[]))
+                                                          Heap Blocks: exact=799
+                                                          Buffers: shared hit=811
+                                                          ->  Bitmap Index Scan on "SearchTerm_normalizedText_c"  (cost=0.00..51.57 rows=1115 width=0) (actual time=0.414..0.414 rows=1180 loops=1)
+                                                                Index Cond: ((("normalizedText")::text >= 'binh'::text) AND (("normalizedText")::text < 'binh􏿿'::text))
+                                                                Buffers: shared hit=12
+                                                    ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d_3  (cost=0.42..8.45 rows=1 width=30) (actual time=0.008..0.008 rows=0 loops=1180)
+                                                          Index Cond: (id = t_2."documentId")
+                                                          Filter: (("chronologyStart" IS NOT NULL) AND ("chronologyStart" <= '483971'::bigint) AND (COALESCE("chronologyEnd", "chronologyStart") >= '372000'::bigint) AND (("entityKind")::text = ANY ('{EVENT}'::text[])))
+                                                          Rows Removed by Filter: 1
+                                                          Buffers: shared hit=4720
+                      ->  Subquery Scan on "*SELECT* 3"  (cost=214.12..214.13 rows=1 width=31) (actual time=9.949..10.028 rows=83 loops=1)
+                            Buffers: shared hit=648
+                            ->  Limit  (cost=214.12..214.12 rows=1 width=35) (actual time=9.946..9.996 rows=83 loops=1)
+                                  Buffers: shared hit=648
+                                  ->  Sort  (cost=214.12..214.12 rows=1 width=35) (actual time=9.944..9.956 rows=83 loops=1)
+                                        Sort Key: d_4.importance DESC, d_4.id
+                                        Sort Method: quicksort  Memory: 30kB
+                                        Buffers: shared hit=648
+                                        ->  Bitmap Heap Scan on "SearchDocument" d_4  (cost=136.21..214.11 rows=1 width=35) (actual time=8.634..9.783 rows=83 loops=1)
+                                              Recheck Cond: (("chronologyStart" IS NOT NULL) AND ("chronologyStart" <= '483971'::bigint) AND (to_tsvector('simple'::regconfig, "normalizedSearchText") @@ '''binh'':*'::tsquery))
+                                              Filter: ((COALESCE("chronologyEnd", "chronologyStart") >= '372000'::bigint) AND (("entityKind")::text = ANY ('{EVENT}'::text[])))
+                                              Rows Removed by Filter: 452
+                                              Heap Blocks: exact=592
+                                              Buffers: shared hit=648
+                                              ->  BitmapAnd  (cost=136.21..136.21 rows=19 width=0) (actual time=8.455..8.456 rows=0 loops=1)
+                                                    Buffers: shared hit=56
+                                                    ->  Bitmap Index Scan on "SearchDocument_chronologyStart_chronologyEnd_idx"  (cost=0.00..17.69 rows=940 width=0) (actual time=1.190..1.191 rows=9945 loops=1)
+                                                          Index Cond: (("chronologyStart" IS NOT NULL) AND ("chronologyStart" <= '483971'::bigint))
+                                                          Buffers: shared hit=27
+                                                    ->  Bitmap Index Scan on "SearchDocument_fts_idx"  (cost=0.00..118.27 rows=1562 width=0) (actual time=6.966..6.966 rows=10721 loops=1)
+                                                          Index Cond: (to_tsvector('simple'::regconfig, "normalizedSearchText") @@ '''binh'':*'::tsquery)
+                                                          Buffers: shared hit=29
+  ->  Sort  (cost=1484.25..1484.26 rows=4 width=241) (actual time=26.319..26.329 rows=21 loops=1)
+        Sort Key: (min(strong.tier)), (CASE WHEN ((d."trustClass")::text = 'COMMUNITY'::text) THEN 1 ELSE 0 END), (CASE WHEN (((min(strong.tier)) = 5) AND (NOT (to_tsvector('simple'::regconfig, d."normalizedNames") @@ '''binh'':*'::tsquery))) THEN 1 ELSE 0 END), ((- d.importance)), (CASE WHEN (bool_or(strong.locale_hit)) THEN 0 ELSE 1 END), (CASE (d."entityKind")::text WHEN 'COUNTRY'::text THEN 1 WHEN 'REGION'::text THEN 2 WHEN 'CITY'::text THEN 3 WHEN 'DESTINATION'::text THEN 4 WHEN 'PLACE'::text THEN 5 WHEN 'PERSON'::text THEN 6 WHEN 'EVENT'::text THEN 7 WHEN 'ERA'::text THEN 8 WHEN 'DYNASTY'::text THEN 9 WHEN 'TERRITORY'::text THEN 10 WHEN 'THEME'::text THEN 11 WHEN 'STORY'::text THEN 12 WHEN 'JOURNEY'::text THEN 13 WHEN 'SOURCE'::text THEN 14 WHEN 'COMMUNITY_STORY'::text THEN 15 ELSE 99 END), d."entityId"
+        Sort Method: top-N heapsort  Memory: 34kB
+        Buffers: shared hit=6520
+        ->  Nested Loop  (cost=1449.49..1484.21 rows=4 width=241) (actual time=22.991..25.744 rows=83 loops=1)
+              Buffers: shared hit=6520
+              ->  GroupAggregate  (cost=1449.07..1449.15 rows=4 width=35) (actual time=22.906..23.102 rows=83 loops=1)
+                    Group Key: strong.id
+                    Buffers: shared hit=6182
+                    ->  Sort  (cost=1449.07..1449.08 rows=4 width=36) (actual time=22.900..22.927 rows=83 loops=1)
+                          Sort Key: strong.id
+                          Sort Method: quicksort  Memory: 30kB
+                          Buffers: shared hit=6182
+                          ->  Append  (cost=0.00..1449.03 rows=4 width=36) (actual time=22.668..22.861 rows=83 loops=1)
+                                Buffers: shared hit=6182
+                                ->  CTE Scan on strong  (cost=0.00..0.06 rows=3 width=37) (actual time=22.667..22.797 rows=83 loops=1)
+                                      Buffers: shared hit=6182
+                                ->  Subquery Scan on f  (cost=1448.94..1448.95 rows=1 width=31) (actual time=0.042..0.048 rows=0 loops=1)
+                                      ->  Limit  (cost=1448.94..1448.94 rows=1 width=30) (actual time=0.041..0.047 rows=0 loops=1)
+                                            InitPlan 2 (returns $3)
+                                              ->  Aggregate  (cost=0.07..0.08 rows=1 width=8) (actual time=0.023..0.024 rows=1 loops=1)
+                                                    ->  CTE Scan on strong strong_1  (cost=0.00..0.06 rows=3 width=0) (actual time=0.001..0.012 rows=83 loops=1)
+                                            ->  Sort  (cost=1448.86..1448.87 rows=1 width=30) (actual time=0.040..0.043 rows=0 loops=1)
+                                                  Sort Key: (max(similarity(t."normalizedText", 'binh'::text))) DESC, t."documentId"
+                                                  Sort Method: quicksort  Memory: 25kB
+                                                  ->  GroupAggregate  (cost=1448.83..1448.85 rows=1 width=30) (actual time=0.033..0.035 rows=0 loops=1)
+                                                        Group Key: t."documentId"
+                                                        ->  Sort  (cost=1448.83..1448.83 rows=1 width=49) (actual time=0.032..0.034 rows=0 loops=1)
+                                                              Sort Key: t."documentId"
+                                                              Sort Method: quicksort  Memory: 25kB
+                                                              ->  Result  (cost=1314.27..1448.82 rows=1 width=49) (actual time=0.026..0.027 rows=0 loops=1)
+                                                                    One-Time Filter: ($3 < '10'::bigint)
+                                                                    ->  Nested Loop  (cost=1314.27..1448.82 rows=1 width=49) (never executed)
+                                                                          ->  Bitmap Heap Scan on "SearchTerm" t  (cost=1313.85..1355.80 rows=11 width=49) (never executed)
+                                                                                Recheck Cond: ("normalizedText" % 'binh'::text)
+                                                                                ->  Bitmap Index Scan on "SearchTerm_normalizedText_trgm"  (cost=0.00..1313.84 rows=11 width=0) (never executed)
+                                                                                      Index Cond: ("normalizedText" % 'binh'::text)
+                                                                          ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d_1  (cost=0.42..8.45 rows=1 width=26) (never executed)
+                                                                                Index Cond: (id = t."documentId")
+                                                                                Filter: (("chronologyStart" IS NOT NULL) AND ("chronologyStart" <= '483971'::bigint) AND (COALESCE("chronologyEnd", "chronologyStart") >= '372000'::bigint) AND (("entityKind")::text = ANY ('{EVENT}'::text[])))
+              ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d  (cost=0.42..8.44 rows=1 width=220) (actual time=0.011..0.011 rows=1 loops=83)
+                    Index Cond: (id = strong.id)
+                    Buffers: shared hit=335
+Planning:
+  Buffers: shared hit=62
+Planning Time: 4.055 ms
+Execution Time: 27.264 ms
+
+### EXPLAIN ANALYZE bbox filter
+Limit  (cost=5348.42..5348.47 rows=21 width=241) (actual time=34.338..34.365 rows=21 loops=1)
+  Buffers: shared hit=7517
+  CTE strong
+    ->  GroupAggregate  (cost=3338.79..3339.73 rows=47 width=31) (actual time=22.533..23.090 rows=365 loops=1)
+          Group Key: t_1."documentId"
+          Buffers: shared hit=6055
+          ->  Sort  (cost=3338.79..3338.90 rows=47 width=31) (actual time=22.517..22.590 rows=418 loops=1)
+                Sort Key: t_1."documentId"
+                Sort Method: quicksort  Memory: 51kB
+                Buffers: shared hit=6055
+                ->  Append  (cost=29.40..3337.48 rows=47 width=31) (actual time=11.420..21.469 rows=418 loops=1)
+                      Buffers: shared hit=6055
+                      ->  GroupAggregate  (cost=29.40..29.43 rows=1 width=31) (actual time=0.030..0.032 rows=0 loops=1)
+                            Group Key: t_1."documentId"
+                            Buffers: shared hit=3
+                            ->  Sort  (cost=29.40..29.40 rows=1 width=32) (actual time=0.029..0.031 rows=0 loops=1)
+                                  Sort Key: t_1."documentId"
+                                  Sort Method: quicksort  Memory: 25kB
+                                  Buffers: shared hit=3
+                                  ->  Nested Loop  (cost=0.83..29.39 rows=1 width=32) (actual time=0.023..0.024 rows=0 loops=1)
+                                        Buffers: shared hit=3
+                                        ->  Index Scan using "SearchTerm_normalizedText_c" on "SearchTerm" t_1  (cost=0.42..8.44 rows=1 width=32) (actual time=0.023..0.023 rows=0 loops=1)
+                                              Index Cond: (("normalizedText")::text = 'binh'::text)
+                                              Buffers: shared hit=3
+                                        ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d_2  (cost=0.42..20.93 rows=1 width=26) (never executed)
+                                              Index Cond: (id = t_1."documentId")
+                                              Filter: ((geom IS NOT NULL) AND st_intersects(geom, '0103000020E6100000010000000500000000000000000059400000000000000000000000000000594000000000000024400000000000805B4000000000000024400000000000805B40000000000000000000000000000059400000000000000000'::geometry))
+                      ->  Subquery Scan on p  (cost=2306.39..2306.42 rows=1 width=31) (actual time=11.389..11.468 rows=53 loops=1)
+                            Buffers: shared hit=5531
+                            ->  Limit  (cost=2306.39..2306.41 rows=1 width=31) (actual time=11.388..11.451 rows=53 loops=1)
+                                  Buffers: shared hit=5531
+                                  ->  GroupAggregate  (cost=2306.39..2306.41 rows=1 width=31) (actual time=11.386..11.441 rows=53 loops=1)
+                                        Group Key: d_3.importance, t_2."documentId"
+                                        Buffers: shared hit=5531
+                                        ->  Sort  (cost=2306.39..2306.39 rows=1 width=32) (actual time=11.350..11.358 rows=53 loops=1)
+                                              Sort Key: d_3.importance DESC, t_2."documentId"
+                                              Sort Method: quicksort  Memory: 28kB
+                                              Buffers: shared hit=5531
+                                              ->  Nested Loop  (cost=51.99..2306.38 rows=1 width=32) (actual time=0.515..11.259 rows=53 loops=1)
+                                                    Buffers: shared hit=5531
+                                                    ->  Bitmap Heap Scan on "SearchTerm" t_2  (cost=51.57..2076.07 rows=11 width=28) (actual time=0.446..2.372 rows=1180 loops=1)
+                                                          Recheck Cond: ((("normalizedText")::text >= 'binh'::text) AND (("normalizedText")::text < 'binh􏿿'::text))
+                                                          Filter: (("termKind")::text = ANY ('{CANONICAL_TITLE,LOCALIZED_TITLE}'::text[]))
+                                                          Heap Blocks: exact=799
+                                                          Buffers: shared hit=811
+                                                          ->  Bitmap Index Scan on "SearchTerm_normalizedText_c"  (cost=0.00..51.57 rows=1115 width=0) (actual time=0.288..0.289 rows=1180 loops=1)
+                                                                Index Cond: ((("normalizedText")::text >= 'binh'::text) AND (("normalizedText")::text < 'binh􏿿'::text))
+                                                                Buffers: shared hit=12
+                                                    ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d_3  (cost=0.42..20.93 rows=1 width=30) (actual time=0.007..0.007 rows=0 loops=1180)
+                                                          Index Cond: (id = t_2."documentId")
+                                                          Filter: ((geom IS NOT NULL) AND st_intersects(geom, '0103000020E6100000010000000500000000000000000059400000000000000000000000000000594000000000000024400000000000805B4000000000000024400000000000805B40000000000000000000000000000059400000000000000000'::geometry))
+                                                          Rows Removed by Filter: 1
+                                                          Buffers: shared hit=4720
+                      ->  Subquery Scan on "*SELECT* 3"  (cost=1000.83..1001.39 rows=45 width=31) (actual time=9.575..9.877 rows=365 loops=1)
+                            Buffers: shared hit=521
+                            ->  Limit  (cost=1000.83..1000.94 rows=45 width=35) (actual time=9.571..9.742 rows=365 loops=1)
+                                  Buffers: shared hit=521
+                                  ->  Sort  (cost=1000.83..1000.94 rows=45 width=35) (actual time=9.570..9.660 rows=365 loops=1)
+                                        Sort Key: d_4.importance DESC, d_4.id
+                                        Sort Method: quicksort  Memory: 50kB
+                                        Buffers: shared hit=521
+                                        ->  Bitmap Heap Scan on "SearchDocument" d_4  (cost=257.33..999.59 rows=45 width=35) (actual time=7.175..8.830 rows=365 loops=1)
+                                              Recheck Cond: ((to_tsvector('simple'::regconfig, "normalizedSearchText") @@ '''binh'':*'::tsquery) AND (geom IS NOT NULL))
+                                              Filter: st_intersects(geom, '0103000020E6100000010000000500000000000000000059400000000000000000000000000000594000000000000024400000000000805B4000000000000024400000000000805B40000000000000000000000000000059400000000000000000'::geometry)
+                                              Heap Blocks: exact=362
+                                              Buffers: shared hit=521
+                                              ->  BitmapAnd  (cost=257.33..257.33 rows=45 width=0) (actual time=7.073..7.074 rows=0 loops=1)
+                                                    Buffers: shared hit=159
+                                                    ->  Bitmap Index Scan on "SearchDocument_fts_idx"  (cost=0.00..118.27 rows=1562 width=0) (actual time=5.125..5.125 rows=10721 loops=1)
+                                                          Index Cond: (to_tsvector('simple'::regconfig, "normalizedSearchText") @@ '''binh'':*'::tsquery)
+                                                          Buffers: shared hit=29
+                                                    ->  Bitmap Index Scan on "SearchDocument_geom_gist"  (cost=0.00..138.79 rows=2251 width=0) (actual time=1.596..1.596 rows=2584 loops=1)
+                                                          Index Cond: ((geom IS NOT NULL) AND (geom && '0103000020E6100000010000000500000000000000000059400000000000000000000000000000594000000000000024400000000000805B4000000000000024400000000000805B40000000000000000000000000000059400000000000000000'::geometry))
+                                                          Buffers: shared hit=130
+  ->  Sort  (cost=2008.70..2008.82 rows=48 width=241) (actual time=34.336..34.345 rows=21 loops=1)
+        Sort Key: (min(strong.tier)), (CASE WHEN ((d."trustClass")::text = 'COMMUNITY'::text) THEN 1 ELSE 0 END), (CASE WHEN (((min(strong.tier)) = 5) AND (NOT (to_tsvector('simple'::regconfig, d."normalizedNames") @@ '''binh'':*'::tsquery))) THEN 1 ELSE 0 END), ((- d.importance)), (CASE WHEN (bool_or(strong.locale_hit)) THEN 0 ELSE 1 END), (CASE (d."entityKind")::text WHEN 'COUNTRY'::text THEN 1 WHEN 'REGION'::text THEN 2 WHEN 'CITY'::text THEN 3 WHEN 'DESTINATION'::text THEN 4 WHEN 'PLACE'::text THEN 5 WHEN 'PERSON'::text THEN 6 WHEN 'EVENT'::text THEN 7 WHEN 'ERA'::text THEN 8 WHEN 'DYNASTY'::text THEN 9 WHEN 'TERRITORY'::text THEN 10 WHEN 'THEME'::text THEN 11 WHEN 'STORY'::text THEN 12 WHEN 'JOURNEY'::text THEN 13 WHEN 'SOURCE'::text THEN 14 WHEN 'COMMUNITY_STORY'::text THEN 15 ELSE 99 END), d."entityId"
+        Sort Method: top-N heapsort  Memory: 34kB
+        Buffers: shared hit=7517
+        ->  Nested Loop  (cost=1590.26..2007.40 rows=48 width=241) (actual time=23.992..33.473 rows=365 loops=1)
+              Buffers: shared hit=7517
+              ->  GroupAggregate  (cost=1589.84..1590.80 rows=48 width=37) (actual time=23.870..24.420 rows=365 loops=1)
+                    Group Key: strong.id
+                    Buffers: shared hit=6055
+                    ->  Sort  (cost=1589.84..1589.96 rows=48 width=37) (actual time=23.863..23.928 rows=365 loops=1)
+                          Sort Key: strong.id
+                          Sort Method: quicksort  Memory: 47kB
+                          Buffers: shared hit=6055
+                          ->  Append  (cost=0.00..1588.50 rows=48 width=37) (actual time=22.537..23.638 rows=365 loops=1)
+                                Buffers: shared hit=6055
+                                ->  CTE Scan on strong  (cost=0.00..0.94 rows=47 width=37) (actual time=22.536..23.362 rows=365 loops=1)
+                                      Buffers: shared hit=6055
+                                ->  Subquery Scan on f  (cost=1587.31..1587.32 rows=1 width=31) (actual time=0.156..0.160 rows=0 loops=1)
+                                      ->  Limit  (cost=1587.31..1587.31 rows=1 width=30) (actual time=0.155..0.159 rows=0 loops=1)
+                                            InitPlan 2 (returns $3)
+                                              ->  Aggregate  (cost=1.06..1.07 rows=1 width=8) (actual time=0.127..0.129 rows=1 loops=1)
+                                                    ->  CTE Scan on strong strong_1  (cost=0.00..0.94 rows=47 width=0) (actual time=0.001..0.075 rows=365 loops=1)
+                                            ->  Sort  (cost=1586.24..1586.24 rows=1 width=30) (actual time=0.152..0.154 rows=0 loops=1)
+                                                  Sort Key: (max(similarity(t."normalizedText", 'binh'::text))) DESC, t."documentId"
+                                                  Sort Method: quicksort  Memory: 25kB
+                                                  ->  GroupAggregate  (cost=1586.21..1586.23 rows=1 width=30) (actual time=0.141..0.144 rows=0 loops=1)
+                                                        Group Key: t."documentId"
+                                                        ->  Sort  (cost=1586.21..1586.21 rows=1 width=49) (actual time=0.140..0.142 rows=0 loops=1)
+                                                              Sort Key: t."documentId"
+                                                              Sort Method: quicksort  Memory: 25kB
+                                                              ->  Result  (cost=1314.27..1586.20 rows=1 width=49) (actual time=0.132..0.133 rows=0 loops=1)
+                                                                    One-Time Filter: ($3 < '10'::bigint)
+                                                                    ->  Nested Loop  (cost=1314.27..1586.20 rows=1 width=49) (never executed)
+                                                                          ->  Bitmap Heap Scan on "SearchTerm" t  (cost=1313.85..1355.80 rows=11 width=49) (never executed)
+                                                                                Recheck Cond: ("normalizedText" % 'binh'::text)
+                                                                                ->  Bitmap Index Scan on "SearchTerm_normalizedText_trgm"  (cost=0.00..1313.84 rows=11 width=0) (never executed)
+                                                                                      Index Cond: ("normalizedText" % 'binh'::text)
+                                                                          ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d_1  (cost=0.42..20.93 rows=1 width=26) (never executed)
+                                                                                Index Cond: (id = t."documentId")
+                                                                                Filter: ((geom IS NOT NULL) AND st_intersects(geom, '0103000020E6100000010000000500000000000000000059400000000000000000000000000000594000000000000024400000000000805B4000000000000024400000000000805B40000000000000000000000000000059400000000000000000'::geometry))
+              ->  Index Scan using "SearchDocument_pkey" on "SearchDocument" d  (cost=0.42..8.35 rows=1 width=220) (actual time=0.008..0.008 rows=1 loops=365)
+                    Index Cond: (id = strong.id)
+                    Buffers: shared hit=1461
+Planning:
+  Buffers: shared hit=62
+Planning Time: 6.001 ms
+Execution Time: 35.319 ms
+exit=0

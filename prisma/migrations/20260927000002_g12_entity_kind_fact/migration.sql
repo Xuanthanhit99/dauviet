@@ -1,0 +1,24 @@
+-- =========================================================================
+-- G12 - Restore the missing EntityKind 'FACT' value (pre-freeze remediation).
+-- ADDITIVE ONLY: one enum value; nothing is renamed, removed or rewritten.
+-- =========================================================================
+-- prisma/schema.prisma has declared `EntityKind.FACT` since V1, and
+-- FactsService/CitationsService write it (AuditLog.entityType for
+-- citation.created/verified/disputed/rejected, fact.linked.*, fact editorial
+-- transitions), and ContributionTargetKind accepts it - but
+-- 20260903000000_init created the database enum WITHOUT it and no migration
+-- ever added it. Every database built from migrations therefore rejects those
+-- writes ("invalid input value for enum EntityKind: FACT"), i.e. the citation
+-- and fact-review workflow fails at its audit step on any fresh install.
+--
+-- From G04 onwards `prisma migrate diff` proposed exactly this statement on
+-- every phase and it was stripped each time as a "drift artifact" (together
+-- with 17 DROP INDEX statements for raw-SQL trigram/GIST indexes, which ARE a
+-- genuine artifact - Prisma cannot model them - and remain correctly
+-- stripped). G12 found that this one half is a real schema/database mismatch.
+--
+-- Kept in its own migration: a value added by ALTER TYPE ... ADD VALUE cannot
+-- be used inside the same transaction (same reason as
+-- 20260910164912_g05_entity_kind_values). IF NOT EXISTS makes it a no-op on a
+-- database where someone already added it by hand.
+ALTER TYPE "EntityKind" ADD VALUE IF NOT EXISTS 'FACT';

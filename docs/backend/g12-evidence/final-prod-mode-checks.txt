@@ -1,0 +1,20 @@
+PASS  cors: allowed origin echoed with credentials  (https://app.example.test)
+PASS  cors: foreign origin gets no Access-Control-Allow-Origin  (null)
+PASS  cors: foreign preflight not allowed
+PASS  cors: allowed preflight answered, never "*"
+PASS  headers: helmet set on 200 /health
+PASS  headers: helmet set on 404
+PASS  headers: helmet set on 401
+PASS  cookies: refresh cookie HttpOnly + Secure + SameSite=Lax + Path=/v1/auth + expiry  (dv_refresh=<redacted>; Path=/v1/auth; Expires=Wed, 28 Oct 2026 04:18:58 GMT; HttpOnly; Secure; SameSite=Lax)
+PASS  cookies: CSRF cookie readable (not HttpOnly) but Secure + SameSite=Lax  (dv_csrf=<redacted>; Path=/; Expires=Wed, 28 Oct 2026 04:18:58 GMT; Secure; SameSite=Lax)
+PASS  cookies: no Domain attribute (host-only)
+PASS  cookies: web login body carries no refresh token
+PASS  errors: malformed JSON -> 400 envelope, no parser internals  (400)
+PASS  errors: body over 1 MB -> 413 PAYLOAD_TOO_LARGE  (413)
+PASS  docs: Swagger UI served (public contract only - documented P3)  (200)
+{
+ "base": "http://localhost:3299/v1",
+ "checks": 14,
+ "passed": 14,
+ "failed": []
+}

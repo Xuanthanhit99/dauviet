@@ -1,0 +1,30 @@
+# G12 chronology period-filter proof - compiled app on the dev DB after the G12 chronology backfill + projection refresh (2026-09-25T03:59:40Z)
+# entityType filter is the `types` query parameter shown on each line (EVENT / ERA,DYNASTY).
+GET /v1/search?q=bach%20dang&types=EVENT
+  => Chiến thắng Bạch Đằng năm 1288
+GET /v1/search?q=bach%20dang&types=EVENT&fromYear=1200&toYear=1300
+  => Chiến thắng Bạch Đằng năm 1288
+GET /v1/search?q=bach%20dang&types=EVENT&fromYear=1288&toYear=1288
+  => Chiến thắng Bạch Đằng năm 1288
+GET /v1/search?q=bach%20dang&types=EVENT&fromYear=1289&toYear=1400
+  => (none)
+GET /v1/search?q=bach%20dang&types=EVENT&fromYear=1000&toYear=1287
+  => (none)
+GET /v1/search?q=ly&types=ERA,DYNASTY
+  => Thời Lý | Nhà Lý
+GET /v1/search?q=ly&types=ERA,DYNASTY&fromYear=1100&toYear=1110
+  => Thời Lý | Nhà Lý
+GET /v1/search?q=ly&types=ERA,DYNASTY&fromYear=1200&toYear=1250
+  => Thời Lý | Nhà Lý
+GET /v1/search?q=ly&types=ERA,DYNASTY&fromYear=1226&toYear=1300
+  => (none)
+GET /v1/search?q=ly&types=ERA,DYNASTY&fromYear=900&toYear=1008
+  => (none)
+GET /v1/search?q=hien%20dai&types=ERA&fromYear=2026&toYear=2026
+  => Thời kỳ hiện đại
+GET /v1/search?q=hien%20dai&types=ERA&fromYear=1900&toYear=1944
+  => (none)
+GET /v1/search?q=lam%20son&types=EVENT&fromYear=1427&toYear=1427
+  => Khởi nghĩa Lam Sơn
+GET /v1/search?q=lam%20son&types=EVENT&fromYear=1428&toYear=1500
+  => (none)

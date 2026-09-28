@@ -1,0 +1,68 @@
+PASS  health: 200 + database/redis ok  ({"api":"ok","database":"ok","redis":"ok"})
+PASS  auth: register owner  (status 201)
+PASS  auth: login owner  (status 201)
+PASS  auth: register editor  (status 201)
+PASS  auth: login editor  (status 201)
+PASS  auth: login outsider  (status 201)
+PASS  auth: login admin  (status 201)
+PASS  auth: /users/me with bearer
+PASS  auth: /users/me anonymous -> 401
+PASS  auth: web login sets HttpOnly SameSite=Lax refresh cookie scoped to /auth  (dv_refresh=<redacted>; Path=/v1/auth; Expires=Sun, 25 Oct 2026 04:49:34 GMT; HttpOnly; SameSite=Lax)
+PASS  auth: web login returns no refresh token in body
+PASS  csrf: cookie refresh without X-CSRF-Token -> 403  (status 403)
+PASS  csrf: cookie refresh with forged X-CSRF-Token -> 403  (status 403)
+PASS  csrf: cookie refresh with matching X-CSRF-Token -> 201  (status 201)
+PASS  geography: countries list
+PASS  geography: country detail
+PASS  discovery: destinations list
+PASS  discovery: destination detail
+PASS  historical: GET /events  (status 200)
+PASS  historical: GET /eras  (status 200)
+PASS  historical: GET /dynasties  (status 200)
+PASS  historical: GET /places  (status 200)
+PASS  historical: GET /facts  (status 200)
+PASS  historical: GET /timeline?fromYear=1000&toYear=2000  (status 200)
+PASS  trust: editor creates a Source  (status 201)
+FAIL  trust: citation create succeeds (writes EntityKind.FACT audit - G12 P1-2)  (status 500 INTERNAL_ERROR)
+FAIL  trust: citation.created audit row with entityType FACT exists  (rows -1)
+PASS  provider: accommodation offers respond 200 (fixture offers only in the development seed profile; empty otherwise)  (offers 1)
+PASS  trip: create
+PASS  trip: owner reads
+PASS  trip: outsider denied
+PASS  collaboration: invitation created (token never returned)
+PASS  collaboration: member list
+PASS  collaboration: editor reads trip
+PASS  location: editor starts sharing  (status 201)
+PASS  location: editor updates location  (status 200)
+PASS  location: owner sees editor location
+PASS  location: outsider denied
+PASS  expense: VND equal split  (status 201)
+PASS  expense: USD exact split  (status 201)
+PASS  expense: negative share rejected (G12 P1-3)  (status 400)
+PASS  money: summary keeps currencies separate (no FX, no cross-currency total)  ([{"currency":"USD","totalAmount":"10.01"},{"currency":"VND","totalAmount":"300000"}])
+PASS  money: settlement suggestions
+PASS  money: settlement recorded  (status 201)
+PASS  affiliate: anonymous click  (status 201 )
+PASS  affiliate: redirect 302 to the https fixture host only  (https://www.fixture-provider.example/deeplink)
+PASS  affiliate: click + redirect created no conversion
+PASS  affiliate: admin ingests fixture conversion  (status 201)
+PASS  commercial: conversion never creates a TripExpense
+PASS  affiliate: non-admin cannot list conversions
+PASS  provider policy: license revoked -> very next click 403, no restart  (403 PROVIDER_LICENSE_REVOKED)
+PASS  search: accent-insensitive query returns results
+FAIL  search: private trip title never searchable
+PASS  search: suggestions
+PASS  map: features in Vietnam bbox
+PASS  map: private G08 coordinate never on the public map
+{
+ "base": "http://localhost:3199/v1",
+ "tag": "pbpre",
+ "checks": 56,
+ "passed": 53,
+ "failed": [
+  "trust: citation create succeeds (writes EntityKind.FACT audit - G12 P1-2)",
+  "trust: citation.created audit row with entityType FACT exists",
+  "search: private trip title never searchable"
+ ],
+ "tripId": "cmugheo7j00oc3m1s19a7p040"
+}

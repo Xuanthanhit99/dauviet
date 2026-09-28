@@ -1,0 +1,21 @@
+# G12 Redis sentinel proof (final full e2e, 2026-09-28T04:12:42Z)
+Sentinels planted OUTSIDE the suite namespace before the run: db0 plain key, db0 key inside the real 'bull:' namespace, db1 key (plus the three planted before the pre-shutdown full run, which also survived the machine power loss).
+All six: value unchanged, TTL -1 after the run. Suite namespace: see teardown lines.
+[e2e] Redis namespace dv-e2e:mukq4qf3-a3fc4a34 (pre-existing keys: 0)
+[e2e] Redis namespace dv-e2e:mukq4qf3-a3fc4a34: removed 4 suite-owned keys, 0 left
+dv-e2e keys left after the run: 0
+PASS test/search-map.e2e-spec.ts (123.711 s)
+PASS test/g12-certification.e2e-spec.ts (68.962 s)
+PASS test/trip-location.e2e-spec.ts (35.333 s)
+PASS test/affiliate.e2e-spec.ts (46.383 s)
+PASS test/trip-expense.e2e-spec.ts (24.624 s)
+PASS test/provider-activation.e2e-spec.ts (19 s)
+PASS test/trips.e2e-spec.ts (9.5 s)
+PASS test/stay-food-activities.e2e-spec.ts (11.611 s)
+PASS test/destination-composition.e2e-spec.ts (13.525 s)
+PASS test/contribution-catalogue.e2e-spec.ts (10.611 s)
+PASS test/cost-assumptions.e2e-spec.ts (15.947 s)
+PASS test/geography-filters.e2e-spec.ts (19.724 s)
+PASS test/health.e2e-spec.ts
+Test Suites: 13 passed, 13 total
+Tests:       320 passed, 320 total

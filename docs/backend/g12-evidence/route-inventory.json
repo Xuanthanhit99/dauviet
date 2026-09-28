@@ -1,0 +1,2800 @@
+{
+ "total": 363,
+ "counts": {
+  "ADMIN": 199,
+  "PUBLIC": 91,
+  "AUTHENTICATED": 37,
+  "PROVIDER_CALLBACK": 1,
+  "TRIP_CAPABILITY": 35
+ },
+ "routes": [
+  {
+   "method": "PATCH",
+   "path": "/v1/accommodations/:id/destinations",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/accommodations/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/accommodations/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/accommodations/:id",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/accommodations/:slug/offers",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/accommodations/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/accommodations/provider-references/:referenceId/map",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/accommodations/provider-references",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/accommodations",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/accommodations",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/activities/:id/destinations",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/activities/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/activities/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/activities/:slug/offers",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/activities/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/activities/provider-references/:referenceId/map",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/activities/provider-references",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/activities",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/activities",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/affiliate/conversions/ingest",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/affiliate/conversions",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/affiliate/summary",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/audit",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN",
+    "MODERATOR",
+    "HISTORIAN_REVIEWER"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/contributions/:id/catalogue/document",
+   "class": "ADMIN",
+   "roles": [
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/contributions/:id/catalogue/media",
+   "class": "ADMIN",
+   "roles": [
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/contributions/:id/catalogue/source",
+   "class": "ADMIN",
+   "roles": [
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/contributions/:id/provenance-confidence",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/contributions/:id/reviews",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/contributions/:id/rights-review",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/contributions/:id/sensitivity",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/contributions/:id",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/contributions",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/cost-assumptions/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/cost-assumptions/:id",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/cost-assumptions/:id",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/cost-assumptions",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/cost-assumptions",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/ingestion/candidates/:id/approve",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/ingestion/candidates/:id/diff",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/ingestion/candidates/:id/merge",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/ingestion/candidates/:id/reject",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/ingestion/candidates/:id",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/ingestion/candidates",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/ingestion/jobs/:id/run",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/ingestion/jobs/:id",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/ingestion/jobs",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/ingestion/jobs",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/ingestion/runs/:id/cancel",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/ingestion/sources/:id/enabled",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/ingestion/sources/:id/policy/evidence",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/ingestion/sources/:id/policy",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/ingestion/sources/:id",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/ingestion/sources",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/ingestion/sources",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/journeys/:id/preview",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/moderation/:targetType/:targetId",
+   "class": "ADMIN",
+   "roles": [
+    "MODERATOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/moderation/actions",
+   "class": "ADMIN",
+   "roles": [
+    "MODERATOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/moderation/queue",
+   "class": "ADMIN",
+   "roles": [
+    "MODERATOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/provider-integrations/:id/capabilities/:capability/activate",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/provider-integrations/:id/capabilities/:capability/enable",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/admin/provider-integrations/:id/capabilities/:capability",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/provider-integrations/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/provider-integrations/:id",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/provider-integrations/check-access",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/provider-licenses/:id/data-policy",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/provider-licenses/:id/evidence",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/provider-licenses/:id/rights",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/provider-licenses/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/provider-licenses/:id",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/provider-licenses/:id",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/providers/:id/attribution-rules",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/providers/:id/capabilities",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/providers/:id/integrations",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/providers/:id/licenses",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/providers/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/providers/:id",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/providers/:id",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/providers",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/providers",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/search/projection/drain",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/search/projection/rebuild",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/search/projection/status",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/stories/:id/media",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/stories/:id/preview",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/admin/users/:id/badges/:type",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/users/:id/badges",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/users/:id/roles",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/users/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/affiliate/clicks",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/affiliate/r/:token",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/aliases/:id",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/aliases",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/aliases",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/attractions/:id/destinations",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/attractions/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/attractions/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/attractions/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/attractions",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/attractions",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/change-password",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/email-verification/resend",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/auth/google/callback",
+   "class": "PROVIDER_CALLBACK",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/auth/google",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/login",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/logout",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/refresh",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/register",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/request-password-reset",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/reset-password",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/auth/sessions/:id",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/sessions/revoke-all",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/auth/sessions",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/verify-email",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/bookmarks",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/bookmarks",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/bookmarks",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/citations/:id/dispute",
+   "class": "ADMIN",
+   "roles": [
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/citations/:id/reject",
+   "class": "ADMIN",
+   "roles": [
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/citations/:id/verify",
+   "class": "ADMIN",
+   "roles": [
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/citations",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/cities/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/cities/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/cities/:id",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/cities/:slug/destinations",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/cities/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/cities",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/cities",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/comments/:id/moderate",
+   "class": "ADMIN",
+   "roles": [
+    "MODERATOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/comments/:id/vote",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/comments/:id",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/comments/:id",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/comments",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/community/stories/:id/eras",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/community/stories/:id/events",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/community/stories/:id/moderation-status",
+   "class": "ADMIN",
+   "roles": [
+    "MODERATOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/community/stories/:id/people",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/community/stories/:id/places",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/community/stories/:id/review-verification-state",
+   "class": "ADMIN",
+   "roles": [
+    "HISTORIAN_REVIEWER",
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/community/stories/:id/verification-state",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/community/stories/:id/vote",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/community/stories/:id/vote",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/community/stories/:id",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/community/stories/:id",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/community/stories/:slug/comments",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/community/stories/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/community/stories/mine",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/community/stories",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/community/stories",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/contributions/:id/provenance-sources",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/contributions/mine/:id/withdraw",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/contributions/mine/:id",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/contributions/mine/:id",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/contributions/mine",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/contributions",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/countries/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/countries/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/countries/:id",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/countries/:slug/cities",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/countries/:slug/destinations",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/countries/:slug/regions",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/countries/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/countries",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/countries",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/cuisines/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/cuisines/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/cuisines/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/cuisines",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/cuisines",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/destination-collections/:id/members",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/destination-collections/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/destination-collections/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/destination-collections/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/destination-collections",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/destination-collections",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/destinations/:id/events",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/destinations/:id/journeys",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/destinations/:id/places",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/destinations/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/destinations/:id/stories",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/destinations/:id/themes",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/destinations/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/destinations/:id",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/destinations/:slug/related",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/destinations/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/destinations",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/destinations",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/dishes/:id/cuisines",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/dishes/:id/destinations",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/dishes/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/dishes/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/dishes/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/dishes",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/dishes",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/dynasties/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/dynasties",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/dynasties",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/editorial/home",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/editorial/slots/:id",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/editorial/slots",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/eras/:id/countries",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/eras/:id/parent",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/eras/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/eras",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/eras",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/events/:id/countries",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/events/:id/publication-status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/events/:slug/comments",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/events/:slug/sources",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/events/:slug/stories",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/events/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/events",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/events",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/facts/:id/editorial-status",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/facts/:id/eras/:entityId",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/facts/:id/events/:entityId",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/facts/:id/people/:entityId",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/facts/:id/places/:entityId",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/facts/:id/reviews",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/facts/:id/territories/:entityId",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/facts/:id",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/facts",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/facts",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/health",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/journeys/:id/editorial-status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/journeys/:id/hero-media",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/journeys/:id/schedule",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/journeys/:id/stops/:stopId",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/journeys/:id/stops/reorder",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/journeys/:id/stops",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/journeys/:slug/comments",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/journeys/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/journeys",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/journeys",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/map/features",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/media/:id/access-policy",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/media/:id/archive",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/media/:id/quarantine",
+   "class": "ADMIN",
+   "roles": [
+    "MODERATOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/media/:id/rights",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/media/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/media/:id",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/media/admin/cleanup-expired-uploads",
+   "class": "ADMIN",
+   "roles": [
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/media/attach",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/media/uploads/:id/confirm",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/media/uploads",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/people/:id/places",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/people/:id/publication-status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/people/:slug/comments",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/people/:slug/sources",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/people/:slug/stories",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/people/:slug/timeline",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/people/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/people",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/people",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/places/:id/publication-status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/places/:id",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/places/:slug/comments",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/places/:slug/community",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/places/:slug/journeys",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/places/:slug/media",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/places/:slug/sources",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/places/:slug/stories",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/places/:slug/timeline",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/places/:slug/visits",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/places/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/places/nearby",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/places",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/places",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/profiles/:id",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/regions/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/regions/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/regions/:id",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/regions/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/regions",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/regions",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/reports/:id/resolve",
+   "class": "ADMIN",
+   "roles": [
+    "MODERATOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/reports/admin",
+   "class": "ADMIN",
+   "roles": [
+    "MODERATOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/reports",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/restaurants/:id/cuisines",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/restaurants/:id/destinations",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/restaurants/:id/dishes",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/restaurants/:id/status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/restaurants/:id/translations/:locale",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/restaurants/:slug/operational-snapshot",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/restaurants/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/restaurants/provider-references/:referenceId/map",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/restaurants/provider-references",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/restaurants",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/restaurants",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/search/suggestions",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/search",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/sources/:id/archive",
+   "class": "ADMIN",
+   "roles": [
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/sources/:id/comments",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/sources/:id/documents/:documentId",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/sources/:id/documents",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/sources/:id",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/sources",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/sources",
+   "class": "ADMIN",
+   "roles": [
+    "CONTRIBUTOR",
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/stories/:id/citations",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/stories/:id/editorial-status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/stories/:id/events",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/stories/:id/facts",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/stories/:id/featured",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/stories/:id/hero-media",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/stories/:id/people",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/stories/:id/places",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/stories/:slug/comments",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/stories/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/stories",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/stories",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/territories/:id/geometry-status",
+   "class": "ADMIN",
+   "roles": [
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/territories/:id/geometry",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/territories/:slug",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/territories",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/territories",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/themes/:id/events/:eventId",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/themes/:id/events/:eventId",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/themes",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/themes",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/then-now/:id/moderation-status",
+   "class": "ADMIN",
+   "roles": [
+    "MODERATOR",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/then-now/:id/publication-status",
+   "class": "ADMIN",
+   "roles": [
+    "EDITOR",
+    "HISTORIAN_REVIEWER",
+    "ADMIN"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v1/then-now",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/then-now",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/timeline",
+   "class": "PUBLIC",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trip-invitations/accept",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trip-invitations/decline",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/activity",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trips/:id/archive",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/trips/:id/days/:dayId/items/reorder",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "PUT",
+   "path": "/v1/trips/:id/days/:dayId/items",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "PUT",
+   "path": "/v1/trips/:id/destinations",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/estimates/latest",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/estimates",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trips/:id/estimates",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/trips/:id/expenses/:expenseId",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/expenses/:expenseId",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/trips/:id/expenses/:expenseId",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/expenses/summary",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/expenses",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trips/:id/expenses",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/trips/:id/invitations/:invitationId",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/invitations",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trips/:id/invitations",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trips/:id/leave",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/location-sharing/me",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trips/:id/location-sharing/start",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trips/:id/location-sharing/stop",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "PUT",
+   "path": "/v1/trips/:id/location",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/locations",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/trips/:id/members/:memberId",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/trips/:id/members/:memberId",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/members",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/settlement-suggestions",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id/settlements",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trips/:id/settlements",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trips/:id/transfer-ownership",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "PUT",
+   "path": "/v1/trips/:id/transport-legs",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips/:id",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/trips/:id",
+   "class": "TRIP_CAPABILITY",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/trips",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "POST",
+   "path": "/v1/trips",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users/me/visited-places",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users/me",
+   "class": "AUTHENTICATED",
+   "roles": []
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/users/me",
+   "class": "AUTHENTICATED",
+   "roles": []
+  }
+ ]
+}

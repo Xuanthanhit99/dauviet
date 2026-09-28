@@ -1,0 +1,41 @@
+{
+ "note": "statement counts include JWT validation (Session + User reads) on authenticated routes",
+ "expensesSmall": 3,
+ "expensesLarge": 30,
+ "rows": {
+  "trip detail": {
+   "small": 3,
+   "large": 3
+  },
+  "trip members": {
+   "small": 5,
+   "large": 5
+  },
+  "expense list": {
+   "small": 7,
+   "large": 8
+  },
+  "expense summary": {
+   "small": 10,
+   "large": 8
+  },
+  "settlement suggestions": {
+   "small": 8,
+   "large": 8
+  },
+  "settlements list": {
+   "small": 7,
+   "large": 7
+  },
+  "location list": {
+   "small": 8,
+   "large": 8
+  },
+  "destination detail (slug)": 26,
+  "search q=hue": 5,
+  "search q=ha (20 results)": 4,
+  "map world zoom 2": 8,
+  "map VN zoom 6": 7,
+  "auth-only baseline GET /users/me": 3
+ }
+}

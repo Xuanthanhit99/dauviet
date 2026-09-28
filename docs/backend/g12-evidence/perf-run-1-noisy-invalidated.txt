@@ -1,0 +1,42 @@
+canonical rows: Place=50000 Territory=2000 HistoricalEvent=10000 City=5000 Person=10000 Story=3000
+rebuildAll #1: processed=82010 upserted=78110 failed=0 in 836.0 s
+rebuildAll #2 (idempotent re-run): processed=82010 upserted=78110 failed=0 in 642.0 s
+projection: 78110 documents, 112663 terms
+Error: read ECONNRESET
+    at TCP.onStreamRead (node:internal/stream_base_commons:216:20) {
+  errno: -4077,
+  code: 'ECONNRESET',
+  syscall: 'read'
+}
+Error: read ECONNRESET
+    at TCP.onStreamRead (node:internal/stream_base_commons:216:20) {
+  errno: -4077,
+  code: 'ECONNRESET',
+  syscall: 'read'
+}
+
+LATENCY (ms; 6 interleaved rounds x 60 sequential warm requests per class over the real HTTP stack)
+CONTROL: GET /v1/health (noise floor)      n=360 p50=12.5 p95=85.6 p99=150.0 max=345.1 | round-p95 min/median/max=11/18/161 | bytes=129 results=0
+search: exact canonical                    n=360 p50=80.0 p95=325.2 p99=493.1 max=830.2 | round-p95 min/median/max=92/136/469 | bytes=1635 results=4
+search: accent-insensitive                 n=360 p50=85.7 p95=334.9 p99=482.2 max=1017.6 | round-p95 min/median/max=98/194/480 | bytes=1635 results=4
+search: exact alias                        n=360 p50=118.6 p95=428.7 p99=1396.2 max=2356.9 | round-p95 min/median/max=140/179/661 | bytes=4076 results=8
+search: prefix (3 tokens of 4)             n=360 p50=35.7 p95=113.9 p99=246.4 max=389.6 | round-p95 min/median/max=56/76/310 | bytes=6328 results=20
+search: FTS multi-token (out of order)     n=360 p50=54.3 p95=225.1 p99=299.5 max=634.3 | round-p95 min/median/max=94/229/268 | bytes=1411 results=3
+search: fuzzy (one-character typo)         n=360 p50=65.4 p95=253.8 p99=335.5 max=1561.9 | round-p95 min/median/max=77/133/308 | bytes=658 results=1
+search: common short prefix ("ha")         n=360 p50=64.5 p95=203.7 p99=263.0 max=500.3 | round-p95 min/median/max=60/111/301 | bytes=6416 results=20
+search: filtered types+country             n=360 p50=75.6 p95=239.1 p99=329.1 max=411.4 | round-p95 min/median/max=101/181/329 | bytes=6414 results=20
+search: period filter (CE)                 n=360 p50=37.4 p95=129.0 p99=175.5 max=199.9 | round-p95 min/median/max=49/60/180 | bytes=5030 results=20
+search: bbox filter                        n=360 p50=45.1 p95=174.5 p99=289.4 max=396.0 | round-p95 min/median/max=65/106/352 | bytes=6375 results=20
+search: page 2 (cursor)                    n=360 p50=191.8 p95=520.2 p99=649.5 max=736.1 | round-p95 min/median/max=305/403/643 | bytes=5908 results=20
+suggestions                                n=360 p50=49.9 p95=111.8 p99=145.1 max=192.8 | round-p95 min/median/max=75/108/145 | bytes=803 results=0
+map: world zoom 2 (bbox world)             n=360 p50=61.7 p95=96.7 p99=120.1 max=132.5 | round-p95 min/median/max=71/98/111 | bytes=84112 results=200
+map: country zoom 5                        n=360 p50=64.1 p95=137.2 p99=2531.4 max=910143.5 | round-p95 min/median/max=80/105/3359 | bytes=83774 results=200
+map: regional zoom 8                       n=360 p50=71.1 p95=141.5 p99=322.7 max=403.1 | round-p95 min/median/max=109/125/334 | bytes=118157 results=279
+map: city zoom 12                          n=360 p50=24.4 p95=40.6 p99=51.1 max=64.7 | round-p95 min/median/max=23/33/51 | bytes=1083 results=5
+map: dense street zoom 15                  n=360 p50=20.7 p95=34.9 p99=44.2 max=66.7 | round-p95 min/median/max=22/32/44 | bytes=190 results=0
+map: geography layers zoom 6               n=360 p50=46.6 p95=70.8 p99=106.8 max=290.9 | round-p95 min/median/max=46/71/107 | bytes=60067 results=175
+map: territories zoom 5 (generalized)      n=360 p50=42.2 p95=100.0 p99=135.8 max=175.5 | round-p95 min/median/max=36/98/140 | bytes=28964 results=39
+map: strict period events+territories      n=360 p50=121.0 p95=434.7 p99=528.7 max=636.5 | round-p95 min/median/max=147/295/516 | bytes=175612 results=140
+NON-200 RESPONSES: [ 'map: country zoom 5: HTTP 503' ]
+
+### EXPLAIN ANALYZE exact / accent-insensitive

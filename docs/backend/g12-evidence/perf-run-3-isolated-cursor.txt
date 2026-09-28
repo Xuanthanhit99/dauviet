@@ -1,0 +1,9 @@
+canonical rows: Place=50000 Territory=2000 HistoricalEvent=10000 City=5000 Person=10000 Story=3000
+projection: 78110 documents, 112663 terms
+
+LATENCY (ms; 10 interleaved rounds x 60 sequential warm requests per class over the real HTTP stack)
+CONTROL: GET /v1/health (noise floor)      n=600 p50=9.8 p95=20.9 p99=61.4 max=169.9 | round-p95 min/median/max=9/17/112 | bytes=129 results=0
+search: exact alias                        n=600 p50=80.0 p95=173.8 p99=259.3 max=839.6 | round-p95 min/median/max=105/180/271 | bytes=4034 results=5
+search: page 2 (cursor)                    n=600 p50=141.5 p95=267.2 p99=362.2 max=535.2 | round-p95 min/median/max=221/267/362 | bytes=5908 results=20
+
+### EXPLAIN ANALYZE exact / accent-insensitive
