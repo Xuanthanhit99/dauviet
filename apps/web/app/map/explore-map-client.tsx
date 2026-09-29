@@ -119,7 +119,10 @@ export default function ExploreMapClient() {
 
   useEffect(() => { if (mapRef.current?.loaded()) void load(mapRef.current); }, [load]);
 
-  const selectedFeature = features.find(feature => String(feature.properties?.id ?? "") === selectedId);\n  const selectedRoute = selectedFeature?.properties?.slug && selectedFeature.properties.entityType === "PLACE" ? `/places/${encodeURIComponent(selectedFeature.properties.slug)}` : selectedFeature?.properties?.slug && selectedFeature.properties.entityType === "EVENT" ? `/events/${encodeURIComponent(selectedFeature.properties.slug)}` : null;\n\n  const selectFromList = (feature: DiscoveryFeature) => {
+  const selectedFeature = features.find(feature => String(feature.properties?.id ?? "") === selectedId);
+  const selectedRoute = selectedFeature?.properties?.slug && selectedFeature.properties.entityType === "PLACE" ? `/places/${encodeURIComponent(selectedFeature.properties.slug)}` : selectedFeature?.properties?.slug && selectedFeature.properties.entityType === "EVENT" ? `/events/${encodeURIComponent(selectedFeature.properties.slug)}` : null;
+
+  const selectFromList = (feature: DiscoveryFeature) => {
     const id = feature.properties?.id;
     if (id) setSelectedId(String(id));
     if (feature.geometry.type === "Point" && mapRef.current) mapRef.current.easeTo({ center: feature.geometry.coordinates as [number, number], zoom: Math.max(mapRef.current.getZoom(), 10) });
