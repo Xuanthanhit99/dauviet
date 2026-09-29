@@ -119,7 +119,7 @@ export default function ExploreMapClient() {
 
   useEffect(() => { if (mapRef.current?.loaded()) void load(mapRef.current); }, [load]);
 
-  const selectFromList = (feature: DiscoveryFeature) => {
+  const selectedFeature = features.find(feature => String(feature.properties?.id ?? "") === selectedId);\n  const selectedRoute = selectedFeature?.properties?.slug && selectedFeature.properties.entityType === "PLACE" ? `/places/${encodeURIComponent(selectedFeature.properties.slug)}` : selectedFeature?.properties?.slug && selectedFeature.properties.entityType === "EVENT" ? `/events/${encodeURIComponent(selectedFeature.properties.slug)}` : null;\n\n  const selectFromList = (feature: DiscoveryFeature) => {
     const id = feature.properties?.id;
     if (id) setSelectedId(String(id));
     if (feature.geometry.type === "Point" && mapRef.current) mapRef.current.easeTo({ center: feature.geometry.coordinates as [number, number], zoom: Math.max(mapRef.current.getZoom(), 10) });
@@ -141,7 +141,7 @@ export default function ExploreMapClient() {
         <div className="map-live" aria-live="polite">{status === "loading" ? "Đang tải dữ liệu…" : status === "error" ? error : `${features.length} dấu vết trong khung nhìn.`}</div>
         {meta.truncated && <div className="map-warning">Kết quả đã đạt giới hạn {meta.limit ?? ""}. Hãy phóng to để xem chi tiết hơn.</div>}
         {status === "ready" && features.length === 0 && <p className="map-note">Không có thực thể đã xuất bản phù hợp trong khung nhìn này.</p>}
-        <div className="map-feature-list">{features.map((feature,index)=>{
+        {selectedFeature && <div className="map-note" role="status"><strong>{featureLabel(selectedFeature)}</strong>{selectedRoute ? <> · <a href={selectedRoute}>Mở hồ sơ chi tiết <span aria-hidden="true">↗</span></a></> : <span> · Lãnh thổ lịch sử hiện chỉ được trình bày trong ngữ cảnh bản đồ; không suy diễn thành biên giới hiện tại.</span>}</div>}\n        <div className="map-feature-list">{features.map((feature,index)=>{
           const id=feature.properties?.id ?? `${feature.properties?.entityType ?? "feature"}-${index}`;
           return <button type="button" key={id} className="map-feature" aria-pressed={selectedId===feature.properties?.id} onClick={()=>selectFromList(feature)}>
             <span className={`feature-symbol ${(feature.properties?.entityType ?? "").toLowerCase()}`} aria-hidden="true"/>
