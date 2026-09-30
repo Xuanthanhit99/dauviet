@@ -1,6 +1,6 @@
 # FRONTEND FINAL ACCEPTANCE
 
-Status: **ACCEPTED WITH FROZEN CONTRACT GAPS**
+Status: **ACCEPTED — FRONTEND_COMPLETE_WITH_FROZEN_CONTRACT_GAPS**
 
 Scope: public web completion on `feat/frontend-production-completion`. Existing production-locked page compositions remain intact except targeted navigation/error-state corrections.
 
@@ -12,7 +12,7 @@ Scope: public web completion on `feat/frontend-production-completion`. Existing 
 - Map Territory behavior intentionally stays map/context-only. No current-sovereignty meaning is inferred and no nonexistent Territory UI route is emitted.
 - Place community cards no longer emit the dead `/community/[slug]` route. Community material remains visibly separated from verified knowledge until a public Community Story frontend surface is accepted.
 - Discovery/collection error states provide retry controls. VI/EN, locale fallback, keyboard focus, reduced motion, responsive overflow and sparse/error/loading states are covered by browser suites.
-- CI evidence before the final dead-link correction: Consumer QA run 36658088217 passed web typecheck/build, browser smoke, Playwright/browser QA, admin typecheck/build and mobile typecheck. The final correction adds a regression test and must pass a fresh run before merge.
+- Final-head CI evidence: Consumer QA run 36659938273 on commit `603670b3f1ea5defdc5286bdcac26e129bfd28d3` passed web typecheck/build, web startup/health, browser smoke, Chromium Playwright/browser QA, admin typecheck/build and mobile typecheck.
 
 ## Contract gaps intentionally not implemented
 
@@ -22,4 +22,4 @@ Scope: public web completion on `feat/frontend-production-completion`. Existing 
 
 ## Merge gate
 
-A fresh Consumer QA run on the final head must be green. PR stays Draft until that evidence exists. No P0/P1 frontend defect is accepted open.
+Consumer QA run `36659938273` is green on the final audited head `603670b3f1ea5defdc5286bdcac26e129bfd28d3`. No P0/P1 frontend defect is accepted open. The branch is accepted for Ready for Review.
