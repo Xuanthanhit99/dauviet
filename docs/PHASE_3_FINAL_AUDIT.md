@@ -1,6 +1,6 @@
 # PHASE 3 FINAL AUDIT — TOGETHER
 
-Status: **COMPLETE — FINAL CI PASS**
+Status: **PHASE 3 COMPLETE — FINAL CI PASS**
 
 Scope: collaboration, invitation lifecycle, role governance, explicit trip location sharing, expenses, balances and external settlements on `feat/project-completion`.
 
