@@ -37,5 +37,5 @@ export async function restore():Promise<AuthUser|null>{
 
 export async function logout(){
  const refreshToken=await readRefresh();
- try{await mobileApi.logout(refreshToken)}finally{accessToken=undefined;await writeRefresh(undefined)}
+ try{await mobileApi.logout(refreshToken ?? undefined)}finally{accessToken=undefined;await writeRefresh(undefined)}
 }
