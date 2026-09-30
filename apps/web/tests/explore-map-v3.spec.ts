@@ -35,3 +35,17 @@ test("Explore Map V3 reduced motion", async ({ page }) => {
   expect(behavior).toBe("auto");
   await expect(page.getByLabel("Bản đồ khám phá Dấu Việt")).toBeVisible();
 });
+
+
+test("Explore Map V3 canonical detail links and Territory safe degradation", async ({ page }) => {
+  await page.route("**/v1/map/features?**", route => route.fulfill({ json: { success: true, data: { type: "FeatureCollection", features: [
+    { type: "Feature", geometry: { type: "Point", coordinates: [105.8, 21.0] }, properties: { entityType: "EVENT", id: "event-qa", slug: "event-qa", title: "Sự kiện QA" } },
+    { type: "Feature", geometry: { type: "Polygon", coordinates: [[[105,20],[106,20],[106,21],[105,21],[105,20]]] }, properties: { entityType: "TERRITORY", id: "territory-qa", slug: "territory-qa", name: "Lãnh thổ QA" } }
+  ] }, meta: {} } }));
+  await page.goto("/map");
+  await page.getByRole("button", { name: /Sự kiện QA/ }).click();
+  await expect(page.getByRole("link", { name: /Mở hồ sơ chi tiết/ })).toHaveAttribute("href", "/events/event-qa");
+  await page.getByRole("button", { name: /Lãnh thổ QA/ }).click();
+  await expect(page.getByText(/không suy diễn thành biên giới hiện tại/)).toBeVisible();
+  await expect(page.locator('a[href^="/territories/"]')).toHaveCount(0);
+});

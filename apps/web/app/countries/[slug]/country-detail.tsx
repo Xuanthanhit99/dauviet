@@ -115,7 +115,7 @@ export default function CountryDetail({ slug }: { slug: string }) {
     <section id="country-regions" className="country-section" aria-labelledby="country-regions-title">
       <div className="container country-section-layout">
         <div><div className="eyebrow">World {">"} Country {">"} Regions</div><h2 id="country-regions-title">Cac vung da xuat ban</h2><p>Regions la lop dieu huong chinh khi backend cong khai chung cho quoc gia nay.</p></div>
-        <EntityList items={regions.items} empty="Chua co region da xuat ban cho quoc gia nay." getHref={() => null} getMeta={item => item.type || "Region"} />
+        <EntityList items={regions.items} empty="Chua co region da xuat ban cho quoc gia nay." getHref={item => `/regions/${encodeURIComponent(item.slug)}`} getMeta={item => item.type || "Region"} />
       </div>
     </section>
 
