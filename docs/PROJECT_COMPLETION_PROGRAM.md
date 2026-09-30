@@ -26,8 +26,8 @@ Trust zones remain distinct: VERIFIED KNOWLEDGE / PROVIDER DATA / COMMUNITY CONT
 
 ## Delivery phases
 
-1. **Consumer foundation** — harden shared API client, session/error primitives, web authenticated shell, mobile navigation/session foundation.
-2. **PLAN** — Trip list/detail, itinerary, deterministic cost output, role-aware collaboration.
+1. **Consumer foundation — COMPLETE** — shared API client, session/error primitives, web authenticated shell, mobile navigation/session foundation.
+2. **PLAN — COMPLETE** — Trip list/detail, itinerary, deterministic cost output, optimistic concurrency and role-aware collaboration. Final Consumer QA: `36725356192`.
 3. **TOGETHER** — invitations/members/activity, explicit location sharing controls, expenses/balances/settlements.
 4. **BOOK** — G05 stay/food/activity surfaces and G10 affiliate handoff without invented availability/prices.
 5. **CONTRIBUTE / REMEMBER / SHARE** — bookmarks, community stories/comments, contribution workflow and personal journey continuity supported by frozen APIs.
