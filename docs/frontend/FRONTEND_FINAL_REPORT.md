@@ -2,7 +2,7 @@
 
 ## Verdict
 
-**FRONTEND_COMPLETE_WITH_FROZEN_CONTRACT_GAPS**, conditional only on the fresh final-head Consumer QA run.
+**FRONTEND_COMPLETE_WITH_FROZEN_CONTRACT_GAPS**.
 
 ## Delivered
 
@@ -22,7 +22,7 @@ No backend changes were made. No provider/commercial data was inserted into orga
 
 ## QA
 
-The prior head `fc50a670cd57edd47cc213943caa85263e20250c` passed Consumer QA run `36658088217`: web typecheck, web build, startup/wait, browser smoke, Chromium Playwright suite, admin typecheck/build, and mobile typecheck all succeeded. The final dead-link fix and regression test require a new green run before changing the PR from Draft to Ready.
+Final audited head `603670b3f1ea5defdc5286bdcac26e129bfd28d3` passed Consumer QA run `36659938273`: web typecheck, web build, startup/wait, browser smoke, Chromium Playwright/browser QA, admin typecheck/build, and mobile typecheck all succeeded. The final dead-link correction and its regression coverage are therefore included in the green evidence. The PR is accepted for Ready for Review.
 
 ## Remaining non-frontend blockers
 
