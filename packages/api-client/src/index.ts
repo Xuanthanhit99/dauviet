@@ -228,6 +228,27 @@ export class DauVietApiClient {
   withdrawContribution<T = unknown>(id: string, reason?: string) { return this.request<T>(`/contributions/mine/${encodeURIComponent(id)}/withdraw`, { method: "POST", body: JSON.stringify({ reason }) }); }
   addContributionProvenance<T = unknown>(id: string, input: unknown) { return this.request<T>(`/contributions/${encodeURIComponent(id)}/provenance-sources`, { method: "POST", body: JSON.stringify(input) }); }
 
+
+  adminContributions<T = unknown>(query: { status?: string; type?: string; cursor?: string; limit?: number } = {}) { return this.request<T>("/admin/contributions", { query }); }
+  adminContribution<T = unknown>(id: string) { return this.request<T>(`/admin/contributions/${encodeURIComponent(id)}`); }
+  adminReviewContribution<T = unknown>(id: string, input: unknown) { return this.request<T>(`/admin/contributions/${encodeURIComponent(id)}/reviews`, { method: "POST", body: JSON.stringify(input) }); }
+  adminSetContributionRights<T = unknown>(id: string, input: unknown) { return this.request<T>(`/admin/contributions/${encodeURIComponent(id)}/rights-review`, { method: "PATCH", body: JSON.stringify(input) }); }
+  adminSetContributionProvenanceConfidence<T = unknown>(id: string, input: unknown) { return this.request<T>(`/admin/contributions/${encodeURIComponent(id)}/provenance-confidence`, { method: "PATCH", body: JSON.stringify(input) }); }
+  adminSetContributionSensitivity<T = unknown>(id: string, input: unknown) { return this.request<T>(`/admin/contributions/${encodeURIComponent(id)}/sensitivity`, { method: "PATCH", body: JSON.stringify(input) }); }
+  adminCatalogueContributionSource<T = unknown>(id: string, input: unknown) { return this.request<T>(`/admin/contributions/${encodeURIComponent(id)}/catalogue/source`, { method: "POST", body: JSON.stringify(input) }); }
+  adminCatalogueContributionDocument<T = unknown>(id: string, input: unknown) { return this.request<T>(`/admin/contributions/${encodeURIComponent(id)}/catalogue/document`, { method: "POST", body: JSON.stringify(input) }); }
+  adminCatalogueContributionMedia<T = unknown>(id: string, input: unknown) { return this.request<T>(`/admin/contributions/${encodeURIComponent(id)}/catalogue/media`, { method: "POST", body: JSON.stringify(input) }); }
+  adminStoryPreview<T = unknown>(id: string) { return this.request<T>(`/admin/stories/${encodeURIComponent(id)}/preview`); }
+  adminStoryMedia<T = unknown>(id: string) { return this.request<T>(`/admin/stories/${encodeURIComponent(id)}/media`); }
+  adminIngestionSources<T = unknown>() { return this.request<T>("/admin/ingestion/sources"); }
+  adminIngestionSource<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/sources/${encodeURIComponent(id)}`); }
+  adminSetIngestionSourceEnabled<T = unknown>(id: string, enabled: boolean) { return this.request<T>(`/admin/ingestion/sources/${encodeURIComponent(id)}/enabled`, { method: "PATCH", body: JSON.stringify({ enabled }) }); }
+  adminIngestionJobs<T = unknown>() { return this.request<T>("/admin/ingestion/jobs"); }
+  adminRunIngestionJob<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/jobs/${encodeURIComponent(id)}/run`, { method: "POST" }); }
+  adminCancelIngestionRun<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/runs/${encodeURIComponent(id)}/cancel`, { method: "POST" }); }
+  adminAffiliateConversions<T = unknown>() { return this.request<T>("/admin/affiliate/conversions"); }
+  adminAffiliateSummary<T = unknown>() { return this.request<T>("/admin/affiliate/summary"); }
+
   tripMembers<T = unknown>(id: string) {
     return this.request<T>(`/trips/${encodeURIComponent(id)}/members`);
   }
