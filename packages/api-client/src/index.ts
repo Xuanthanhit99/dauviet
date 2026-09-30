@@ -217,4 +217,29 @@ export class DauVietApiClient {
   tripActivity<T = unknown>(id: string, page = 1, pageSize = 20) {
     return this.request<T>(`/trips/${encodeURIComponent(id)}/activity`, { query: { page, pageSize } });
   }
+
+  revokeTripInvitation<T = unknown>(id: string, invitationId: string) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/invitations/${encodeURIComponent(invitationId)}`, { method: "DELETE" });
+  }
+
+  leaveTrip<T = unknown>(id: string, expectedVersion: number) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/leave`, { method: "POST", body: JSON.stringify({ expectedVersion }) });
+  }
+
+  transferTripOwnership<T = unknown>(id: string, newOwnerUserId: string, expectedVersion: number) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/transfer-ownership`, { method: "POST", body: JSON.stringify({ newOwnerUserId, expectedVersion }) });
+  }
+
+  myTripLocationSharing<T = unknown>(id: string) { return this.request<T>(`/trips/${encodeURIComponent(id)}/location-sharing/me`); }
+  startTripLocationSharing<T = unknown>(id: string, durationMinutes: number) { return this.request<T>(`/trips/${encodeURIComponent(id)}/location-sharing/start`, { method: "POST", body: JSON.stringify({ durationMinutes }) }); }
+  stopTripLocationSharing<T = unknown>(id: string) { return this.request<T>(`/trips/${encodeURIComponent(id)}/location-sharing/stop`, { method: "POST" }); }
+  tripLocations<T = unknown>(id: string) { return this.request<T>(`/trips/${encodeURIComponent(id)}/locations`); }
+  updateTripLocation<T = unknown>(id: string, input: { latitude: number; longitude: number; accuracyMeters: number; capturedAt: string }) { return this.request<T>(`/trips/${encodeURIComponent(id)}/location`, { method: "PUT", body: JSON.stringify(input) }); }
+
+  tripExpenses<T = unknown>(id: string, page = 1, pageSize = 20) { return this.request<T>(`/trips/${encodeURIComponent(id)}/expenses`, { query: { page, pageSize } }); }
+  createTripExpense<T = unknown>(id: string, input: unknown) { return this.request<T>(`/trips/${encodeURIComponent(id)}/expenses`, { method: "POST", body: JSON.stringify(input) }); }
+  tripExpenseSummary<T = unknown>(id: string) { return this.request<T>(`/trips/${encodeURIComponent(id)}/expenses/summary`); }
+  tripSettlementSuggestions<T = unknown>(id: string) { return this.request<T>(`/trips/${encodeURIComponent(id)}/settlement-suggestions`); }
+  tripSettlements<T = unknown>(id: string, page = 1, pageSize = 20) { return this.request<T>(`/trips/${encodeURIComponent(id)}/settlements`, { query: { page, pageSize } }); }
+  createTripSettlement<T = unknown>(id: string, input: unknown) { return this.request<T>(`/trips/${encodeURIComponent(id)}/settlements`, { method: "POST", body: JSON.stringify(input) }); }
 }
