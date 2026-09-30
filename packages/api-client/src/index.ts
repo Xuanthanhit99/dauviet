@@ -152,4 +152,45 @@ export class DauVietApiClient {
   updateProfile(input: { displayName?: string; locale?: string; visitedPlacesPublic?: boolean }) {
     return this.request<AuthUser>("/users/me", { method: "PATCH", body: JSON.stringify(input) });
   }
+
+  listTrips<T = unknown>(query: { page?: number; pageSize?: number; status?: string } = {}) {
+    return this.request<T>("/trips", { query });
+  }
+
+  createTrip<T = unknown>(input: {
+    title: string; startDate: string; endDate: string; primaryCurrency: string;
+    travelerCount?: number; roomCount?: number; originCountrySlug?: string;
+    originRegionSlug?: string; originCitySlug?: string; originLabel?: string;
+    targetBudgetAmount?: string; targetBudgetCurrency?: string; notes?: string;
+  }) {
+    return this.request<T>("/trips", { method: "POST", body: JSON.stringify(input) });
+  }
+
+  trip<T = unknown>(id: string) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}`);
+  }
+
+  updateTrip<T = unknown>(id: string, input: Record<string, unknown>) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) });
+  }
+
+  replaceTripDestinations<T = unknown>(id: string, expectedVersion: number, destinations: unknown[]) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/destinations`, { method: "PUT", body: JSON.stringify({ expectedVersion, destinations }) });
+  }
+
+  replaceTripDayItems<T = unknown>(id: string, dayId: string, expectedVersion: number, items: unknown[]) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/days/${encodeURIComponent(dayId)}/items`, { method: "PUT", body: JSON.stringify({ expectedVersion, items }) });
+  }
+
+  replaceTripTransportLegs<T = unknown>(id: string, expectedVersion: number, transportLegs: unknown[]) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/transport-legs`, { method: "PUT", body: JSON.stringify({ expectedVersion, transportLegs }) });
+  }
+
+  generateTripEstimate<T = unknown>(id: string) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/estimates`, { method: "POST" });
+  }
+
+  latestTripEstimate<T = unknown>(id: string) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/estimates/latest`);
+  }
 }
