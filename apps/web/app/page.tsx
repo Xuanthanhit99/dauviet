@@ -12,7 +12,7 @@ export default function Home(){
   <header className="site-header"><div className="container header-inner">
    <a href="/" aria-label="Dấu Việt Global — Trang chủ"><Image className="brand-logo" src="/brand/dvg-logo-horizontal-primary-light-v1.4.1.svg" width={460} height={96} priority alt="Dấu Việt Global"/></a>
    <nav className="desktop-nav" aria-label="Điều hướng chính"><a href="/explore">Khám phá</a><a href="/map">Bản đồ</a><a href="/stories">Câu chuyện</a><a href="/journeys">Hành trình</a></nav>
-   <div className="header-actions"><button className="locale" aria-label="Ngôn ngữ hiện tại: Tiếng Việt">VI</button><a className="header-action primary-action" href="/explore">Bắt đầu khám phá</a></div>
+   <div className="header-actions"><button className="locale" aria-label="Ngôn ngữ hiện tại: Tiếng Việt">VI</button><a className="header-action" href="/auth/login">Đăng nhập</a><a className="header-action primary-action" href="/explore">Bắt đầu khám phá</a></div>
    <button className="mobile-nav" aria-label="Mở điều hướng" type="button">☰</button>
   </div></header>
   <main id="main">
