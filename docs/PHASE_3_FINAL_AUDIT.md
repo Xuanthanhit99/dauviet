@@ -1,6 +1,6 @@
 # PHASE 3 FINAL AUDIT — TOGETHER
 
-Status: **CONDITIONAL — CURRENT-HEAD CI REQUIRED**
+Status: **COMPLETE — FINAL CI PASS**
 
 Scope: collaboration, invitation lifecycle, role governance, explicit trip location sharing, expenses, balances and external settlements on `feat/project-completion`.
 
@@ -20,7 +20,7 @@ No open P0/P1 product-contract gap remains after the final remediation pass.
 | Balances | PASS | server-derived per-currency balances; no client FX conversion |
 | Settlements | PASS | server suggestions, append-only external-settlement recording and settlement history surfaced |
 | Failure/empty states | PASS | authenticated load failure, empty members/activity/location/expense/settlement states and mutation feedback present |
-| Regression | CONDITIONAL | current-head Consumer QA must pass after final audit remediations |
+| Regression | PASS | Consumer QA `36734861258` succeeded on exact accepted head `dfe36c3c6374faa168ae9451f0fea8766a977124` |
 
 ## Non-production decision
 
@@ -28,4 +28,4 @@ PR #2 remains Draft. No merge and no production deployment is authorized by this
 
 ## Acceptance rule
 
-Phase 3 may be marked **COMPLETE** only after Consumer QA succeeds on the exact current head containing this audit/remediation set. A failing or superseded head does not satisfy the gate.
+Phase 3 is **COMPLETE**. Consumer QA `36734861258` succeeded on exact accepted head `dfe36c3c6374faa168ae9451f0fea8766a977124`. PR #2 remains Draft; this acceptance does not authorize merge or production deployment.
