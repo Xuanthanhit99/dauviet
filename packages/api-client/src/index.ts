@@ -218,6 +218,9 @@ export class DauVietApiClient {
     return this.request<T>(`/trips/${encodeURIComponent(id)}/activity`, { query: { page, pageSize } });
   }
 
+  acceptTripInvitation<T = unknown>(token: string) { return this.request<T>("/trip-invitations/accept", { method: "POST", body: JSON.stringify({ token }) }); }
+  declineTripInvitation<T = unknown>(token: string) { return this.request<T>("/trip-invitations/decline", { method: "POST", body: JSON.stringify({ token }) }); }
+
   revokeTripInvitation<T = unknown>(id: string, invitationId: string) {
     return this.request<T>(`/trips/${encodeURIComponent(id)}/invitations/${encodeURIComponent(invitationId)}`, { method: "DELETE" });
   }
@@ -238,6 +241,8 @@ export class DauVietApiClient {
 
   tripExpenses<T = unknown>(id: string, page = 1, pageSize = 20) { return this.request<T>(`/trips/${encodeURIComponent(id)}/expenses`, { query: { page, pageSize } }); }
   createTripExpense<T = unknown>(id: string, input: unknown) { return this.request<T>(`/trips/${encodeURIComponent(id)}/expenses`, { method: "POST", body: JSON.stringify(input) }); }
+  updateTripExpense<T = unknown>(id: string, expenseId: string, input: unknown) { return this.request<T>(`/trips/${encodeURIComponent(id)}/expenses/${encodeURIComponent(expenseId)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  deleteTripExpense<T = unknown>(id: string, expenseId: string, expectedVersion: number) { return this.request<T>(`/trips/${encodeURIComponent(id)}/expenses/${encodeURIComponent(expenseId)}`, { method: "DELETE", body: JSON.stringify({ expectedVersion }) }); }
   tripExpenseSummary<T = unknown>(id: string) { return this.request<T>(`/trips/${encodeURIComponent(id)}/expenses/summary`); }
   tripSettlementSuggestions<T = unknown>(id: string) { return this.request<T>(`/trips/${encodeURIComponent(id)}/settlement-suggestions`); }
   tripSettlements<T = unknown>(id: string, page = 1, pageSize = 20) { return this.request<T>(`/trips/${encodeURIComponent(id)}/settlements`, { query: { page, pageSize } }); }
