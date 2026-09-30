@@ -253,6 +253,11 @@ export class DauVietApiClient {
   adminDisputeCitation<T = unknown>(id: string) { return this.request<T>(`/citations/${encodeURIComponent(id)}/dispute`, { method: "PATCH" }); }
   adminRejectCitation<T = unknown>(id: string, reason?: string) { return this.request<T>(`/citations/${encodeURIComponent(id)}/reject`, { method: "PATCH", body: JSON.stringify({ reason }) }); }
   adminUpdateMediaRights<T = unknown>(id: string, input: unknown) { return this.request<T>(`/media/${encodeURIComponent(id)}/rights`, { method: "PATCH", body: JSON.stringify(input) }); }
+  adminMedia<T = unknown>(id: string) { return this.request<T>(`/media/${encodeURIComponent(id)}`); }
+  adminSetMediaTranslation<T = unknown>(id: string, locale: string, input: unknown) { return this.request<T>(`/media/${encodeURIComponent(id)}/translations/${encodeURIComponent(locale)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  adminSetMediaAccessPolicy<T = unknown>(id: string, accessPolicy: string) { return this.request<T>(`/media/${encodeURIComponent(id)}/access-policy`, { method: "PATCH", body: JSON.stringify({ accessPolicy }) }); }
+  adminArchiveMedia<T = unknown>(id: string, reason?: string) { return this.request<T>(`/media/${encodeURIComponent(id)}/archive`, { method: "PATCH", body: JSON.stringify({ reason }) }); }
+  adminCleanupExpiredUploads<T = unknown>() { return this.request<T>("/media/admin/cleanup-expired-uploads", { method: "POST" }); }
   adminQuarantineMedia<T = unknown>(id: string, input: unknown) { return this.request<T>(`/media/${encodeURIComponent(id)}/quarantine`, { method: "PATCH", body: JSON.stringify(input) }); }
   adminModerationQueue<T = unknown>(query: { status?: string; targetType?: string; category?: string; from?: string; to?: string } = {}) { return this.request<T>("/admin/moderation/queue", { query }); }
   adminModerationAction<T = unknown>(input: unknown) { return this.request<T>("/admin/moderation/actions", { method: "POST", body: JSON.stringify(input) }); }
