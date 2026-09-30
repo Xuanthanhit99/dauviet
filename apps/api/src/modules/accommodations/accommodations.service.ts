@@ -367,6 +367,8 @@ export class AccommodationsService {
         if (isExpired) continue; // an expired offer is never presented as current (spec section 25/35/83/118)
         results.push({
           providerCode: reference.provider.code,
+          providerReferenceId: reference.id,
+          providerOfferId: offer.id,
           checkInDate: dto.checkIn,
           checkOutDate: dto.checkOut,
           currency: offer.currency,
