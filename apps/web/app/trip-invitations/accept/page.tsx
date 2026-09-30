@@ -1,0 +1,9 @@
+"use client";
+import {useEffect,useState} from "react";
+import {restoreWebSession,webApi} from "../../auth/session";
+export default function TripInvitationAccept(){
+ const [token,setToken]=useState(""),[status,setStatus]=useState("Đang kiểm tra lời mời…"),[tripId,setTripId]=useState("");
+ useEffect(()=>{void(async()=>{if(!await restoreWebSession()){setStatus("Hãy đăng nhập bằng đúng email nhận lời mời rồi mở lại liên kết này.");return}const raw=new URLSearchParams(location.hash.slice(1)).get("token")??"";setToken(raw);setStatus(raw?"Lời mời đã sẵn sàng. Token chỉ được gửi trong nội dung yêu cầu, không gửi trong URL tới máy chủ.":"Liên kết lời mời không có token hợp lệ.")})()},[]);
+ async function act(accept:boolean){if(!token)return;setStatus("Đang xử lý…");try{if(accept){const r=await webApi.acceptTripInvitation<{tripId:string}>(token);setTripId(r.tripId);setStatus("Đã tham gia chuyến đi.")}else{await webApi.declineTripInvitation(token);setStatus("Đã từ chối lời mời.")}history.replaceState(null,"",location.pathname)}catch{setStatus("Không thể xử lý lời mời. Lời mời có thể đã hết hạn, đã được xử lý hoặc không thuộc email đang đăng nhập.")}}
+ return <main id="main" className="auth-shell"><section className="auth-card"><p className="eyebrow">TOGETHER</p><h1>Lời mời chuyến đi</h1><p role="status">{status}</p>{token&&!tripId&&<div><button className="button button-gold" onClick={()=>void act(true)}>Chấp nhận</button><button className="button button-quiet" onClick={()=>void act(false)}>Từ chối</button></div>}{tripId&&<a className="button button-gold" href={"/trips/"+tripId+"/together"}>Mở chuyến đi</a>}</section></main>
+}
