@@ -120,7 +120,36 @@ export class DauVietApiClient {
     await this.options.onAccessToken?.(undefined);
   }
 
-  me(): Promise<AuthUser> {
-    return this.request<AuthUser>("/users/me");
+  register(input: { email: string; password: string; displayName: string }) {
+    return this.request<{ id?: string; email?: string }>("/auth/register", { method: "POST", body: JSON.stringify(input) });
+  }
+
+  verifyEmail(token: string) {
+    return this.request("/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) });
+  }
+
+  resendVerification(email: string) {
+    return this.request("/auth/email-verification/resend", { method: "POST", body: JSON.stringify({ email }) });
+  }
+
+  requestPasswordReset(email: string) {
+    return this.request("/auth/request-password-reset", { method: "POST", body: JSON.stringify({ email }) });
+  }
+
+  resetPassword(token: string, newPassword: string) {
+    return this.request("/auth/reset-password", { method: "POST", body: JSON.stringify({ token, newPassword }) });
+  }
+
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.request("/auth/change-password", { method: "POST", body: JSON.stringify({ currentPassword, newPassword }) });
+  }
+
+  listSessions<T = unknown[]>() { return this.request<T>("/auth/sessions"); }
+  revokeSession(id: string) { return this.request(`/auth/sessions/${encodeURIComponent(id)}`, { method: "DELETE" }); }
+  revokeAllSessions() { return this.request("/auth/sessions/revoke-all", { method: "POST" }); }
+
+  me(): Promise<AuthUser> { return this.request<AuthUser>("/users/me"); }
+  updateProfile(input: { displayName?: string; locale?: string; visitedPlacesPublic?: boolean }) {
+    return this.request<AuthUser>("/users/me", { method: "PATCH", body: JSON.stringify(input) });
   }
 }
