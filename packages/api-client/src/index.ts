@@ -194,6 +194,18 @@ export class DauVietApiClient {
     return this.request<T>(`/trips/${encodeURIComponent(id)}/estimates/latest`);
   }
 
+  listAccommodations<T = unknown>(query: { country?: string; region?: string; city?: string; destination?: string; type?: string; page?: number; pageSize?: number } = {}) { return this.request<T>("/accommodations", { query }); }
+  accommodation<T = unknown>(slug: string) { return this.request<T>(`/accommodations/${encodeURIComponent(slug)}`); }
+  accommodationOffers<T = unknown>(slug: string, query: { checkIn: string; checkOut: string; guests: number; rooms?: number; currency: string }) { return this.request<T>(`/accommodations/${encodeURIComponent(slug)}/offers`, { query }); }
+  listRestaurants<T = unknown>(query: { country?: string; region?: string; city?: string; cuisine?: string; page?: number; pageSize?: number } = {}) { return this.request<T>("/restaurants", { query }); }
+  restaurant<T = unknown>(slug: string) { return this.request<T>(`/restaurants/${encodeURIComponent(slug)}`); }
+  restaurantOperationalSnapshot<T = unknown>(slug: string) { return this.request<T>(`/restaurants/${encodeURIComponent(slug)}/operational-snapshot`); }
+  listActivities<T = unknown>(query: { country?: string; destination?: string; page?: number; pageSize?: number } = {}) { return this.request<T>("/activities", { query }); }
+  activity<T = unknown>(slug: string) { return this.request<T>(`/activities/${encodeURIComponent(slug)}`); }
+  activityOffers<T = unknown>(slug: string, query: { date: string; participants: number; currency: string }) { return this.request<T>(`/activities/${encodeURIComponent(slug)}/offers`, { query }); }
+  createAffiliateClick<T = unknown>(input: { providerCode: string; providerEntityReferenceId?: string; providerOfferId?: string; entityKind?: string; surface: string; placement?: string; tripId?: string; destinationId?: string; sessionId?: string }) { return this.request<T>("/affiliate/clicks", { method: "POST", body: JSON.stringify(input) }); }
+  affiliateRedirectUrl(token: string) { return `${this.options.baseUrl.replace(/\/$/, "")}/v1/affiliate/r/${encodeURIComponent(token)}`; }
+
   tripMembers<T = unknown>(id: string) {
     return this.request<T>(`/trips/${encodeURIComponent(id)}/members`);
   }
