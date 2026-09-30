@@ -1,0 +1,4 @@
+"use client";import {DauVietApiClient,type AuthUser} from "@dauviet/api-client";
+let token:string|undefined;export const adminApi=new DauVietApiClient({baseUrl:process.env.NEXT_PUBLIC_API_URL??"http://127.0.0.1:3000",platform:"web",getAccessToken:()=>token,onAccessToken:v=>{token=v},getCsrfToken:()=>typeof document==="undefined"?undefined:document.cookie.split("; ").find(v=>v.startsWith("dv_csrf="))?.split("=").slice(1).join("=")});
+export const ADMIN_ROLES=new Set(["ADMIN","EDITOR","HISTORIAN_REVIEWER","MODERATOR"]);
+export async function restoreAdmin():Promise<AuthUser|null>{try{await adminApi.refresh();const user=await adminApi.me();return (user.roles??[]).some(role=>ADMIN_ROLES.has(role))?user:null}catch{return null}}
