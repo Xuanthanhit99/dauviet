@@ -1,6 +1,6 @@
 # Frontend completion audit
 
-Status: in progress on `feat/frontend-production-completion`.
+Status: final audit complete on `feat/frontend-production-completion`; acceptance remains subject to CI on the current head.
 
 ## Locked surfaces preserved
 Home V5, Explore Map V3, Destination Detail V4, Place Detail V4, Story Explorer V4, Journey Detail V3, Country Detail V1 and Region Detail V2 remain compositionally unchanged except for targeted navigation fixes.
@@ -25,5 +25,5 @@ Home V5, Explore Map V3, Destination Detail V4, Place Detail V4, Story Explorer 
 ## Trust and data boundaries
 No backend changes were made. No fixture/provider data is promoted to canonical knowledge. No AI/local substitute media was added. G08 private locations and G09/G10 private/commercial data are not exposed by these public routes.
 
-## Remaining gate
-GitHub Consumer QA must pass on the final branch head before this pass can move out of Draft. Browser-level responsive/keyboard QA remains required before merge.
+## Final gate
+The PR is Ready for Review. Browser-level responsive/keyboard QA passed on the previously accepted head; the final diff review found and corrected pagination retry state loss. Merge requires Consumer QA to pass again on the current head containing that correction and its regression test.
