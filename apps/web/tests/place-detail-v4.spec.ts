@@ -31,10 +31,12 @@ test("Place V4 API error",async({page})=>{await mockPlace(page,{error:true});awa
 test("Place V4 keyboard focus and reduced motion",async({page})=>{await mockPlace(page);await page.emulateMedia({reducedMotion:"reduce"});await page.goto("/places/co-loa");const link=page.getByRole("link",{name:"Hiểu địa điểm"});await link.focus();await expect(link).toBeFocused();expect(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior)).toBe("auto");});
 
 
-test("Place V4 community cards do not link to a missing route and keep trust-zone disclosure", async ({ page }) => {
+test("Place V4 community cards link to the contracted public route and keep trust-zone disclosure", async ({ page }) => {
   await mockPlace(page,{community:[{ id: "community-1", slug: "ky-uc-cong-dong", type: "MEMORY", verificationState: "COMMUNITY_SUBMISSION", title: "Ký ức cộng đồng" }]});
   await page.goto("/places/co-loa");
   await expect(page.getByText("Ký ức cộng đồng", { exact: true })).toBeVisible();
   await expect(page.getByText("Nội dung cộng đồng · không phải tri thức đã xác minh.", { exact: true })).toBeVisible();
-  await expect(page.locator('a[href^="/community/"]')).toHaveCount(0);
+  const communityLink = page.locator('a[href^="/community/"]').first();
+  await expect(communityLink).toHaveCount(1);
+  await expect(communityLink).toHaveAttribute("href", "/community/ky-uc-cong-dong");
 });
