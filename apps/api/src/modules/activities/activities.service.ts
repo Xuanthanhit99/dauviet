@@ -204,6 +204,8 @@ export class ActivitiesService {
         if (offer.expiresAt && offer.expiresAt <= now) continue; // never present an expired offer as current
         results.push({
           providerCode: reference.provider.code,
+          providerReferenceId: reference.id,
+          providerOfferId: offer.id,
           date: dto.date,
           currency: offer.currency,
           amount: offer.amount.toString(),
