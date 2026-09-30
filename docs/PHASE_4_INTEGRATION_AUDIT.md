@@ -1,31 +1,22 @@
-# PHASE 4 — BOOK INTEGRATION AUDIT
+# PHASE 4 — BOOK FINAL AUDIT
 
-Status: **BLOCKED — P1 CONTRACT INTEGRATION GAP**
+Status: **CONDITIONAL — EXACT-CURRENT-HEAD CI REQUIRED**
 
-Phase 4 consumer work now has BOOK discovery plus Stay, Food and Activity detail/provider-data states. Current-head CI for the three surfaces is green.
+The G05 → G10 P1 integration gap is remediated in source.
 
-## P1 — G05 → G10 handoff has no trustworthy identifier
+## Gate
 
-The frozen G05 public offer responses expose provider code, commercial fields, freshness and attribution, but do **not** expose the provider offer id or provider-reference id.
+- Stay: PASS — contextual provider offers expose opaque server offer/reference ids.
+- Food: PASS — operational snapshots remain provider-scoped and expose the mapped opaque provider reference id.
+- Activities: PASS — contextual provider offers expose opaque server offer/reference ids.
+- Affiliate integrity: PASS IN SOURCE — G10 verifies offer/reference ownership against the declared provider before creating a click.
+- Fail closed: PASS IN SOURCE — no raw provider URL or fabricated identifier is accepted by the consumer flow.
+- Browser regression: ADDED — Stay server-id handoff + provider rejection, Food reference handoff, Activity empty-state/no fabricated CTA.
+- Backend regression: ADDED — forged offer/reference identifiers are rejected before an AffiliateClick is created.
+- CI: PENDING — must pass on the exact current head containing these remediations and regressions.
 
-G10 `POST /v1/affiliate/clicks` requires `providerOfferId` or `providerEntityReferenceId`. The consumer therefore has no server-issued identifier it can truthfully pass from a displayed G05 offer into G10.
+## Remaining acceptance rule
 
-The G10 fixture adapter accepts any non-empty identifier, but synthesizing an id from slug/index/provider code would violate the BOOK truth contract and would make attribution unrelated to the displayed provider record.
-
-### Consequence
-
-Affiliate handoff is intentionally **not wired** in the web UI yet. Phase 4 must not be marked COMPLETE while this gap exists.
-
-### Required remediation
-
-Resolve this as a backend cross-contract defect, not as a UI convenience change:
-
-1. G05 provider-backed public responses expose the opaque server identifier required for G10 handoff (offer id and/or provider-reference id).
-2. G10 validates that the supplied identifier belongs to the declared provider and expected entity family before creating the click.
-3. Preserve the existing G02 eligibility/policy gate, server-controlled redirect, attribution, expiry and fail-closed behavior.
-4. Add backend regression proving valid G05 → G10 handoff and rejection of forged/cross-provider identifiers.
-5. Only then wire the BOOK CTA and browser regression.
-
-No raw provider URL is accepted from the browser. No fabricated id is allowed.
+Phase 4 is not COMPLETE until exact-current-head Consumer QA succeeds. If CI exposes a P0/P1 regression, remediate and rerun before acceptance.
 
 PR #2 remains Draft. No merge and no production deployment.
