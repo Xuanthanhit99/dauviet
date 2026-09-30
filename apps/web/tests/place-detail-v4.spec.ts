@@ -29,3 +29,12 @@ test("Place V4 pillars and relationships",async({page})=>{await mockPlace(page);
 test("Place V4 explicit empty and locale fallback states",async({page})=>{await mockPlace(page,{place:{...place,meta:{requestedLocale:"en",resolvedLocale:"vi",fallbackApplied:true}},timeline:[],stories:[],journeys:[],sources:[],media:[],community:[]});await page.goto("/places/co-loa");await expect(page.getByText("Ngôn ngữ dự phòng: vi")).toBeVisible();await expect(page.getByText("Chưa có sự kiện đã xuất bản.")).toBeVisible();await expect(page.getByText("Chưa có media đã xuất bản.")).toBeVisible();await expect(page.getByText("Chưa có nguồn công khai được liên kết.")).toBeVisible();await expect(page.getByText("Chưa có câu chuyện cộng đồng đủ điều kiện hiển thị.")).toBeVisible();});
 test("Place V4 API error",async({page})=>{await mockPlace(page,{error:true});await page.goto("/places/khong-ton-tai");await expect(page.getByRole("heading",{name:"Không thể mở địa điểm"})).toBeVisible();await expect(page.getByText("Không tìm thấy địa điểm.")).toBeVisible();});
 test("Place V4 keyboard focus and reduced motion",async({page})=>{await mockPlace(page);await page.emulateMedia({reducedMotion:"reduce"});await page.goto("/places/co-loa");const link=page.getByRole("link",{name:"Hiểu địa điểm"});await link.focus();await expect(link).toBeFocused();expect(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior)).toBe("auto");});
+
+
+test("Place V4 community cards do not link to a missing route and keep trust-zone disclosure", async ({ page }) => {
+  await page.route("**/v1/places/ha-noi/community?**", route => route.fulfill({ json: { success: true, data: [{ id: "community-1", slug: "ky-uc-cong-dong", type: "MEMORY", verificationState: "COMMUNITY_SUBMISSION", title: "Ký ức cộng đồng" }] } }));
+  await page.goto("/places/ha-noi");
+  await expect(page.getByText("Ký ức cộng đồng", { exact: true })).toBeVisible();
+  await expect(page.getByText("Nội dung cộng đồng · không phải tri thức đã xác minh.", { exact: true })).toBeVisible();
+  await expect(page.locator('a[href^="/community/"]')).toHaveCount(0);
+});
