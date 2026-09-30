@@ -246,6 +246,20 @@ export class DauVietApiClient {
   adminIngestionJobs<T = unknown>() { return this.request<T>("/admin/ingestion/jobs"); }
   adminRunIngestionJob<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/jobs/${encodeURIComponent(id)}/run`, { method: "POST" }); }
   adminCancelIngestionRun<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/runs/${encodeURIComponent(id)}/cancel`, { method: "POST" }); }
+  adminSources<T = unknown>(query: { sourceType?: string; q?: string } = {}) { return this.request<T>("/sources", { query }); }
+  adminSource<T = unknown>(id: string) { return this.request<T>(`/sources/${encodeURIComponent(id)}`); }
+  adminArchiveSource<T = unknown>(id: string, reason?: string) { return this.request<T>(`/sources/${encodeURIComponent(id)}/archive`, { method: "PATCH", body: JSON.stringify({ reason }) }); }
+  adminVerifyCitation<T = unknown>(id: string) { return this.request<T>(`/citations/${encodeURIComponent(id)}/verify`, { method: "PATCH" }); }
+  adminDisputeCitation<T = unknown>(id: string) { return this.request<T>(`/citations/${encodeURIComponent(id)}/dispute`, { method: "PATCH" }); }
+  adminRejectCitation<T = unknown>(id: string, reason?: string) { return this.request<T>(`/citations/${encodeURIComponent(id)}/reject`, { method: "PATCH", body: JSON.stringify({ reason }) }); }
+  adminUpdateMediaRights<T = unknown>(id: string, input: unknown) { return this.request<T>(`/media/${encodeURIComponent(id)}/rights`, { method: "PATCH", body: JSON.stringify(input) }); }
+  adminQuarantineMedia<T = unknown>(id: string, input: unknown) { return this.request<T>(`/media/${encodeURIComponent(id)}/quarantine`, { method: "PATCH", body: JSON.stringify(input) }); }
+  adminModerationQueue<T = unknown>(query: { status?: string; targetType?: string; category?: string; from?: string; to?: string } = {}) { return this.request<T>("/admin/moderation/queue", { query }); }
+  adminModerationAction<T = unknown>(input: unknown) { return this.request<T>("/admin/moderation/actions", { method: "POST", body: JSON.stringify(input) }); }
+  adminAudit<T = unknown>(entityType?: string, entityId?: string) { return this.request<T>("/admin/audit", { query: { entityType, entityId } }); }
+  adminProviders<T = unknown>(page = 1, pageSize = 20, status?: string) { return this.request<T>("/admin/providers", { query: { page, pageSize, status } }); }
+  adminProvider<T = unknown>(id: string) { return this.request<T>(`/admin/providers/${encodeURIComponent(id)}`); }
+  adminSetProviderStatus<T = unknown>(id: string, status: string) { return this.request<T>(`/admin/providers/${encodeURIComponent(id)}/status`, { method: "PATCH", body: JSON.stringify({ status }) }); }
   adminAffiliateConversions<T = unknown>() { return this.request<T>("/admin/affiliate/conversions"); }
   adminAffiliateSummary<T = unknown>() { return this.request<T>("/admin/affiliate/summary"); }
 
