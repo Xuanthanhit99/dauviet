@@ -193,4 +193,28 @@ export class DauVietApiClient {
   latestTripEstimate<T = unknown>(id: string) {
     return this.request<T>(`/trips/${encodeURIComponent(id)}/estimates/latest`);
   }
+
+  tripMembers<T = unknown>(id: string) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/members`);
+  }
+
+  inviteTripMember<T = unknown>(id: string, email: string, role: "EDITOR" | "VIEWER") {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/invitations`, { method: "POST", body: JSON.stringify({ email, role }) });
+  }
+
+  tripInvitations<T = unknown>(id: string) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/invitations`);
+  }
+
+  updateTripMemberRole<T = unknown>(id: string, memberId: string, role: "EDITOR" | "VIEWER", expectedVersion: number) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/members/${encodeURIComponent(memberId)}`, { method: "PATCH", body: JSON.stringify({ role, expectedVersion }) });
+  }
+
+  removeTripMember<T = unknown>(id: string, memberId: string, expectedVersion: number) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/members/${encodeURIComponent(memberId)}`, { method: "DELETE", body: JSON.stringify({ expectedVersion }) });
+  }
+
+  tripActivity<T = unknown>(id: string, page = 1, pageSize = 20) {
+    return this.request<T>(`/trips/${encodeURIComponent(id)}/activity`, { query: { page, pageSize } });
+  }
 }
