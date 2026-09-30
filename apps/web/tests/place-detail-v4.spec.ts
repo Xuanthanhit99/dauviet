@@ -32,8 +32,8 @@ test("Place V4 keyboard focus and reduced motion",async({page})=>{await mockPlac
 
 
 test("Place V4 community cards do not link to a missing route and keep trust-zone disclosure", async ({ page }) => {
-  await page.route("**/v1/places/ha-noi/community?**", route => route.fulfill({ json: { success: true, data: [{ id: "community-1", slug: "ky-uc-cong-dong", type: "MEMORY", verificationState: "COMMUNITY_SUBMISSION", title: "Ký ức cộng đồng" }] } }));
-  await page.goto("/places/ha-noi");
+  await mockPlace(page,{community:[{ id: "community-1", slug: "ky-uc-cong-dong", type: "MEMORY", verificationState: "COMMUNITY_SUBMISSION", title: "Ký ức cộng đồng" }]});
+  await page.goto("/places/co-loa");
   await expect(page.getByText("Ký ức cộng đồng", { exact: true })).toBeVisible();
   await expect(page.getByText("Nội dung cộng đồng · không phải tri thức đã xác minh.", { exact: true })).toBeVisible();
   await expect(page.locator('a[href^="/community/"]')).toHaveCount(0);
