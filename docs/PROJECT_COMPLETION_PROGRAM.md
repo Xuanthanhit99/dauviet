@@ -29,7 +29,7 @@ Trust zones remain distinct: VERIFIED KNOWLEDGE / PROVIDER DATA / COMMUNITY CONT
 1. **Consumer foundation — COMPLETE** — shared API client, session/error primitives, web authenticated shell, mobile navigation/session foundation.
 2. **PLAN — COMPLETE** — Trip list/detail, itinerary, deterministic cost output, optimistic concurrency and role-aware collaboration. Final Consumer QA: `36725356192`.
 3. **TOGETHER — COMPLETE** — invitations/members/activity, explicit location sharing controls, expenses/balances/settlements. Final Consumer QA: `36734861258` on accepted head `dfe36c3c6374faa168ae9451f0fea8766a977124`.
-4. **BOOK** — G05 stay/food/activity surfaces and G10 affiliate handoff without invented availability/prices.
+4. **BOOK — IN PROGRESS** — G05 stay/food/activity surfaces and G10 affiliate handoff without invented availability/prices. Shared consumer contracts for canonical discovery, contextual provider reads and server-controlled affiliate handoff are now implemented; web surfaces/regression remain.
 5. **CONTRIBUTE / REMEMBER / SHARE** — bookmarks, community stories/comments, contribution workflow and personal journey continuity supported by frozen APIs.
 6. **Admin/CMS** — editorial publishing, trust/source/citation review, media provenance, moderation, ingestion/provider policy and audit.
 7. **Mobile parity** — core discovery/detail/trip/together/community flows with native accessibility and location permission semantics.
