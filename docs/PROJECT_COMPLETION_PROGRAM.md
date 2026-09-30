@@ -1,6 +1,6 @@
 # PROJECT COMPLETION PROGRAM
 
-Status: **PHASE 4 COMPLETE · PHASE 5 CONTRIBUTE / REMEMBER / SHARE IN PROGRESS — NOT FOR PRODUCTION**
+Status: **PHASE 5 COMPLETE · PHASE 6 ADMIN/CMS IN PROGRESS — NOT FOR PRODUCTION**
 
 Baseline: `main@74846c4ce0bd5fe5bd806278cac576a3f82b9df2`.
 The public web completion pass is accepted and green. This program finishes the remaining product surfaces before any real deployment.
@@ -30,8 +30,8 @@ Trust zones remain distinct: VERIFIED KNOWLEDGE / PROVIDER DATA / COMMUNITY CONT
 2. **PLAN — COMPLETE** — Trip list/detail, itinerary, deterministic cost output, optimistic concurrency and role-aware collaboration. Final Consumer QA: `36725356192`.
 3. **TOGETHER — COMPLETE** — invitations/members/activity, explicit location sharing controls, expenses/balances/settlements. Final Consumer QA: `36734861258` on accepted head `dfe36c3c6374faa168ae9451f0fea8766a977124`.
 4. **BOOK — COMPLETE** — G05 stay/food/activity surfaces, truthful provider states and G10 server-controlled affiliate handoff with forged/cross-provider identifier protection. Final Consumer QA: `36738812532` on accepted head `eab9560670ec7560435e44d7c8f5f64bd09c429c`.
-5. **CONTRIBUTE / REMEMBER / SHARE — IN PROGRESS** — bookmarks, community stories/comments, contribution workflow and personal journey continuity supported by frozen APIs.
-6. **Admin/CMS** — editorial publishing, trust/source/citation review, media provenance, moderation, ingestion/provider policy and audit.
+5. **CONTRIBUTE / REMEMBER / SHARE — COMPLETE** — bookmarks/Remember, community authoring + public detail/share, submitter-owned contribution/provenance workflow, trust/RBAC regression. Final Consumer QA: `36742005455` on accepted head `6cb1f4aa1c0ebe6928f47811de76e3f00586b682`; browser regression `136/136` passed.
+6. **Admin/CMS — IN PROGRESS** — editorial publishing, trust/source/citation review, media provenance, moderation, ingestion/provider policy and audit.
 7. **Mobile parity** — core discovery/detail/trip/together/community flows with native accessibility and location permission semantics.
 8. **Final system QA** — dead-link/contract sweep, VI/EN, responsive/native layouts, accessibility, auth/RBAC, failure/offline states, full consumer CI and final acceptance report.
 
