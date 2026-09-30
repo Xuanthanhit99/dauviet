@@ -206,6 +206,28 @@ export class DauVietApiClient {
   createAffiliateClick<T = unknown>(input: { providerCode: string; providerEntityReferenceId?: string; providerOfferId?: string; entityKind?: string; surface: string; placement?: string; tripId?: string; destinationId?: string; sessionId?: string }) { return this.request<T>("/affiliate/clicks", { method: "POST", body: JSON.stringify(input) }); }
   affiliateRedirectUrl(token: string) { return `${this.options.baseUrl.replace(/\/$/, "")}/v1/affiliate/r/${encodeURIComponent(token)}`; }
 
+
+  listBookmarks<T = unknown>(targetType?: string) { return this.request<T>("/bookmarks", { query: { targetType } }); }
+  addBookmark<T = unknown>(targetType: string, targetId: string) { return this.request<T>("/bookmarks", { method: "POST", body: JSON.stringify({ targetType, targetId }) }); }
+  removeBookmark<T = unknown>(targetType: string, targetId: string) { return this.request<T>("/bookmarks", { method: "DELETE", body: JSON.stringify({ targetType, targetId }) }); }
+
+  listCommunityStories<T = unknown>(query: { type?: string; placeId?: string; sort?: "NEW" | "HELPFUL"; cursor?: string; limit?: number } = {}) { return this.request<T>("/community/stories", { query }); }
+  communityStory<T = unknown>(slug: string) { return this.request<T>(`/community/stories/${encodeURIComponent(slug)}`); }
+  communityStoryComments<T = unknown>(slug: string, cursor?: string, limit?: number) { return this.request<T>(`/community/stories/${encodeURIComponent(slug)}/comments`, { query: { cursor, limit } }); }
+  myCommunityStories<T = unknown>() { return this.request<T>("/community/stories/mine"); }
+  createCommunityStory<T = unknown>(input: unknown) { return this.request<T>("/community/stories", { method: "POST", body: JSON.stringify(input) }); }
+  updateCommunityStory<T = unknown>(id: string, input: unknown) { return this.request<T>(`/community/stories/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  withdrawCommunityStory<T = unknown>(id: string) { return this.request<T>(`/community/stories/${encodeURIComponent(id)}`, { method: "DELETE" }); }
+  voteCommunityStory<T = unknown>(id: string) { return this.request<T>(`/community/stories/${encodeURIComponent(id)}/vote`, { method: "POST" }); }
+  unvoteCommunityStory<T = unknown>(id: string) { return this.request<T>(`/community/stories/${encodeURIComponent(id)}/vote`, { method: "DELETE" }); }
+
+  myContributions<T = unknown>() { return this.request<T>("/contributions/mine"); }
+  contribution<T = unknown>(id: string) { return this.request<T>(`/contributions/mine/${encodeURIComponent(id)}`); }
+  createContribution<T = unknown>(input: unknown) { return this.request<T>("/contributions", { method: "POST", body: JSON.stringify(input) }); }
+  updateContribution<T = unknown>(id: string, input: unknown) { return this.request<T>(`/contributions/mine/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  withdrawContribution<T = unknown>(id: string, reason?: string) { return this.request<T>(`/contributions/mine/${encodeURIComponent(id)}/withdraw`, { method: "POST", body: JSON.stringify({ reason }) }); }
+  addContributionProvenance<T = unknown>(id: string, input: unknown) { return this.request<T>(`/contributions/${encodeURIComponent(id)}/provenance-sources`, { method: "POST", body: JSON.stringify(input) }); }
+
   tripMembers<T = unknown>(id: string) {
     return this.request<T>(`/trips/${encodeURIComponent(id)}/members`);
   }
