@@ -1,0 +1,9 @@
+"use client";
+import {useEffect,useState} from "react";
+import {useParams} from "next/navigation";
+import {webApi} from "../../../auth/session";
+type Detail={slug:string;translation?:{name?:string;summary?:string};cuisines?:Array<{name:string}>};
+type Snap={providerCode:string;address?:string|null;providerRating?:string|null;providerRatingCount?:number|null;temporaryClosure?:boolean;permanentlyClosed?:boolean;attribution?:{displayText?:string|null}};
+export default function Food(){const {slug}=useParams<{slug:string}>();const [d,setD]=useState<Detail>();const [snaps,setSnaps]=useState<Snap[]>([]);const [status,setStatus]=useState("Đang tải nhà hàng…");
+useEffect(()=>{Promise.all([webApi.restaurant<Detail>(slug),webApi.restaurantOperationalSnapshot<{snapshots:Snap[]}>(slug)]).then(([x,s])=>{setD(x);setSnaps(s.snapshots);setStatus(s.snapshots.length?"":"Hiện chưa có dữ liệu vận hành nhà cung cấp còn hiệu lực.")}).catch(()=>setStatus("Không thể tải dữ liệu nhà hàng lúc này. Không có dữ liệu thay thế được dựng giả."))},[slug]);
+return <main id="main" className="auth-shell"><section className="auth-card"><div className="eyebrow">BOOK · FOOD</div><h1>{d?.translation?.name??slug}</h1>{d?.translation?.summary&&<p>{d.translation.summary}</p>}{d?.cuisines?.length?<p>Ẩm thực: {d.cuisines.map(x=>x.name).join(", ")}</p>:null}<p role="status">{status}</p>{snaps.map((s,i)=><article key={i}><h2>{s.providerCode}</h2>{s.permanentlyClosed?<p>Nhà cung cấp báo đã đóng cửa.</p>:s.temporaryClosure?<p>Nhà cung cấp báo tạm đóng cửa.</p>:null}{s.address&&<p>{s.address}</p>}{s.providerRating!=null&&<p>Đánh giá từ {s.providerCode}: {String(s.providerRating)}{s.providerRatingCount!=null?" · "+s.providerRatingCount+" lượt":""}</p>}{s.attribution?.displayText&&<p>{s.attribution.displayText}</p>}<p>Dữ liệu vận hành theo từng nhà cung cấp, không gộp rating.</p></article>)}</section></main>}
