@@ -1,1 +1,1 @@
-export default function AdminHome(){return <main><h1>Dấu Việt Admin</h1><p>Editorial, provenance, moderation and audit workspace.</p></main>}
+"use client";import {AdminGate} from "./admin-gate";import {adminApi} from "./admin-session";export default function AdminHome(){return <main><AdminGate><h1>Dấu Việt Admin</h1><p>Editorial, provenance, moderation and audit workspace.</p><button onClick={async()=>{await adminApi.logout();location.assign("/login")}}>Đăng xuất</button></AdminGate></main>}
