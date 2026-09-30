@@ -1,6 +1,6 @@
 # PHASE 4 — BOOK FINAL AUDIT
 
-Status: **CONDITIONAL — EXACT-CURRENT-HEAD CI REQUIRED**
+Status: **COMPLETE — FINAL CI PASS**
 
 The G05 → G10 P1 integration gap is remediated in source.
 
@@ -13,10 +13,10 @@ The G05 → G10 P1 integration gap is remediated in source.
 - Fail closed: PASS IN SOURCE — no raw provider URL or fabricated identifier is accepted by the consumer flow.
 - Browser regression: ADDED — Stay server-id handoff + provider rejection, Food reference handoff, Activity empty-state/no fabricated CTA.
 - Backend regression: ADDED — forged offer/reference identifiers are rejected before an AffiliateClick is created.
-- CI: PENDING — must pass on the exact current head containing these remediations and regressions.
+- CI: PASS — Consumer QA `36738812532` succeeded on accepted head `eab9560670ec7560435e44d7c8f5f64bd09c429c`.
 
-## Remaining acceptance rule
+## Acceptance
 
-Phase 4 is not COMPLETE until exact-current-head Consumer QA succeeds. If CI exposes a P0/P1 regression, remediate and rerun before acceptance.
+Phase 4 is COMPLETE. Stay/Food/Activities, truthful provider states, G05 → G10 handoff integrity, forged-id rejection and browser regression are accepted on the recorded green head.
 
 PR #2 remains Draft. No merge and no production deployment.
