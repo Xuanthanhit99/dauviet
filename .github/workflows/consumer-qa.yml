@@ -58,4 +58,13 @@ jobs:
         run: pnpm --filter @dauviet/web exec playwright test
       - run: pnpm --filter @dauviet/admin typecheck
       - run: pnpm --filter @dauviet/admin build
+      - name: Start Admin for browser RBAC QA
+        run: pnpm --filter @dauviet/admin start --hostname 127.0.0.1 --port 3003 > /tmp/dauviet-admin.log 2>&1 &
+      - name: Wait for Admin
+        run: |
+          for i in {1..30}; do curl -fsS http://127.0.0.1:3003/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/dauviet-admin.log
+          exit 1
+      - name: Admin browser RBAC QA
+        run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts
       - run: pnpm --filter @dauviet/mobile typecheck
