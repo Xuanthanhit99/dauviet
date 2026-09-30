@@ -191,7 +191,7 @@ export class TripsService {
       include: {
         destinations: {
           orderBy: { sortOrder: 'asc' },
-          include: { destination: { select: { id: true, canonicalSlug: true, name: true } } },
+          include: { destination: { select: { id: true, canonicalSlug: true } } },
         },
         days: {
           orderBy: { date: 'asc' },
