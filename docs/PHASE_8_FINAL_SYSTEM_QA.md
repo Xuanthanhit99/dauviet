@@ -27,7 +27,7 @@ Phase 8 is the final cross-surface acceptance pass after Phases 1–7. It does n
 | Gate | State |
 | --- | --- |
 | Dead-link / route / contract sweep | PASS — route trees verified; native BOOK entry point repaired; API client remains canonical /v1 contract boundary |
-| VI/EN | IN PROGRESS — Admin Vietnamese UI leakage corrected; public Web locale/fallback audit continues |
+| VI/EN | IN PROGRESS — Admin Vietnamese UI leakage corrected; public Web locale propagation repaired on Destination/Place/Story; Mobile trust-label leakage corrected; exact-head QA pending |
 | Responsive / native layout | PENDING |
 | Accessibility | PENDING |
 | Auth / RBAC | PENDING |
@@ -38,3 +38,5 @@ Phase 8 is the final cross-surface acceptance pass after Phases 1–7. It does n
 ## Non-negotiable
 
 PR #2 remains Draft. No merge and no production deployment until the entire completion program and Phase 8 acceptance are complete. No fake provider availability, booking success, price, historical fact, translation, provenance, media or location data.
+
+- Gate 2 locale audit found Destination, Place and Story detail routes accepted no locale and hard-coded backend requests to `locale=vi`; route search params now propagate the requested `vi|en` locale into API reads. Backend-owned fallback metadata remains authoritative; the UI does not synthesize missing translations.
