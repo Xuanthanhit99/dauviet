@@ -39,7 +39,7 @@ export class MailerService {
    */
   async sendTripInvitation(to: string, token: string, tripTitle: string) {
     const appUrl = this.config.get('appUrl', { infer: true });
-    const link = `${appUrl}/trip-invitations/accept?token=${token}`;
+    // Keep the bearer secret out of HTTP request URLs, access logs and referrers. The web client reads the fragment locally and submits the token in the authenticated POST body.\n    const link = `${appUrl}/trip-invitations/accept#token=${token}`;
     const escapedTitle = tripTitle.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     await this.send(
       to,

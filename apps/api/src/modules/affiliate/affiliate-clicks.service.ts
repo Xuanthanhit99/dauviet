@@ -69,6 +69,25 @@ export class AffiliateClicksService {
       throw new ForbiddenException({ code: gate.code, message: gate.message });
     }
 
+    // Cross-contract G05 -> G10 integrity: a browser may only hand back an opaque
+    // identifier that actually belongs to this provider. Never trust an arbitrary
+    // offer/reference id merely because it is a non-empty string.
+    if (dto.providerOfferId) {
+      const [stayOffer, activityOffer] = await Promise.all([
+        this.prisma.accommodationOffer.findFirst({ where: { id: dto.providerOfferId, providerReference: { providerId: gate.context.providerId } }, select: { id: true } }),
+        this.prisma.activityOffer.findFirst({ where: { id: dto.providerOfferId, providerReference: { providerId: gate.context.providerId } }, select: { id: true } }),
+      ]);
+      if (!stayOffer && !activityOffer) throw new BadRequestException({ code: AFFILIATE_ERROR_CODES.AFFILIATE_PROVIDER_ENTITY_REQUIRED, message: 'Provider offer does not belong to the declared provider.' });
+    }
+    if (dto.providerEntityReferenceId) {
+      const [stayRef, restaurantRef, activityRef] = await Promise.all([
+        this.prisma.providerAccommodationReference.findFirst({ where: { id: dto.providerEntityReferenceId, providerId: gate.context.providerId }, select: { id: true } }),
+        this.prisma.providerRestaurantReference.findFirst({ where: { id: dto.providerEntityReferenceId, providerId: gate.context.providerId }, select: { id: true } }),
+        this.prisma.providerActivityReference.findFirst({ where: { id: dto.providerEntityReferenceId, providerId: gate.context.providerId }, select: { id: true } }),
+      ]);
+      if (!stayRef && !restaurantRef && !activityRef) throw new BadRequestException({ code: AFFILIATE_ERROR_CODES.AFFILIATE_PROVIDER_ENTITY_REQUIRED, message: 'Provider reference does not belong to the declared provider.' });
+    }
+
     const adapter = this.adapters.get(dto.providerCode);
     const session = await this.resolveOrCreateSession(gate.context.providerId, userId, dto);
 

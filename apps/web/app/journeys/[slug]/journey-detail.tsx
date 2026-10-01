@@ -29,7 +29,7 @@ export function hasCoordinates(stop: JourneyStop): boolean {
 }
 export function stopName(stop: JourneyStop) { return stop.stopTitle || stop.place.name || stop.place.slug; }
 
-export default function JourneyDetail({ slug }: { slug: string }) {
+export default function JourneyDetail({ slug, locale }: { slug: string; locale: "vi" | "en" }) {
   const [data, setData] = useState<Journey | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -38,7 +38,7 @@ export default function JourneyDetail({ slug }: { slug: string }) {
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(""); setData(null); setSelected(null);
-    fetch(`${API}/v1/journeys/${encodeURIComponent(slug)}?locale=vi`, { credentials: "include", signal: controller.signal })
+    fetch(`${API}/v1/journeys/${encodeURIComponent(slug)}?locale=${locale}`, { credentials: "include", signal: controller.signal })
       .then(async response => {
         const payload = await response.json();
         if (!response.ok) throw new Error(payload?.error?.message ?? "Không thể tải hành trình.");
@@ -48,7 +48,7 @@ export default function JourneyDetail({ slug }: { slug: string }) {
       .catch(reason => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Không thể tải hành trình."); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [slug, attempt]);
+  }, [slug, locale, attempt]);
   const stops = useMemo(() => [...(data?.stops ?? [])].sort((a, b) => a.order - b.order), [data]);
   const selectFromMap = useCallback((id: string) => {
     setSelected(id);

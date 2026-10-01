@@ -54,8 +54,51 @@ jobs:
           curl -fsS http://127.0.0.1:3001/map >/dev/null
       - name: Install Chromium for browser QA
         run: pnpm --filter @dauviet/web exec playwright install --with-deps chromium
-      - name: Explore Map V3 browser QA
+      - name: Web browser QA
         run: pnpm --filter @dauviet/web exec playwright test
+      - name: Web responsive viewport gate (375 / 768 / 1440)
+        run: pnpm --filter @dauviet/web exec playwright test tests/responsive-gate.spec.ts
+      - name: Web accessibility gate
+        run: pnpm --filter @dauviet/web exec playwright test tests/accessibility.spec.ts
+      - name: Web auth/session and ownership RBAC gate
+        run: pnpm --filter @dauviet/web exec playwright test tests/auth-foundation.spec.ts tests/trip-together.spec.ts
+      - name: Web failure retry and fail-closed gate
+        run: pnpm --filter @dauviet/web exec playwright test tests/book-phase4.spec.ts tests/journey-detail-v3.spec.ts tests/phase5-community.spec.ts
       - run: pnpm --filter @dauviet/admin typecheck
       - run: pnpm --filter @dauviet/admin build
+      - name: Start Admin for browser RBAC QA
+        run: pnpm --filter @dauviet/admin start --hostname 127.0.0.1 --port 3003 > /tmp/dauviet-admin.log 2>&1 &
+      - name: Wait for Admin
+        run: |
+          for i in {1..30}; do curl -fsS http://127.0.0.1:3003/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/dauviet-admin.log
+          exit 1
+      - name: Admin browser RBAC QA
+        run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts
+      - name: Admin responsive viewport gate (375 / 768 / 1440)
+        run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts ../admin/tests/responsive.spec.ts
+      - name: Admin accessibility gate
+        run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts ../admin/tests/accessibility.spec.ts
+      - name: Admin explicit RBAC boundary gate
+        run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts ../admin/tests/rbac.spec.ts
       - run: pnpm --filter @dauviet/mobile typecheck
+      - name: Mobile native layout regression gate
+        run: pnpm --filter @dauviet/mobile exec tsx src/qa/layout-regression.ts
+        env:
+          DAUViet_MOBILE_LAYOUT_QA: "1"
+      - name: Mobile accessibility regression gate
+        run: pnpm --filter @dauviet/mobile exec tsx src/qa/accessibility-regression.ts
+        env:
+          DAUViet_MOBILE_ACCESSIBILITY_QA: "1"
+      - name: Mobile auth/session fail-closed gate
+        run: pnpm --filter @dauviet/mobile exec tsx src/qa/auth-session-regression.ts
+        env:
+          DAUViet_MOBILE_AUTH_QA: "1"
+      - name: Mobile failure/offline and fail-closed gate
+        run: pnpm --filter @dauviet/mobile exec tsx src/qa/failure-offline-regression.ts
+        env:
+          DAUViet_MOBILE_FAILURE_QA: "1"
+      - name: Mobile Phase 7 regression QA
+        run: pnpm --filter @dauviet/mobile exec tsx src/qa/phase7-regression.ts
+        env:
+          DAUViet_PHASE7_QA: "1"

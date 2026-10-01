@@ -32,7 +32,7 @@ async function readJson<T>(path: string, signal: AbortSignal): Promise<T> {
   return (payload?.data ?? payload) as T;
 }
 
-export default function CountryDetail({ slug }: { slug: string }) {
+export default function CountryDetail({ slug, locale }: { slug: string; locale: "vi" | "en" }) {
   const [country, setCountry] = useState<Country | null>(null);
   const [regions, setRegions] = useState<PageList<Region>>(emptyList);
   const [cities, setCities] = useState<PageList<City>>(emptyList);
@@ -44,14 +44,14 @@ export default function CountryDetail({ slug }: { slug: string }) {
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(""); setCountry(null); setRegions(emptyList()); setCities(emptyList()); setDestinations(emptyList());
-    const countryPath = `/v1/countries/${encodeURIComponent(slug)}?locale=vi`;
+    const countryPath = `/v1/countries/${encodeURIComponent(slug)}?locale=${locale}`;
     readJson<Country>(countryPath, controller.signal)
       .then(async value => {
         const base = `/v1/countries/${encodeURIComponent(value.slug || slug)}`;
         const [regionData, cityData, destinationData] = await Promise.all([
-          readJson<PageList<Region>>(`${base}/regions?locale=vi&page=1&pageSize=24`, controller.signal).catch(() => emptyList<Region>()),
-          readJson<PageList<City>>(`${base}/cities?locale=vi&page=1&pageSize=18`, controller.signal).catch(() => emptyList<City>()),
-          readJson<PageList<Destination>>(`${base}/destinations?locale=vi&page=1&pageSize=12`, controller.signal).catch(() => emptyList<Destination>()),
+          readJson<PageList<Region>>(`${base}/regions?locale=${locale}&page=1&pageSize=24`, controller.signal).catch(() => emptyList<Region>()),
+          readJson<PageList<City>>(`${base}/cities?locale=${locale}&page=1&pageSize=18`, controller.signal).catch(() => emptyList<City>()),
+          readJson<PageList<Destination>>(`${base}/destinations?locale=${locale}&page=1&pageSize=12`, controller.signal).catch(() => emptyList<Destination>()),
         ]);
         if (!controller.signal.aborted) {
           setCountry(value);
@@ -63,7 +63,7 @@ export default function CountryDetail({ slug }: { slug: string }) {
       .catch(reason => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Khong the tai du lieu quoc gia."); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [slug, attempt]);
+  }, [slug, locale, attempt]);
 
   const title = country?.translation?.name || country?.slug || slug;
   const description = country?.translation?.description || country?.translation?.shortDescription || "";

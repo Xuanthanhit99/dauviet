@@ -181,8 +181,25 @@ export class TripsService {
   }
 
   /** Detail remains readable once archived (spec correction) - viewing history is exactly the use case archiving exists for. Owner and any accepted member (VIEW_TRIP) may read it. */
-  async findOwned(tripId: string, userId: string): Promise<Trip> {
-    return this.getOwnedOrThrow(tripId, userId, TripCapability.VIEW_TRIP);
+  async findOwned(tripId: string, userId: string) {
+    await this.getOwnedOrThrow(tripId, userId, TripCapability.VIEW_TRIP);
+    // Phase 2 consumer contract: the planning detail must be usable from one
+    // authorized read. This is additive to the existing Trip fields and does
+    // not change mutation/authorization semantics.
+    return this.prisma.trip.findUniqueOrThrow({
+      where: { id: tripId },
+      include: {
+        destinations: {
+          orderBy: { sortOrder: 'asc' },
+          include: { destination: { select: { id: true, canonicalSlug: true } } },
+        },
+        days: {
+          orderBy: { date: 'asc' },
+          include: { items: { orderBy: { sortOrder: 'asc' } } },
+        },
+        transportLegs: { orderBy: { sortOrder: 'asc' } },
+      },
+    });
   }
 
   async update(tripId: string, userId: string, dto: UpdateTripDto): Promise<Trip> {

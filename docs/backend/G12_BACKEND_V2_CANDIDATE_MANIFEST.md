@@ -92,6 +92,14 @@ Everything else is optional or provider-specific: `G12_ENVIRONMENT_MATRIX.md`.
 
 No BREAKING change for a client that sends valid requests.
 
+### Post-freeze additive security remediation used by Consumer Phase 3
+
+| Surface | Change | Class |
+|---|---|---|
+| Trip invitation email link | invitation bearer token moved from query string to URL fragment; the web client reads it locally and submits it in the existing authenticated POST body | INTENTIONAL_REMEDIATION (non-breaking; prevents bearer secret from entering HTTP request URLs/access logs/referrers) |
+
+The API contract is unchanged: acceptance/decline still require the token in the POST body. This remediation exists solely to align the mail link with that already-frozen contract and its documented token-handling rule. Consumer regression coverage verifies the explicit invitation flow; current-head Consumer QA is required before Phase 3 acceptance.
+
 ## 7. Acceptance evidence
 
 `G12_ACCEPTANCE_GATE_MANIFEST.md` (gate-by-gate), `G12_FINAL_REPORT.md`, `G12_PERFORMANCE_SECURITY_REPORT.md`,

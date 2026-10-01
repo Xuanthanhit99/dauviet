@@ -274,6 +274,7 @@ export class RestaurantsService {
       if (snapshot.expiresAt && snapshot.expiresAt <= now) continue; // never present a stale snapshot as current
       snapshots.push({
         providerCode: reference.provider.code,
+        providerReferenceId: reference.id,
         address: snapshot.address,
         phone: snapshot.phone,
         website: snapshot.website,

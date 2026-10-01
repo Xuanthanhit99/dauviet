@@ -183,6 +183,22 @@ describe('Affiliate & Commercial Attribution (G10) - e2e', () => {
       await followRedirect('not-a-real-token').expect(404);
     });
 
+    it('rejects a forged provider offer id before creating an affiliate click', async () => {
+      const { code } = await setupEligibleProvider();
+      const before = await prisma.affiliateClick.count({ where: { provider: { code } } });
+      const res = await createClick(null, { providerCode: code, providerOfferId: 'forged-offer-id', surface: 'DESTINATION_STAY' }).expect(400);
+      expect(res.body.error.code).toBe('AFFILIATE_PROVIDER_ENTITY_REQUIRED');
+      expect(await prisma.affiliateClick.count({ where: { provider: { code } } })).toBe(before);
+    });
+
+    it('rejects a forged provider reference id before creating an affiliate click', async () => {
+      const { code } = await setupEligibleProvider();
+      const before = await prisma.affiliateClick.count({ where: { provider: { code } } });
+      const res = await createClick(null, { providerCode: code, providerEntityReferenceId: 'forged-reference-id', entityKind: 'RESTAURANT', surface: 'DESTINATION_FOOD' }).expect(400);
+      expect(res.body.error.code).toBe('AFFILIATE_PROVIDER_ENTITY_REQUIRED');
+      expect(await prisma.affiliateClick.count({ where: { provider: { code } } })).toBe(before);
+    });
+
     it('the client cannot supply a raw URL or provider params - only canonical ids are accepted (spec section 10-12)', async () => {
       const { code } = await setupEligibleProvider();
       const res = await createClick(null, { providerCode: code, providerOfferId: 'offer-1', surface: 'DESTINATION_STAY', url: 'https://evil.example', label: 'attacker-controlled' } as any).expect(400);

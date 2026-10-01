@@ -1,0 +1,59 @@
+# PHASE 8 — FINAL SYSTEM QA
+
+Status: **COMPLETE — ACCEPTED — NOT FOR PRODUCTION**
+
+Phase 8 is the final cross-surface acceptance pass after Phases 1–7. It does not reopen frozen backend contracts for UI convenience and does not authorize deployment.
+
+## Gate order
+
+1. Dead-link / canonical route / API-contract sweep across Web, Admin and Mobile.
+2. VI/EN copy and locale-path audit; no fabricated translation fallback.
+3. Responsive Web/Admin and native safe-area/touch/layout audit.
+4. Accessibility semantics, keyboard/focus and reduced-motion audit.
+5. Auth/session/RBAC and ownership/role boundary regression.
+6. Failure/offline/retry/fail-closed audit for discovery, provider, location and contribution surfaces.
+7. Full exact-head Consumer QA and final acceptance evidence.
+
+## Initial findings
+
+- Phase 7 final exact-head Consumer QA 36828618986 (#244) on ffa56afefde6021d4376ea81e1d97c26c7451a8d is green.
+- Mobile home still contained stale Phase 7 implementation copy after Phase 7 completion; removed at Phase 8 start.
+- Route sweep found the native /book lifecycle surface had no App Shell entry point. Added a canonical BOOK header link while keeping the four-item bottom navigation focused on Explore / Trips / Remember / Community.
+- Location remains foreground permission only after explicit trip-scoped opt-in; no background location permission is introduced.
+- Provider/affiliate paths remain server-controlled and fail closed.
+- VI/EN audit found Admin operational/review surfaces mixing English prose into Vietnamese UI. User-facing labels/status prose were localized while preserving server-owned enum/role/contract identifiers (for example ADMIN, MODERATOR, HISTORIAN_REVIEWER, PROVIDER enum values).
+
+## Acceptance checklist
+
+| Gate | State |
+| --- | --- |
+| Dead-link / route / contract sweep | PASS — route trees verified; native BOOK entry point repaired; API client remains canonical /v1 contract boundary |
+| VI/EN | PASS — source audit completed; detail routes propagate requested VI/EN locale; backend fallback metadata remains authoritative; no client-side translation synthesis |
+| Responsive / native layout | PASS — Consumer QA #280 (run 36844557016) succeeded on implementation SHA 6e470c4fc2d2685999c78489fee59936f6d8fb9f; Web and Admin viewport gates passed at 375 / 768 / 1440; Mobile native layout regression and Phase 7 regression QA passed |
+| Accessibility | PASS — Consumer QA #287 (run 36847716923) succeeded on exact implementation SHA c845f13b9c97112e0abc91762ddccc105d78c2da; Web/Admin keyboard-focus and reduced-motion gates passed; Mobile native accessibility regression passed |
+| Auth / RBAC | PASS — Consumer QA #290 (run 36863034992) succeeded on exact implementation SHA 4e8f15a6b87d8570e6dc5e8633d3dfa2c9766b4d; Web auth/session + ownership RBAC, Admin explicit role boundaries and Mobile session fail-closed gates passed |
+| Failure / offline | PASS — Consumer QA #293 (run 36868407605) succeeded on exact implementation SHA 9da24c7b43e0fb4de47b41486bb2d400100725f5; Web retry/provider/community fail-closed and Mobile provider/discovery/location/trip/community failure regressions passed |
+| Full exact-head final CI | PASS — Consumer QA #294 (run 36869004291) succeeded on exact HEAD 3a774924b7ee403776597f09d99d3ffa295d6a5b with all Web/Admin/Mobile build, responsive, accessibility, Auth/RBAC, failure/fail-closed and Phase 7 regression steps green |
+| Final acceptance report | PASS — Consumer QA #295 (run 36874002700) succeeded on exact acceptance HEAD 0f434f9d3849e24a39fd838701ee41f49e4dd4fd; docs/PHASE_8_FINAL_ACCEPTANCE.md accepted |
+
+## Non-negotiable
+
+PR #2 remains Draft. No merge and no production deployment until the entire completion program and Phase 8 acceptance are complete. No fake provider availability, booking success, price, historical fact, translation, provenance, media or location data.
+
+- Gate 2 locale audit found Destination, Place and Story detail routes accepted no locale and hard-coded backend requests to `locale=vi`; route search params now propagate the requested `vi|en` locale into API reads. Backend-owned fallback metadata remains authoritative; the UI does not synthesize missing translations.
+
+- Gate 2 final source audit also found Country and Journey detail hard-coded to `locale=vi`; both now propagate `?locale=vi|en` into backend reads. Region, Event and Person already propagated locale correctly. No audited detail surface synthesizes missing backend translations; published-content fallback is represented by backend `meta.requestedLocale`, `resolvedLocale` and `fallbackApplied`.
+
+- Gate 3 source audit: Mobile AppShell used React Native core `SafeAreaView` despite `react-native-safe-area-context` being installed, and compact headers could compress BOOK/account actions. AppShell now uses safe-area-context edges, >=44px header actions, bounded/flexible header content, keyboard tap handling and touch-friendly bottom navigation. Admin previously had no responsive stylesheet; a shared responsive baseline now constrains content, forms, long values and mobile navigation. Web global media/form/long-token overflow guards were added without changing domain layouts.
+
+- Gate 3 exact-head evidence: Consumer QA #280 (run 36844557016) completed successfully on SHA `6e470c4fc2d2685999c78489fee59936f6d8fb9f`. The run explicitly passed Web responsive viewport QA at 375/768/1440, Admin responsive viewport QA at 375/768/1440, Mobile native layout regression, Mobile Phase 7 regression QA, and the associated Web/Admin/Mobile typecheck/build/browser checks.
+
+- Gate 4 exact-head evidence: Consumer QA #287 (run 36847716923) completed successfully on SHA `c845f13b9c97112e0abc91762ddccc105d78c2da`. The run explicitly passed Web accessibility QA, Admin accessibility QA, Mobile native accessibility regression, Web/Admin responsive gates, Admin browser RBAC QA, Mobile native layout regression and Mobile Phase 7 regression QA. Gate 4 therefore passes without changing the Phase 8 overall status or authorizing merge/deployment.
+
+- Gate 5 exact-head evidence: Consumer QA #290 (run 36863034992) completed successfully on SHA `4e8f15a6b87d8570e6dc5e8633d3dfa2c9766b4d`. The run explicitly passed Web auth/session and ownership RBAC, Admin explicit RBAC boundary, Mobile auth/session fail-closed, and all prerequisite build/typecheck/responsive/accessibility regression gates. Gate 5 therefore passes without authorizing merge or production deployment.
+
+- Gate 6 exact-head evidence: Consumer QA #293 (run 36868407605) completed successfully on SHA `9da24c7b43e0fb4de47b41486bb2d400100725f5`. Web failure/retry/fail-closed and Mobile failure/offline/fail-closed gates passed together with all prerequisite consumer QA. Gate 6 therefore passes. Gate 7 remains the final exact-head acceptance gate; PR #2 remains Draft and no merge or production deployment is authorized.
+
+- Gate 7 pre-acceptance evidence: Consumer QA #294 (run 36869004291) completed successfully on exact HEAD `3a774924b7ee403776597f09d99d3ffa295d6a5b`. Full exact-head final CI is PASS. The final acceptance report is prepared separately, but Phase 8 remains IN PROGRESS until Consumer QA succeeds again on the acceptance documentation commit itself.
+
+- Gate 7 final acceptance evidence: Consumer QA #295 (run 36874002700) completed successfully on exact acceptance HEAD `0f434f9d3849e24a39fd838701ee41f49e4dd4fd`. Every Web, Admin and Mobile step completed successfully, including build/typecheck, browser QA, responsive, accessibility, Auth/RBAC, failure/offline/fail-closed and Phase 7 regression. Gate 7 is PASS and Phase 8 is COMPLETE. This completion does not authorize merge or production deployment; PR #2 remains Draft pending a separate explicit decision.

@@ -1,6 +1,7 @@
 import PlaceDetail from "./place-detail";
 
-export default async function PlacePage({params}:{params:Promise<{slug:string}>}) {
-  const {slug}=await params;
-  return <PlaceDetail slug={slug}/>;
+export default async function PlacePage({params,searchParams}:{params:Promise<{slug:string}>;searchParams:Promise<{locale?:string}>}) {
+  const [{slug},query]=await Promise.all([params,searchParams]);
+  const locale=query.locale==="en"?"en":"vi";
+  return <PlaceDetail key={`${slug}-${locale}`} slug={slug} locale={locale}/>;
 }
