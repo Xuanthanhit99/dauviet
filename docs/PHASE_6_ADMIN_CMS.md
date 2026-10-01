@@ -1,27 +1,42 @@
-# PHASE 6 — ADMIN / CMS IMPLEMENTATION BASELINE
+# PHASE 6 — ADMIN / CMS FINAL AUDIT
 
-Status: **IN PROGRESS — DRAFT ONLY — NOT FOR PRODUCTION**
+Status: **COMPLETE — FINAL CI PASS — DRAFT ONLY — NOT FOR PRODUCTION**
 
-Phase 6 turns the existing role-gated backend administration contracts into truthful operational workspaces. It does not relax backend RBAC and does not promote community/contributor claims into verified knowledge on the client.
+Accepted head: `c9fadff75c08c5eb94d7c50d67f15b122ad5c56e`  
+Final Consumer QA: `36744962774` — **SUCCESS**
 
-## Existing surface and contract inventory
+## Accepted implementation
 
-- Admin app already has session restoration and an allow-list gate for ADMIN, EDITOR, HISTORIAN_REVIEWER and MODERATOR.
-- Contributions admin: EDITOR/HISTORIAN_REVIEWER/ADMIN queue/detail/review; cataloguing promotion is restricted to HISTORIAN_REVIEWER/ADMIN.
-- Ingestion administration: ADMIN-only source, policy, evidence, job, run and cancellation contracts.
-- Existing backend admin controllers also cover stories/editorial, journeys, search and affiliate operations.
+- Role-aware Admin shell for ADMIN, EDITOR, HISTORIAN_REVIEWER and MODERATOR without client-side privilege elevation.
+- Contribution review queue/detail with server-owned status and optimistic-concurrency `expectedVersion` for review, rights, provenance-confidence and sensitivity actions.
+- Cataloguing remains restricted to HISTORIAN_REVIEWER/ADMIN.
+- Editorial/trust/source/citation workspace preserves the distinction between submitted evidence and canonical verified knowledge.
+- Media governance exposes server-owned provenance/rights/access/AI-disclosure data; quarantine remains MODERATOR/ADMIN.
+- Moderation workspace follows backend MODERATOR/ADMIN boundary.
+- Ingestion/provider operations remain ADMIN-only and external integrations remain fail-closed when credentials/approval are absent.
+- Audit/commercial operations do not fabricate booking, conversion, commission, provider availability or trust outcomes.
 
-## Implementation sequence
+## Final regression evidence
 
-1. Admin shell/navigation and role-aware workspace visibility.
-2. Contribution review queue/detail with server-owned status, rights, provenance-confidence and sensitivity actions.
-3. Editorial publishing/trust/source/citation workflows only where frozen admin contracts exist.
-4. Media provenance and moderation surfaces with exact backend role gates.
-5. Ingestion/provider policy and job operations; external integrations remain fail-closed.
-6. Audit/operational states, loading/error/empty/success, destructive-action confirmation and RBAC failure states.
-7. Admin browser regression + exact-current-head Consumer QA.
-8. Phase 6 final audit.
+Exact-head Consumer QA `36744962774` passed on `c9fadff75c08c5eb94d7c50d67f15b122ad5c56e`.
 
-## Non-negotiable
+- Web typecheck/build: PASS.
+- Web browser regression: **135/135 PASS**.
+- Admin typecheck/build/start: PASS.
+- Admin browser RBAC regression: **6/6 PASS**.
+- Mobile typecheck: PASS.
+- Combined browser gates: **141/141 PASS**.
 
-No client-side privilege elevation. No fabricated verification, provenance, moderation outcome, provider availability, historical claim, translation or media. Cataloguing actions must respect HISTORIAN_REVIEWER/ADMIN restrictions; ingestion remains ADMIN-only. No production deployment. PR #2 remains Draft.
+Admin browser coverage explicitly verifies EDITOR, HISTORIAN_REVIEWER, MODERATOR, ADMIN, non-admin rejection, and the provenance/cataloguing trust boundary.
+
+## Trust / RBAC audit
+
+The client never promotes contributor claims into canonical Source/Historical Fact by itself. Verification, catalogue promotion, moderation, media quarantine and ingestion remain governed by backend roles and server state. Community/submitted provenance is presented as evidence input, not as verified historical truth.
+
+No automatic privilege elevation, fabricated verification/provenance/moderation result, fake provider state, historical claim, translation or media was introduced.
+
+## Final decision
+
+**PHASE 6 COMPLETE.** Phase 7 Mobile Parity may proceed on the same branch.
+
+PR #2 remains Draft. Do not merge and do not deploy to production until the Project Completion Program reaches its final acceptance gate.
