@@ -72,6 +72,10 @@ jobs:
       - name: Admin responsive viewport gate (375 / 768 / 1440)
         run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts ../admin/tests/responsive.spec.ts
       - run: pnpm --filter @dauviet/mobile typecheck
+      - name: Mobile native layout regression gate
+        run: pnpm --filter @dauviet/mobile exec tsx src/qa/layout-regression.ts
+        env:
+          DAUViet_MOBILE_LAYOUT_QA: "1"
       - name: Mobile Phase 7 regression QA
         run: pnpm --filter @dauviet/mobile exec tsx src/qa/phase7-regression.ts
         env:
