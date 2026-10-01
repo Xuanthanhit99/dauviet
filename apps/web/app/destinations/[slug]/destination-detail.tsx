@@ -15,9 +15,9 @@ type Destination={
 const API=(process.env.NEXT_PUBLIC_API_URL??"http://localhost:3000").replace(/\/$/,"");
 const label=(x:Item)=>x.name??x.title??x.slug;
 
-export default function DestinationDetail({slug}:{slug:string}){
+export default function DestinationDetail({slug,locale}:{slug:string;locale:"vi"|"en"}){
  const [data,setData]=useState<Destination|null>(null);const [error,setError]=useState("");const [loading,setLoading]=useState(true);
- useEffect(()=>{const c=new AbortController();setLoading(true);fetch(`${API}/v1/destinations/${encodeURIComponent(slug)}?locale=vi`,{signal:c.signal,credentials:"include"}).then(async r=>{const p=await r.json();if(!r.ok)throw new Error(p?.error?.message??"Không thể tải điểm đến.");return p?.data??p}).then(setData).catch(e=>{if(!c.signal.aborted)setError(e instanceof Error?e.message:"Không thể tải điểm đến.")}).finally(()=>{if(!c.signal.aborted)setLoading(false)});return()=>c.abort()},[slug]);
+ useEffect(()=>{const c=new AbortController();setLoading(true);fetch(`${API}/v1/destinations/${encodeURIComponent(slug)}?locale=${locale}`,{signal:c.signal,credentials:"include"}).then(async r=>{const p=await r.json();if(!r.ok)throw new Error(p?.error?.message??"Không thể tải điểm đến.");return p?.data??p}).then(setData).catch(e=>{if(!c.signal.aborted)setError(e instanceof Error?e.message:"Không thể tải điểm đến.")}).finally(()=>{if(!c.signal.aborted)setLoading(false)});return()=>c.abort()},[slug,locale]);
  if(loading)return <main id="main" className="destination-state" aria-live="polite"><p>Đang tải điểm đến…</p></main>;
  if(error||!data)return <main id="main" className="destination-state"><div className="eyebrow">Destination</div><h1>Không thể mở điểm đến</h1><p>{error||"Không tìm thấy dữ liệu đã xuất bản."}</p><a className="button button-gold" href="/explore">Quay lại khám phá</a></main>;
  const t=data.translation??{};
