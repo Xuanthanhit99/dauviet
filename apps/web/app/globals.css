@@ -165,3 +165,8 @@ a.country-entity{min-height:112px}
 .auth-shell{min-height:calc(100vh - 2rem);display:grid;place-items:center;padding:clamp(1.25rem,5vw,4rem);background:var(--dv-color-warm-sand,#EADDC7)}
 .auth-card{width:min(100%,34rem);background:#fff;border:1px solid rgba(6,42,36,.14);border-radius:1rem;padding:clamp(1.25rem,4vw,2.5rem);box-shadow:0 1rem 3rem rgba(6,42,36,.08)}
 .auth-card h1{margin:.35rem 0 1rem}.auth-form{display:grid;gap:1rem;margin:1.5rem 0}.auth-form label{display:grid;gap:.45rem;font-weight:650}.auth-form input{min-height:48px;border:1px solid #B6B6B6;border-radius:.6rem;padding:.7rem .8rem;font:inherit}.auth-form input:focus-visible{outline:3px solid #D4AF7C;outline-offset:2px}.auth-form [role="alert"]{margin:0;color:#7a1f1f}.auth-form [role="status"]{margin:0;color:#18463C}
+
+/* Phase 8 Gate 4 — global keyboard focus and reduced-motion baseline. */
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--dv-forest-700);outline-offset:3px}
+.hero :where(a,button,input,select,textarea,[tabindex]):focus-visible,.trust-band :where(a,button,input,select,textarea,[tabindex]):focus-visible{outline-color:var(--dv-gold-500)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
