@@ -153,6 +153,18 @@ export class DauVietApiClient {
     return this.request<AuthUser>("/users/me", { method: "PATCH", body: JSON.stringify(input) });
   }
 
+  search<T = unknown>(query: { q: string; types?: string; country?: string; region?: string; city?: string; limit?: number; cursor?: string }) { return this.request<T>("/search", { query }); }
+  listDestinations<T = unknown>(query: { country?: string; region?: string; city?: string; type?: string; theme?: string; page?: number; pageSize?: number } = {}) { return this.request<T>("/destinations", { query }); }
+  destination<T = unknown>(slug: string) { return this.request<T>(`/destinations/${encodeURIComponent(slug)}`); }
+  destinationRelated<T = unknown>(slug: string) { return this.request<T>(`/destinations/${encodeURIComponent(slug)}/related`); }
+  listPlaces<T = unknown>(query: { type?: string; cursor?: string; limit?: number } = {}) { return this.request<T>("/places", { query }); }
+  place<T = unknown>(slug: string) { return this.request<T>(`/places/${encodeURIComponent(slug)}`); }
+  placeTimeline<T = unknown>(slug: string) { return this.request<T>(`/places/${encodeURIComponent(slug)}/timeline`); }
+  placeSources<T = unknown>(slug: string) { return this.request<T>(`/places/${encodeURIComponent(slug)}/sources`); }
+  placeMedia<T = unknown>(slug: string) { return this.request<T>(`/places/${encodeURIComponent(slug)}/media`); }
+  listStories<T = unknown>(query: { type?: string; placeId?: string; personId?: string; eventId?: string; cursor?: string; limit?: number } = {}) { return this.request<T>("/stories", { query }); }
+  story<T = unknown>(slug: string) { return this.request<T>(`/stories/${encodeURIComponent(slug)}`); }
+
   listTrips<T = unknown>(query: { page?: number; pageSize?: number; status?: string } = {}) {
     return this.request<T>("/trips", { query });
   }
