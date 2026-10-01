@@ -68,3 +68,7 @@ jobs:
       - name: Admin browser RBAC QA
         run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts
       - run: pnpm --filter @dauviet/mobile typecheck
+      - name: Mobile Phase 7 regression QA
+        run: pnpm --filter @dauviet/mobile exec tsx src/qa/phase7-regression.ts
+        env:
+          DAUViet_PHASE7_QA: "1"
