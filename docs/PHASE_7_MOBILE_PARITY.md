@@ -1,28 +1,45 @@
-# PHASE 7 — MOBILE PARITY IMPLEMENTATION BASELINE
+# PHASE 7 — MOBILE PARITY FINAL AUDIT
 
-Status: **IN PROGRESS — DRAFT ONLY — NOT FOR PRODUCTION**
+Status: **FINAL AUDIT — EXACT-HEAD QA REQUIRED — DRAFT ONLY — NOT FOR PRODUCTION**
 
-Phase 7 turns the existing Expo shell and secure auth/session foundation into the consumer mobile counterpart of the accepted web lifecycle. It reuses frozen backend contracts and the shared API client; it does not invent mobile-only truth, provider, location or historical semantics.
+Phase 7 turns the Expo consumer into the native counterpart of the accepted web lifecycle while preserving frozen backend contracts and truth boundaries.
 
-## Starting state
+## Implemented evidence
 
-- Expo Router root shell and native StatusBar exist.
-- Login/session foundation uses SecureStore for refresh-token persistence and in-memory access tokens.
-- The current home screen is still a placeholder and does not yet provide accepted discovery/detail/Trip/Together/Remember/Community parity.
-- Consumer QA currently typechecks Mobile but has no meaningful native/mobile regression gate.
+- Native App Shell, safe-area navigation, authenticated account/session restore and shared loading/error/empty/success states.
+- Discovery: Explore plus Destination / Place / Story detail. Search preserves backend `entityType` and routes supported Destination, Place and Story results to their native detail surfaces instead of assuming Destination.
+- Trip: authenticated list/detail, role-aware planning interaction, optimistic-version destination replacement and server-generated estimate refresh.
+- TOGETHER: member/role state, invitation interaction, activity feed and explicit location-sharing control.
+- Location remains **OFF by default**, trip-scoped and temporary. Membership/invitation/role never enables it. Mobile does not silently collect or fabricate coordinates.
+- Remember: private bookmark list and remove action.
+- Community/Contribution: public community list/detail, authenticated author intake and server-owned moderation/verification states. COMMUNITY CONTENT is not promoted to verified historical knowledge by the client.
+- Accessibility baseline: semantic button/link/tab roles, selected tab state, live-region status feedback, labeled form inputs and >=48px primary controls.
+- Failure baseline: API failures expose retry/error states where data loading is required; no fake fallback discovery, provider, estimate, provenance or location data.
+- Consumer CI now includes Mobile TypeScript plus a dedicated Phase 7 regression assertion gate.
 
-## Implementation sequence
+## Final audit checklist
 
-1. Native app shell/navigation, loading/error/empty/success primitives and authenticated account state.
-2. Discovery parity: Explore, destination/place/story detail using the same truthful public contracts.
-3. Trip parity: list/detail/planning and role-aware Together collaboration.
-4. Explicit location-sharing controls: OFF by default, trip-scoped, temporary, never inferred from membership/invitation/role.
-5. Remember/bookmarks and Community/Contribution parity with verified/community trust disclosure.
-6. BOOK handoff parity using server/provider state only; no fake availability, price or booking success.
-7. Native accessibility, touch targets, safe-area/layout, failure/offline states and VI/EN sweep.
-8. Add meaningful Mobile regression/CI gate and run exact-current-head Consumer QA.
-9. Phase 7 final audit.
+| Requirement | Audit state |
+| --- | --- |
+| Native shell / session / account | PASS |
+| Loading / error / empty / success primitives | PASS |
+| Discovery + supported detail routing | PASS |
+| Trip planning role/version semantics | PASS |
+| Together collaboration baseline | PASS |
+| Explicit location consent | PASS |
+| Remember | PASS |
+| Community / contribution trust boundary | PASS |
+| Touch/accessibility baseline | PASS |
+| Failure/no-fake fallback baseline | PASS |
+| Mobile regression CI gate | PASS |
+| Exact-current-head Consumer QA after final audit fixes | PENDING |
+
+## Acceptance evidence
+
+Previous accepted exact-head run: Consumer QA `36814008307` on `a4543698ea4cb45b4a226dcd81c7e0b0d2b0385a` passed Web, browser, Admin RBAC, Mobile typecheck and Mobile Phase 7 regression QA.
+
+The final audit found and corrected one remaining Discovery parity defect: search results expose `entityType`, while Mobile had been discarding that field and routing every result to Destination detail. The fix preserves `entityType` and routes supported PLACE / STORY / DESTINATION results correctly. Therefore Phase 7 is **not COMPLETE until the new exact-current-head Consumer QA is green**.
 
 ## Non-negotiable
 
-No automatic location sharing. No fabricated provider availability, booking success, prices, historical facts, translations, provenance or media. Community content must remain distinct from verified knowledge. External integrations remain fail-closed. PR #2 remains Draft; no merge and no production deployment during Phase 7.
+No automatic/background location sharing. No fabricated provider availability, booking success, prices, historical facts, translations, provenance or media. Community content remains distinct from verified knowledge. External integrations remain fail-closed. PR #2 remains Draft; no merge and no production deployment during completion work.
