@@ -54,8 +54,10 @@ jobs:
           curl -fsS http://127.0.0.1:3001/map >/dev/null
       - name: Install Chromium for browser QA
         run: pnpm --filter @dauviet/web exec playwright install --with-deps chromium
-      - name: Explore Map V3 browser QA
+      - name: Web browser QA
         run: pnpm --filter @dauviet/web exec playwright test
+      - name: Web responsive viewport gate (375 / 768 / 1440)
+        run: pnpm --filter @dauviet/web exec playwright test tests/responsive-gate.spec.ts
       - run: pnpm --filter @dauviet/admin typecheck
       - run: pnpm --filter @dauviet/admin build
       - name: Start Admin for browser RBAC QA
@@ -67,6 +69,8 @@ jobs:
           exit 1
       - name: Admin browser RBAC QA
         run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts
+      - name: Admin responsive viewport gate (375 / 768 / 1440)
+        run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts ../admin/tests/responsive.spec.ts
       - run: pnpm --filter @dauviet/mobile typecheck
       - name: Mobile Phase 7 regression QA
         run: pnpm --filter @dauviet/mobile exec tsx src/qa/phase7-regression.ts
