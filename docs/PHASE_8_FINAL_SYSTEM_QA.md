@@ -18,7 +18,7 @@ Phase 8 is the final cross-surface acceptance pass after Phases 1–7. It does n
 
 - Phase 7 final exact-head Consumer QA 36828618986 (#244) on ffa56afefde6021d4376ea81e1d97c26c7451a8d is green.
 - Mobile home still contained stale Phase 7 implementation copy after Phase 7 completion; removed at Phase 8 start.
-- Mobile canonical navigation currently targets /explore, /trips, /remember, /community; BOOK remains a lifecycle surface reached through its explicit /book route rather than a duplicated bottom-nav tab.
+- Route sweep found the native /book lifecycle surface had no App Shell entry point. Added a canonical BOOK header link while keeping the four-item bottom navigation focused on Explore / Trips / Remember / Community.
 - Location remains foreground permission only after explicit trip-scoped opt-in; no background location permission is introduced.
 - Provider/affiliate paths remain server-controlled and fail closed.
 
@@ -26,8 +26,8 @@ Phase 8 is the final cross-surface acceptance pass after Phases 1–7. It does n
 
 | Gate | State |
 | --- | --- |
-| Dead-link / route / contract sweep | IN PROGRESS |
-| VI/EN | PENDING |
+| Dead-link / route / contract sweep | PASS — route trees verified; native BOOK entry point repaired; API client remains canonical /v1 contract boundary |
+| VI/EN | IN PROGRESS |
 | Responsive / native layout | PENDING |
 | Accessibility | PENDING |
 | Auth / RBAC | PENDING |
