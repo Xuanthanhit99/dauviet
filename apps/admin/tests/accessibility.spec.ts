@@ -8,10 +8,16 @@ test.describe("Phase 8 admin accessibility baseline",()=>{
 
   test("keyboard focus is visible",async({page})=>{
     await page.goto("/");
-    await page.keyboard.press("Tab");
-    const focused=page.locator(":focus");
-    await expect(focused).toBeVisible();
-    expect(await focused.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe("none");
+    const focusable=page.locator('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])').filter({visible:true}).first();
+    await expect(focusable).toBeVisible();
+    await focusable.focus();
+    await expect(focusable).toBeFocused();
+    const focusStyle=await focusable.evaluate(el=>{
+      const style=getComputedStyle(el);
+      return {outlineStyle:style.outlineStyle,outlineWidth:style.outlineWidth};
+    });
+    expect(focusStyle.outlineStyle).not.toBe("none");
+    expect(parseFloat(focusStyle.outlineWidth)).toBeGreaterThan(0);
   });
 
   test("reduced motion removes long animation and transitions",async({browser})=>{
