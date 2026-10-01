@@ -28,7 +28,7 @@ Phase 8 is the final cross-surface acceptance pass after Phases 1–7. It does n
 | --- | --- |
 | Dead-link / route / contract sweep | PASS — route trees verified; native BOOK entry point repaired; API client remains canonical /v1 contract boundary |
 | VI/EN | PASS — source audit completed; detail routes propagate requested VI/EN locale; backend fallback metadata remains authoritative; no client-side translation synthesis |
-| Responsive / native layout | PENDING |
+| Responsive / native layout | IN PROGRESS — Web overflow baseline, Admin responsive baseline and Mobile safe-area/touch shell corrected; exact-head QA and viewport regression evidence pending |
 | Accessibility | PENDING |
 | Auth / RBAC | PENDING |
 | Failure / offline | PENDING |
@@ -42,3 +42,5 @@ PR #2 remains Draft. No merge and no production deployment until the entire comp
 - Gate 2 locale audit found Destination, Place and Story detail routes accepted no locale and hard-coded backend requests to `locale=vi`; route search params now propagate the requested `vi|en` locale into API reads. Backend-owned fallback metadata remains authoritative; the UI does not synthesize missing translations.
 
 - Gate 2 final source audit also found Country and Journey detail hard-coded to `locale=vi`; both now propagate `?locale=vi|en` into backend reads. Region, Event and Person already propagated locale correctly. No audited detail surface synthesizes missing backend translations; published-content fallback is represented by backend `meta.requestedLocale`, `resolvedLocale` and `fallbackApplied`.
+
+- Gate 3 source audit: Mobile AppShell used React Native core `SafeAreaView` despite `react-native-safe-area-context` being installed, and compact headers could compress BOOK/account actions. AppShell now uses safe-area-context edges, >=44px header actions, bounded/flexible header content, keyboard tap handling and touch-friendly bottom navigation. Admin previously had no responsive stylesheet; a shared responsive baseline now constrains content, forms, long values and mobile navigation. Web global media/form/long-token overflow guards were added without changing domain layouts.
