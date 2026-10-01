@@ -1,6 +1,6 @@
 # PHASE 7 — MOBILE PARITY FINAL AUDIT
 
-Status: **FINAL AUDIT — BOOK PARITY ADDED — EXACT-HEAD QA REQUIRED — DRAFT ONLY — NOT FOR PRODUCTION**
+Status: **COMPLETE — FINAL EXACT-HEAD QA PASS — DRAFT ONLY — NOT FOR PRODUCTION**
 
 Phase 7 turns the Expo consumer into the native counterpart of the accepted web lifecycle while preserving frozen backend contracts and truth boundaries.
 
@@ -28,17 +28,18 @@ Phase 7 turns the Expo consumer into the native counterpart of the accepted web 
 | Together collaboration baseline | PASS |
 | Explicit location consent | PASS |
 | Remember | PASS |
-| Community / contribution trust boundary | PASS |\n| BOOK provider / affiliate handoff parity | PASS |
+| Community / contribution trust boundary | PASS |
+| BOOK provider / affiliate handoff parity | PASS |
 | Touch/accessibility baseline | PASS |
 | Failure/no-fake fallback baseline | PASS |
 | Mobile regression CI gate | PASS |
-| Exact-current-head Consumer QA after final audit fixes | PENDING |
+| Exact-current-head Consumer QA after final audit fixes | PASS |
 
 ## Acceptance evidence
 
-Previous accepted exact-head run: Consumer QA `36814008307` on `a4543698ea4cb45b4a226dcd81c7e0b0d2b0385a` passed Web, browser, Admin RBAC, Mobile typecheck and Mobile Phase 7 regression QA.
+Final accepted exact-head run: Consumer QA `36828618986` (#244) on `ffa56afefde6021d4376ea81e1d97c26c7451a8d` passed Web typecheck/build, browser smoke + Explore Map V3, Admin typecheck/build + RBAC, Mobile typecheck and Mobile Phase 7 regression QA.
 
-The final source/parity audit corrected Discovery entity routing, completed Trip/Together write parity, added explicit foreground-only device-location permission after user opt-in, and added native BOOK provider/affiliate handoff surfaces. Phase 7 remains **not COMPLETE until Consumer QA is green on the exact final-audit HEAD**.
+The final source/parity audit corrected Discovery entity routing, completed Trip/Together write parity, added explicit foreground-only device-location permission after user opt-in, and added native BOOK provider/affiliate handoff surfaces. Exact-head Consumer QA is green; **Phase 7 is COMPLETE**.
 
 ## Non-negotiable
 
