@@ -24,7 +24,7 @@ function focusAnchor(event: MouseEvent<HTMLAnchorElement>) {
   target?.focus({ preventScroll: true });
 }
 
-export default function StoryExplorer({ slug }: { slug: string }) {
+export default function StoryExplorer({ slug, locale }: { slug: string; locale: "vi" | "en" }) {
   const [data, setData] = useState<Story | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -33,7 +33,7 @@ export default function StoryExplorer({ slug }: { slug: string }) {
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(""); setData(null); setReturnTo({});
-    fetch(`${API}/v1/stories/${encodeURIComponent(slug)}?locale=vi`, { credentials: "include", signal: controller.signal })
+    fetch(`${API}/v1/stories/${encodeURIComponent(slug)}?locale=${locale}`, { credentials: "include", signal: controller.signal })
       .then(async response => {
         const payload = await response.json();
         if (!response.ok) throw new Error(payload?.error?.message ?? "Không thể tải câu chuyện.");
@@ -43,7 +43,7 @@ export default function StoryExplorer({ slug }: { slug: string }) {
       .catch(reason => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Không thể tải câu chuyện."); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [slug, attempt]);
+  }, [slug, locale, attempt]);
   const citations = useMemo(() => new Map((data?.citations ?? []).map(item => [item.id, item])), [data]);
   if (loading) return <main id="main" className="story-state" aria-busy="true"><p role="status">Đang mở câu chuyện…</p></main>;
   if (error || !data) return <main id="main" className="story-state"><div className="eyebrow">Story Explorer</div><h1>Không thể mở câu chuyện</h1><p role="alert">{error || "Không tìm thấy nội dung đã xuất bản."}</p><div className="hero-actions"><button className="button button-gold" onClick={() => setAttempt(value => value + 1)}>Thử lại</button><a className="button" href="/map">Quay lại khám phá</a></div></main>;
