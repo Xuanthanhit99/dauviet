@@ -62,6 +62,8 @@ jobs:
         run: pnpm --filter @dauviet/web exec playwright test tests/accessibility.spec.ts
       - name: Web auth/session and ownership RBAC gate
         run: pnpm --filter @dauviet/web exec playwright test tests/auth-foundation.spec.ts tests/trip-together.spec.ts
+      - name: Web failure retry and fail-closed gate
+        run: pnpm --filter @dauviet/web exec playwright test tests/book-phase4.spec.ts tests/journey-detail-v3.spec.ts tests/phase5-community.spec.ts
       - run: pnpm --filter @dauviet/admin typecheck
       - run: pnpm --filter @dauviet/admin build
       - name: Start Admin for browser RBAC QA
@@ -92,6 +94,10 @@ jobs:
         run: pnpm --filter @dauviet/mobile exec tsx src/qa/auth-session-regression.ts
         env:
           DAUViet_MOBILE_AUTH_QA: "1"
+      - name: Mobile failure/offline and fail-closed gate
+        run: pnpm --filter @dauviet/mobile exec tsx src/qa/failure-offline-regression.ts
+        env:
+          DAUViet_MOBILE_FAILURE_QA: "1"
       - name: Mobile Phase 7 regression QA
         run: pnpm --filter @dauviet/mobile exec tsx src/qa/phase7-regression.ts
         env:
