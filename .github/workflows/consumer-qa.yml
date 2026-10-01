@@ -60,6 +60,8 @@ jobs:
         run: pnpm --filter @dauviet/web exec playwright test tests/responsive-gate.spec.ts
       - name: Web accessibility gate
         run: pnpm --filter @dauviet/web exec playwright test tests/accessibility.spec.ts
+      - name: Web auth/session and ownership RBAC gate
+        run: pnpm --filter @dauviet/web exec playwright test tests/auth-foundation.spec.ts tests/trip-together.spec.ts
       - run: pnpm --filter @dauviet/admin typecheck
       - run: pnpm --filter @dauviet/admin build
       - name: Start Admin for browser RBAC QA
@@ -75,6 +77,8 @@ jobs:
         run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts ../admin/tests/responsive.spec.ts
       - name: Admin accessibility gate
         run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts ../admin/tests/accessibility.spec.ts
+      - name: Admin explicit RBAC boundary gate
+        run: pnpm --filter @dauviet/web exec playwright test --config ../admin/playwright.config.ts ../admin/tests/rbac.spec.ts
       - run: pnpm --filter @dauviet/mobile typecheck
       - name: Mobile native layout regression gate
         run: pnpm --filter @dauviet/mobile exec tsx src/qa/layout-regression.ts
@@ -84,6 +88,10 @@ jobs:
         run: pnpm --filter @dauviet/mobile exec tsx src/qa/accessibility-regression.ts
         env:
           DAUViet_MOBILE_ACCESSIBILITY_QA: "1"
+      - name: Mobile auth/session fail-closed gate
+        run: pnpm --filter @dauviet/mobile exec tsx src/qa/auth-session-regression.ts
+        env:
+          DAUViet_MOBILE_AUTH_QA: "1"
       - name: Mobile Phase 7 regression QA
         run: pnpm --filter @dauviet/mobile exec tsx src/qa/phase7-regression.ts
         env:
