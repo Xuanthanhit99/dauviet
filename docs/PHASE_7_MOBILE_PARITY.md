@@ -1,6 +1,6 @@
 # PHASE 7 — MOBILE PARITY FINAL AUDIT
 
-Status: **FINAL AUDIT — EXACT-HEAD QA REQUIRED — DRAFT ONLY — NOT FOR PRODUCTION**
+Status: **FINAL AUDIT — BOOK PARITY ADDED — EXACT-HEAD QA REQUIRED — DRAFT ONLY — NOT FOR PRODUCTION**
 
 Phase 7 turns the Expo consumer into the native counterpart of the accepted web lifecycle while preserving frozen backend contracts and truth boundaries.
 
@@ -12,7 +12,7 @@ Phase 7 turns the Expo consumer into the native counterpart of the accepted web 
 - TOGETHER: member/role state, invitation interaction, activity feed and explicit location-sharing control.
 - Location remains **OFF by default**, trip-scoped and temporary. Membership/invitation/role never enables it. Mobile does not silently collect or fabricate coordinates.
 - Remember: private bookmark list and remove action.
-- Community/Contribution: public community list/detail, authenticated author intake and server-owned moderation/verification states. COMMUNITY CONTENT is not promoted to verified historical knowledge by the client.
+- Community/Contribution: public community list/detail, authenticated author intake and server-owned moderation/verification states. COMMUNITY CONTENT is not promoted to verified historical knowledge by the client.\n- BOOK handoff: native Stay / Food / Activity discovery and detail flows consume real server/provider responses only. Affiliate continuation is created from a server-issued redirect token; Mobile does not construct provider URLs, prices, availability or booking success.
 - Accessibility baseline: semantic button/link/tab roles, selected tab state, live-region status feedback, labeled form inputs and >=48px primary controls.
 - Failure baseline: API failures expose retry/error states where data loading is required; no fake fallback discovery, provider, estimate, provenance or location data.
 - Consumer CI now includes Mobile TypeScript plus a dedicated Phase 7 regression assertion gate.
@@ -28,7 +28,7 @@ Phase 7 turns the Expo consumer into the native counterpart of the accepted web 
 | Together collaboration baseline | PASS |
 | Explicit location consent | PASS |
 | Remember | PASS |
-| Community / contribution trust boundary | PASS |
+| Community / contribution trust boundary | PASS |\n| BOOK provider / affiliate handoff parity | PASS |
 | Touch/accessibility baseline | PASS |
 | Failure/no-fake fallback baseline | PASS |
 | Mobile regression CI gate | PASS |
@@ -38,7 +38,7 @@ Phase 7 turns the Expo consumer into the native counterpart of the accepted web 
 
 Previous accepted exact-head run: Consumer QA `36814008307` on `a4543698ea4cb45b4a226dcd81c7e0b0d2b0385a` passed Web, browser, Admin RBAC, Mobile typecheck and Mobile Phase 7 regression QA.
 
-The final audit found and corrected one remaining Discovery parity defect: search results expose `entityType`, while Mobile had been discarding that field and routing every result to Destination detail. The fix preserves `entityType` and routes supported PLACE / STORY / DESTINATION results correctly. Therefore Phase 7 is **not COMPLETE until the new exact-current-head Consumer QA is green**.
+The final source/parity audit corrected Discovery entity routing, completed Trip/Together write parity, added explicit foreground-only device-location permission after user opt-in, and added native BOOK provider/affiliate handoff surfaces. Phase 7 remains **not COMPLETE until Consumer QA is green on the exact final-audit HEAD**.
 
 ## Non-negotiable
 
