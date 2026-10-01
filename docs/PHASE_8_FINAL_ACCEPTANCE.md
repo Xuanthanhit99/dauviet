@@ -1,6 +1,6 @@
 # PHASE 8 — FINAL ACCEPTANCE REPORT
 
-Status: **PREPARED — EXACT-HEAD VERIFICATION PENDING**
+Status: **COMPLETE — ACCEPTED — NOT FOR PRODUCTION**
 
 This report records the final acceptance evidence for Phase 8. It does not authorize merge or production deployment while the acceptance commit itself remains unverified.
 
@@ -16,9 +16,9 @@ This report records the final acceptance evidence for Phase 8. It does not autho
 
 ## Final verification rule
 
-The commit that introduces this report and records #294 must itself pass Consumer QA on its exact HEAD. Until that verification is green, Phase 8 remains IN PROGRESS and PR #2 remains Draft.
+The acceptance report commit passed Consumer QA #295 (run 36874002700) on exact HEAD `0f434f9d3849e24a39fd838701ee41f49e4dd4fd`. Every Web, Admin and Mobile acceptance step completed successfully. Gate 7 is PASS and Phase 8 is COMPLETE. PR #2 remains Draft.
 
-After that exact-head verification succeeds, the acceptance documentation may be updated to COMPLETE with the verification run ID and SHA. No product code changes are permitted between the verified acceptance HEAD and the completion record without rerunning final acceptance.
+Final verification evidence: Consumer QA #295, run 36874002700, exact acceptance SHA `0f434f9d3849e24a39fd838701ee41f49e4dd4fd`, conclusion SUCCESS. No product code changes are permitted after the verified acceptance HEAD without rerunning final acceptance.
 
 ## Release constraints
 
