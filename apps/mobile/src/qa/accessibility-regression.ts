@@ -2,6 +2,7 @@ import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import assert from "node:assert/strict";
 
+// Dedicated Phase 8 native accessibility contract gate.
 if(process.env.DAUViet_MOBILE_ACCESSIBILITY_QA==="1"){
   const shell=readFileSync(resolve(process.cwd(),"src/ui/app-shell.tsx"),"utf8");
   const login=readFileSync(resolve(process.cwd(),"app/login.tsx"),"utf8");
