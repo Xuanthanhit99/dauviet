@@ -33,8 +33,8 @@ Phase 8 is the final cross-surface acceptance pass after Phases 1–7. It does n
 | Accessibility | PASS — Consumer QA #287 (run 36847716923) succeeded on exact implementation SHA c845f13b9c97112e0abc91762ddccc105d78c2da; Web/Admin keyboard-focus and reduced-motion gates passed; Mobile native accessibility regression passed |
 | Auth / RBAC | PASS — Consumer QA #290 (run 36863034992) succeeded on exact implementation SHA 4e8f15a6b87d8570e6dc5e8633d3dfa2c9766b4d; Web auth/session + ownership RBAC, Admin explicit role boundaries and Mobile session fail-closed gates passed |
 | Failure / offline | PASS — Consumer QA #293 (run 36868407605) succeeded on exact implementation SHA 9da24c7b43e0fb4de47b41486bb2d400100725f5; Web retry/provider/community fail-closed and Mobile provider/discovery/location/trip/community failure regressions passed |
-| Full exact-head final CI | PENDING |
-| Final acceptance report | PENDING |
+| Full exact-head final CI | PASS — Consumer QA #294 (run 36869004291) succeeded on exact HEAD 3a774924b7ee403776597f09d99d3ffa295d6a5b with all Web/Admin/Mobile build, responsive, accessibility, Auth/RBAC, failure/fail-closed and Phase 7 regression steps green |
+| Final acceptance report | PREPARED — docs/PHASE_8_FINAL_ACCEPTANCE.md; acceptance-commit exact-head verification still required before COMPLETE |
 
 ## Non-negotiable
 
@@ -53,3 +53,5 @@ PR #2 remains Draft. No merge and no production deployment until the entire comp
 - Gate 5 exact-head evidence: Consumer QA #290 (run 36863034992) completed successfully on SHA `4e8f15a6b87d8570e6dc5e8633d3dfa2c9766b4d`. The run explicitly passed Web auth/session and ownership RBAC, Admin explicit RBAC boundary, Mobile auth/session fail-closed, and all prerequisite build/typecheck/responsive/accessibility regression gates. Gate 5 therefore passes without authorizing merge or production deployment.
 
 - Gate 6 exact-head evidence: Consumer QA #293 (run 36868407605) completed successfully on SHA `9da24c7b43e0fb4de47b41486bb2d400100725f5`. Web failure/retry/fail-closed and Mobile failure/offline/fail-closed gates passed together with all prerequisite consumer QA. Gate 6 therefore passes. Gate 7 remains the final exact-head acceptance gate; PR #2 remains Draft and no merge or production deployment is authorized.
+
+- Gate 7 pre-acceptance evidence: Consumer QA #294 (run 36869004291) completed successfully on exact HEAD `3a774924b7ee403776597f09d99d3ffa295d6a5b`. Full exact-head final CI is PASS. The final acceptance report is prepared separately, but Phase 8 remains IN PROGRESS until Consumer QA succeeds again on the acceptance documentation commit itself.
