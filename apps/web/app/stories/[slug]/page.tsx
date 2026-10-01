@@ -1,2 +1,2 @@
 import StoryExplorer from "./story-explorer";
-export default async function StoryPage({params}:{params:Promise<{slug:string}>}){const{slug}=await params;return <StoryExplorer slug={slug}/>}
+export default async function StoryPage({params,searchParams}:{params:Promise<{slug:string}>;searchParams:Promise<{locale?:string}>}){const[{slug},query]=await Promise.all([params,searchParams]);const locale=query.locale==="en"?"en":"vi";return <StoryExplorer key={`${slug}-${locale}`} slug={slug} locale={locale}/>}
