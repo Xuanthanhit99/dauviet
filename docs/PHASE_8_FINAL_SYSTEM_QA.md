@@ -20,14 +20,14 @@ Phase 8 is the final cross-surface acceptance pass after Phases 1–7. It does n
 - Mobile home still contained stale Phase 7 implementation copy after Phase 7 completion; removed at Phase 8 start.
 - Route sweep found the native /book lifecycle surface had no App Shell entry point. Added a canonical BOOK header link while keeping the four-item bottom navigation focused on Explore / Trips / Remember / Community.
 - Location remains foreground permission only after explicit trip-scoped opt-in; no background location permission is introduced.
-- Provider/affiliate paths remain server-controlled and fail closed.
+- Provider/affiliate paths remain server-controlled and fail closed.\n- VI/EN audit found Admin operational/review surfaces mixing English prose into Vietnamese UI. User-facing labels/status prose were localized while preserving server-owned enum/role/contract identifiers (for example ADMIN, MODERATOR, HISTORIAN_REVIEWER, PROVIDER enum values).
 
 ## Acceptance checklist
 
 | Gate | State |
 | --- | --- |
 | Dead-link / route / contract sweep | PASS — route trees verified; native BOOK entry point repaired; API client remains canonical /v1 contract boundary |
-| VI/EN | IN PROGRESS |
+| VI/EN | IN PROGRESS — Admin Vietnamese UI leakage corrected; public Web locale/fallback audit continues |
 | Responsive / native layout | PENDING |
 | Accessibility | PENDING |
 | Auth / RBAC | PENDING |
