@@ -10,7 +10,8 @@ const discoveries=[
 
 export default function Home(){
  return <div>
-  <ConsumerHeader/>\n  <main id="main">
+  <ConsumerHeader/>
+  <main id="main">
    <section className="hero"><div className="container hero-grid">
     <div><div className="eyebrow">Dấu vết của thời gian</div><h1>Explore Places. Understand Stories.</h1><p className="hero-copy">Khám phá thế giới qua nơi chốn, con người, văn hóa và những câu chuyện có nguồn gốc. Mỗi địa điểm là một điểm bắt đầu để hiểu điều đã xảy ra, vì sao nó quan trọng và những gì còn hiện diện hôm nay.</p><div className="hero-actions"><a className="button button-gold" href="/explore">Khám phá địa điểm</a><a className="button button-quiet" href="/stories">Đọc một câu chuyện</a></div></div>
     <div className="trace-visual" aria-hidden="true"><Image className="trace-logo" src="/brand/dau-viet-global-time-trace-v3-geometry-v1.3-dark.svg" width={500} height={500} alt=""/></div>
