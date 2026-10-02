@@ -80,7 +80,6 @@ async function main() {
       data: {
         actorId: user.id,
         action: 'admin.bootstrap.provisioned',
-        entityType: 'USER',
         entityId: user.id,
         metadata: { email, method: 'railway_env_one_time_bootstrap' },
       },
