@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "policy": "Curated real-location media candidates. These are source records for the existing Wikimedia Commons ingestion -> human review -> MediaAsset/S3 -> READY/PUBLIC pipeline. Never render these source URLs directly as production media.",
+  "candidates": [
+    {
+      "entityType": "DESTINATION",
+      "entityKey": "DESTINATION_HANOI_OLD_QUARTER",
+      "role": "HERO",
+      "commonsTitle": "File:2024-11-03 Hanoi's Old Quarter 1.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:2024-11-03_Hanoi%27s_Old_Quarter_1.jpg",
+      "depicts": "Hanoi's Old Quarter",
+      "creator": "Alexkom000 / Alexey Komarov",
+      "license": "CC BY 4.0",
+      "capturedAt": "2024-11-03",
+      "reviewState": "CURATED_FOR_INGESTION"
+    },
+    {
+      "entityType": "PLACE",
+      "entityKey": "PLACE_VAN_MIEU",
+      "role": "HERO",
+      "commonsTitle": "File:Hanoi - Temple of Literature.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Hanoi_-_Temple_of_Literature.jpg",
+      "depicts": "Khue Van Cac, Temple of Literature, Hanoi",
+      "creator": "P. Hughes",
+      "license": "CC BY 4.0",
+      "reviewState": "CURATED_FOR_INGESTION"
+    },
+    {
+      "entityType": "PLACE",
+      "entityKey": "PLACE_THANG_LONG",
+      "role": "HISTORICAL",
+      "commonsTitle": "File:Dien Kinh Thien 002.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Dien_Kinh_Thien_002.jpg",
+      "depicts": "Kinh Thien Palace / Imperial Citadel of Thang Long, Hanoi",
+      "creator": "Charles-Edouard Hocquard",
+      "license": "Public domain",
+      "capturedAt": "1884-1885",
+      "reviewState": "CURATED_FOR_INGESTION"
+    },
+    {
+      "entityType": "DESTINATION",
+      "entityKey": "DESTINATION_GION",
+      "role": "HERO",
+      "commonsTitle": "File:Gion Kyoto.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Gion_Kyoto.jpg",
+      "depicts": "Gion, Kyoto, Japan",
+      "creator": "Vldimir Pankratov",
+      "license": "CC BY-SA 4.0",
+      "capturedAt": "2018-01-10",
+      "reviewState": "CURATED_FOR_INGESTION"
+    }
+  ]
+}
