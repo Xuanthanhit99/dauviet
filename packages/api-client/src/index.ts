@@ -256,6 +256,12 @@ export class DauVietApiClient {
   adminIngestionSource<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/sources/${encodeURIComponent(id)}`); }
   adminSetIngestionSourceEnabled<T = unknown>(id: string, enabled: boolean) { return this.request<T>(`/admin/ingestion/sources/${encodeURIComponent(id)}/enabled`, { method: "PATCH", body: JSON.stringify({ enabled }) }); }
   adminIngestionJobs<T = unknown>() { return this.request<T>("/admin/ingestion/jobs"); }
+  adminCreateIngestionJob<T = unknown>(input: { sourceCode: string; scopeType: string; scopeParams: Record<string, unknown>; label?: string }) { return this.request<T>("/admin/ingestion/jobs", { method: "POST", body: JSON.stringify(input) }); }
+  adminIngestionCandidates<T = unknown>(query: { status?: string; sourceCode?: string; page?: number; pageSize?: number } = {}) { return this.request<T>("/admin/ingestion/candidates", { query }); }
+  adminIngestionCandidate<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/candidates/${encodeURIComponent(id)}`); }
+  adminApproveIngestionCandidate<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/candidates/${encodeURIComponent(id)}/approve`, { method: "POST" }); }
+  adminRejectIngestionCandidate<T = unknown>(id: string, notes?: string) { return this.request<T>(`/admin/ingestion/candidates/${encodeURIComponent(id)}/reject`, { method: "POST", body: JSON.stringify({ notes }) }); }
+  adminAttachMedia<T = unknown>(input: { entityType: string; entityId: string; mediaAssetId: string; role?: string; order?: number }) { return this.request<T>("/media/attach", { method: "POST", body: JSON.stringify(input) }); }
   adminRunIngestionJob<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/jobs/${encodeURIComponent(id)}/run`, { method: "POST" }); }
   adminCancelIngestionRun<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/runs/${encodeURIComponent(id)}/cancel`, { method: "POST" }); }
   adminSources<T = unknown>(query: { sourceType?: string; q?: string } = {}) { return this.request<T>("/sources", { query }); }
