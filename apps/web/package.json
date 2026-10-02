@@ -17,15 +17,15 @@
     "@dauviet/brand-tokens": "workspace:*",
     "@dauviet/i18n": "workspace:*",
     "maplibre-gl": "^5.7.1",
-    "next": "16.0.0",
+    "next": "16.3.8",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5.6.3",
-    "@playwright/test": "^1.55.0"
+    "typescript": "^5.6.3"
   }
 }
