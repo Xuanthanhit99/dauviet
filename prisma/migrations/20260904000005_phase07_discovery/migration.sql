@@ -15,9 +15,8 @@ CREATE EXTENSION IF NOT EXISTS "unaccent";
 -- pinned by name and never swapped at runtime in this codebase.
 CREATE OR REPLACE FUNCTION public.immutable_unaccent(text)
 RETURNS text AS
-$
-  SELECT public.unaccent('public.unaccent'::regdictionary, $1)
-$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
+'SELECT public.unaccent(''public.unaccent''::regdictionary, $1)'
+LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
 
 -- Expression trigram indexes on immutable_unaccent(...) - SearchService's
 -- queries wrap both the column and the query parameter in
