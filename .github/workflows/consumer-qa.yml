@@ -85,6 +85,16 @@ jobs:
         run: pnpm --filter @dauviet/web exec playwright test
       - name: Web responsive viewport gate (375 / 768 / 1440)
         run: pnpm --filter @dauviet/web exec playwright test tests/responsive-gate.spec.ts
+      - name: Home V5 visual evidence (390 / 1536)
+        run: pnpm --filter @dauviet/web exec playwright test tests/home-v5-visual.spec.ts
+      - name: Upload Home V5 visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-v5-visual-${{ github.sha }}
+          path: apps/web/qa-evidence/home-v5/*.png
+          if-no-files-found: error
+          retention-days: 14
       - name: Web accessibility gate
         run: pnpm --filter @dauviet/web exec playwright test tests/accessibility.spec.ts
       - name: Web auth/session and ownership RBAC gate
