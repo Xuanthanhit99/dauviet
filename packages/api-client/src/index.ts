@@ -262,6 +262,7 @@ export class DauVietApiClient {
   adminApproveIngestionCandidate<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/candidates/${encodeURIComponent(id)}/approve`, { method: "POST" }); }
   adminRejectIngestionCandidate<T = unknown>(id: string, notes?: string) { return this.request<T>(`/admin/ingestion/candidates/${encodeURIComponent(id)}/reject`, { method: "POST", body: JSON.stringify({ notes }) }); }
   adminAttachMedia<T = unknown>(input: { entityType: string; entityId: string; mediaAssetId: string; role?: string; order?: number }) { return this.request<T>("/media/attach", { method: "POST", body: JSON.stringify(input) }); }
+  adminSetHeroMedia<T = unknown>(input: { entityType: "PLACE" | "DESTINATION"; entityId: string; mediaAssetId: string }) { return this.request<T>("/media/set-hero", { method: "POST", body: JSON.stringify(input) }); }
   adminRunIngestionJob<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/jobs/${encodeURIComponent(id)}/run`, { method: "POST" }); }
   adminCancelIngestionRun<T = unknown>(id: string) { return this.request<T>(`/admin/ingestion/runs/${encodeURIComponent(id)}/cancel`, { method: "POST" }); }
   adminSources<T = unknown>(query: { sourceType?: string; q?: string } = {}) { return this.request<T>("/sources", { query }); }
