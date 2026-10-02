@@ -7,7 +7,6 @@ on:
       - "apps/web/**"
       - "apps/admin/**"
       - "apps/api/**"
-      - "apps/api/**"
       - "apps/mobile/**"
       - "packages/api-client/**"
       - "packages/i18n/**"
@@ -19,6 +18,7 @@ on:
     paths:
       - "apps/web/**"
       - "apps/admin/**"
+      - "apps/api/**"
       - "apps/mobile/**"
       - "packages/api-client/**"
       - "packages/i18n/**"
