@@ -7,6 +7,8 @@ on:
       - "apps/web/**"
       - "apps/admin/**"
       - "apps/api/**"
+      - "prisma/**"
+      - "prisma/**"
       - "apps/mobile/**"
       - "packages/api-client/**"
       - "packages/i18n/**"
@@ -29,7 +31,21 @@ on:
 jobs:
   consumer-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+    services:
+      postgis:
+        image: postgis/postgis:17-master
+        env:
+          POSTGRES_DB: dauviet_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d dauviet_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -44,6 +60,10 @@ jobs:
         run: pnpm install --no-frozen-lockfile
       - name: Generate Prisma Client for API build
         run: pnpm db:generate
+      - name: Clean PostGIS migration gate
+        run: pnpm db:migrate:deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public
       - name: API production build gate
         run: pnpm --filter @dauviet/api build
       - run: pnpm web:typecheck
