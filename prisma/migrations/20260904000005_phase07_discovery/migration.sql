@@ -13,11 +13,11 @@ CREATE EXTENSION IF NOT EXISTS "unaccent";
 -- workaround: a thin SQL wrapper pinned to the default 'unaccent'
 -- dictionary, explicitly marked IMMUTABLE - safe because the dictionary is
 -- pinned by name and never swapped at runtime in this codebase.
-CREATE OR REPLACE FUNCTION immutable_unaccent(text)
+CREATE OR REPLACE FUNCTION public.immutable_unaccent(text)
 RETURNS text AS
-$$
-  SELECT unaccent('unaccent', $1)
-$$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
+$
+  SELECT public.unaccent('public.unaccent'::regdictionary, $1)
+$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
 
 -- Expression trigram indexes on immutable_unaccent(...) - SearchService's
 -- queries wrap both the column and the query parameter in
