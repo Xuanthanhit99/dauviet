@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { EntityKind, Role } from '@prisma/client';
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
@@ -36,6 +36,18 @@ class AttachMediaDto {
   order?: number;
 }
 
+
+class SetHeroMediaDto {
+  @IsIn(['PLACE', 'DESTINATION'])
+  entityType!: 'PLACE' | 'DESTINATION';
+
+  @IsString()
+  entityId!: string;
+
+  @IsString()
+  mediaAssetId!: string;
+}
+
 @ApiTags('media')
 // G12: bearer auth is declared per role-gated method, not on the class - GET /media/:id is
 // @Public() and the class-level declaration made OpenAPI claim it required a bearer token.
@@ -61,6 +73,13 @@ export class MediaController {
   @Post('uploads/:id/confirm')
   confirmUpload(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: ConfirmUploadDto) {
     return this.media.confirmUpload(id, dto, user);
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN)
+  @Post('set-hero')
+  setHero(@CurrentUser() user: AuthUser, @Body() dto: SetHeroMediaDto) {
+    return this.media.setHeroMedia(dto.entityType, dto.entityId, dto.mediaAssetId, user.id);
   }
 
   @ApiBearerAuth()
