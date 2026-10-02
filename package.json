@@ -24,7 +24,8 @@
     "admin:dev": "pnpm --filter @dauviet/admin dev",
     "admin:build": "pnpm --filter @dauviet/admin build",
     "mobile:start": "pnpm --filter @dauviet/mobile start",
-    "consumer:typecheck": "pnpm --filter @dauviet/web typecheck && pnpm --filter @dauviet/admin typecheck && pnpm --filter @dauviet/mobile typecheck"
+    "consumer:typecheck": "pnpm --filter @dauviet/web typecheck && pnpm --filter @dauviet/admin typecheck && pnpm --filter @dauviet/mobile typecheck",
+    "admin:provision": "tsx scripts/admin/provision-production-admin.ts"
   },
   "devDependencies": {
     "prisma": "5.20.0",
