@@ -213,6 +213,25 @@ export class MediaService {
     await this.getOwned(mediaAssetId, actor);
   }
 
+  async setHeroMedia(entityType: 'PLACE' | 'DESTINATION', entityId: string, mediaAssetId: string, actorId: string) {
+    const media = await this.prisma.mediaAsset.findUnique({ where: { id: mediaAssetId } });
+    if (!media) throw new NotFoundException('Media asset not found.');
+    if (media.status !== MediaAssetStatus.READY || media.accessPolicy !== 'PUBLIC' || !['LICENSED', 'PUBLIC_DOMAIN'].includes(media.rightsStatus)) {
+      throw new BadRequestException('Hero media must be READY, PUBLIC, and rights-reviewed.');
+    }
+    if (entityType === 'PLACE') {
+      const entity = await this.prisma.place.findUnique({ where: { id: entityId } });
+      if (!entity) throw new NotFoundException('Place not found.');
+      await this.prisma.place.update({ where: { id: entityId }, data: { heroMediaId: mediaAssetId } });
+    } else {
+      const entity = await this.prisma.destination.findUnique({ where: { id: entityId } });
+      if (!entity) throw new NotFoundException('Destination not found.');
+      await this.prisma.destination.update({ where: { id: entityId }, data: { heroMediaId: mediaAssetId } });
+    }
+    await this.audit.log({ actorId, action: 'media.hero.assigned', entityType, entityId, metadata: { mediaAssetId } });
+    return { entityType, entityId, mediaAssetId };
+  }
+
   async attachToEntity(entityType: string, entityId: string, mediaAssetId: string, role = 'gallery', order = 0) {
     const media = await this.prisma.mediaAsset.findUnique({ where: { id: mediaAssetId } });
     if (!media) throw new NotFoundException('Media asset not found.');
