@@ -168,5 +168,5 @@ test("Event Person link opens the supplied Person profile", async ({ page }) => 
 test("person detail uses global consumer shell", async ({ page }) => {
   await page.goto("/people/qa-person");
   await expect(page.locator("header.consumer-header")).toBeVisible();
-  await expect(page.locator("footer.consumer-footer")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Khám phá thêm" })).toBeVisible();
 });
