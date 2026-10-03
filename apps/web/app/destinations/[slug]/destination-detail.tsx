@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import PublishedMedia from "../../components/published-media";
 
 type Item={id:string;slug:string;title?:string;name?:string;summary?:string|null;type?:string;role?:string;isFeatured?:boolean;date?:{display?:string}|null};
 type Destination={
  id:string;slug:string;type:string;importance:number;
  country:{slug:string;iso2:string};region?:{slug:string}|null;city?:{slug:string}|null;
- location?:{latitude:number;longitude:number}|null;heroMedia?:{id:string;url:string|null}|null;
+ location?:{latitude:number;longitude:number}|null;heroMedia?:{id:string;url?:string|null}|null;
  translation?:{name?:string;summary?:string|null;description?:string|null;tagline?:string|null;whyVisit?:string|null}|null;
  themes:Array<{id:string;slug:string;category:string;name:string}>;
  places:Item[];stories:Item[];journeys:Item[];historicalTurningPoints:Item[];
@@ -24,10 +25,11 @@ export default function DestinationDetail({slug,locale}:{slug:string;locale:"vi"
  if(error||!data)return <main id="main" className="destination-state"><div className="eyebrow">Destination</div><h1>{ui.fail}</h1><p>{error||"Không tìm thấy dữ liệu đã xuất bản."}</p><a className="button button-gold" href="/explore">{ui.back}</a></main>;
  const t=data.translation??{};
  return <main id="main" className="destination-page">
-  <section className={`destination-hero ${data.heroMedia?.url?"has-media":""}`} style={data.heroMedia?.url?{backgroundImage:`linear-gradient(90deg,rgba(6,42,36,.92),rgba(6,42,36,.42)),url("${data.heroMedia.url}")`}:undefined}>
+  <section className="destination-hero">
    <div className="container destination-hero-inner"><div className="destination-breadcrumb">World → {data.country.iso2} → {data.region?.slug??"Region"} → Destination</div><div className="eyebrow">{data.type}</div><h1>{t.name??data.slug}</h1>{t.tagline&&<p className="destination-tagline">{t.tagline}</p>}<p className="destination-summary">{t.summary??"Nội dung giới thiệu đang được biên tập từ dữ liệu đã xuất bản."}</p>
    <div className="destination-meta">{data.themes.map(x=><span key={x.id}>{x.name}</span>)}{data.meta.fallbackApplied&&<span>Ngôn ngữ dự phòng: {data.meta.resolvedLocale}</span>}</div></div>
   </section>
+  {data.heroMedia?.id ? <section className="section destination-media" aria-label={locale==="en"?"Destination imagery and provenance":"Hình ảnh và nguồn gốc điểm đến"}><div className="container"><PublishedMedia id={data.heroMedia.id} locale={locale} /></div></section> : <section className="destination-media-empty"><div className="container"><p>{locale==="en"?"No eligible published hero media is linked to this destination.":"Chưa có hero media đã xuất bản đủ điều kiện cho điểm đến này."}</p></div></section>}
   <nav className="destination-jump container" aria-label={locale==="en"?"Destination sections":"Đi tới nội dung điểm đến"}><a href="#understand">{ui.understand}</a><a href="#places">{ui.places}</a><a href="#turning-points">{ui.timeline}</a><a href="#stories">{ui.stories}</a><a href="#journeys">{ui.journeys}</a></nav>
   <section id="understand" className="section"><div className="container destination-intro"><div><div className="eyebrow">Understand</div><h2>Hiểu nơi này trước khi lên đường</h2><p>{t.description??t.summary??"Chưa có mô tả đã xuất bản cho điểm đến này."}</p></div><aside>{t.whyVisit&&<><strong>Vì sao nên khám phá</strong><p>{t.whyVisit}</p></>}{data.location&&<><strong>Vị trí</strong><p>{data.location.latitude.toFixed(4)}, {data.location.longitude.toFixed(4)}</p></>}</aside></div></section>
   <Section id="places" eyebrow="Places" title="Những nơi tạo nên điểm đến" items={data.places} kind="place"/>
