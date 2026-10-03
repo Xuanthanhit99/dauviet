@@ -9,6 +9,6 @@ export async function detailMetadata(kind:string,slug:string,locale:"vi"|"en",fa
   const title=tr.name??tr.title??tr.displayName??fallback;
   const description=tr.summary??tr.shortDescription??tr.description??undefined;
   const canonical=`/${kind}/${encodeURIComponent(d?.slug??slug)}`;
-  return {title,description,alternates:{canonical},openGraph:{title,description,url:canonical,type:"article"}};
+  return {title,description,alternates:{canonical},openGraph:{title,description,url:canonical,type:"website"}};
  }catch{return {title:fallback,robots:{index:false,follow:true}}}
 }
