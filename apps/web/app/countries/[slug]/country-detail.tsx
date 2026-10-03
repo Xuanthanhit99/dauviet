@@ -28,7 +28,7 @@ const hasPoint = (country: Country | null) => !!country?.location && Number.isFi
 async function readJson<T>(path: string, signal: AbortSignal): Promise<T> {
   const response = await fetch(`${API}${path}`, { credentials: "include", signal });
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload?.error?.message ?? "Khong the tai du lieu quoc gia.");
+  if (!response.ok) throw new Error(payload?.error?.message ?? "Không thể tải dữ liệu quốc gia.");
   return (payload?.data ?? payload) as T;
 }
 
@@ -60,7 +60,7 @@ export default function CountryDetail({ slug, locale }: { slug: string; locale: 
           setDestinations(destinationData);
         }
       })
-      .catch(reason => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Khong the tai du lieu quoc gia."); })
+      .catch(reason => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Không thể tải dữ liệu quốc gia."); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [slug, locale, attempt]);
@@ -76,32 +76,32 @@ export default function CountryDetail({ slug, locale }: { slug: string; locale: 
     { label: "Journeys", value: null, id: "country-gaps" },
   ], [regions.total, destinations.total]);
 
-  if (loading) return <main id="main" className="country-state" aria-busy="true"><p role="status">Dang mo ho so quoc gia...</p></main>;
-  if (error || !country) return <main id="main" className="country-state"><div className="eyebrow">Country</div><h1>Khong the mo quoc gia</h1><p role="alert">{error || "Khong tim thay quoc gia da xuat ban."}</p><div className="hero-actions"><button className="button button-gold" onClick={() => setAttempt(value => value + 1)}>Thu lai</button><a className="button" href="/map">Quay lai ban do</a></div></main>;
+  if (loading) return <main id="main" className="country-state" aria-busy="true"><p role="status">Đang mở hồ sơ quốc gia…</p></main>;
+  if (error || !country) return <main id="main" className="country-state"><div className="eyebrow">Country</div><h1>Không thể mở quốc gia</h1><p role="alert">{error || "Không tìm thấy quốc gia đã xuất bản."}</p><div className="hero-actions"><button className="button button-gold" onClick={() => setAttempt(value => value + 1)}>Thử lại</button><a className="button" href="/map">Quay lại bản đồ</a></div></main>;
 
   return <main id="main" className="country-page">
     <header className="country-hero">
       <div className="container country-hero-inner">
-        <nav className="country-breadcrumb" aria-label="Duong dan"><a href="/">Dau Viet Global</a><span aria-hidden="true">/</span><span>World</span><span aria-hidden="true">/</span><span>{country.iso2}</span></nav>
+        <nav className="country-breadcrumb" aria-label="Đường dẫn"><a href="/">Dấu Việt Global</a><span aria-hidden="true">/</span><span>World</span><span aria-hidden="true">/</span><span>{country.iso2}</span></nav>
         <div className="eyebrow">Country Detail V1 · {country.iso2}{country.iso3 ? ` / ${country.iso3}` : ""}</div>
         <h1 lang={country.meta.resolvedLocale}>{title}</h1>
         <p className="country-deck" lang={country.meta.resolvedLocale}>{country.translation?.shortDescription || "Ho so quoc gia nay chua co tom tat da xuat ban."}</p>
-        {country.meta.fallbackApplied && <p className="locale-fallback">Ngon ngu du phong: {country.meta.resolvedLocale}</p>}
-        <div className="country-hero-grid" aria-label="Tong quan quan he">
-          <a href="#country-regions"><strong>{regions.total}</strong><span>Regions da xuat ban</span></a>
-          <a href="#country-destinations"><strong>{destinations.total}</strong><span>Destinations da xuat ban</span></a>
-          <a href="#country-spatial"><strong>{located ? "1" : "0"}</strong><span>Diem toa do quoc gia</span></a>
+        {country.meta.fallbackApplied && <p className="locale-fallback">Ngôn ngữ dự phòng: {country.meta.resolvedLocale}</p>}
+        <div className="country-hero-grid" aria-label="Tổng quan quan hệ">
+          <a href="#country-regions"><strong>{regions.total}</strong><span>Vùng đã xuất bản</span></a>
+          <a href="#country-destinations"><strong>{destinations.total}</strong><span>Điểm đến đã xuất bản</span></a>
+          <a href="#country-spatial"><strong>{located ? "1" : "0"}</strong><span>Điểm tọa độ quốc gia</span></a>
         </div>
-        <p className="country-media-empty">Country V1 khong co truong hero media cong khai. Man hinh nay khong dung anh thay the.</p>
+        <p className="country-media-empty">Country V1 chưa có trường hero media công khai. Màn hình này không dùng ảnh thay thế.</p>
       </div>
     </header>
 
-    <nav className="country-jump container" aria-label="Trong quoc gia">
+    <nav className="country-jump container" aria-label="Trong quốc gia">
       <a href="#country-understand">Understand</a><a href="#country-regions">Regions</a><a href="#country-destinations">Destinations</a><a href="#country-spatial">Spatial context</a><a href="#country-gaps">Trust notes</a>
     </nav>
 
     <section id="country-understand" className="country-introduction container" aria-labelledby="country-understand-title">
-      <div><div className="eyebrow">Understand this country</div><h2 id="country-understand-title">Doc tu du lieu da xuat ban</h2></div>
+      <div><div className="eyebrow">Understand this country</div><h2 id="country-understand-title">Đọc từ dữ liệu đã xuất bản</h2></div>
       <div className="country-description" lang={country.meta.resolvedLocale}>{description ? description.split(/\n\s*\n/).map((paragraph, index) => <p key={index}>{paragraph}</p>) : <p>Chua co mo ta hoac boi canh lich su da xuat ban cho quoc gia nay.</p>}</div>
       <aside className="country-facts" aria-label="Thong tin hop dong">
         <dl>
