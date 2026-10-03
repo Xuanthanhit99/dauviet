@@ -40,7 +40,7 @@ export default function ExploreMapClient() {
   const [year, setYear] = useState("");
   const [types, setTypes] = useState("");
   const [selectedId, setSelectedId] = useState<string>();
-  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
 
   const load = useCallback(async (map: MapLibreMap) => {
     abortRef.current?.abort();
