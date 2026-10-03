@@ -175,3 +175,10 @@ test("keyboard focus, 44px controls and reduced motion", async ({ page }) => {
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe("auto");
   expect(await page.locator(".event-page a,.event-page button").evaluateAll(nodes => nodes.filter(el => el.getBoundingClientRect().height > 0 && el.getBoundingClientRect().height < 44).map(el => el.textContent))).toEqual([]);
 });
+
+
+test("event detail uses global consumer shell", async ({ page }) => {
+  await page.goto("/events/qa-event");
+  await expect(page.locator("header.consumer-header")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Khám phá thêm" })).toBeVisible();
+});

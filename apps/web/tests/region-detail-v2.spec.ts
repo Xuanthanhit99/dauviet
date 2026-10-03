@@ -138,3 +138,10 @@ test("keyboard focus, touch targets, long text and reduced motion", async ({ pag
   const tooSmall = await page.locator(".region-page a, .region-page button").evaluateAll(nodes => nodes.filter(node => node.getBoundingClientRect().height > 0 && node.getBoundingClientRect().height < 44).map(node => node.textContent));
   expect(tooSmall).toEqual([]);
 });
+
+
+test("region detail uses global consumer shell", async ({ page }) => {
+  await page.goto("/regions/qa-region");
+  await expect(page.locator("header.consumer-header")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Khám phá thêm" })).toBeVisible();
+});

@@ -3,6 +3,7 @@
 import {FormEvent,useState} from "react";
 import {DauVietApiError} from "@dauviet/api-client";
 import {webApi} from "../session";
+import {ConsumerShell} from "../../components/consumer-shell";
 
 export default function RegisterPage(){
  const [message,setMessage]=useState(""); const [error,setError]=useState(""); const [busy,setBusy]=useState(false);
@@ -15,7 +16,7 @@ export default function RegisterPage(){
   }catch(value){setError(value instanceof DauVietApiError?value.message:"Không thể đăng ký lúc này.");}
   finally{setBusy(false);}
  }
- return <main id="main" className="auth-shell"><section className="auth-card" aria-labelledby="register-title">
+ return <ConsumerShell><main id="main" className="auth-shell"><section className="auth-card" aria-labelledby="register-title">
   <div className="eyebrow">Bắt đầu hành trình</div><h1 id="register-title">Tạo tài khoản</h1>
   <form onSubmit={submit} className="auth-form">
    <label>Tên hiển thị<input name="displayName" autoComplete="name" required/></label>
@@ -24,5 +25,5 @@ export default function RegisterPage(){
    {error&&<p role="alert">{error}</p>}{message&&<p role="status">{message}</p>}
    <button className="button button-gold" disabled={busy} type="submit">{busy?"Đang tạo…":"Tạo tài khoản"}</button>
   </form><p><a href="/auth/login">Đã có tài khoản? Đăng nhập</a></p>
- </section></main>
+ </section></main></ConsumerShell>
 }

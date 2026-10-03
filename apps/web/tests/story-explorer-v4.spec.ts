@@ -76,3 +76,11 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 834, height: 1112 
     await page.screenshot({ path: testInfo.outputPath(`story-${viewport.width}.png`), fullPage: true });
   });
 }
+
+
+test("Story Explorer uses the global consumer shell", async ({ page }) => {
+  await mock(page);
+  await page.goto("/stories/thanh-co-va-ky-uc");
+  await expect(page.getByRole("navigation", { name: /Điều hướng chính|Primary navigation/ })).toBeVisible();
+  await expect(page.getByRole("contentinfo")).toBeVisible();
+});

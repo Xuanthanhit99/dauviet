@@ -1,8 +1,13 @@
+import { DetailJsonLd } from "../../components/detail-jsonld";
+import { detailMetadata } from "../../components/detail-metadata";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { ConsumerShell } from "../../components/consumer-shell";
 import JourneyDetail from "./journey-detail";
+
+export async function generateMetadata({params,searchParams}:{params:Promise<{slug:string}>;searchParams:Promise<{locale?:string}>}){const [{slug},q]=await Promise.all([params,searchParams]);const locale=q.locale==="en"?"en":"vi";return detailMetadata("journeys",slug,locale,"Hành trình");}
 
 export default async function JourneyPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ locale?: string }> }) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   const locale = query.locale === "en" ? "en" : "vi";
-  return <JourneyDetail key={`${slug}-${locale}`} slug={slug} locale={locale}/>;
+  return <ConsumerShell><DetailJsonLd kind="journeys" slug={slug} locale={locale} /><JourneyDetail key={`${slug}-${locale}`} slug={slug} locale={locale} /></ConsumerShell>;
 }

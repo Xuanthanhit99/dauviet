@@ -27,7 +27,6 @@ export default function PersonDetail({ slug, locale }: { slug: string; locale: P
   const places = person.places ?? [];
   const canonicalSlug = person.slug || slug;
   return <div className="person-page" lang={locale}>
-    <header className="person-topbar person-wrap"><a href="/" aria-label={`Dấu Việt Global — ${t.home}`}><img src="/brand/dvg-logo-horizontal-primary-light-v1.4.1.svg" width="230" height="48" alt="Dấu Việt Global" /></a><nav aria-label={t.language}><a href="?locale=vi" lang="vi" aria-current={locale === "vi" ? "page" : undefined}>VI</a><a href="?locale=en" lang="en" aria-current={locale === "en" ? "page" : undefined}>EN</a></nav></header>
     <main id="main">
       <header className="person-hero"><div className="person-wrap">
         <nav className="person-breadcrumb" aria-label={t.breadcrumb}><a href="/">Dấu Việt Global</a><span aria-hidden="true">/</span><span aria-current="page">{t.person}</span></nav>
@@ -47,7 +46,7 @@ export default function PersonDetail({ slug, locale }: { slug: string; locale: P
       <PersonTimeline key={`timeline-${canonicalSlug}-${locale}`} slug={canonicalSlug} locale={locale} />
       <RelatedStories key={`stories-${canonicalSlug}-${locale}`} entity="people" prefix="person" copy={t} slug={canonicalSlug} locale={locale} />
       <RelatedSources key={`sources-${canonicalSlug}`} entity="people" prefix="person" copy={t} slug={canonicalSlug} locale={locale} />
-      <footer className="person-end"><div className="person-wrap"><p className="person-kicker">{t.continue}</p><a href="#person-timeline">{t.backEvents}<span aria-hidden="true">↑</span></a><a href="/map">{t.map}<span aria-hidden="true">↗</span></a><p>DẤU VIỆT GLOBAL · Explore Places. Understand Stories.</p></div></footer>
+
     </main>
   </div>;
 }

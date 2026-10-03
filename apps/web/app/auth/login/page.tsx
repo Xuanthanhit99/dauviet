@@ -3,6 +3,7 @@
 import {FormEvent,useState} from "react";
 import {DauVietApiError} from "@dauviet/api-client";
 import {webApi} from "../session";
+import {ConsumerShell} from "../../components/consumer-shell";
 
 export default function LoginPage(){
  const [error,setError]=useState(""); const [busy,setBusy]=useState(false);
@@ -17,7 +18,7 @@ export default function LoginPage(){
    setBusy(false);
   }
  }
- return <main id="main" className="auth-shell"><section className="auth-card" aria-labelledby="login-title">
+ return <ConsumerShell><main id="main" className="auth-shell"><section className="auth-card" aria-labelledby="login-title">
   <div className="eyebrow">Tài khoản Dấu Việt</div><h1 id="login-title">Đăng nhập</h1>
   <p>Tiếp tục hành trình, cộng tác chuyến đi và lưu những nơi bạn quan tâm.</p>
   <form onSubmit={submit} className="auth-form">
@@ -27,5 +28,5 @@ export default function LoginPage(){
    <button className="button button-gold" disabled={busy} type="submit">{busy?"Đang đăng nhập…":"Đăng nhập"}</button>
   </form>
   <p><a href="/auth/register">Chưa có tài khoản? Đăng ký</a></p>
- </section></main>
+ </section></main></ConsumerShell>
 }

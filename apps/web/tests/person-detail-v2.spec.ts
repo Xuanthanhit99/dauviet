@@ -163,3 +163,10 @@ test("Event Person link opens the supplied Person profile", async ({ page }) => 
   await expect(page).toHaveURL(/\/people\/nhan-vat-qa\?locale=vi$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(person.translation.displayName);
 });
+
+
+test("person detail uses global consumer shell", async ({ page }) => {
+  await page.goto("/people/qa-person");
+  await expect(page.locator("header.consumer-header")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Khám phá thêm" })).toBeVisible();
+});
