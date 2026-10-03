@@ -37,7 +37,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 834, height: 1112 
     await expect(page.getByText("World", { exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Cac vung da xuat ban" })).toBeVisible();
     await expect(page.getByRole("link", { name: /Pho co Ha Noi/ })).toHaveAttribute("href", "/destinations/pho-co-ha-noi");
-    await expect(page.getByText("Country V1 khong co truong hero media cong khai.")).toBeVisible();
+    await expect(page.getByText("Country V1 chưa có trường hero media công khai.")).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
     mkdirSync("qa-evidence/pass-09", { recursive: true });
     await page.screenshot({ path: `qa-evidence/pass-09/country-${viewport.width}.png`, fullPage: true });
@@ -64,7 +64,7 @@ test("empty relationship lists, no coordinate and fallback stay explicit", async
     destinations: { items: [], page: 1, pageSize: 12, total: 0, totalPages: 0 },
   });
   await page.goto("/countries/viet-nam");
-  await expect(page.getByText("Ngon ngu du phong: vi")).toBeVisible();
+  await expect(page.getByText("Ngôn ngữ dự phòng: vi")).toBeVisible();
   await expect(page.getByText("Chua co region da xuat ban cho quoc gia nay.")).toBeVisible();
   await expect(page.getByText("Chua co destination da xuat ban cho quoc gia nay.")).toBeVisible();
   await expect(page.getByText("Ban do duoc bo qua de tranh tao bien gioi hoac vi tri suy dien.")).toBeVisible();
@@ -85,9 +85,9 @@ test("country API errors can be retried", async ({ page }) => {
   await page.route("**/v1/countries/viet-nam/cities?**", route => route.fulfill({ json: { data: cities } }));
   await page.route("**/v1/countries/viet-nam/destinations?**", route => route.fulfill({ json: { data: destinations } }));
   await page.goto("/countries/viet-nam");
-  await expect(page.getByRole("heading", { name: "Khong the mo quoc gia" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Không thể mở quốc gia" })).toBeVisible();
   fail = false;
-  await page.getByRole("button", { name: "Thu lai" }).click();
+  await page.getByRole("button", { name: "Thử lại" }).click();
   await expect(page.getByRole("heading", { name: "Viet Nam", level: 1 })).toBeVisible();
 });
 
@@ -106,5 +106,5 @@ test("keyboard focus and reduced motion remain accessible", async ({ page }) => 
 test("country detail uses global consumer shell", async ({ page }) => {
   await page.goto("/countries/viet-nam");
   await expect(page.locator("header.consumer-header")).toBeVisible();
-  await expect(page.locator("footer.consumer-footer")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Khám phá thêm" })).toBeVisible();
 });
