@@ -21,3 +21,13 @@ test("Destination V4 composition and links",async({page})=>{await fulfill(page);
 test("Destination V4 explicit empty sections and fallback",async({page})=>{await fulfill(page,{...destination,places:[],stories:[],journeys:[],historicalTurningPoints:[],meta:{requestedLocale:"en",resolvedLocale:"vi",fallbackApplied:true}});await page.goto("/destinations/ha-noi");await expect(page.getByText("Ngôn ngữ dự phòng: vi")).toBeVisible();await expect(page.getByText("Chưa có nội dung đã xuất bản trong phần này.")).toHaveCount(3);await expect(page.getByText("Chưa có bước ngoặt lịch sử đã xuất bản.")).toBeVisible();});
 test("Destination V4 API error",async({page})=>{await fulfill(page,null,404);await page.goto("/destinations/khong-ton-tai");await expect(page.getByRole("heading",{name:"Không thể mở điểm đến"})).toBeVisible();await expect(page.getByText("Không tìm thấy điểm đến.")).toBeVisible();});
 test("Destination V4 keyboard and reduced motion",async({page})=>{await fulfill(page);await page.emulateMedia({reducedMotion:"reduce"});await page.goto("/destinations/ha-noi");const jump=page.getByRole("link",{name:"Hiểu điểm đến"});await jump.focus();await expect(jump).toBeFocused();expect(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior)).toBe("auto");});
+
+
+test("Destination V4 ignores raw hero URL and requires resolved eligible media", async ({ page }) => {
+ const withHero={...destination,heroMedia:{id:"hero-unsafe",url:"https://untrusted.example.test/raw.jpg"}};
+ await fulfill(page,withHero);
+ await page.route("**/v1/media/hero-unsafe", route=>route.fulfill({status:200,json:{data:{id:"hero-unsafe",type:"PHOTO",mimeType:"image/jpeg",status:"READY",accessPolicy:"PUBLIC",rightsStatus:"UNKNOWN",url:"https://untrusted.example.test/raw.jpg",provenanceNote:null}}}));
+ await page.goto("/destinations/ha-noi");
+ await expect(page.locator('img[src*="untrusted.example.test"]')).toHaveCount(0);
+ await expect(page.getByRole("status").filter({hasText:"Media chưa khả dụng"})).toBeVisible();
+});
