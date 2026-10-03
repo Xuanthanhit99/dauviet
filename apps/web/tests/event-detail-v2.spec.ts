@@ -180,5 +180,5 @@ test("keyboard focus, 44px controls and reduced motion", async ({ page }) => {
 test("event detail uses global consumer shell", async ({ page }) => {
   await page.goto("/events/qa-event");
   await expect(page.locator("header.consumer-header")).toBeVisible();
-  await expect(page.locator("footer.consumer-footer")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Khám phá thêm" })).toBeVisible();
 });
