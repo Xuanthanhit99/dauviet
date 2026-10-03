@@ -12,7 +12,7 @@ for (const viewport of viewports) {
     await page.goto("/map");
     await expect(page.getByRole("heading", { name: "Khám phá không gian qua thời gian" })).toBeVisible();
     await expect(page.getByLabel("Bản đồ khám phá Dấu Việt")).toBeVisible();
-    await expect(page.getByRole("complementary", { name: "Danh sách đồng bộ với bản đồ" })).toBeVisible();
+    const results=page.getByRole("complementary", { name: "Danh sách đồng bộ với bản đồ" });\n    await expect(results).toBeVisible();\n    if (viewport.width <= 960) { await expect(page.getByRole("button", { name: /Ẩn danh sách|Xem .* dấu vết/ })).toBeVisible(); }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
   });
 }
