@@ -101,3 +101,10 @@ test("keyboard focus and reduced motion remain accessible", async ({ page }) => 
   expect(await link.evaluate(element => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe("auto");
 });
+
+
+test("country detail uses global consumer shell", async ({ page }) => {
+  await page.goto("/countries/viet-nam");
+  await expect(page.locator("header.consumer-header")).toBeVisible();
+  await expect(page.locator("footer.consumer-footer")).toBeVisible();
+});
