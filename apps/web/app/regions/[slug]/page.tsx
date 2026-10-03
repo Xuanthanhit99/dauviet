@@ -1,10 +1,9 @@
+import { ConsumerShell } from "../../components/consumer-shell";
 import RegionDetail from "./region-detail";
 import "./region.css";
 
-export default async function RegionPage({ params, searchParams }: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ locale?: string }>;
-}) {
+export default async function RegionPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ locale?: string }> }) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
-  return <RegionDetail slug={slug} locale={query.locale === "en" ? "en" : "vi"} />;
+  const locale = query.locale === "en" ? "en" : "vi";
+  return <ConsumerShell><RegionDetail key={`${slug}-${locale}`} slug={slug} locale={locale} /></ConsumerShell>;
 }
