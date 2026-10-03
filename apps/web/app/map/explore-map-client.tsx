@@ -40,7 +40,9 @@ export default function ExploreMapClient() {
   const [year, setYear] = useState("");
   const [types, setTypes] = useState("");
   const [selectedId, setSelectedId] = useState<string>();
-  const [panelOpen, setPanelOpen] = useState(true);\n  const places = features.filter(feature => feature.properties?.entityType === "PLACE").slice(0, 6);\n  const events = features.filter(feature => feature.properties?.entityType === "EVENT").slice(0, 4);
+  const [panelOpen, setPanelOpen] = useState(true);
+  const places = features.filter(feature => feature.properties?.entityType === "PLACE").slice(0, 6);
+  const events = features.filter(feature => feature.properties?.entityType === "EVENT").slice(0, 4);
 
   const load = useCallback(async (map: MapLibreMap) => {
     abortRef.current?.abort();
