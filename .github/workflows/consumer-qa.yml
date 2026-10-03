@@ -95,6 +95,16 @@ jobs:
           path: apps/web/qa-evidence/home-v5/*.png
           if-no-files-found: error
           retention-days: 14
+      - name: Map V4 visual evidence (390 / 1536)
+        run: pnpm --filter @dauviet/web exec playwright test tests/map-v4-visual.spec.ts
+      - name: Upload Map V4 visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: map-v4-visual-${{ github.sha }}
+          path: apps/web/qa-evidence/map-v4/*.png
+          if-no-files-found: error
+          retention-days: 14
       - name: Web accessibility gate
         run: pnpm --filter @dauviet/web exec playwright test tests/accessibility.spec.ts
       - name: Web auth/session and ownership RBAC gate
