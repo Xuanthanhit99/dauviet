@@ -29,7 +29,6 @@ export default function EventDetail({ slug, locale }: { slug: string; locale: Ev
   const places = event.places ?? [], countries = event.countries ?? [], people = event.people ?? [], themes = event.themes ?? [];
   const hasContext = people.length || themes.length || event.era || event.territory;
   return <div className="event-page" lang={locale}>
-    <header className="event-topbar event-wrap"><a href="/" aria-label={`Dấu Việt Global — ${t.home}`}><img src="/brand/dvg-logo-horizontal-primary-light-v1.4.1.svg" width="230" height="48" alt="Dấu Việt Global" /></a><nav aria-label={t.language}><a href="?locale=vi" lang="vi" aria-current={locale === "vi" ? "page" : undefined}>VI</a><a href="?locale=en" lang="en" aria-current={locale === "en" ? "page" : undefined}>EN</a></nav></header>
     <main id="main">
       <header className="event-hero"><div className="event-wrap">
         <nav className="event-breadcrumb" aria-label={t.breadcrumb}><a href="/">Dấu Việt Global</a><span aria-hidden="true">/</span><span aria-current="page">{t.event}</span></nav>
@@ -53,7 +52,7 @@ export default function EventDetail({ slug, locale }: { slug: string; locale: Ev
       </div> : <p className="event-empty">{t.noContext}</p>}<p className="event-small event-context-note">{t.relationLocale}</p></div></section>
       <RelatedStories entity="events" prefix="event" copy={t} key={`stories-${event.slug}-${locale}`} slug={event.slug || slug} locale={locale} />
       <RelatedSources entity="events" prefix="event" copy={t} key={`sources-${event.slug}`} slug={event.slug || slug} locale={locale} />
-      <footer className="event-end"><div className="event-wrap"><p className="event-kicker">{t.continue}</p><a href="#event-stories">{t.backStories}<span aria-hidden="true">↑</span></a><a href="/map">{t.map}<span aria-hidden="true">↗</span></a><p>DẤU VIỆT GLOBAL · Explore Places. Understand Stories.</p></div></footer>
+
     </main>
   </div>;
 }
