@@ -120,3 +120,11 @@ test("loading is announced and API errors can be retried", async ({ page }) => {
   await page.getByRole("button", { name: "Thử lại" }).click();
   await expect(page.getByRole("heading", { name: journey.translation.title, exact: true })).toBeVisible();
 });
+
+
+test("Journey detail uses the global consumer shell", async ({ page }) => {
+  await mock(page);
+  await page.goto("/journeys/hanh-trinh-qa");
+  await expect(page.getByRole("navigation", { name: /Điều hướng chính|Primary navigation/ })).toBeVisible();
+  await expect(page.getByRole("contentinfo")).toBeVisible();
+});
