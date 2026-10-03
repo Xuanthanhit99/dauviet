@@ -41,6 +41,8 @@ export default function ExploreMapClient() {
   const [types, setTypes] = useState("");
   const [selectedId, setSelectedId] = useState<string>();
   const [panelOpen, setPanelOpen] = useState(true);
+  const places = features.filter(feature => feature.properties?.entityType === "PLACE").slice(0, 6);
+  const events = features.filter(feature => feature.properties?.entityType === "EVENT").slice(0, 4);
 
   const load = useCallback(async (map: MapLibreMap) => {
     abortRef.current?.abort();
@@ -129,30 +131,26 @@ export default function ExploreMapClient() {
     if (feature.geometry.type === "Point" && mapRef.current) mapRef.current.easeTo({ center: feature.geometry.coordinates as [number, number], zoom: Math.max(mapRef.current.getZoom(), 10) });
   };
 
-  return <main id="main" className="map-page">
-    <section className="map-toolbar" aria-labelledby="map-title">
-      <div><div className="eyebrow">Explore Map</div><h1 id="map-title">Khám phá không gian qua thời gian</h1><p>Địa điểm, sự kiện và lãnh thổ được tải theo đúng khung nhìn hiện tại. Mật độ thay đổi theo mức zoom do backend quyết định.</p><div className="map-discovery-links"><a href="/explore">Tìm theo tên</a><span aria-hidden="true">·</span><a href="/stories">Đọc câu chuyện</a><span aria-hidden="true">·</span><a href="/journeys">Theo hành trình</a></div></div>
-      <form className="map-controls" onSubmit={(event) => { event.preventDefault(); if (mapRef.current) void load(mapRef.current); }}>
-        <label>Năm lịch sử<input inputMode="numeric" pattern="-?[0-9]*" value={year} onChange={(e)=>setYear(e.target.value)} placeholder="Ví dụ: 1288" /></label>
-        <label>Loại địa điểm<select value={types} onChange={(e)=>setTypes(e.target.value)}><option value="">Tất cả</option><option value="HERITAGE_SITE">Di sản</option><option value="ARCHAEOLOGICAL_SITE">Khảo cổ</option><option value="MONUMENT">Di tích</option></select></label>
+  return <main id="main" className="travel-map-v4">
+    <section className="tm-hero"><div className="container tm-hero-inner"><div className="eyebrow">Khám phá Việt Nam</div><h1>Đi đến một nơi.<br/>Hiểu câu chuyện của nơi ấy.</h1><p>Dấu Việt kết nối địa điểm đã xuất bản với sự kiện và câu chuyện trong đúng bối cảnh. Bản đồ là điểm bắt đầu, không phải điểm kết thúc.</p><div className="tm-hero-actions"><a className="button button-gold" href="#explore-area">Khám phá quanh đây</a><a className="button button-quiet" href="/journeys">Xem hành trình</a></div></div></section>
+    <section id="explore-area" className="container tm-discovery">
+      <div className="tm-search-row"><div><div className="eyebrow">Explore places</div><h2>Hôm nay bạn muốn khám phá đâu?</h2></div><div className="map-discovery-links"><a href="/explore">Tìm theo tên</a><a href="/stories">Câu chuyện</a><a href="/journeys">Hành trình</a></div></div>
+      <form className="tm-filters" onSubmit={(event)=>{event.preventDefault();if(mapRef.current)void load(mapRef.current)}}>
+        <label>Thời điểm lịch sử<input inputMode="numeric" pattern="-?[0-9]*" value={year} onChange={(e)=>setYear(e.target.value)} placeholder="Ví dụ: 1288"/></label>
+        <label>Loại địa điểm<select value={types} onChange={(e)=>setTypes(e.target.value)}><option value="">Tất cả địa điểm</option><option value="HERITAGE_SITE">Di sản</option><option value="ARCHAEOLOGICAL_SITE">Khảo cổ</option><option value="MONUMENT">Di tích</option></select></label>
         <button type="submit" className="button button-gold">Áp dụng</button>
       </form>
+      <div className="tm-main-grid">
+        <div className="tm-map-column"><div className="tm-map-frame"><div className="tm-map" ref={hostRef} aria-label="Bản đồ khám phá Dấu Việt"/><div className="tm-map-caption"><strong>Khám phá quanh bản đồ</strong><span>{status==="loading"?"Đang tải dữ liệu…":status==="error"?error:`${features.length} dấu vết đã xuất bản trong khung nhìn`}</span></div></div><div className="tm-history-lens"><div><span className="eyebrow">Historical lens</span><strong>{year?`Bối cảnh năm ${year}`:"Bật lớp thời gian khi bạn muốn hiểu sâu hơn"}</strong></div><a href="/stories">Đi vào câu chuyện →</a></div></div>
+        <aside className="tm-place-feed" aria-label="Địa điểm trong khu vực"><div className="tm-section-title"><div><span className="eyebrow">Điểm đến</span><h2>Đáng khám phá trong khu vực</h2></div><a href="/explore">Xem tất cả</a></div>
+          {meta.truncated&&<p className="tm-notice">Khung nhìn có nhiều kết quả. Phóng to bản đồ để khám phá cụ thể hơn.</p>}
+          {status==="ready"&&places.length===0&&<div className="tm-empty"><strong>Chưa có địa điểm đã xuất bản ở khung nhìn này.</strong><span>Di chuyển bản đồ hoặc mở Khám phá để tìm theo tên.</span></div>}
+          <div className="tm-place-list">{places.map((feature,index)=><button type="button" key={feature.properties?.id??index} className={`tm-place-card ${selectedId===feature.properties?.id?"is-selected":""}`} onClick={()=>selectFromList(feature)}><span className="tm-card-index" aria-hidden="true">⌖</span><span><strong>{featureLabel(feature)}</strong><small>{feature.properties?.placeType??"Địa điểm"} · dữ liệu đã xuất bản</small></span><span aria-hidden="true">→</span></button>)}</div>
+          {selectedFeature&&<article className="tm-selected"><div className="eyebrow">Đang khám phá</div><h3>{featureLabel(selectedFeature)}</h3><p>{selectedFeature.properties?.entityType==="TERRITORY"?"Lãnh thổ lịch sử chỉ được trình bày trong đúng bối cảnh thời gian, không suy diễn thành biên giới hiện tại.":"Mở hồ sơ để xem thông tin, câu chuyện và nguồn đã xuất bản của nơi này."}</p>{selectedRoute&&<a className="button button-gold" href={selectedRoute}>Mở hồ sơ địa điểm</a>}</article>}
+        </aside>
+      </div>
     </section>
-    <section className="map-workspace">
-      <div className="map-canvas" ref={hostRef} aria-label="Bản đồ khám phá Dấu Việt" />
-      <button className="map-results-toggle" type="button" aria-expanded={panelOpen} aria-controls="map-result-panel" onClick={()=>setPanelOpen(v=>!v)}>{panelOpen?"Ẩn danh sách":`Xem ${features.length} dấu vết`}</button><aside id="map-result-panel" className={`map-results ${panelOpen?"is-open":""}`} aria-label="Danh sách đồng bộ với bản đồ">
-        <div className="eyebrow">Trong khung nhìn</div><h2>Những dấu vết có thể khám phá</h2>
-        <div className="map-live" aria-live="polite">{status === "loading" ? "Đang tải dữ liệu…" : status === "error" ? error : `${features.length} dấu vết trong khung nhìn.`}</div>
-        {meta.truncated && <div className="map-warning">Kết quả đã đạt giới hạn {meta.limit ?? ""}. Hãy phóng to để xem chi tiết hơn.</div>}
-        {status === "ready" && features.length === 0 && <p className="map-note">Không có thực thể đã xuất bản phù hợp trong khung nhìn này.</p>}
-        {selectedFeature && <article className="map-selection" role="status"><div className="eyebrow">Đang chọn</div><strong>{featureLabel(selectedFeature)}</strong><small>{selectedFeature.properties?.entityType}{selectedFeature.properties?.placeType?` · ${selectedFeature.properties.placeType}`:""}</small>{selectedRoute ? <a className="button button-gold" href={selectedRoute}>Mở hồ sơ chi tiết <span aria-hidden="true">↗</span></a> : <p>Lãnh thổ lịch sử chỉ được trình bày trong ngữ cảnh bản đồ; không suy diễn thành biên giới hiện tại.</p>}</article>}\n        <div className="map-feature-list">{features.map((feature,index)=>{
-          const id=feature.properties?.id ?? `${feature.properties?.entityType ?? "feature"}-${index}`;
-          return <button type="button" key={id} className="map-feature" aria-pressed={selectedId===feature.properties?.id} onClick={()=>selectFromList(feature)}>
-            <span className={`feature-symbol ${(feature.properties?.entityType ?? "").toLowerCase()}`} aria-hidden="true"/>
-            <span><strong>{featureLabel(feature)}</strong><small>{feature.properties?.entityType ?? "UNKNOWN"}{feature.properties?.placeType ? ` · ${feature.properties.placeType}` : ""}</small></span>
-          </button>;
-        })}</div>
-      </aside>
-    </section>
+    <section className="tm-story-band"><div className="container tm-story-grid"><div><span className="eyebrow">Understand stories</span><h2>Đằng sau mỗi nơi là những lớp thời gian.</h2><p>Chỉ những sự kiện đã xuất bản trong khung nhìn hiện tại mới xuất hiện ở đây. Không tự tạo dữ liệu để lấp khoảng trống.</p></div><div className="tm-event-list">{events.length?events.map((feature,index)=><article key={feature.properties?.id??index}><span>Sự kiện</span><strong>{featureLabel(feature)}</strong>{feature.properties?.slug&&<a href={`/events/${encodeURIComponent(feature.properties.slug)}`}>Đọc trong bối cảnh →</a>}</article>):<div className="tm-empty tm-empty-dark">Chưa có sự kiện đã xuất bản trong khung nhìn hiện tại.</div>}</div></div></section>
+    <section className="container tm-journey"><div><span className="eyebrow">Đi tiếp</span><h2>Biến những nơi bạn quan tâm thành một hành trình.</h2></div><div className="tm-journey-actions"><a href="/journeys" className="button button-gold">Khám phá hành trình</a><a href="/stories" className="tm-text-link">Đọc câu chuyện</a></div></section>
   </main>;
 }
