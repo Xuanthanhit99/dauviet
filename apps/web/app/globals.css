@@ -289,3 +289,43 @@ a.country-entity{min-height:112px}
 .locked-map-v4 .lm-timeline{min-height:68px;padding-block:7px}
 @media(max-width:960px){.consumer-header:has(+ .locked-map-v4){position:absolute}.consumer-header:has(+ .locked-map-v4) .header-inner{height:58px}.locked-map-v4 .lm-hero{padding-top:52px}}
 @media(max-width:600px){.locked-map-v4 .lm-hero{min-height:430px}.locked-map-v4 .lm-hero-copy{padding-top:38px;padding-bottom:132px}.locked-map-v4 .lm-explore{padding-inline:14px}.locked-map-v4 .lm-map-wrap{height:340px}.locked-map-v4 .lm-card-photo{height:140px}}
+
+/* Map V4 mobile recovery + desktop polish */
+.locked-map-v4 .lm-map:after{content:"";position:absolute;inset:0;pointer-events:none;background:rgba(2,28,24,.12);mix-blend-mode:multiply}
+.locked-map-v4 .lm-hero:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(1,15,13,.14),rgba(1,15,13,.04) 55%,rgba(1,15,13,.24))}
+.locked-map-v4 .lm-hero-copy,.locked-map-v4 .lm-hero-shortcuts,.locked-map-v4 .lm-hero-gallery{z-index:2}
+@media(min-width:961px){
+ .consumer-header:has(+ .locked-map-v4) .brand-logo{max-width:216px}
+ .locked-map-v4 .lm-hero{background-image:linear-gradient(90deg,rgba(2,24,21,.96) 0%,rgba(2,24,21,.66) 28%,rgba(2,24,21,.18) 60%,rgba(2,24,21,.78) 100%),var(--lm-photo)}
+ .locked-map-v4 .lm-map{filter:saturate(.72) brightness(.74) contrast(1.08)}
+}
+@media(max-width:600px){
+ .consumer-header:has(+ .locked-map-v4) .header-inner{height:54px;padding-inline:14px}
+ .consumer-header:has(+ .locked-map-v4) .brand-logo{max-width:158px}
+ .locked-map-v4 .lm-hero{min-height:438px;padding-top:54px;background-position:54% center}
+ .locked-map-v4 .lm-hero-copy{position:relative;z-index:3;width:auto;margin:0;padding:34px 18px 0}
+ .locked-map-v4 .lm-kicker{font-size:10px}
+ .locked-map-v4 .lm-hero h1{font-size:42px;margin:8px 0 9px}
+ .locked-map-v4 .lm-hero h1 span{width:27px;height:27px;font-size:14px}
+ .locked-map-v4 .lm-hero-copy p{max-width:300px;font-size:13px;line-height:1.38}
+ .locked-map-v4 .lm-actions{gap:13px;margin-top:12px}
+ .locked-map-v4 .lm-primary{padding:10px 14px}
+ .locked-map-v4 .lm-video{font-size:11px}
+ .locked-map-v4 .lm-hero-shortcuts{z-index:4;left:14px;right:14px;bottom:14px;display:flex;gap:7px;overflow-x:auto;padding:0 0 2px;scroll-snap-type:x mandatory}
+ .locked-map-v4 .lm-hero-shortcuts a{flex:0 0 145px;min-height:50px;grid-template-columns:22px 1fr auto;padding:6px 8px;scroll-snap-align:start}
+ .locked-map-v4 .lm-hero-shortcuts b{font-size:11px;white-space:nowrap}
+ .locked-map-v4 .lm-hero-shortcuts small{font-size:8px;white-space:nowrap}
+ .locked-map-v4 .lm-toolbar{margin-bottom:8px}
+ .locked-map-v4 .lm-main{display:flex;flex-direction:column}
+ .locked-map-v4 .lm-map-wrap{order:0;height:280px;margin-inline:-14px}
+ .locked-map-v4 .lm-content{order:1;padding-top:4px}
+ .locked-map-v4 .lm-content>header{gap:10px;align-items:center}
+ .locked-map-v4 .lm-content>header h2{max-width:245px;font-size:17px}
+ .locked-map-v4 .lm-content>header a{flex:0 0 auto}
+ .locked-map-v4 .lm-destination-grid>button{flex-basis:76vw}
+ .locked-map-v4 .lm-card-photo{height:132px}
+ .locked-map-v4 .lm-media-credit{font-size:7px}
+ .locked-map-v4 .lm-mini,.locked-map-v4 .lm-story,.locked-map-v4 .lm-journey-card{flex-basis:72vw}
+ .locked-map-v4 .lm-lower{padding-inline:0}
+ .locked-map-v4 .lm-timeline{padding-top:14px}
+}
