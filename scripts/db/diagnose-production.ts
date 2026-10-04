@@ -48,11 +48,13 @@ async function main() {
     WHERE "publicationStatus" = 'PUBLISHED' AND "location" IS NOT NULL
   `;
 
-  const projection = await prisma.searchProjectionQueue.groupBy({
-    by: ['status'],
-    _count: { _all: true },
-    where: { entityKind: 'PLACE' },
-  });
+  const projection = await prisma.$queryRaw<Array<{ attempts: number; count: bigint }>>`
+    SELECT "attempts", COUNT(*)::bigint AS count
+    FROM "SearchProjectionQueue"
+    WHERE "entityKind" = 'PLACE'
+    GROUP BY "attempts"
+    ORDER BY "attempts"
+  `;
 
   console.log(JSON.stringify({
     ok: true,
@@ -62,7 +64,7 @@ async function main() {
     goldenPlaces: golden,
     hanoiPublishedSpatialImportance4Plus: Number(hanoi?.count ?? 0),
     publishedSpatialPlaces: Number(spatial?.count ?? 0),
-    searchProjectionQueueByStatus: projection,
+    searchProjectionQueueByAttempts: projection,
   }, null, 2));
 }
 
