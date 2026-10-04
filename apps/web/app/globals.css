@@ -257,3 +257,35 @@ a.country-entity{min-height:112px}
 /* Locked-master overflow guard: containers own their horizontal rails. */
 .locked-map-v4{max-width:100%;overflow-x:hidden}.lm-content,.lm-lower,.lm-rail{min-width:0}.lm-toolbar>*{min-width:0}
 @media(max-width:600px){.lm-toolbar,.lm-destination-grid,.lm-rail>div{max-width:100%;overscroll-behavior-inline:contain}.lm-timeline>div{max-width:none}}
+
+/* Map V4 desktop fidelity correction pass */
+.consumer-header:has(+ .locked-map-v4){position:absolute;inset:0 0 auto;z-index:30;background:linear-gradient(180deg,rgba(2,20,18,.92),rgba(2,20,18,.28),transparent);border-bottom:1px solid rgba(239,195,111,.18);box-shadow:none;color:#fff}
+.consumer-header:has(+ .locked-map-v4) .header-inner{max-width:1480px;height:64px}
+.consumer-header:has(+ .locked-map-v4) .brand-logo{filter:none;max-width:190px}
+.consumer-header:has(+ .locked-map-v4) .desktop-nav{gap:18px}
+.consumer-header:has(+ .locked-map-v4) .desktop-nav a{color:#f6f0e4;font-size:12px}
+.consumer-header:has(+ .locked-map-v4) .desktop-nav a[aria-current="page"]{color:var(--dv-gold,#d4af7c)}
+.consumer-header:has(+ .locked-map-v4) .header-actions{gap:8px}
+.consumer-header:has(+ .locked-map-v4) .header-action{display:none}
+.consumer-header:has(+ .locked-map-v4) .locale{color:#f6f0e4}
+.locked-map-v4 .lm-hero{min-height:326px;padding-top:58px;background-position:center 46%}
+.locked-map-v4 .lm-hero-copy{padding-top:22px}
+.locked-map-v4 .lm-hero-shortcuts{left:27%;right:22%;bottom:16px}
+.locked-map-v4 .lm-hero-gallery{top:82px;width:184px}
+.locked-map-v4 .lm-thumbs span{height:58px;background-size:cover;background-position:center}
+.locked-map-v4 .lm-explore{padding:8px 22px 0}
+.locked-map-v4 .lm-toolbar{margin:0 auto 10px;max-width:1492px;grid-template-columns:minmax(300px,1.7fr) 125px 126px 166px 118px 144px;gap:8px}
+.locked-map-v4 .lm-toolbar label,.locked-map-v4 .lm-toolbar button{height:38px;border-radius:6px}
+.locked-map-v4 .lm-main{max-width:1492px;margin:auto;grid-template-columns:minmax(0,39%) minmax(0,61%);gap:16px}
+.locked-map-v4 .lm-map-wrap{height:372px}
+.locked-map-v4 .lm-card-photo{height:96px}
+.locked-map-v4 .lm-destination-grid strong{font-size:13px}
+.locked-map-v4 .lm-destination-grid small{font-size:9px}
+.locked-map-v4 .lm-media-credit{display:block;padding:0 10px 6px;overflow:hidden;color:#8fa39d;font-size:7px;white-space:nowrap;text-overflow:ellipsis}
+.locked-map-v4 .lm-mini{height:78px}
+.locked-map-v4 .lm-lower{max-width:1492px;margin:auto;gap:20px;padding:0 0 8px}
+.locked-map-v4 .lm-lower .lm-rail{margin-top:9px}
+.locked-map-v4 .lm-story div,.locked-map-v4 .lm-journey-card div{height:48px;background-image:linear-gradient(rgba(3,28,25,.15),rgba(3,28,25,.15)),url("https://commons.wikimedia.org/wiki/Special:Redirect/file/Thang_Long_Citadel.jpg")}
+.locked-map-v4 .lm-timeline{min-height:68px;padding-block:7px}
+@media(max-width:960px){.consumer-header:has(+ .locked-map-v4){position:absolute}.consumer-header:has(+ .locked-map-v4) .header-inner{height:58px}.locked-map-v4 .lm-hero{padding-top:52px}}
+@media(max-width:600px){.locked-map-v4 .lm-hero{min-height:430px}.locked-map-v4 .lm-hero-copy{padding-top:38px;padding-bottom:132px}.locked-map-v4 .lm-explore{padding-inline:14px}.locked-map-v4 .lm-map-wrap{height:340px}.locked-map-v4 .lm-card-photo{height:140px}}
