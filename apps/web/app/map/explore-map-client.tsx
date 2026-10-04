@@ -14,10 +14,10 @@ const MAP_STYLE=process.env.NEXT_PUBLIC_MAP_STYLE_URL??"https://tiles.openfreema
 const HANOI:[number,number]=[105.8342,21.0278];
 const label=(f:DiscoveryFeature)=>f.properties?.name??f.properties?.title??f.properties?.slug??"Dấu vết chưa có tên";
 const MEDIA=[
- {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Thang_Long_Citadel.jpg",source:"https://commons.wikimedia.org/wiki/File:Thang_Long_Citadel.jpg",credit:"Minhle817 · Wikimedia Commons"},
- {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hanoi_-_Main_gate%2C_Temple_of_Literature.jpg",source:"https://commons.wikimedia.org/wiki/File:Hanoi_-_Main_gate%2C_Temple_of_Literature.jpg",credit:"P. Hughes · Wikimedia Commons"},
- {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hoan_Kiem_Lake_photo.jpg",source:"https://commons.wikimedia.org/wiki/File:Hoan_Kiem_Lake_photo.jpg",credit:"Wikimedia Commons"},
- {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Ho_Hoan_Kiem.jpg",source:"https://commons.wikimedia.org/wiki/File:Ho_Hoan_Kiem.jpg",credit:"Trung geo · Wikimedia Commons"},
+ {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Thang_Long_Citadel.jpg",source:"https://commons.wikimedia.org/wiki/File:Thang_Long_Citadel.jpg",author:"Minhle817",license:"CC BY-SA 4.0",licenseUrl:"https://creativecommons.org/licenses/by-sa/4.0/",credit:"Minhle817 · CC BY-SA 4.0 · Wikimedia Commons"},
+ {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hanoi_-_Main_gate%2C_Temple_of_Literature.jpg",source:"https://commons.wikimedia.org/wiki/File:Hanoi_-_Main_gate%2C_Temple_of_Literature.jpg",author:"P. Hughes",license:"CC BY 4.0",licenseUrl:"https://creativecommons.org/licenses/by/4.0/",credit:"P. Hughes · CC BY 4.0 · Wikimedia Commons"},
+ {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hoan_Kiem_Lake_photo.jpg",source:"https://commons.wikimedia.org/wiki/File:Hoan_Kiem_Lake_photo.jpg",author:"Tranhuutukkt",license:"CC BY-SA 4.0",licenseUrl:"https://creativecommons.org/licenses/by-sa/4.0/",credit:"Tranhuutukkt · CC BY-SA 4.0 · Wikimedia Commons"},
+ {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Ho_Hoan_Kiem.jpg",source:"https://commons.wikimedia.org/wiki/File:Ho_Hoan_Kiem.jpg",author:"Trung geo",license:"Public Domain",licenseUrl:"https://commons.wikimedia.org/wiki/File:Ho_Hoan_Kiem.jpg#Licensing",credit:"Trung geo · Public Domain · Wikimedia Commons"},
 ] as const;
 const HERO=MEDIA[0];
 
