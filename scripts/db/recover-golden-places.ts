@@ -7,7 +7,7 @@
  * projection queue has been populated and prints the recovered Hanoi rows for smoke checks.
  */
 import { PrismaClient, PublicationStatus } from '@prisma/client';
-import { GOLDEN_PLACES, slug } from '../prisma/golden';
+import { GOLDEN_PLACES, slug } from '../../prisma/golden';
 
 const prisma = new PrismaClient();
 
