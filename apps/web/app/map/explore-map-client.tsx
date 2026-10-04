@@ -13,7 +13,13 @@ const API_BASE=process.env.NEXT_PUBLIC_API_URL??"http://localhost:3000";
 const MAP_STYLE=process.env.NEXT_PUBLIC_MAP_STYLE_URL??"https://tiles.openfreemap.org/styles/liberty";
 const HANOI:[number,number]=[105.8342,21.0278];
 const label=(f:DiscoveryFeature)=>f.properties?.name??f.properties?.title??f.properties?.slug??"Dấu vết chưa có tên";
-const PHOTO="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=82";
+const MEDIA=[
+ {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Thang_Long_Citadel.jpg",source:"https://commons.wikimedia.org/wiki/File:Thang_Long_Citadel.jpg",credit:"Minhle817 · Wikimedia Commons"},
+ {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hanoi_-_Main_gate%2C_Temple_of_Literature.jpg",source:"https://commons.wikimedia.org/wiki/File:Hanoi_-_Main_gate%2C_Temple_of_Literature.jpg",credit:"P. Hughes · Wikimedia Commons"},
+ {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hoan_Kiem_Lake_photo.jpg",source:"https://commons.wikimedia.org/wiki/File:Hoan_Kiem_Lake_photo.jpg",credit:"Wikimedia Commons"},
+ {image:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Ho_Hoan_Kiem.jpg",source:"https://commons.wikimedia.org/wiki/File:Ho_Hoan_Kiem.jpg",credit:"Trung geo · Wikimedia Commons"},
+] as const;
+const HERO=MEDIA[0];
 
 export default function ExploreMapClient(){
  const hostRef=useRef<HTMLDivElement>(null); const mapRef=useRef<MapLibreMap|null>(null); const abortRef=useRef<AbortController|null>(null);
@@ -25,10 +31,10 @@ export default function ExploreMapClient(){
  const select=(f:DiscoveryFeature)=>{if(f.properties?.id)setSelectedId(String(f.properties.id));if(f.geometry.type==="Point")mapRef.current?.easeTo({center:f.geometry.coordinates as [number,number],zoom:13})};
  const cards=places.length?places:Array.from({length:4},(_,i)=>({properties:{id:`empty-${i}`,name:["Hoàng thành Thăng Long","Văn Miếu – Quốc Tử Giám","Hồ Hoàn Kiếm","Phố cổ Hà Nội"][i],placeType:"Điểm đến"},geometry:{type:"Point",coordinates:HANOI},type:"Feature"} as DiscoveryFeature));
  return <main id="main" className="locked-map-v4">
-  <section className="lm-hero" style={{"--lm-photo":`url("${PHOTO}")`} as React.CSSProperties}>
+  <section className="lm-hero" style={{"--lm-photo":`url("${HERO.image}")`} as React.CSSProperties}>
    <div className="lm-hero-copy"><span className="lm-kicker">ĐIỂM ĐẾN NỔI BẬT</span><h1>Hà Nội <span>→</span></h1><p>Ngàn năm văn hiến · Những lớp lịch sử đan xen với nhịp sống hiện đại, tạo nên một hành trình khám phá đầy cảm xúc.</p><div className="lm-actions"><a href="#explore-area" className="lm-primary">Khám phá ngay →</a><a href="/stories" className="lm-video">▷ &nbsp; Xem video</a></div></div>
    <div className="lm-hero-shortcuts"><a href="#explore-area">⌂ <span><b>Điểm đến</b><small>Nổi bật</small></span>›</a><a href="#experiences">♙ <span><b>Trải nghiệm</b><small>Đặc sắc</small></span>›</a><a href="#stories">▣ <span><b>Câu chuyện</b><small>Lịch sử & Văn hoá</small></span>›</a><a href="/journeys">⌘ <span><b>Hành trình</b><small>Gợi ý</small></span>›</a></div>
-   <div className="lm-hero-gallery"><div className="lm-thumbs"><span/><span/><span/><span/></div><b>Hoàng thành Thăng Long</b><small>Hà Nội</small></div>
+   <div className="lm-hero-gallery"><div className="lm-thumbs">{MEDIA.map((m,i)=><span key={m.source} style={{backgroundImage:`url("${m.image}")`}} title={m.credit}/>)}</div><b>Hoàng thành Thăng Long</b><small>Hà Nội</small></div>
   </section>
   <section id="explore-area" className="lm-explore">
    <form className="lm-toolbar" onSubmit={e=>{e.preventDefault();if(mapRef.current)void load(mapRef.current)}}>
@@ -42,8 +48,8 @@ export default function ExploreMapClient(){
     <div className="lm-map-wrap"><div ref={hostRef} className="lm-map" aria-label="Bản đồ khám phá Dấu Việt"/><div className="lm-map-label">⌖ &nbsp; Khám phá quanh đây</div><div className="lm-map-layer">▰ &nbsp; Lớp bản đồ⌄</div></div>
     <div className="lm-content">
      <header><h2>Những địa điểm nổi bật tại Hà Nội</h2><a href="/explore">Xem tất cả (86) →</a></header>
-     <div className="lm-destination-grid">{cards.map((f,i)=><button type="button" key={f.properties?.id??i} onClick={()=>select(f)} className={selectedId===String(f.properties?.id)?"selected":""}><div className="lm-card-photo" style={{backgroundImage:`linear-gradient(0deg,rgba(4,25,22,.1),rgba(4,25,22,.05)),url("${PHOTO}")`}}><span>{i===0?"Di sản thế giới":"⌑"}</span></div><strong>{label(f)}</strong><small>{["Di sản nghìn năm giữa lòng Hà Nội","Biểu tượng hiếu học Việt Nam","Biểu tượng văn hóa và nhịp sống","Nét xưa trong nhịp sống hiện đại"][i]}</small><footer><span>⌖ {(.8+i*.5).toFixed(1)} km</span><span>★ 4.{8-i}</span></footer></button>)}</div>
-     <section id="experiences" className="lm-rail"><header><h2>Trải nghiệm tại Hà Nội</h2><a href="/journeys">Xem tất cả →</a></header><div>{["Tham quan di tích","Dạo bước phố cổ","Trải nghiệm văn hoá","Hành trình trong ngày"].map((x,i)=><a href="/journeys" key={x} className="lm-mini" style={{"--lm-photo":`url("${PHOTO}")`} as React.CSSProperties}><b>{x}</b><small>{["Hoàng thành Thăng Long","Khám phá ẩm thực, nghệ thuật","Múa rối nước, làng nghề","Nội đô xưa và nay"][i]}</small><em>↗ 2–{i+3} giờ</em></a>)}</div></section>
+     <div className="lm-destination-grid">{cards.map((f,i)=><button type="button" key={f.properties?.id??i} onClick={()=>select(f)} className={selectedId===String(f.properties?.id)?"selected":""}><div className="lm-card-photo" style={{backgroundImage:`linear-gradient(0deg,rgba(4,25,22,.1),rgba(4,25,22,.05)),url("${MEDIA[i%MEDIA.length].image}")}}><span>{i===0?"Di sản thế giới":"⌑"}</span></div><strong>{label(f)}</strong><small>{["Di sản nghìn năm giữa lòng Hà Nội","Biểu tượng hiếu học Việt Nam","Biểu tượng văn hóa và nhịp sống","Nét xưa trong nhịp sống hiện đại"][i]}</small><footer><span>⌖ {(.8+i*.5).toFixed(1)} km</span><span>★ 4.{8-i}</span></footer><a className="lm-media-credit" href={MEDIA[i%MEDIA.length].source} target="_blank" rel="noreferrer">Ảnh: {MEDIA[i%MEDIA.length].credit}</a></button>)}</div>
+     <section id="experiences" className="lm-rail"><header><h2>Trải nghiệm tại Hà Nội</h2><a href="/journeys">Xem tất cả →</a></header><div>{["Tham quan di tích","Dạo bước phố cổ","Trải nghiệm văn hoá","Hành trình trong ngày"].map((x,i)=><a href="/journeys" key={x} className="lm-mini" style={{"--lm-photo":`url("${MEDIA[i%MEDIA.length].image}")`} as React.CSSProperties}><b>{x}</b><small>{["Hoàng thành Thăng Long","Khám phá ẩm thực, nghệ thuật","Múa rối nước, làng nghề","Nội đô xưa và nay"][i]}</small><em>↗ 2–{i+3} giờ</em></a>)}</div></section>
     </div>
    </div>
    <div className="lm-lower">
