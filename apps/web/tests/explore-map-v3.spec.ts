@@ -7,32 +7,31 @@ const viewports = [
 ];
 
 for (const viewport of viewports) {
-  test(`Explore Map V4 responsive — ${viewport.name}`, async ({ page }) => {
+  test(`Explore Map V4 locked-master responsive — ${viewport.name}`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto("/map");
-    await expect(page.getByRole("heading", { name: /Đi đến một nơi/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Hà Nội" })).toBeVisible();
     await expect(page.getByLabel("Bản đồ khám phá Dấu Việt")).toBeVisible();
-    await expect(page.getByRole("complementary", { name: "Địa điểm trong khu vực" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Những địa điểm nổi bật tại Hà Nội" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Trải nghiệm tại Hà Nội" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
   });
 }
 
-test("Explore Map V4 keyboard and focus", async ({ page }) => {
+test("Explore Map V4 locked-master keyboard and focus", async ({ page }) => {
   await page.goto("/map");
   await page.keyboard.press("Tab");
-  const focused = await page.evaluate(() => document.activeElement?.tagName);
-  expect(focused).not.toBe("BODY");
+  expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe("BODY");
   await page.getByLabel("Thời điểm lịch sử").focus();
   await expect(page.getByLabel("Thời điểm lịch sử")).toBeFocused();
-  await page.getByRole("button", { name: "Áp dụng" }).focus();
-  await expect(page.getByRole("button", { name: "Áp dụng" })).toBeFocused();
+  await page.getByRole("button", { name: /Chủ đề/ }).focus();
+  await expect(page.getByRole("button", { name: /Chủ đề/ })).toBeFocused();
 });
 
 test("Explore Map V4 reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/map");
-  const behavior = await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior);
-  expect(behavior).toBe("auto");
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe("auto");
   await expect(page.getByLabel("Bản đồ khám phá Dấu Việt")).toBeVisible();
 });
 
@@ -42,7 +41,7 @@ test("Explore Map V4 canonical event link and Territory safe degradation", async
     { type: "Feature", geometry: { type: "Polygon", coordinates: [[[105,20],[106,20],[106,21],[105,21],[105,20]]] }, properties: { entityType: "TERRITORY", id: "territory-qa", slug: "territory-qa", name: "Lãnh thổ QA" } }
   ] }, meta: {} } }));
   await page.goto("/map");
-  await expect(page.getByRole("link", { name: "Đọc trong bối cảnh →" })).toHaveAttribute("href", "/events/event-qa");
-  await expect(page.getByText(/không suy diễn thành biên giới hiện tại/)).toHaveCount(0);
+  await expect(page.locator('a[href="/events/event-qa"]')).toHaveCount(1);
   await expect(page.locator('a[href^="/territories/"]')).toHaveCount(0);
+  await expect(page.getByText(/không suy diễn thành biên giới hiện tại/)).toHaveCount(0);
 });
