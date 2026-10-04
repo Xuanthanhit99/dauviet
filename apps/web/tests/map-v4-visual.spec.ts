@@ -24,12 +24,12 @@ for (const viewport of [
     await page.route("**/v1/map/features?**", route => route.fulfill({ json: { success: true, data: { type: "FeatureCollection", features }, meta: { truncated: false, limit: 100 } } }));
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto("/map", { waitUntil: "networkidle" });
-    await expect(page.getByRole("heading", { name: /Đi đến một nơi/ })).toBeVisible();
+    await expect(page.locator(".lm-hero h1")).toHaveText(/Hà Nội/);
     await expect(page.getByLabel("Bản đồ khám phá Dấu Việt")).toBeVisible();
-    await expect(page.getByRole("complementary", { name: "Địa điểm trong khu vực" })).toBeVisible();
-    await expect(page.getByText("Hà Nội", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Những địa điểm nổi bật tại Hà Nội" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Trải nghiệm tại Hà Nội" })).toBeVisible();
     await expect(page.getByText("Bạch Đằng năm 1288", { exact: true })).toBeVisible();
     fs.mkdirSync(evidenceDir, { recursive: true });
-    await page.screenshot({ path: path.join(evidenceDir, `map-v4-${viewport.name}.png`), fullPage: true, animations: "disabled" });
+    await page.screenshot({ path: path.join(evidenceDir, `map-v4-${viewport.name}.png`), fullPage: false, animations: "disabled" });
   });
 }
