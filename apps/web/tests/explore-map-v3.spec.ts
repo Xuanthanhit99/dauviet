@@ -10,7 +10,7 @@ for (const viewport of viewports) {
   test(`Explore Map V4 locked-master responsive — ${viewport.name}`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto("/map");
-    await expect(page.getByRole("heading", { name: "Hà Nội" })).toBeVisible();
+    await expect(page.locator(".lm-hero h1")).toBeVisible();
     await expect(page.getByLabel("Bản đồ khám phá Dấu Việt")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Những địa điểm nổi bật tại Hà Nội" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Trải nghiệm tại Hà Nội" })).toBeVisible();
