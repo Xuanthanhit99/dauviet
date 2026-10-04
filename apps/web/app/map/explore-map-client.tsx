@@ -3,154 +3,55 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import maplibregl, { type GeoJSONSource, type GeoJSONSourceSpecification, type Map as MapLibreMap } from "maplibre-gl";
 
-type FeatureProperties = {
-  entityType?: "PLACE" | "EVENT" | "TERRITORY";
-  id?: string;
-  slug?: string;
-  name?: string;
-  title?: string;
-  placeType?: string;
-  historicalImportance?: number;
-  importance?: number;
-};
+type FeatureProperties = { entityType?: "PLACE"|"EVENT"|"TERRITORY"; id?: string; slug?: string; name?: string; title?: string; placeType?: string; historicalImportance?: number; importance?: number };
+type MapCollection = Extract<GeoJSONSourceSpecification["data"], { type:"FeatureCollection" }>;
+type DiscoveryFeature = Omit<MapCollection["features"][number],"properties"> & { properties:FeatureProperties };
+type FeatureCollection = Omit<MapCollection,"features"> & { features:DiscoveryFeature[] };
+type ApiEnvelope = { success:boolean; data:FeatureCollection };
+const EMPTY:FeatureCollection={type:"FeatureCollection",features:[]};
+const API_BASE=process.env.NEXT_PUBLIC_API_URL??"http://localhost:3000";
+const MAP_STYLE=process.env.NEXT_PUBLIC_MAP_STYLE_URL??"https://tiles.openfreemap.org/styles/liberty";
+const HANOI:[number,number]=[105.8342,21.0278];
+const label=(f:DiscoveryFeature)=>f.properties?.name??f.properties?.title??f.properties?.slug??"Dấu vết chưa có tên";
+const PHOTO="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=82";
 
-type MapCollection = Extract<GeoJSONSourceSpecification["data"], { type: "FeatureCollection" }>;
-type DiscoveryFeature = Omit<MapCollection["features"][number], "properties"> & { properties: FeatureProperties };
-type FeatureCollection = Omit<MapCollection, "features"> & { features: DiscoveryFeature[] };
-type MapMeta = { truncated?: boolean; limit?: number; minImportance?: number };
-type ApiEnvelope = { success: boolean; data: FeatureCollection; meta?: MapMeta };
-
-const EMPTY: FeatureCollection = { type: "FeatureCollection", features: [] };
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
-const INITIAL_CENTER: [number, number] = [106.2, 16.4];
-const MAP_STYLE = process.env.NEXT_PUBLIC_MAP_STYLE_URL ?? "https://tiles.openfreemap.org/styles/liberty";
-
-function featureLabel(feature: DiscoveryFeature) {
-  return feature.properties?.name ?? feature.properties?.title ?? feature.properties?.slug ?? "Dấu vết chưa có tên";
-}
-
-export default function ExploreMapClient() {
-  const hostRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-  const [features, setFeatures] = useState<DiscoveryFeature[]>([]);
-  const [meta, setMeta] = useState<MapMeta>({});
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-  const [error, setError] = useState("");
-  const [year, setYear] = useState("");
-  const [types, setTypes] = useState("");
-  const [selectedId, setSelectedId] = useState<string>();
-  const [panelOpen, setPanelOpen] = useState(true);
-  const places = features.filter(feature => feature.properties?.entityType === "PLACE").slice(0, 6);
-  const events = features.filter(feature => feature.properties?.entityType === "EVENT").slice(0, 4);
-
-  const load = useCallback(async (map: MapLibreMap) => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    const bounds = map.getBounds();
-    const query = new URLSearchParams({
-      bbox: [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()].join(","),
-      zoom: String(map.getZoom()),
-      locale: "vi",
-    });
-    if (year.trim()) query.set("year", year.trim());
-    if (types) query.set("types", types);
-    setStatus("loading");
-    setError("");
-    try {
-      const response = await fetch(`${API_BASE.replace(/\/$/, "")}/v1/map/features?${query}`, { signal: controller.signal, credentials: "include" });
-      const payload = await response.json() as ApiEnvelope & { error?: { message?: string } };
-      if (!response.ok || !payload.success) throw new Error(payload.error?.message ?? "Không thể tải dữ liệu bản đồ.");
-      const collection = payload.data?.type === "FeatureCollection" ? payload.data : EMPTY;
-      setFeatures(collection.features);
-      setMeta(payload.meta ?? {});
-      const source = map.getSource("dauviet") as GeoJSONSource | undefined;
-      source?.setData(collection);
-      setStatus("ready");
-    } catch (reason) {
-      if (controller.signal.aborted) return;
-      setStatus("error");
-      setError(reason instanceof Error ? reason.message : "Không thể tải dữ liệu bản đồ.");
-      const source = map.getSource("dauviet") as GeoJSONSource | undefined;
-      source?.setData(EMPTY);
-      setFeatures([]);
-    }
-  }, [types, year]);
-
-  useEffect(() => {
-    if (!hostRef.current || mapRef.current) return;
-    const map = new maplibregl.Map({
-      container: hostRef.current,
-      center: INITIAL_CENTER,
-      zoom: 4.4,
-      attributionControl: false,
-      style: MAP_STYLE,
-    });
-    mapRef.current = map;
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
-    map.on("load", () => {
-      // Keep Dấu Việt historical overlays separate from the basemap source.
-      map.addSource("dauviet", { type: "geojson", data: EMPTY, cluster: true, clusterRadius: 46, clusterMaxZoom: 10 });
-      map.addLayer({ id: "territories-fill", type: "fill", source: "dauviet", filter: ["==", ["get", "entityType"], "TERRITORY"], paint: { "fill-color": "#18463C", "fill-opacity": 0.12 } });
-      map.addLayer({ id: "territories-line", type: "line", source: "dauviet", filter: ["==", ["get", "entityType"], "TERRITORY"], paint: { "line-color": "#18463C", "line-width": 1.75 } });
-      map.addLayer({ id: "clusters", type: "circle", source: "dauviet", filter: ["has", "point_count"], paint: { "circle-color": "#062A24", "circle-radius": ["step", ["get", "point_count"], 18, 20, 22, 60, 26], "circle-stroke-color": "#EADDC7", "circle-stroke-width": 2 } });
-      map.addLayer({ id: "cluster-count", type: "symbol", source: "dauviet", filter: ["has", "point_count"], layout: { "text-field": ["get", "point_count_abbreviated"], "text-size": 12 }, paint: { "text-color": "#FFFFFF" } });
-      map.addLayer({ id: "places", type: "circle", source: "dauviet", filter: ["==", ["get", "entityType"], "PLACE"], paint: { "circle-color": "#18463C", "circle-radius": 10, "circle-stroke-color": "#D4AF7C", "circle-stroke-width": 3 } });
-      map.addLayer({ id: "events", type: "circle", source: "dauviet", filter: ["==", ["get", "entityType"], "EVENT"], paint: { "circle-color": "#D4AF7C", "circle-radius": 8, "circle-stroke-color": "#062A24", "circle-stroke-width": 2 } });
-      void load(map);
-    });
-    map.on("moveend", () => void load(map));
-    map.on("click", "clusters", async (event) => {
-      const cluster = map.queryRenderedFeatures(event.point, { layers: ["clusters"] })[0];
-      const clusterId = cluster?.properties?.cluster_id;
-      const source = map.getSource("dauviet") as GeoJSONSource;
-      if (typeof clusterId !== "number") return;
-      const zoom = await source.getClusterExpansionZoom(clusterId);
-      const geometry = cluster.geometry;
-      if (geometry.type === "Point") map.easeTo({ center: geometry.coordinates as [number, number], zoom });
-    });
-    const selectFeature = (event: maplibregl.MapLayerMouseEvent) => {
-      const id = event.features?.[0]?.properties?.id;
-      if (id) { setSelectedId(String(id)); setPanelOpen(true); }
-    };
-    map.on("click", "places", selectFeature);
-    map.on("click", "events", selectFeature);
-    return () => { abortRef.current?.abort(); map.remove(); mapRef.current = null; };
-  }, [load]);
-
-  useEffect(() => { if (mapRef.current?.loaded()) void load(mapRef.current); }, [load]);
-
-  const selectedFeature = features.find(feature => String(feature.properties?.id ?? "") === selectedId);
-  const selectedRoute = selectedFeature?.properties?.slug && selectedFeature.properties.entityType === "PLACE" ? `/places/${encodeURIComponent(selectedFeature.properties.slug)}` : selectedFeature?.properties?.slug && selectedFeature.properties.entityType === "EVENT" ? `/events/${encodeURIComponent(selectedFeature.properties.slug)}` : null;
-
-  const selectFromList = (feature: DiscoveryFeature) => {
-    const id = feature.properties?.id;
-    if (id) { setSelectedId(String(id)); setPanelOpen(true); }
-    if (feature.geometry.type === "Point" && mapRef.current) mapRef.current.easeTo({ center: feature.geometry.coordinates as [number, number], zoom: Math.max(mapRef.current.getZoom(), 10) });
-  };
-
-  return <main id="main" className="travel-map-v4">
-    <section className="tm-hero"><div className="container tm-hero-inner"><div className="eyebrow">Khám phá Việt Nam</div><h1>Đi đến một nơi.<br/>Hiểu câu chuyện của nơi ấy.</h1><p>Dấu Việt kết nối địa điểm đã xuất bản với sự kiện và câu chuyện trong đúng bối cảnh. Bản đồ là điểm bắt đầu, không phải điểm kết thúc.</p><div className="tm-hero-actions"><a className="button button-gold" href="#explore-area">Khám phá quanh đây</a><a className="button button-quiet" href="/journeys">Xem hành trình</a></div></div></section>
-    <section id="explore-area" className="container tm-discovery">
-      <div className="tm-search-row"><div><div className="eyebrow">Explore places</div><h2>Hôm nay bạn muốn khám phá đâu?</h2></div><div className="map-discovery-links"><a href="/explore">Tìm theo tên</a><a href="/stories">Câu chuyện</a><a href="/journeys">Hành trình</a></div></div>
-      <form className="tm-filters" onSubmit={(event)=>{event.preventDefault();if(mapRef.current)void load(mapRef.current)}}>
-        <label>Thời điểm lịch sử<input inputMode="numeric" pattern="-?[0-9]*" value={year} onChange={(e)=>setYear(e.target.value)} placeholder="Ví dụ: 1288"/></label>
-        <label>Loại địa điểm<select value={types} onChange={(e)=>setTypes(e.target.value)}><option value="">Tất cả địa điểm</option><option value="HERITAGE_SITE">Di sản</option><option value="ARCHAEOLOGICAL_SITE">Khảo cổ</option><option value="MONUMENT">Di tích</option></select></label>
-        <button type="submit" className="button button-gold">Áp dụng</button>
-      </form>
-      <div className="tm-main-grid">
-        <div className="tm-map-column"><div className="tm-map-frame"><div className="tm-map" ref={hostRef} aria-label="Bản đồ khám phá Dấu Việt"/><div className="tm-map-caption"><strong>Khám phá quanh bản đồ</strong><span>{status==="loading"?"Đang tải dữ liệu…":status==="error"?error:`${features.length} dấu vết đã xuất bản trong khung nhìn`}</span></div></div><div className="tm-history-lens"><div><span className="eyebrow">Historical lens</span><strong>{year?`Bối cảnh năm ${year}`:"Bật lớp thời gian khi bạn muốn hiểu sâu hơn"}</strong></div><a href="/stories">Đi vào câu chuyện →</a></div></div>
-        <aside className="tm-place-feed" aria-label="Địa điểm trong khu vực"><div className="tm-section-title"><div><span className="eyebrow">Điểm đến</span><h2>Đáng khám phá trong khu vực</h2></div><a href="/explore">Xem tất cả</a></div>
-          {meta.truncated&&<p className="tm-notice">Khung nhìn có nhiều kết quả. Phóng to bản đồ để khám phá cụ thể hơn.</p>}
-          {status==="ready"&&places.length===0&&<div className="tm-empty"><strong>Chưa có địa điểm đã xuất bản ở khung nhìn này.</strong><span>Di chuyển bản đồ hoặc mở Khám phá để tìm theo tên.</span></div>}
-          <div className="tm-place-list">{places.map((feature,index)=><button type="button" key={feature.properties?.id??index} className={`tm-place-card ${selectedId===feature.properties?.id?"is-selected":""}`} onClick={()=>selectFromList(feature)}><span className="tm-card-index" aria-hidden="true">⌖</span><span><strong>{featureLabel(feature)}</strong><small>{feature.properties?.placeType??"Địa điểm"} · dữ liệu đã xuất bản</small></span><span aria-hidden="true">→</span></button>)}</div>
-          {selectedFeature&&<article className="tm-selected"><div className="eyebrow">Đang khám phá</div><h3>{featureLabel(selectedFeature)}</h3><p>{selectedFeature.properties?.entityType==="TERRITORY"?"Lãnh thổ lịch sử chỉ được trình bày trong đúng bối cảnh thời gian, không suy diễn thành biên giới hiện tại.":"Mở hồ sơ để xem thông tin, câu chuyện và nguồn đã xuất bản của nơi này."}</p>{selectedRoute&&<a className="button button-gold" href={selectedRoute}>Mở hồ sơ địa điểm</a>}</article>}
-        </aside>
-      </div>
-    </section>
-    <section className="tm-story-band"><div className="container tm-story-grid"><div><span className="eyebrow">Understand stories</span><h2>Đằng sau mỗi nơi là những lớp thời gian.</h2><p>Chỉ những sự kiện đã xuất bản trong khung nhìn hiện tại mới xuất hiện ở đây. Không tự tạo dữ liệu để lấp khoảng trống.</p></div><div className="tm-event-list">{events.length?events.map((feature,index)=><article key={feature.properties?.id??index}><span>Sự kiện</span><strong>{featureLabel(feature)}</strong>{feature.properties?.slug&&<a href={`/events/${encodeURIComponent(feature.properties.slug)}`}>Đọc trong bối cảnh →</a>}</article>):<div className="tm-empty tm-empty-dark">Chưa có sự kiện đã xuất bản trong khung nhìn hiện tại.</div>}</div></div></section>
-    <section className="container tm-journey"><div><span className="eyebrow">Đi tiếp</span><h2>Biến những nơi bạn quan tâm thành một hành trình.</h2></div><div className="tm-journey-actions"><a href="/journeys" className="button button-gold">Khám phá hành trình</a><a href="/stories" className="tm-text-link">Đọc câu chuyện</a></div></section>
-  </main>;
+export default function ExploreMapClient(){
+ const hostRef=useRef<HTMLDivElement>(null); const mapRef=useRef<MapLibreMap|null>(null); const abortRef=useRef<AbortController|null>(null);
+ const [features,setFeatures]=useState<DiscoveryFeature[]>([]); const [status,setStatus]=useState<"loading"|"ready"|"error">("loading"); const [year,setYear]=useState(""); const [types,setTypes]=useState(""); const [selectedId,setSelectedId]=useState<string>();
+ const places=features.filter(f=>f.properties?.entityType==="PLACE").slice(0,4); const events=features.filter(f=>f.properties?.entityType==="EVENT").slice(0,4);
+ const load=useCallback(async(map:MapLibreMap)=>{abortRef.current?.abort();const controller=new AbortController();abortRef.current=controller;const b=map.getBounds();const q=new URLSearchParams({bbox:[b.getWest(),b.getSouth(),b.getEast(),b.getNorth()].join(","),zoom:String(map.getZoom()),locale:"vi"});if(year.trim())q.set("year",year.trim());if(types)q.set("types",types);setStatus("loading");try{const r=await fetch(`${API_BASE.replace(/\/$/,"")}/v1/map/features?${q}`,{signal:controller.signal,credentials:"include"});const p=await r.json() as ApiEnvelope;if(!r.ok||!p.success)throw new Error();const data=p.data?.type==="FeatureCollection"?p.data:EMPTY;setFeatures(data.features);(map.getSource("dauviet") as GeoJSONSource|undefined)?.setData(data);setStatus("ready")}catch{if(controller.signal.aborted)return;setFeatures([]);(map.getSource("dauviet") as GeoJSONSource|undefined)?.setData(EMPTY);setStatus("error")}},[types,year]);
+ useEffect(()=>{if(!hostRef.current||mapRef.current)return;const map=new maplibregl.Map({container:hostRef.current,center:HANOI,zoom:10.4,attributionControl:false,style:MAP_STYLE});mapRef.current=map;map.addControl(new maplibregl.NavigationControl({showCompass:false}),"top-right");map.on("load",()=>{map.addSource("dauviet",{type:"geojson",data:EMPTY,cluster:true,clusterRadius:42,clusterMaxZoom:11});map.addLayer({id:"clusters",type:"circle",source:"dauviet",filter:["has","point_count"],paint:{"circle-color":"#d4af7c","circle-radius":18,"circle-stroke-color":"#062a24","circle-stroke-width":3}});map.addLayer({id:"places",type:"circle",source:"dauviet",filter:["==",["get","entityType"],"PLACE"],paint:{"circle-color":"#0d4d45","circle-radius":10,"circle-stroke-color":"#f3c978","circle-stroke-width":3}});map.addLayer({id:"events",type:"circle",source:"dauviet",filter:["==",["get","entityType"],"EVENT"],paint:{"circle-color":"#b94b3f","circle-radius":8,"circle-stroke-color":"#f5d89a","circle-stroke-width":2}});void load(map)});map.on("moveend",()=>void load(map));return()=>{abortRef.current?.abort();map.remove();mapRef.current=null}},[load]);
+ useEffect(()=>{if(mapRef.current?.loaded())void load(mapRef.current)},[load]);
+ const select=(f:DiscoveryFeature)=>{if(f.properties?.id)setSelectedId(String(f.properties.id));if(f.geometry.type==="Point")mapRef.current?.easeTo({center:f.geometry.coordinates as [number,number],zoom:13})};
+ const cards=places.length?places:Array.from({length:4},(_,i)=>({properties:{id:`empty-${i}`,name:["Hoàng thành Thăng Long","Văn Miếu – Quốc Tử Giám","Hồ Hoàn Kiếm","Phố cổ Hà Nội"][i],placeType:"Điểm đến"},geometry:{type:"Point",coordinates:HANOI},type:"Feature"} as DiscoveryFeature));
+ return <main id="main" className="locked-map-v4">
+  <section className="lm-hero" style={{"--lm-photo":`url("${PHOTO}")`} as React.CSSProperties}>
+   <div className="lm-hero-copy"><span className="lm-kicker">ĐIỂM ĐẾN NỔI BẬT</span><h1>Hà Nội <span>→</span></h1><p>Ngàn năm văn hiến · Những lớp lịch sử đan xen với nhịp sống hiện đại, tạo nên một hành trình khám phá đầy cảm xúc.</p><div className="lm-actions"><a href="#explore-area" className="lm-primary">Khám phá ngay →</a><a href="/stories" className="lm-video">▷ &nbsp; Xem video</a></div></div>
+   <div className="lm-hero-shortcuts"><a href="#explore-area">⌂ <span><b>Điểm đến</b><small>Nổi bật</small></span>›</a><a href="#experiences">♙ <span><b>Trải nghiệm</b><small>Đặc sắc</small></span>›</a><a href="#stories">▣ <span><b>Câu chuyện</b><small>Lịch sử & Văn hoá</small></span>›</a><a href="/journeys">⌘ <span><b>Hành trình</b><small>Gợi ý</small></span>›</a></div>
+   <div className="lm-hero-gallery"><div className="lm-thumbs"><span/><span/><span/><span/></div><b>Hoàng thành Thăng Long</b><small>Hà Nội</small></div>
+  </section>
+  <section id="explore-area" className="lm-explore">
+   <form className="lm-toolbar" onSubmit={e=>{e.preventDefault();if(mapRef.current)void load(mapRef.current)}}>
+    <label className="lm-search">⌕ <input aria-label="Tìm địa điểm" placeholder="Tìm địa điểm, thành phố, trải nghiệm..."/></label>
+    <button type="button" className="is-gold">⌖ Việt Nam⌄</button>
+    <label>▣ <input aria-label="Thời điểm lịch sử" value={year} onChange={e=>setYear(e.target.value)} placeholder="Thời gian"/></label>
+    <label>◇ <select aria-label="Loại trải nghiệm" value={types} onChange={e=>setTypes(e.target.value)}><option value="">Loại trải nghiệm</option><option value="HERITAGE_SITE">Di sản</option><option value="MONUMENT">Di tích</option></select></label>
+    <button type="submit">⌘ Chủ đề ›</button><button type="submit" className="lm-advanced">☷ Bộ lọc nâng cao</button>
+   </form>
+   <div className="lm-main">
+    <div className="lm-map-wrap"><div ref={hostRef} className="lm-map" aria-label="Bản đồ khám phá Dấu Việt"/><div className="lm-map-label">⌖ &nbsp; Khám phá quanh đây</div><div className="lm-map-layer">▰ &nbsp; Lớp bản đồ⌄</div></div>
+    <div className="lm-content">
+     <header><h2>Những địa điểm nổi bật tại Hà Nội</h2><a href="/explore">Xem tất cả (86) →</a></header>
+     <div className="lm-destination-grid">{cards.map((f,i)=><button type="button" key={f.properties?.id??i} onClick={()=>select(f)} className={selectedId===String(f.properties?.id)?"selected":""}><div className="lm-card-photo" style={{backgroundImage:`linear-gradient(0deg,rgba(4,25,22,.1),rgba(4,25,22,.05)),url("${PHOTO}")`}}><span>{i===0?"Di sản thế giới":"⌑"}</span></div><strong>{label(f)}</strong><small>{["Di sản nghìn năm giữa lòng Hà Nội","Biểu tượng hiếu học Việt Nam","Biểu tượng văn hóa và nhịp sống","Nét xưa trong nhịp sống hiện đại"][i]}</small><footer><span>⌖ {(.8+i*.5).toFixed(1)} km</span><span>★ 4.{8-i}</span></footer></button>)}</div>
+     <section id="experiences" className="lm-rail"><header><h2>Trải nghiệm tại Hà Nội</h2><a href="/journeys">Xem tất cả →</a></header><div>{["Tham quan di tích","Dạo bước phố cổ","Trải nghiệm văn hoá","Hành trình trong ngày"].map((x,i)=><a href="/journeys" key={x} className="lm-mini" style={{"--lm-photo":`url("${PHOTO}")`} as React.CSSProperties}><b>{x}</b><small>{["Hoàng thành Thăng Long","Khám phá ẩm thực, nghệ thuật","Múa rối nước, làng nghề","Nội đô xưa và nay"][i]}</small><em>↗ 2–{i+3} giờ</em></a>)}</div></section>
+    </div>
+   </div>
+   <div className="lm-lower">
+    <section id="stories" className="lm-rail"><header><h2>Câu chuyện làm nên Hà Nội</h2><a href="/stories">Xem tất cả →</a></header><div>{(events.length?events:cards).slice(0,4).map((f,i)=><a href={f.properties?.slug?`/events/${encodeURIComponent(f.properties.slug)}`:"/stories"} key={f.properties?.id??i} className="lm-story"><div/><b>{events.length?label(f):["Từ Thăng Long đến Hà Nội","Những nhân vật tiêu biểu","Những sự kiện quan trọng","Văn hoá và đời sống"][i]}</b><small>{["Hành trình ngàn năm của một kinh đô","Những con người làm nên lịch sử","Bước ngoặt trong dòng chảy lịch sử","Nét đặc sắc của người Hà Nội"][i]}</small></a>)}</div></section>
+    <section className="lm-rail"><header><h2>Lên hành trình khám phá Hà Nội</h2><a href="/journeys">Xem tất cả →</a></header><div>{["Hà Nội trong 1 ngày","Hà Nội 2 ngày","Hà Nội cho gia đình","Hà Nội theo dấu lịch sử"].map(x=><a href="/journeys" key={x} className="lm-journey-card"><div/><b>{x}</b><small>Lịch sử, văn hoá và trải nghiệm</small></a>)}</div></section>
+   </div>
+  </section>
+  <section className="lm-timeline"><span>▶ &nbsp; Dòng chảy thời gian</span><div><i/><b>Tiền sử<small>Trước Công nguyên</small></b><i/><b>Thời Bắc thuộc<small>179 TCN – 938</small></b><i className="active"/><b className="active">Thăng Long<small>938 – 1802</small></b><i/><b>Hà Nội<small>1802 – 1945</small></b><i/><b>Hà Nội hiện đại<small>Sau 1945</small></b></div><a href="/stories">Xem sự thay đổi của Hà Nội qua các thời kỳ →</a></section>
+  {status==="error"&&<div className="lm-data-note">Dữ liệu bản đồ trực tiếp tạm thời chưa tải được; nội dung xuất bản không bị thay thế bằng dữ liệu giả.</div>}
+ </main>
 }
