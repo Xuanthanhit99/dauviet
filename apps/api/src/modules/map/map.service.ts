@@ -144,7 +144,7 @@ export class MapService {
       WHERE "publicationStatus"='PUBLISHED' AND "location" IS NOT NULL
     `;
     const projection = await this.prisma.searchProjectionQueue.groupBy({
-      by:['status'], _count:{_all:true}, where:{entityKind:'PLACE'}
+      by:['attempts'], _count:{_all:true}, where:{entityKind:'PLACE'}
     });
     return {
       ok:true, readOnly:true,
@@ -152,7 +152,7 @@ export class MapService {
       extensions, goldenPlaces:golden,
       hanoiPublishedSpatialImportance4Plus:Number(hanoi?.count ?? 0),
       publishedSpatialPlaces:Number(spatial?.count ?? 0),
-      searchProjectionQueueByStatus:projection,
+      searchProjectionQueueByAttempts:projection,
     };
   }
 
