@@ -329,3 +329,21 @@ a.country-entity{min-height:112px}
  .locked-map-v4 .lm-lower{padding-inline:0}
  .locked-map-v4 .lm-timeline{padding-top:14px}
 }
+
+/* Map V4 final fidelity polish — no composition changes */
+@media(min-width:961px){
+ .locked-map-v4 .lm-map{filter:saturate(.64) brightness(.62) contrast(1.14)}
+ .locked-map-v4 .lm-map:after{background:linear-gradient(180deg,rgba(1,30,25,.22),rgba(1,22,19,.34));mix-blend-mode:multiply}
+ .locked-map-v4 .lm-lower{gap:22px;padding-bottom:11px}
+ .locked-map-v4 .lm-lower .lm-rail{margin-top:11px}
+ .locked-map-v4 .lm-story div,.locked-map-v4 .lm-journey-card div{height:58px}
+ .locked-map-v4 .lm-story b,.locked-map-v4 .lm-journey-card b{padding-top:6px;font-size:11.5px}
+ .locked-map-v4 .lm-story small,.locked-map-v4 .lm-journey-card small{padding-bottom:7px}
+}
+@media(max-width:600px){
+ .locked-map-v4 .lm-hero-shortcuts{right:0;padding-right:22px;scroll-padding-inline:14px}
+ .locked-map-v4 .lm-hero-shortcuts:after{content:"";flex:0 0 8px}
+ .locked-map-v4 .lm-hero-shortcuts a{flex-basis:142px}
+ .locked-map-v4 .lm-destination-grid,.locked-map-v4 .lm-rail>div{padding-right:18px;scroll-padding-left:0;scroll-snap-type:x proximity}
+ .locked-map-v4 .lm-destination-grid>button,.locked-map-v4 .lm-mini,.locked-map-v4 .lm-story,.locked-map-v4 .lm-journey-card{scroll-snap-align:start}
+}
