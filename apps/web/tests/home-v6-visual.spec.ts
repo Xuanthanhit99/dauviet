@@ -15,21 +15,15 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
   await expect(page.getByText("Lên kế hoạch hành trình của bạn",{exact:true})).toBeVisible();
   await expect(page.locator(".home-v6-search")).toBeVisible();
 
-  // Every rendered visual card must have a real, loadable image.
-  const mediaCheck=await page.locator(".home-v6-hero, .context-thumb img, .journey-card .media, .destination-grid > a, .story-card").evaluateAll(nodes=>nodes.map((node:any)=>{
-    const style=getComputedStyle(node);
-    const bg=style.backgroundImage;
-    const img=node.tagName==="IMG"?node:null;
-    return {
-      tag:node.tagName,
-      hasBackground:bg && bg!=="none",
-      imageComplete:img?img.complete:false,
-      imageNaturalWidth:img?img.naturalWidth:1
-    };
-  }));
-  const visualNodes=mediaCheck.filter((x:any)=>x.tag==="IMG"||x.tag==="DIV"||x.tag==="A");
-  expect(visualNodes.length).toBeGreaterThan(0);
-  expect(mediaCheck.filter((x:any)=>x.tag==="IMG").every((x:any)=>x.imageComplete&&x.imageNaturalWidth>0)).toBeTruthy();
+  // Content media gate: UI chrome (logo/icon) is intentionally excluded.
+  const contentImages=await page.locator(".context-thumb img").evaluateAll((nodes:any[])=>nodes.map((img:any)=>({
+    src:img.currentSrc||img.src,
+    complete:img.complete,
+    naturalWidth:img.naturalWidth,
+    naturalHeight:img.naturalHeight
+  })));
+  const brokenContentImages=contentImages.filter((x:any)=>!x.complete||x.naturalWidth<=0||x.naturalHeight<=0);
+  expect(brokenContentImages, "Broken Home V6 content <img>: "+JSON.stringify(brokenContentImages)).toHaveLength(0);
   const backgroundUrls=await page.locator(".home-v6-hero, .journey-card .media, .destination-grid > a, .story-card").evaluateAll(nodes=>nodes.flatMap((node:any)=>{
     const bg=getComputedStyle(node).backgroundImage;
     const match=bg.match(/url\(["']?([^"')]+)["']?\)/);
