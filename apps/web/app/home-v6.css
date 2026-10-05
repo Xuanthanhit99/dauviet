@@ -16,3 +16,196 @@
 .destination-grid a.has-media small{color:rgba(255,255,255,.72)}
 @media(max-width:960px){.home-v6-hero-inner{min-height:0}.home-v6-hero .hero-planner .planner-grid{grid-template-columns:1fr}.home-v6-hero .hero-planner .services{display:grid;grid-template-columns:1fr 1fr}.home-v6-hero .hero-planner .services h3{grid-column:1/-1}}
 @media(max-width:600px){.home-v6-hero-inner{padding-bottom:8px}.hero-media-credit{position:relative;top:auto;left:auto;margin:8px 0 -28px;font-size:8px}.home-v6-hero .hero-planner{padding-top:12px}.home-v6-hero .hero-planner .planner-main{padding:20px}.home-v6-hero .hero-planner .services{grid-template-columns:1fr;padding:20px}.home-v6-hero .hero-planner .services h3{grid-column:auto}}
+
+/* Home V6 Pass 3 — Travel Dominance, 2026-10-05
+   Composition remains V6; this pass increases travel/action visual weight only. */
+.home-v6-hero{
+  min-height:720px;
+  background-position:center 42%;
+}
+.home-v6-hero:before{
+  background:
+    linear-gradient(90deg,rgba(3,20,17,.86) 0%,rgba(3,20,17,.48) 42%,rgba(3,20,17,.18) 72%,rgba(3,20,17,.54) 100%),
+    linear-gradient(0deg,rgba(3,20,17,.72) 0%,transparent 34%);
+}
+.home-v6-hero-inner{
+  min-height:430px;
+  grid-template-columns:minmax(0,1.18fr) minmax(420px,.82fr);
+  gap:40px;
+}
+.home-v6-copy{
+  padding:54px 0 34px;
+}
+.home-v6-copy>p{
+  max-width:700px;
+}
+.context-card{
+  align-self:center;
+  margin-bottom:0;
+  padding:20px;
+  box-shadow:0 20px 55px rgba(0,0,0,.25);
+}
+.context-list a{
+  padding:11px 0;
+}
+.context-thumb{
+  width:68px;
+  height:54px;
+}
+.home-v6-hero .hero-planner{
+  padding:12px 0 18px;
+}
+.home-v6-hero .hero-planner .planner-grid{
+  box-shadow:0 20px 55px rgba(0,0,0,.28);
+}
+.home-v6-hero .hero-planner .planner-main{
+  padding:20px 26px;
+}
+.home-v6-hero .hero-planner .planner-main h2{
+  font-size:32px;
+}
+.home-v6-hero .hero-planner .planner-main>p{
+  max-width:760px;
+}
+.journey-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+}
+.journey-card .media{
+  height:230px;
+}
+.journey-card h3{
+  font-size:26px;
+}
+.journey-card p{
+  min-height:34px;
+}
+.destination-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+}
+.destination-grid a{
+  min-height:230px;
+  padding:20px;
+}
+.destination-grid strong{
+  font-size:27px;
+}
+.destination-grid a.has-media{
+  background-position:center;
+  box-shadow:inset 0 -1px 0 rgba(255,255,255,.16);
+}
+.experience-grid a{
+  min-height:165px;
+}
+.history{
+  padding:72px 0;
+}
+@media(max-width:1150px){
+  .home-v6-hero{min-height:0}
+  .home-v6-hero-inner{grid-template-columns:minmax(0,1fr) minmax(360px,.8fr)}
+  .journey-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:960px){
+  .home-v6-hero-inner{
+    grid-template-columns:1fr;
+    min-height:0;
+  }
+  .home-v6-copy{padding-bottom:18px}
+  .context-card{
+    max-width:none;
+    justify-self:stretch;
+  }
+  .journey-grid{grid-template-columns:1fr 1fr}
+  .destination-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .home-v6-hero{
+    min-height:0;
+    background-position:58% center;
+  }
+  .home-v6-hero:before{
+    background:
+      linear-gradient(180deg,rgba(3,20,17,.62) 0%,rgba(3,20,17,.30) 36%,rgba(3,20,17,.76) 100%),
+      linear-gradient(90deg,rgba(3,20,17,.48),transparent 70%);
+  }
+  .home-v6-copy{
+    padding:34px 0 12px;
+  }
+  .home-v6 h1{
+    font-size:46px;
+    max-width:9ch;
+    text-shadow:0 2px 16px rgba(0,0,0,.28);
+  }
+  .home-v6-copy>p{
+    font-size:15px;
+    max-width:34ch;
+  }
+  .context-card{
+    margin-top:8px;
+    padding:15px;
+  }
+  .context-head strong{font-size:17px}
+  .context-thumb{
+    width:62px;
+    height:50px;
+  }
+  .home-v6-hero .hero-planner{
+    padding:10px 0 14px;
+  }
+  .home-v6-hero .hero-planner .planner-main{
+    padding:18px;
+  }
+  .home-v6-hero .hero-planner .planner-main h2{
+    font-size:28px;
+  }
+  .home-v6-hero .hero-planner .planner-main>p{
+    font-size:12px;
+  }
+  .home-v6-hero .hero-planner .services{
+    display:none;
+  }
+  .home-v6-hero .hero-planner .steps{
+    margin:8px 0 10px;
+  }
+  .home-v6-hero .hero-planner .planner-form{
+    gap:8px;
+  }
+  .journey-grid{
+    display:flex;
+    overflow-x:auto;
+    gap:12px;
+    padding-bottom:5px;
+    scroll-snap-type:x proximity;
+  }
+  .journey-card{
+    flex:0 0 82vw;
+    scroll-snap-align:start;
+  }
+  .journey-card .media{
+    height:190px;
+  }
+  .journey-card h3{font-size:24px}
+  .destination-grid{
+    display:flex;
+    overflow-x:auto;
+    gap:12px;
+    padding-bottom:5px;
+    scroll-snap-type:x proximity;
+  }
+  .destination-grid a{
+    flex:0 0 78vw;
+    min-height:205px;
+    scroll-snap-align:start;
+  }
+  .experience-grid{
+    display:flex;
+    overflow-x:auto;
+    gap:12px;
+    padding-bottom:5px;
+  }
+  .experience-grid a{
+    flex:0 0 78vw;
+    min-height:145px;
+  }
+}
