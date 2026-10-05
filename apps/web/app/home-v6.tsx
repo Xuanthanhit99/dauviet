@@ -4,7 +4,7 @@ import {useEffect,useMemo,useState} from "react";
 type Item={id:string;slug:string;name?:string;title?:string;type?:string;tagline?:string|null;heroMedia?:{url:string|null}|null};
 type Nearby={id:string;slug:string;name:string;distanceMeters:number;historicalImportance?:number};
 const API=process.env.NEXT_PUBLIC_API_URL||"https://dauvietapi-production.up.railway.app";
-const hrefFor=(x:Item)=>x.type==="JOURNEY"?"/journeys/"+x.slug:"/places/"+x.slug;
+const hrefFor=(x:Item)=>{const type=(x.type??"").toUpperCase();if(type==="JOURNEY")return "/journeys/"+x.slug;if(type==="STORY")return "/stories/"+x.slug;if(type==="DESTINATION")return "/destinations/"+x.slug;return "/places/"+x.slug;};
 const img=(x:Item)=>x.heroMedia?.url||null;
 
 export default function HomeV6(){
@@ -35,7 +35,7 @@ export default function HomeV6(){
  });},[]);
  const mediaUrl=(x:any)=>x?.heroMedia?.url??(x?.heroMedia?.id?mediaById[x.heroMedia.id]?.url:null);
  const context=useMemo(()=>location==="granted"&&nearby.length?nearby.map(x=>({id:x.id,slug:x.slug,name:x.name,type:"Gần bạn"})):destinations,[location,nearby,destinations,mediaById]);
- async function search(value:string){setQ(value);if(value.trim().length<2){setResults([]);return}try{const r=await fetch(API+"/v1/search?q="+encodeURIComponent(value)+"&limit=6");const p=await r.json();const d=p.data??p;setResults((d.items??d.results??[]).map((x:any)=>({id:x.id,slug:x.slug,name:x.name??x.title??x.slug,type:x.type})))}catch{}}
+ async function search(value:string){setQ(value);if(value.trim().length<2){setResults([]);return}try{const r=await fetch(API+"/v1/search?q="+encodeURIComponent(value)+"&limit=6");const p=await r.json();const d=p.data??p;setResults((d.results??d.items??[]).map((x:any)=>({id:x.id,slug:x.slug,name:x.name??x.title??x.slug,type:x.entityType??x.type})))}catch{}}
  function locate(){if(!navigator.geolocation){setLocation("denied");return}setLocation("loading");navigator.geolocation.getCurrentPosition(async p=>{try{const r=await fetch(API+"/v1/places/nearby?lat="+p.coords.latitude+"&lng="+p.coords.longitude+"&radius=25000&limit=8");const j=await r.json();setNearby(j.data??j);setLocation("granted")}catch{setLocation("denied")}},()=>setLocation("denied"),{maximumAge:300000,timeout:8000})}
  return <div className="home-v6">
   <section className="home-v6-hero" style={destinations[0]?.heroMedia?.url?{backgroundImage:"linear-gradient(90deg,rgba(4,24,20,.84),rgba(4,24,20,.34) 55%,rgba(4,24,20,.55)),url("+destinations[0].heroMedia.url+")"}:undefined}>
