@@ -15,7 +15,7 @@ type Story = {
   translation?: { title?: string; subtitle?: string | null; summary?: string | null; content?: Block[] } | null;
   meta: { requestedLocale: string; resolvedLocale: string; fallbackApplied: boolean };
 };
-const API = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const API = (process.env.NEXT_PUBLIC_API_URL ?? "https://dauvietapi-production.up.railway.app").replace(/\/$/, "");
 
 // Native anchors retain copy/open behavior; keyboard activation also moves focus.
 function focusAnchor(event: MouseEvent<HTMLAnchorElement>) {
