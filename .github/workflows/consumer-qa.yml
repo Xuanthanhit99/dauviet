@@ -73,10 +73,41 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public
       - name: API production build gate
         run: pnpm --filter @dauviet/api build
-      - run: pnpm web:typecheck
-      - run: pnpm web:build
+      - name: Start local API for browser QA
+        run: pnpm --filter @dauviet/api start:prod > /tmp/dauviet-api.log 2>&1 &
+        env:
+          NODE_ENV: test
+          PORT: "3002"
+          API_PREFIX: v1
+          APP_URL: http://127.0.0.1:3001
+          CORS_ORIGINS: http://127.0.0.1:3001
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public
+          JWT_ACCESS_SECRET: ci-access-secret
+          JWT_REFRESH_SECRET: ci-refresh-secret
+          REDIS_URL: redis://127.0.0.1:6379
+          SEARCH_PROJECTION_WORKER_ENABLED: "false"
+      - name: Wait for local API
+        run: |
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:3002/v1/health >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/dauviet-api.log
+          exit 1
+      - name: Web typecheck
+        run: pnpm web:typecheck
+      - name: Web build against local API
+        run: pnpm web:build
+        env:
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:3002
+          NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:3002/v1
+          API_URL: http://127.0.0.1:3002
       - name: Start Web for browser QA
         run: pnpm --filter @dauviet/web start --hostname 127.0.0.1 --port 3001 > /tmp/dauviet-web.log 2>&1 &
+        env:
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:3002
+          NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:3002/v1
+          API_URL: http://127.0.0.1:3002
       - name: Wait for Web
         run: |
           for i in {1..30}; do curl -fsS http://127.0.0.1:3001/map >/dev/null && exit 0; sleep 1; done
