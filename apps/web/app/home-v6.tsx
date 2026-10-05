@@ -5,22 +5,43 @@ type Item={id:string;slug:string;name?:string;title?:string;type?:string;tagline
 type Nearby={id:string;slug:string;name:string;distanceMeters:number;historicalImportance?:number};
 const API=process.env.NEXT_PUBLIC_API_URL||"https://dauvietapi-production.up.railway.app";
 const CURATED_MEDIA: Record<string,{url:string;source:string;license:string;credit:string}> = {
- "hoang-thanh-thang-long": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Imperial_Citadel_of_Thang_Long_(26910835332).jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Bex Walton"},
- "hoa-lu": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hoa_Lu_(2).jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
+ "hoang-thanh-thang-long": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Imperial_Citadel_of_Thang_Long_(26910835332).jpg",source:"Wikimedia Commons",license:"CC BY 2.0",credit:"Bex Walton"},
+ "hoa-lu": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hoa_Lu_(2).jpg",source:"Wikimedia Commons",license:"CC BY-SA 3.0",credit:"Wikimedia Commons contributor"},
  "co-loa": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hoa_Lu_landscape.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
  "co-do-hue": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/The_Complex_of_Hue_Monuments_-_World_Cultural_Heritage.jpg",source:"Wikimedia Commons",license:"CC BY-SA 4.0",credit:"HCCB3947"},
- "hoi-an": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hoi_An_Ancient_Town.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
+ "hoi-an": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hoi_An_Ancient_Town.jpg",source:"Wikimedia Commons",license:"CC BY 4.0",credit:"Andre Hospers"},
  "my-son": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/My_Son_Sanctuary%2C_Vietnam%2C_2017_(52415210322).jpg",source:"Wikimedia Commons",license:"CC BY-SA 2.0",credit:"JL Cogburn"},
- "dien-bien-phu": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Dien_Bien_Phu002.jpg",source:"Wikimedia Commons",license:"Public domain",credit:"Unknown / public-domain U.S. Army image"},
+ "dien-bien-phu": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Dien_Bien_Phu002.jpg",source:"Wikimedia Commons",license:"Public domain",credit:"U.S. Army / public domain"},
  "dinh-doc-lap": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Independence_Palace_(9982437526).jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
+ "gion": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Gion_Kyoto.jpg",source:"Wikimedia Commons",license:"CC BY-SA 4.0",credit:"Vldimir Pankratov"},
+ "arashiyama": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Arashiyama,_Kyoto.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
 };
 const MEDIA_BY_JOURNEY: Record<string,string> = {"dau-kinh-do-xua":"hoa-lu","di-san-mien-trung":"hoi-an","dau-an-khang-chien":"dien-bien-phu"};
 const MEDIA_BY_STORY: Record<string,string> = {"vi-sao-thang-long-tro-thanh-kinh-do":"hoang-thanh-thang-long","hue-va-dau-an-kinh-do-trieu-nguyen":"co-do-hue","dien-bien-phu-trong-tien-trinh-nam-1954":"dien-bien-phu"};
-const mediaKey=(x:any)=>{const slug=String(x?.slug??"").toLowerCase(); const name=String(x?.name??x?.title??"").toLowerCase(); const all=slug+" "+name; if(all.includes("thang-long")) return "hoang-thanh-thang-long"; if(all.includes("hoa-lu")) return "hoa-lu"; if(all.includes("co-loa")) return "co-loa"; if(all.includes("hue")) return "co-do-hue"; if(all.includes("hoi-an")) return "hoi-an"; if(all.includes("my-son")) return "my-son"; if(all.includes("dien-bien")) return "dien-bien-phu"; if(all.includes("doc-lap")||all.includes("independence")) return "dinh-doc-lap"; return null;};
-const curatedMedia=(x:any)=>{const key=mediaKey(x) || MEDIA_BY_JOURNEY[String(x?.slug??"")] || MEDIA_BY_STORY[String(x?.slug??"")]; return key?CURATED_MEDIA[key]??null:null;};
+const mediaKey=(x:any)=>{
+ const slug=String(x?.slug??"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+ const name=String(x?.name??x?.title??"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+ const all=slug+" "+name;
+ if(all.includes("thang-long")||all.includes("hoang-thanh")) return "hoang-thanh-thang-long";
+ if(all.includes("pho-co-ha-noi")||all.includes("hanoi-old-quarter")||all.includes("old-quarter")) return "hoang-thanh-thang-long";
+ if(all.includes("hoa-lu")||all.includes("ancient-capital")) return "hoa-lu";
+ if(all.includes("co-loa")) return "co-loa";
+ if(all.includes("hue")||all.includes("co-do")) return "co-do-hue";
+ if(all.includes("hoi-an")) return "hoi-an";
+ if(all.includes("my-son")) return "my-son";
+ if(all.includes("dien-bien")||all.includes("kháng chien")||all.includes("resistance")) return "dien-bien-phu";
+ if(all.includes("doc-lap")||all.includes("independence-palace")) return "dinh-doc-lap";
+ if(all.includes("gion")||all.includes("gion-kyoto")) return "gion";
+ if(all.includes("arashiyama")) return "arashiyama";
+ return MEDIA_BY_JOURNEY[slug]||MEDIA_BY_STORY[slug]||null;
+};
+const curatedMedia=(x:any)=>{
+ const key=mediaKey(x);
+ return key?CURATED_MEDIA[key]??null:null;
+};
 
 const hrefFor=(x:Item)=>{const type=(x.type??"").toUpperCase();if(type==="JOURNEY")return "/journeys/"+x.slug;if(type==="STORY")return "/stories/"+x.slug;if(type==="DESTINATION")return "/destinations/"+x.slug;return "/places/"+x.slug;};
-const img=(x:Item)=>x.heroMedia?.url||curatedMedia(x)?.url||null;
+const img=(x:Item)=>{const apiUrl=typeof x?.heroMedia?.url==="string"&&x.heroMedia.url.trim()?x.heroMedia.url:null;return apiUrl||curatedMedia(x)?.url||null;};
 
 export default function HomeV6(){
  const [destinations,setDestinations]=useState<Item[]>([]),[journeys,setJourneys]=useState<Item[]>([]),[stories,setStories]=useState<Item[]>([]),[mediaById,setMediaById]=useState<Record<string,{url:string|null}>>({});
