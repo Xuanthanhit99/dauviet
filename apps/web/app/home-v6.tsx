@@ -20,9 +20,13 @@ export default function HomeV6(){
    const ds=(a?.data??a)?.items??[],js=(b?.data??b)?.items??[],ss=(c?.data??c)?.items??[];
    const detail=await Promise.all(ds.slice(0,8).map((x:Item)=>fetch(API+"/v1/destinations/"+encodeURIComponent(x.slug)).then(r=>r.json()).catch(()=>null)));
    const media=new Map(detail.map((x:any)=>x?.data??x).filter(Boolean).map((x:any)=>[x.slug,x.heroMedia]));
-   setDestinations(ds.map((x:Item)=>({...x,heroMedia:media.get(x.slug)||null})));setJourneys(js);setStories(ss);\n   const allHeroIds=[...detail.map((x:any)=>(x?.data??x)?.heroMedia?.id),...js.map((x:any)=>x.heroMedia?.id),...ss.map((x:any)=>x.heroMedia?.id)].filter(Boolean);\n   const resolved=await Promise.all(allHeroIds.map(async(id:string)=>{const r=await fetch(API+"/v1/media/"+encodeURIComponent(id)).then(r=>r.json()).catch(()=>null);const v=r?.data??r;return v?.id?{id,url:v.url??null}:null;}));\n   setMediaById(Object.fromEntries(resolved.filter(Boolean).map((x:any)=>[x.id,{url:x.url}])));
+   setDestinations(ds.map((x:Item)=>({...x,heroMedia:media.get(x.slug)||null})));setJourneys(js);setStories(ss);
+   const allHeroIds=[...detail.map((x:any)=>(x?.data??x)?.heroMedia?.id),...js.map((x:any)=>x.heroMedia?.id),...ss.map((x:any)=>x.heroMedia?.id)].filter(Boolean);
+   const resolved=await Promise.all(allHeroIds.map(async(id:string)=>{const r=await fetch(API+"/v1/media/"+encodeURIComponent(id)).then(r=>r.json()).catch(()=>null);const v=r?.data??r;return v?.id?{id,url:v.url??null}:null;}));
+   setMediaById(Object.fromEntries(resolved.filter(Boolean).map((x:any)=>[x.id,{url:x.url}])));
  });},[]);
- const mediaUrl=(x:any)=>x?.heroMedia?.url??(x?.heroMedia?.id?mediaById[x.heroMedia.id]?.url:null);\n const context=useMemo(()=>location==="granted"&&nearby.length?nearby.map(x=>({id:x.id,slug:x.slug,name:x.name,type:"Gần bạn"})):destinations,[location,nearby,destinations,mediaById]);
+ const mediaUrl=(x:any)=>x?.heroMedia?.url??(x?.heroMedia?.id?mediaById[x.heroMedia.id]?.url:null);
+ const context=useMemo(()=>location==="granted"&&nearby.length?nearby.map(x=>({id:x.id,slug:x.slug,name:x.name,type:"Gần bạn"})):destinations,[location,nearby,destinations,mediaById]);
  async function search(value:string){setQ(value);if(value.trim().length<2){setResults([]);return}try{const r=await fetch(API+"/v1/search?q="+encodeURIComponent(value)+"&limit=6");const p=await r.json();const d=p.data??p;setResults((d.items??d.results??[]).map((x:any)=>({id:x.id,slug:x.slug,name:x.name??x.title??x.slug,type:x.type})))}catch{}}
  function locate(){if(!navigator.geolocation){setLocation("denied");return}setLocation("loading");navigator.geolocation.getCurrentPosition(async p=>{try{const r=await fetch(API+"/v1/places/nearby?lat="+p.coords.latitude+"&lng="+p.coords.longitude+"&radius=25000&limit=8");const j=await r.json();setNearby(j.data??j);setLocation("granted")}catch{setLocation("denied")}},()=>setLocation("denied"),{maximumAge:300000,timeout:8000})}
  return <div className="home-v6">
