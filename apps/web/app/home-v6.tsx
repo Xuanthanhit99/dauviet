@@ -6,12 +6,12 @@ type Nearby={id:string;slug:string;name:string;distanceMeters:number;historicalI
 const API=process.env.NEXT_PUBLIC_API_URL||"https://dauvietapi-production.up.railway.app";
 const CURATED_MEDIA: Record<string,{url:string;source:string;license:string;credit:string}> = {
  "hoang-thanh-thang-long": {url:"https://upload.wikimedia.org/wikipedia/commons/b/b6/Imperial_Citadel_of_Thang_Long_%2826910835332%29.jpg",source:"Wikimedia Commons",license:"CC BY 2.0",credit:"Bex Walton"},
- "hoa-lu": {url:"https://upload.wikimedia.org/wikipedia/commons/0/0f/Hoa_Lu_%282%29.jpg",source:"Wikimedia Commons",license:"CC BY-SA 3.0",credit:"Wikimedia Commons contributor"},
+ "hoa-lu": {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Hoa_Lu_%282%29.jpg/1920px-Hoa_Lu_%282%29.jpg",source:"Wikimedia Commons",license:"CC BY-SA 3.0",credit:"Wikimedia Commons contributor"},
  "co-loa": {url:"https://upload.wikimedia.org/wikipedia/commons/2/23/Hoa_Lu_landscape.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
- "co-do-hue": {url:"https://upload.wikimedia.org/wikipedia/commons/4/43/The_Complex_of_Hue_Monuments_-_World_Cultural_Heritage.jpg",source:"Wikimedia Commons",license:"CC BY-SA 4.0",credit:"HCCB3947"},
+ "co-do-hue": {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Hue_Vietnam_Citadel-of-Hu%E1%BA%BF-01.jpg/1920px-Hue_Vietnam_Citadel-of-Hu%E1%BA%BF-01.jpg",source:"Wikimedia Commons",license:"CC BY-SA 4.0",credit:"HCCB3947"},
  "hoi-an": {url:"https://upload.wikimedia.org/wikipedia/commons/0/06/Hoi_An_Ancient_Town.jpg",source:"Wikimedia Commons",license:"CC BY 4.0",credit:"Andre Hospers"},
  "my-son": {url:"https://upload.wikimedia.org/wikipedia/commons/4/42/My_Son_Sanctuary%2C_Vietnam%2C_2017_%2852415210322%29.jpg",source:"Wikimedia Commons",license:"CC BY-SA 2.0",credit:"JL Cogburn"},
- "dien-bien-phu": {url:"https://upload.wikimedia.org/wikipedia/commons/e/e2/Dien_Bien_Phu002.jpg",source:"Wikimedia Commons",license:"Public domain",credit:"U.S. Army / public domain"},
+ "dien-bien-phu": {url:"https://upload.wikimedia.org/wikipedia/commons/2/24/Dien_Bien_Phu002.jpg",source:"Wikimedia Commons",license:"Public domain",credit:"U.S. Army / public domain"},
  "dinh-doc-lap": {url:"https://upload.wikimedia.org/wikipedia/commons/1/1f/Independence_Palace_%289982437526%29.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
  "gion": {url:"https://upload.wikimedia.org/wikipedia/commons/d/d1/Gion_Kyoto.jpg",source:"Wikimedia Commons",license:"CC BY-SA 4.0",credit:"Vldimir Pankratov"},
  "arashiyama": {url:"https://upload.wikimedia.org/wikipedia/commons/1/1e/Arashiyama%2C_Kyoto.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
