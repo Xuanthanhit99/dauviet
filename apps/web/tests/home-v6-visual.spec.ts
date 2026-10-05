@@ -37,7 +37,8 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
     img.onerror=()=>resolve(false);
     img.src=url;
   }))),backgroundUrls);
-  expect(backgroundLoads.every(Boolean)).toBeTruthy();
+  const backgroundFailures=backgroundUrls.filter((_,i)=>!backgroundLoads[i]);
+  expect(backgroundFailures, "Broken Home V6 background media: "+JSON.stringify(backgroundFailures)).toHaveLength(0);
 
   // Smoke-test the three core content paths without mutating the current page.
   const destinationHref=await page.locator(".destination-grid > a").first().getAttribute("href");
