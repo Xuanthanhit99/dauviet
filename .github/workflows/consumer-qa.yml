@@ -64,6 +64,10 @@ jobs:
         run: pnpm db:migrate:deploy
         env:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public
+      - name: Golden Dataset local preflight
+        run: |
+          pnpm db:seed
+          NODE_ENV=development DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public pnpm db:preflight:production
       - name: API production build gate
         run: pnpm --filter @dauviet/api build
       - run: pnpm web:typecheck
