@@ -5,16 +5,16 @@ type Item={id:string;slug:string;name?:string;title?:string;type?:string;tagline
 type Nearby={id:string;slug:string;name:string;distanceMeters:number;historicalImportance?:number};
 const API=process.env.NEXT_PUBLIC_API_URL||"https://dauvietapi-production.up.railway.app";
 const CURATED_MEDIA: Record<string,{url:string;source:string;license:string;credit:string}> = {
- "hoang-thanh-thang-long": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Imperial_Citadel_of_Thang_Long_(26910835332).jpg",source:"Wikimedia Commons",license:"CC BY 2.0",credit:"Bex Walton"},
- "hoa-lu": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hoa_Lu_(2).jpg",source:"Wikimedia Commons",license:"CC BY-SA 3.0",credit:"Wikimedia Commons contributor"},
- "co-loa": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hoa_Lu_landscape.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
- "co-do-hue": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/The_Complex_of_Hue_Monuments_-_World_Cultural_Heritage.jpg",source:"Wikimedia Commons",license:"CC BY-SA 4.0",credit:"HCCB3947"},
- "hoi-an": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Hoi_An_Ancient_Town.jpg",source:"Wikimedia Commons",license:"CC BY 4.0",credit:"Andre Hospers"},
- "my-son": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/My_Son_Sanctuary%2C_Vietnam%2C_2017_(52415210322).jpg",source:"Wikimedia Commons",license:"CC BY-SA 2.0",credit:"JL Cogburn"},
- "dien-bien-phu": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Dien_Bien_Phu002.jpg",source:"Wikimedia Commons",license:"Public domain",credit:"U.S. Army / public domain"},
- "dinh-doc-lap": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Independence_Palace_(9982437526).jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
- "gion": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Gion_Kyoto.jpg",source:"Wikimedia Commons",license:"CC BY-SA 4.0",credit:"Vldimir Pankratov"},
- "arashiyama": {url:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Arashiyama,_Kyoto.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
+ "hoang-thanh-thang-long": {url:"https://upload.wikimedia.org/wikipedia/commons/7/76/Imperial_Citadel_of_Thang_Long_%2826910835332%29.jpg",source:"Wikimedia Commons",license:"CC BY 2.0",credit:"Bex Walton"},
+ "hoa-lu": {url:"https://upload.wikimedia.org/wikipedia/commons/0/0f/Hoa_Lu_%282%29.jpg",source:"Wikimedia Commons",license:"CC BY-SA 3.0",credit:"Wikimedia Commons contributor"},
+ "co-loa": {url:"https://upload.wikimedia.org/wikipedia/commons/2/23/Hoa_Lu_landscape.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
+ "co-do-hue": {url:"https://upload.wikimedia.org/wikipedia/commons/4/43/The_Complex_of_Hue_Monuments_-_World_Cultural_Heritage.jpg",source:"Wikimedia Commons",license:"CC BY-SA 4.0",credit:"HCCB3947"},
+ "hoi-an": {url:"https://upload.wikimedia.org/wikipedia/commons/3/3c/Hoi_An_Ancient_Town.jpg",source:"Wikimedia Commons",license:"CC BY 4.0",credit:"Andre Hospers"},
+ "my-son": {url:"https://upload.wikimedia.org/wikipedia/commons/4/42/My_Son_Sanctuary%2C_Vietnam%2C_2017_%2852415210322%29.jpg",source:"Wikimedia Commons",license:"CC BY-SA 2.0",credit:"JL Cogburn"},
+ "dien-bien-phu": {url:"https://upload.wikimedia.org/wikipedia/commons/e/e2/Dien_Bien_Phu002.jpg",source:"Wikimedia Commons",license:"Public domain",credit:"U.S. Army / public domain"},
+ "dinh-doc-lap": {url:"https://upload.wikimedia.org/wikipedia/commons/1/1f/Independence_Palace_%289982437526%29.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
+ "gion": {url:"https://upload.wikimedia.org/wikipedia/commons/c/cf/Gion_Kyoto.jpg",source:"Wikimedia Commons",license:"CC BY-SA 4.0",credit:"Vldimir Pankratov"},
+ "arashiyama": {url:"https://upload.wikimedia.org/wikipedia/commons/0/02/Arashiyama%2C_Kyoto.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
 };
 const MEDIA_BY_JOURNEY: Record<string,string> = {"dau-kinh-do-xua":"hoa-lu","di-san-mien-trung":"hoi-an","dau-an-khang-chien":"dien-bien-phu"};
 const MEDIA_BY_STORY: Record<string,string> = {"vi-sao-thang-long-tro-thanh-kinh-do":"hoang-thanh-thang-long","hue-va-dau-an-kinh-do-trieu-nguyen":"co-do-hue","dien-bien-phu-trong-tien-trinh-nam-1954":"dien-bien-phu"};
@@ -71,12 +71,12 @@ export default function HomeV6(){
  });},[]);
  const mediaUrl=(x:any)=>x?.heroMedia?.url??(x?.heroMedia?.id?mediaById[x.heroMedia.id]?.url:null)??curatedMedia(x)?.url;
  const journeyFallbackKeys=["hoa-lu","hoi-an","dien-bien-phu","co-do-hue","my-son","dinh-doc-lap"];
- const journeyMediaUrl=(x:any,index:number)=>mediaUrl(x)??CURATED_MEDIA[journeyFallbackKeys[index%journeyFallbackKeys.length]]?.url;
+ const journeyMediaUrl=(x:any,index:number)=>curatedMedia(x)?.url??CURATED_MEDIA[journeyFallbackKeys[index%journeyFallbackKeys.length]]?.url??mediaUrl(x);
  const context=useMemo(()=>location==="granted"&&nearby.length?nearby.map(x=>({id:x.id,slug:x.slug,name:x.name,type:"Gần bạn"})):destinations,[location,nearby,destinations,mediaById]);
  async function search(value:string){setQ(value);if(value.trim().length<2){setResults([]);return}try{const r=await fetch(API+"/v1/search?q="+encodeURIComponent(value)+"&limit=6");const p=await r.json();const d=p.data??p;setResults((d.results??d.items??[]).map((x:any)=>({id:x.id,slug:x.slug,name:x.name??x.title??x.slug,type:x.entityType??x.type})))}catch{}}
  function locate(){if(!navigator.geolocation){setLocation("denied");return}setLocation("loading");navigator.geolocation.getCurrentPosition(async p=>{try{const r=await fetch(API+"/v1/places/nearby?lat="+p.coords.latitude+"&lng="+p.coords.longitude+"&radius=25000&limit=8");const j=await r.json();setNearby(j.data??j);setLocation("granted")}catch{setLocation("denied")}},()=>setLocation("denied"),{maximumAge:300000,timeout:8000})}
  return <div className="home-v6">
-  <section className="home-v6-hero" style={(destinations[0]&&img(destinations[0]))?{backgroundImage:"linear-gradient(90deg,rgba(4,24,20,.84),rgba(4,24,20,.34) 55%,rgba(4,24,20,.55)),url("+img(destinations[0])+")"}:undefined}>
+  <section className="home-v6-hero" style={(destinations[0]&&(curatedMedia(destinations[0])?.url||img(destinations[0])))?{backgroundImage:"linear-gradient(90deg,rgba(4,24,20,.72),rgba(4,24,20,.18) 58%,rgba(4,24,20,.34)),url("+(curatedMedia(destinations[0])?.url||img(destinations[0]))+")"}:undefined}>
    <header className="home-v6-nav container"><a href="/" className="home-v6-logo"><img src="/brand/dvg-logo-horizontal-primary-light-v1.4.1.svg" alt="Dấu Việt"/></a><nav><a className="active" href="/explore">Khám phá</a><a href="/map">Bản đồ</a><a href="/stories">Câu chuyện</a><a href="/journeys">Hành trình</a><a href="/periods">Thời kỳ</a><a href="/people">Nhân vật</a><a href="/events">Sự kiện</a><a href="/themes">Chủ đề</a></nav><div className="home-v6-actions"><span>VN</span><a href="/auth/login">Đăng nhập</a></div></header>
    <div className="home-v6-hero-inner container"><div className="hero-media-credit">{destinations[0]&&curatedMedia(destinations[0])&&!destinations[0]?.heroMedia?.url?`Ảnh: ${curatedMedia(destinations[0])!.credit} · ${curatedMedia(destinations[0])!.license}`:""}</div><div className="home-v6-copy"><span className="kicker">DU LỊCH LỊCH SỬ</span><h1>Đi để khám phá.<br/><em>Ở lại để hiểu.</em></h1><p>Những vùng đất, con người và biến cố đã tạo nên Việt Nam và thế giới — qua những hành trình có thể chạm tới.</p>
     <div className="home-v6-search"><span>⌕</span><input value={q} onChange={e=>search(e.target.value)} placeholder="Bạn muốn đi đâu? Hà Nội, Huế, Hội An..." aria-label="Bạn muốn đi đâu?"/><button onClick={()=>search(q)}>Tìm</button>{results.length>0&&<div className="search-results">{results.map(x=><a key={x.id} href={hrefFor(x)}><strong>{x.name}</strong><small>{x.type??"Địa điểm"}</small></a>)}</div>}</div>
