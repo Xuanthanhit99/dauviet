@@ -30,7 +30,19 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
   const visualNodes=mediaCheck.filter((x:any)=>x.tag==="IMG"||x.tag==="DIV"||x.tag==="A");
   expect(visualNodes.length).toBeGreaterThan(0);
   expect(mediaCheck.filter((x:any)=>x.tag==="IMG").every((x:any)=>x.imageComplete&&x.imageNaturalWidth>0)).toBeTruthy();
-  expect(mediaCheck.filter((x:any)=>x.hasBackground).length).toBeGreaterThan(0);
+  const backgroundUrls=await page.locator(".home-v6-hero, .journey-card .media, .destination-grid > a, .story-card").evaluateAll(nodes=>nodes.flatMap((node:any)=>{
+    const bg=getComputedStyle(node).backgroundImage;
+    const match=bg.match(/url\(["']?([^"')]+)["']?\)/);
+    return match?[match[1]]:[];
+  }));
+  expect(backgroundUrls.length).toBeGreaterThan(0);
+  const backgroundLoads=await page.evaluate(async(urls:string[])=>await Promise.all(urls.map(url=>new Promise<boolean>(resolve=>{
+    const img=new Image();
+    img.onload=()=>resolve(img.naturalWidth>0);
+    img.onerror=()=>resolve(false);
+    img.src=url;
+  }))),backgroundUrls);
+  expect(backgroundLoads.every(Boolean)).toBeTruthy();
 
   // Smoke-test the three core content paths without mutating the current page.
   const destinationHref=await page.locator(".destination-grid > a").first().getAttribute("href");
