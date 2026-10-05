@@ -24,7 +24,7 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
       tag:node.tagName,
       hasBackground:bg && bg!=="none",
       imageComplete:img?img.complete:false,
-      imageNaturalWidth:img?img.naturalWidth:0:1
+      imageNaturalWidth:img?img.naturalWidth:1
     };
   }));
   const visualNodes=mediaCheck.filter((x:any)=>x.tag==="IMG"||x.tag==="DIV"||x.tag==="A");
