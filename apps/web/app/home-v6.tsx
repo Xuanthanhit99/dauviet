@@ -21,7 +21,11 @@ export default function HomeV6(){
    const detail=await Promise.all(ds.slice(0,8).map((x:Item)=>fetch(API+"/v1/destinations/"+encodeURIComponent(x.slug)).then(r=>r.json()).catch(()=>null)));
    const media=new Map(detail.map((x:any)=>x?.data??x).filter(Boolean).map((x:any)=>[x.slug,x.heroMedia]));
    setDestinations(ds.map((x:Item)=>({...x,heroMedia:media.get(x.slug)||null})));setJourneys(js);setStories(ss);
-   const allHeroIds=[...detail.map((x:any)=>(x?.data??x)?.heroMedia?.id),...js.map((x:any)=>x.heroMedia?.id),...ss.map((x:any)=>x.heroMedia?.id)].filter(Boolean);
+   const [journeyDetails,storyDetails]=await Promise.all([
+     Promise.all(js.slice(0,6).map((x:Item)=>fetch(API+"/v1/journeys/"+encodeURIComponent(x.slug)).then(r=>r.json()).catch(()=>null))),
+     Promise.all(ss.slice(0,6).map((x:Item)=>fetch(API+"/v1/stories/"+encodeURIComponent(x.slug)).then(r=>r.json()).catch(()=>null)))
+   ]);
+   const allHeroIds=[...detail.map((x:any)=>(x?.data??x)?.heroMedia?.id),...journeyDetails.map((x:any)=>(x?.data??x)?.heroMedia?.id),...storyDetails.map((x:any)=>(x?.data??x)?.heroMedia?.id)].filter(Boolean);
    const resolved=await Promise.all(allHeroIds.map(async(id:string)=>{const r=await fetch(API+"/v1/media/"+encodeURIComponent(id)).then(r=>r.json()).catch(()=>null);const v=r?.data??r;return v?.id?{id,url:v.url??null}:null;}));
    setMediaById(Object.fromEntries(resolved.filter(Boolean).map((x:any)=>[x.id,{url:x.url}])));
  });},[]);
