@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
-import { IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
@@ -35,6 +35,10 @@ class StoryListQuery extends CursorPaginationQuery {
   @IsOptional()
   @IsString()
   eventId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  featured?: boolean;
 }
 
 @ApiTags('stories')
@@ -51,6 +55,7 @@ export class StoriesController {
       placeId: query.placeId,
       personId: query.personId,
       eventId: query.eventId,
+      featured: query.featured,
       cursor: query.cursor,
       limit: query.limit,
     });
