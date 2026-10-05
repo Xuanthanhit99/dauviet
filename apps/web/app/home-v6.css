@@ -249,3 +249,87 @@
 .home-v6-hero .hero-planner .plan-button{grid-column:1/-1;min-height:42px}
 .home-v6-stats blockquote{grid-column:1/-1}
 }
+
+/* Home V6 final hero/mobile fidelity pass — 2026-10-05 */
+.home-v6-hero{
+  background-size:cover;
+  background-position:center 32%;
+}
+.home-v6-hero:before{
+  background:
+    linear-gradient(90deg,rgba(3,20,17,.78) 0%,rgba(3,20,17,.30) 52%,rgba(3,20,17,.46) 100%),
+    linear-gradient(0deg,rgba(3,20,17,.78) 0%,rgba(3,20,17,.18) 55%,rgba(3,20,17,.18) 100%);
+}
+.journey-card .media{
+  background-color:#214d43;
+  background-size:cover;
+  background-position:center;
+}
+.destination-grid a.has-media:first-child{
+  background-position:center 35%;
+}
+@media(max-width:600px){
+  .home-v6-hero{
+    background-size:auto 620px;
+    background-repeat:no-repeat;
+    background-position:center top;
+  }
+  .home-v6-hero:before{
+    background:
+      linear-gradient(180deg,rgba(3,20,17,.46) 0%,rgba(3,20,17,.18) 28%,rgba(3,20,17,.72) 58%,rgba(3,20,17,.96) 100%);
+  }
+  .home-v6-copy{
+    padding-top:24px;
+  }
+  .home-v6-copy .kicker{
+    text-shadow:0 1px 8px rgba(0,0,0,.5);
+  }
+  .home-v6 h1{
+    font-size:44px;
+    max-width:10ch;
+    margin-top:12px;
+    margin-bottom:14px;
+  }
+  .home-v6-copy>p{
+    max-width:31ch;
+  }
+  .home-v6-search{
+    margin-top:14px;
+    border:2px solid rgba(230,183,98,.72);
+    box-shadow:0 14px 36px rgba(0,0,0,.28);
+  }
+  .home-v6-chips a:first-child{
+    background:#dca74e;
+    border-color:#dca74e;
+    color:#17231e;
+    font-weight:800;
+  }
+  .home-v6-hero .hero-planner .steps{
+    display:none;
+  }
+  .home-v6-hero .hero-planner .planner-main h2{
+    font-size:24px;
+  }
+  .home-v6-hero .hero-planner .planner-main>p{
+    display:none;
+  }
+  .home-v6-hero .hero-planner .planner-form{
+    grid-template-columns:1fr 1fr;
+  }
+  .home-v6-hero .hero-planner .planner-form label:first-child{
+    grid-column:1/-1;
+  }
+  .home-v6-hero .hero-planner .planner-form label:nth-child(3),
+  .home-v6-hero .hero-planner .planner-form label:nth-child(4){
+    display:none;
+  }
+  .home-v6-hero .hero-planner .plan-button{
+    grid-column:1/-1;
+  }
+  .context-card{
+    margin-top:4px;
+  }
+  .destination-grid a.has-media:first-child{
+    background-position:center;
+  }
+}
