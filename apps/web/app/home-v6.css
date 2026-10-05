@@ -245,7 +245,7 @@
 .home-v6-hero .hero-planner .planner-form{grid-template-columns:1fr 1fr;gap:7px}
 .home-v6-hero .hero-planner .planner-form label:first-child{grid-column:1/-1}
 .home-v6-hero .hero-planner .planner-form label{font-size:9px}
-.home-v6-hero .hero-planner .planner-form input,.home-v6-hero .hero-planner .planner-form select{min-height:40px;font-size:12px}
+.home-v6-hero .hero-planner .planner-form input,.home-v6-hero .hero-planner .planner-form select{min-height:44px;font-size:12px}
 .home-v6-hero .hero-planner .plan-button{grid-column:1/-1;min-height:42px}
 .home-v6-stats blockquote{grid-column:1/-1}
 }
