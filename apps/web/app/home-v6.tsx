@@ -25,6 +25,10 @@ export default function HomeV6(){
      Promise.all(js.slice(0,6).map((x:Item)=>fetch(API+"/v1/journeys/"+encodeURIComponent(x.slug)).then(r=>r.json()).catch(()=>null))),
      Promise.all(ss.slice(0,6).map((x:Item)=>fetch(API+"/v1/stories/"+encodeURIComponent(x.slug)).then(r=>r.json()).catch(()=>null)))
    ]);
+   const journeyMedia=new Map(journeyDetails.map((x:any)=>x?.data??x).filter(Boolean).map((x:any)=>[x.slug,x.heroMedia]));
+   const storyMedia=new Map(storyDetails.map((x:any)=>x?.data??x).filter(Boolean).map((x:any)=>[x.slug,x.heroMedia]));
+   setJourneys(js.map((x:Item)=>({...x,heroMedia:journeyMedia.get(x.slug)||null})));
+   setStories(ss.map((x:Item)=>({...x,heroMedia:storyMedia.get(x.slug)||null})));
    const allHeroIds=[...detail.map((x:any)=>(x?.data??x)?.heroMedia?.id),...journeyDetails.map((x:any)=>(x?.data??x)?.heroMedia?.id),...storyDetails.map((x:any)=>(x?.data??x)?.heroMedia?.id)].filter(Boolean);
    const resolved=await Promise.all(allHeroIds.map(async(id:string)=>{const r=await fetch(API+"/v1/media/"+encodeURIComponent(id)).then(r=>r.json()).catch(()=>null);const v=r?.data??r;return v?.id?{id,url:v.url??null}:null;}));
    setMediaById(Object.fromEntries(resolved.filter(Boolean).map((x:any)=>[x.id,{url:x.url}])));
