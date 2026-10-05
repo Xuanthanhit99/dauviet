@@ -82,8 +82,8 @@ jobs:
           APP_URL: http://127.0.0.1:3001
           CORS_ORIGINS: http://127.0.0.1:3001
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public
-          JWT_ACCESS_SECRET: ci-access-secret
-          JWT_REFRESH_SECRET: ci-refresh-secret
+          JWT_ACCESS_SECRET: ci-access-secret-32-characters-minimum-abcdef
+          JWT_REFRESH_SECRET: ci-refresh-secret-32-characters-minimum-abcdef
           REDIS_URL: redis://127.0.0.1:6379
           SEARCH_PROJECTION_WORKER_ENABLED: "false"
       - name: Wait for local API
