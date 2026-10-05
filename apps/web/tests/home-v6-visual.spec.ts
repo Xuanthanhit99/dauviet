@@ -16,6 +16,7 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
   await expect(page.locator(".home-v6-search")).toBeVisible();
 
   // Content media gate: UI chrome (logo/icon) is intentionally excluded.
+  await page.locator(".context-thumb img").evaluateAll(async(nodes:any[])=>Promise.all(nodes.map((img:any)=>img.complete?Promise.resolve():new Promise<void>(resolve=>{img.addEventListener("load",()=>resolve(),{once:true});img.addEventListener("error",()=>resolve(),{once:true});}))));
   const contentImages=await page.locator(".context-thumb img").evaluateAll((nodes:any[])=>nodes.map((img:any)=>({
     src:img.currentSrc||img.src,
     complete:img.complete,
