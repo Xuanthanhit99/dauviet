@@ -25,7 +25,9 @@
     "admin:build": "pnpm --filter @dauviet/admin build",
     "mobile:start": "pnpm --filter @dauviet/mobile start",
     "consumer:typecheck": "pnpm --filter @dauviet/web typecheck && pnpm --filter @dauviet/admin typecheck && pnpm --filter @dauviet/mobile typecheck",
-    "admin:provision": "tsx scripts/admin/provision-production-admin.ts"
+    "admin:provision": "tsx scripts/admin/provision-production-admin.ts",
+    "db:preflight:production": "tsx scripts/db/production-preflight.ts",
+    "db:seed:production": "NODE_ENV=production SEED_PROFILE=production tsx prisma/seed.ts"
   },
   "devDependencies": {
     "prisma": "5.20.0",
