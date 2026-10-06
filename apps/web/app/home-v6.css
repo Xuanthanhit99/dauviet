@@ -333,3 +333,90 @@
     background-position:center;
   }
 }
+
+/* Home V6 Mobile 390 micro-fidelity final — 2026-10-06 */
+@media(max-width:600px){
+  .home-v6-hero{
+    background-size:auto 560px;
+    background-position:center top;
+  }
+  .home-v6-hero:before{
+    background:
+      linear-gradient(180deg,rgba(3,20,17,.38) 0%,rgba(3,20,17,.12) 30%,rgba(3,20,17,.68) 57%,rgba(3,20,17,.96) 100%);
+  }
+  .home-v6-copy{
+    padding:30px 0 14px;
+  }
+  .home-v6 h1{
+    font-size:46px;
+    line-height:.98;
+    margin:16px 0 16px;
+  }
+  .home-v6-copy>p{
+    font-size:15px;
+    line-height:1.6;
+    max-width:32ch;
+    margin-bottom:8px;
+  }
+  .home-v6-search{
+    margin-top:16px;
+  }
+  .home-v6-hero .hero-planner{
+    padding:6px 0 8px;
+  }
+  .home-v6-hero .hero-planner .planner-main{
+    padding:14px 16px;
+  }
+  .home-v6-hero .hero-planner .planner-main h2{
+    font-size:22px;
+    margin:2px 0 8px;
+  }
+  .home-v6-hero .hero-planner .planner-form{
+    gap:7px;
+  }
+  .home-v6-hero .hero-planner .planner-form input,
+  .home-v6-hero .hero-planner .planner-form select{
+    min-height:44px;
+  }
+  .home-v6-hero .hero-planner .plan-button{
+    min-height:44px;
+  }
+  .context-card{
+    margin:0 14px 6px;
+    padding:12px;
+    border-radius:14px;
+  }
+  .context-head strong{
+    font-size:16px;
+  }
+  .context-list{
+    margin-top:6px;
+  }
+  .context-list a{
+    padding:7px 0;
+  }
+  .context-thumb{
+    width:54px;
+    height:44px;
+  }
+  .context-list strong{
+    font-size:12px;
+  }
+  .context-list small{
+    font-size:9px;
+  }
+  .context-note{
+    display:none;
+  }
+  .home-v6-stats{
+    padding-top:6px;
+    padding-bottom:14px;
+    gap:10px;
+  }
+  .home-v6-stats b{
+    font-size:19px;
+  }
+  .home-v6-stats span{
+    font-size:10px;
+  }
+}
