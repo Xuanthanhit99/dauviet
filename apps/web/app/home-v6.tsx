@@ -153,7 +153,7 @@ export default function HomeV6() {
     return () => { active = false; };
   }, []);
 
-  const hydrated = (item: Item) =>
+  const hydrated = (item?: Item | null) =>
     item.heroMedia?.url ? item : item.heroMedia?.id && mediaById[item.heroMedia.id] ? { ...item, heroMedia: mediaById[item.heroMedia.id] } : item;
 
   const editorialJourneys = useMemo(() => listOf<Item>(editorial.HOME_JOURNEY), [editorial]);
