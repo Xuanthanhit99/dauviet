@@ -31,6 +31,7 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
     return match?[match[1]]:[];
   }));
   expect(backgroundUrls.length).toBeGreaterThan(0);
+  expect(backgroundUrls.some(url=>url.includes("Ha_Long_Bay_in_Vietnam.jpg")), "Stale Home V6 hero media URL detected").toBe(false);
   const backgroundLoads=await page.evaluate(async(urls:string[])=>await Promise.all(urls.map(url=>new Promise<boolean>(resolve=>{
     const img=new Image();
     img.onload=()=>resolve(img.naturalWidth>0);
