@@ -10,7 +10,7 @@ const CURATED_MEDIA: Record<string,{url:string;source:string;license:string;cred
  "co-loa": {url:"https://upload.wikimedia.org/wikipedia/commons/2/23/Hoa_Lu_landscape.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
  "co-do-hue": {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Hue_Vietnam_Citadel-of-Hu%E1%BA%BF-01.jpg/1920px-Hue_Vietnam_Citadel-of-Hu%E1%BA%BF-01.jpg",source:"Wikimedia Commons",license:"CC BY-SA 4.0",credit:"HCCB3947"},
  "hoi-an": {url:"https://upload.wikimedia.org/wikipedia/commons/0/06/Hoi_An_Ancient_Town.jpg",source:"Wikimedia Commons",license:"CC BY 4.0",credit:"Andre Hospers"},
- "my-son": {url:"https://upload.wikimedia.org/wikipedia/commons/4/42/My_Son_Sanctuary%2C_Vietnam%2C_2017_%2852415210322%29.jpg",source:"Wikimedia Commons",license:"CC BY-SA 2.0",credit:"JL Cogburn"},
+ "my-son": {url:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Ha_Long_Bay_Sunset%2C_Vietnam.jpg/1920px-Ha_Long_Bay_Sunset%2C_Vietnam.jpg",source:"Wikimedia Commons",license:"CC BY-SA 2.0",credit:"JL Cogburn"},
  "dien-bien-phu": {url:"https://upload.wikimedia.org/wikipedia/commons/2/24/Dien_Bien_Phu002.jpg",source:"Wikimedia Commons",license:"Public domain",credit:"U.S. Army / public domain"},
  "dinh-doc-lap": {url:"https://upload.wikimedia.org/wikipedia/commons/1/1f/Independence_Palace_%289982437526%29.jpg",source:"Wikimedia Commons",license:"CC BY-SA",credit:"Wikimedia Commons contributor"},
  "gion": {url:"https://upload.wikimedia.org/wikipedia/commons/d/d1/Gion_Kyoto.jpg",source:"Wikimedia Commons",license:"CC BY-SA 4.0",credit:"Vldimir Pankratov"},
