@@ -509,3 +509,63 @@
 }
 
 @media(min-width:901px){.home-v6-hero{min-height:0;height:auto}.home-v6-hero-inner{min-height:205px;align-items:start;padding-top:22px;padding-bottom:14px}.context-card{align-self:start;margin:0;height:auto;max-height:180px;overflow:hidden}.context-list a{padding:6px 0}.context-thumb{height:40px}.home-v6-copy{padding-top:0}.home-v6 h1{font-size:43px;line-height:.92}.journey-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.journey-card .media{height:88px}.destination-strip{grid-template-columns:repeat(8,minmax(0,1fr))}}
+
+
+/* Home V6 correction pass — master section geometry/assets */
+.planner.hero-planner{background:#f4eadb}
+.planner.hero-planner .planner-grid{position:relative;min-height:175px}
+.planner.hero-planner .planner-main{
+  background:
+    linear-gradient(90deg,rgba(255,250,241,.96) 0%,rgba(255,250,241,.88) 52%,rgba(255,250,241,.35) 100%),
+    url("https://upload.wikimedia.org/wikipedia/commons/b/b6/Imperial_Citadel_of_Thang_Long_%2826910835332%29.jpg") center/cover no-repeat;
+}
+.planner.hero-planner .services{background:rgba(6,56,47,.94)}
+.stay-experience{background:#fffaf1;padding-top:22px;padding-bottom:24px}
+.dual-discovery{display:grid;grid-template-columns:1fr 1.25fr;gap:28px}
+.dual-discovery .section-head h2{font-size:25px}
+.mini-cards a{height:105px}
+.mini-cards strong{font-size:13px}
+.mini-cards small{font-size:7px}
+.history{background:#123b33;padding:32px 0}
+.timeline-photo{
+  height:190px;border-radius:10px;background:center/cover no-repeat;position:relative;overflow:hidden;
+}
+.timeline-track{
+  position:absolute;left:8%;right:8%;bottom:24px;height:48px;display:flex;align-items:end;justify-content:space-between;z-index:2;color:#fff;font-size:9px;
+}
+.timeline-track:before{content:"";position:absolute;left:8%;right:8%;bottom:18px;height:2px;background:rgba(255,255,255,.7)}
+.timeline-track i{width:13px;height:13px;border-radius:50%;background:#e1b46a;border:3px solid #fff;position:relative;z-index:2;margin-bottom:12px}
+.timeline-track b{font-size:7px;color:rgba(255,255,255,.8)}
+.stories-section{background:#f8f0e3;padding:28px 0}
+.master-story-grid{grid-template-columns:repeat(4,1fr);gap:8px}
+.master-story-grid .story-card{min-height:150px}
+.map-discovery-section{background:#fffaf1;padding:0 0 28px}
+.map-discovery-section .map-discovery{
+  min-height:190px;border-radius:10px;background:
+    linear-gradient(90deg,rgba(255,250,241,.92),rgba(255,250,241,.28)),
+    url("https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Ha_Long_Bay_Sunset%2C_Vietnam.jpg/1920px-Ha_Long_Bay_Sunset%2C_Vietnam.jpg") center/cover no-repeat;
+}
+.map-discovery-section .map-copy{padding:20px}
+.cta{min-height:180px;padding:38px 0;background-size:cover;background-position:center 55%}
+.cta h2{font-size:42px}
+@media(max-width:900px){
+ .dual-discovery{grid-template-columns:1fr}
+ .master-story-grid{grid-template-columns:repeat(2,1fr)}
+ .timeline-photo{height:180px}
+}
+@media(max-width:600px){
+ .planner.hero-planner .planner-main{
+   background:
+     linear-gradient(180deg,rgba(255,250,241,.94),rgba(255,250,241,.86)),
+     url("https://upload.wikimedia.org/wikipedia/commons/b/b6/Imperial_Citadel_of_Thang_Long_%2826910835332%29.jpg") center/cover no-repeat;
+ }
+ .stay-experience{padding:24px 0}
+ .dual-discovery{gap:22px}
+ .mini-cards a{height:110px}
+ .history{padding:28px 0}
+ .timeline-photo{height:170px}
+ .master-story-grid{display:grid;grid-template-columns:1fr 1fr}
+ .master-story-grid .story-card{min-height:145px}
+ .map-discovery-section .map-discovery{min-height:210px}
+ .cta{min-height:230px}
+}
