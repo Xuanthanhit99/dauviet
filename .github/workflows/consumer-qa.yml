@@ -46,6 +46,28 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
+          - 9001:9001
+        options: >-
+          --health-cmd "curl -fsS http://127.0.0.1:9000/minio/health/live"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -71,6 +93,22 @@ jobs:
         env:
           NODE_ENV: development
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public
+      - name: Home V6 isolated media fixture gate
+        run: pnpm --filter @dauviet/api seed:home-media:ci
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public
+          JWT_ACCESS_SECRET: ci-access-secret-32-characters-minimum-abcdef
+          JWT_REFRESH_SECRET: ci-refresh-secret-32-characters-minimum-abcdef
+          REDIS_URL: redis://127.0.0.1:6379
+          S3_ENDPOINT: http://127.0.0.1:9000
+          S3_REGION: us-east-1
+          S3_ACCESS_KEY_ID: minioadmin
+          S3_SECRET_ACCESS_KEY: minioadmin
+          S3_BUCKET: dauviet-media
+          S3_FORCE_PATH_STYLE: "true"
+          S3_PUBLIC_BASE_URL: http://127.0.0.1:9000/dauviet-media
+
       - name: API production build gate
         run: pnpm --filter @dauviet/api build
       - name: Start local API for browser QA
@@ -86,6 +124,13 @@ jobs:
           JWT_REFRESH_SECRET: ci-refresh-secret-32-characters-minimum-abcdef
           REDIS_URL: redis://127.0.0.1:6379
           SEARCH_PROJECTION_WORKER_ENABLED: "false"
+          S3_ENDPOINT: http://127.0.0.1:9000
+          S3_REGION: us-east-1
+          S3_ACCESS_KEY_ID: minioadmin
+          S3_SECRET_ACCESS_KEY: minioadmin
+          S3_BUCKET: dauviet-media
+          S3_FORCE_PATH_STYLE: "true"
+          S3_PUBLIC_BASE_URL: http://127.0.0.1:9000/dauviet-media
       - name: Wait for local API
         run: |
           for i in {1..30}; do
