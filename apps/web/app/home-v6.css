@@ -627,3 +627,95 @@
   .map-discovery-section .map-discovery{min-height:180px}
   .cta{min-height:190px!important;padding:28px 0!important}
 }
+
+
+/* === V6 MASTER P0: compact full-page composition === */
+@media(min-width:901px){
+  .home-v6 .container{width:min(1168px,calc(100% - 48px))}
+  .home-v6-nav{height:42px;grid-template-columns:190px 1fr auto;gap:16px}
+  .home-v6-logo img{width:145px}
+  .home-v6-nav nav{gap:17px;font-size:9px}
+  .home-v6-nav nav a{padding:9px 0 5px}
+  .home-v6-actions{font-size:9px;gap:8px}
+  .home-v6-actions a{padding:7px 11px;border-radius:7px}
+  .home-v6-hero{height:250px;min-height:250px}
+  .home-v6-hero-inner{height:208px;min-height:208px;grid-template-columns:1.65fr .7fr;gap:26px;padding:12px 0 10px;align-items:center}
+  .home-v6-copy{padding:0;max-width:600px}
+  .home-v6 h1{font-size:47px;line-height:.91;margin:7px 0 8px;max-width:9ch}
+  .home-v6-copy>p{font-size:11px;line-height:1.35;max-width:470px}
+  .home-v6-search{max-width:470px;margin-top:10px;padding:3px 4px 3px 10px;border-radius:8px}
+  .home-v6-search input,.home-v6-search button{min-height:30px;font-size:9px}
+  .home-v6-search button{padding:0 13px;border-radius:6px}
+  .home-v6-chips{gap:5px;margin-top:6px}
+  .home-v6-chips a{padding:5px 8px;font-size:7px}
+  .context-card{margin:0;padding:10px;border-radius:10px;max-height:174px}
+  .context-head span{font-size:7px}.context-head strong{font-size:11px;margin-top:3px}.context-head button{min-height:26px;padding:5px;font-size:7px}
+  .context-list{margin-top:6px;grid-template-columns:repeat(3,1fr);gap:5px}
+  .context-list a{display:block;padding:0;border:0}
+  .context-thumb{width:100%;height:45px;border-radius:6px}
+  .context-list strong{font-size:7px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .context-list small{font-size:6px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .context-list i{display:none}
+  .context-note{display:none}
+  .home-v6-stats{height:46px;grid-template-columns:repeat(4,1fr) 1.55fr;gap:0;padding:7px 0}
+  .home-v6-stats span{font-size:7px;padding:0 12px}.home-v6-stats b{font-size:16px}.home-v6-stats blockquote{font-size:8px;padding-left:14px}
+  .home-v6-section{padding:12px 0}
+  .section-head{margin-bottom:5px;gap:12px}.section-head h2{font-size:21px;margin:3px 0}.section-head p{font-size:7px;margin:2px 0}.section-head>a{font-size:7px}
+  .featured-journeys{padding-top:11px;padding-bottom:8px}
+  .journey-filters{gap:4px;margin:-1px 0 5px}.journey-filters>*{padding:3px 6px;font-size:6px}
+  .journey-grid{gap:5px;grid-template-columns:repeat(5,1fr)}
+  .journey-card{border-radius:6px;padding-bottom:4px}.journey-card .media{height:64px;padding:5px}.journey-card .media>span{font-size:5px;padding:2px 3px}
+  .journey-card small{font-size:5px;margin:4px 6px 0}.journey-card h3{font-size:9px;margin:2px 6px;line-height:1.05}.journey-card p{font-size:5px;margin:2px 6px;min-height:0}.journey-card b{font-size:5px;margin:2px 6px}
+  .planner{padding:8px 0}.planner-grid{min-height:153px;border-radius:0;grid-template-columns:1.55fr .45fr}
+  .planner-main{padding:12px 18px}.planner-main>p{font-size:7px;line-height:1.35;margin:2px 0 5px}
+  .planner-main h2{font-size:20px;margin:3px 0}
+  .steps{margin:5px 0}.steps>*{padding:3px 6px;font-size:6px}
+  .planner-form{grid-template-columns:1.3fr .7fr .45fr .95fr auto;gap:4px}.planner-form label{font-size:6px;gap:3px}.planner-form input,.planner-form select,.plan-button{min-height:27px;font-size:7px;padding:0 6px}.plan-button{padding:0 8px}
+  .services{padding:12px}.services h3{font-size:15px;margin:0 0 4px}.services a{padding:5px 0;font-size:7px}
+  .destinations-section{padding:10px 0 8px}.destination-strip{grid-template-columns:repeat(8,1fr);gap:4px}.destination-strip a{height:58px;border-radius:5px;padding:5px}.destination-strip strong{font-size:8px}.destination-strip small{font-size:5px}
+  .stay-experience{padding:8px 0 10px}.dual-discovery{gap:18px}.dual-discovery .section-head h2{font-size:18px}.mini-cards{gap:4px}.mini-cards a{height:58px;border-radius:5px;padding:5px}.mini-cards strong{font-size:8px}.mini-cards small{font-size:5px}
+  .history{padding:10px 0}.history-grid{gap:18px}.history h2{font-size:27px;margin:4px 0 6px}.history p{font-size:6px;line-height:1.35;margin:2px 0 5px}.timeline-photo{height:88px;border-radius:6px}.timeline-track{bottom:12px;font-size:6px}.timeline-track b{font-size:5px}.timeline-track i{width:8px;height:8px;border-width:2px;margin-bottom:6px}
+  .stories-section{padding:9px 0}.master-story-grid{gap:4px}.master-story-grid .story-card{min-height:72px;border-radius:5px;padding:5px}.story-grid small{font-size:4px}.story-grid h3{font-size:8px;margin:2px 0}.story-grid p{font-size:5px}
+  .map-discovery-section{padding:0 0 9px}.map-discovery-section .map-discovery{min-height:60px;border-radius:6px}.map-discovery-section .map-copy{padding:8px}.map-copy h2{font-size:16px;margin:2px 0}.map-copy p{font-size:5px}.map-discovery-section .gold-button{min-height:20px;font-size:5px;padding:0 7px}
+  .cta{min-height:72px;padding:11px 0;background-position:center}.cta h2{font-size:25px;margin:3px 0 7px}.gold-button,.outline-button{min-height:20px;padding:0 7px;font-size:5px}
+}
+@media(max-width:600px){
+  .home-v6-hero{min-height:0!important;height:auto!important}
+  .home-v6-hero-inner{min-height:0!important;height:auto!important;padding:16px 0 10px!important;gap:7px!important}
+  .home-v6 h1{font-size:35px!important;line-height:.94!important;margin:7px 0 8px!important}
+  .home-v6-copy>p{font-size:10px!important;line-height:1.3!important}
+  .home-v6-search{margin-top:8px!important}
+  .context-card{margin-top:0!important;height:154px!important;max-height:154px!important;overflow:hidden!important;padding:9px!important}
+  .context-head strong{font-size:11px!important}
+  .context-head button{min-height:28px!important;font-size:7px!important}
+  .context-list{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:5px!important;margin-top:6px!important}
+  .context-list a{display:block!important;padding:0!important;border:0!important}
+  .context-thumb{height:52px!important;width:100%!important}
+  .context-list strong{font-size:7px!important;display:block!important}
+  .context-list small{font-size:6px!important;display:block!important}
+  .context-list i{display:none!important}
+  .context-note{display:none!important}
+  .home-v6-stats{display:none!important}
+  .featured-journeys{padding:13px 0 8px!important}
+  .section-head h2{font-size:20px!important}
+  .section-head p{font-size:7px!important}
+  .journey-card{min-width:190px!important}
+  .journey-card .media{height:82px!important}
+  .planner{padding:8px 0!important}
+  .planner-grid{border-radius:7px!important}
+  .planner-main{padding:12px!important}
+  .planner-main h2{font-size:20px!important}
+  .planner-main>p{font-size:7px!important}
+  .services{padding:11px!important}
+  .services h3{font-size:15px!important}
+  .destinations-section{padding:10px 0!important}
+  .destination-strip a{height:70px!important}
+  .stay-experience{padding:12px 0!important}
+  .mini-cards a{height:88px!important}
+  .history{padding:16px 0!important}
+  .timeline-photo{height:140px!important}
+  .stories-section{padding:14px 0!important}
+  .master-story-grid .story-card{min-height:120px!important}
+  .map-discovery-section .map-discovery{min-height:145px!important}
+  .cta{min-height:165px!important;padding:22px 0!important}
+}
