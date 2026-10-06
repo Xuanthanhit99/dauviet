@@ -507,3 +507,5 @@
   .planner-form select,
   .plan-button{min-height:44px}
 }
+
+@media(min-width:901px){.home-v6-hero{min-height:0;height:auto}.home-v6-hero-inner{min-height:205px;align-items:start;padding-top:22px;padding-bottom:14px}.context-card{align-self:start;margin:0;height:auto;max-height:180px;overflow:hidden}.context-list a{padding:6px 0}.context-thumb{height:40px}.home-v6-copy{padding-top:0}.home-v6 h1{font-size:43px;line-height:.92}.journey-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.journey-card .media{height:88px}.destination-strip{grid-template-columns:repeat(8,minmax(0,1fr))}}
