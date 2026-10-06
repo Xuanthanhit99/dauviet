@@ -8,7 +8,7 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
 
   // Data-ready gate: networkidle alone is not sufficient for this client-rendered home.
   await expect.poll(async()=>await page.locator(".journey-card").count(),{timeout:15000}).toBeGreaterThan(0);
-  await expect.poll(async()=>await page.locator(".destination-grid > a").count(),{timeout:15000}).toBeGreaterThan(0);
+  await expect.poll(async()=>await page.locator(".destination-strip > a").count(),{timeout:15000}).toBeGreaterThan(0);
   await expect.poll(async()=>await page.locator(".story-card").count(),{timeout:15000}).toBeGreaterThan(0);
 
   await expect(page.getByText("Đi để khám phá.",{exact:false}).first()).toBeVisible();
@@ -25,7 +25,7 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
   })));
   const brokenContentImages=contentImages.filter((x:any)=>!x.complete||x.naturalWidth<=0||x.naturalHeight<=0);
   expect(brokenContentImages, "Broken Home V6 content <img>: "+JSON.stringify(brokenContentImages)).toHaveLength(0);
-  const backgroundUrls=await page.locator(".home-v6-hero, .journey-card .media, .destination-grid > a, .story-card").evaluateAll(nodes=>nodes.flatMap((node:any)=>{
+  const backgroundUrls=await page.locator(".home-v6-hero, .journey-card .media, .destination-strip > a, .story-card").evaluateAll(nodes=>nodes.flatMap((node:any)=>{
     const bg=getComputedStyle(node).backgroundImage;
     const match=bg.match(/url\(["']?([^"')]+)["']?\)/);
     return match?[match[1]]:[];
@@ -42,7 +42,7 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
   expect(backgroundFailures, "Broken Home V6 background media: "+JSON.stringify(backgroundFailures)).toHaveLength(0);
 
   // Smoke-test the three core content paths without mutating the current page.
-  const destinationHref=await page.locator(".destination-grid > a").first().getAttribute("href");
+  const destinationHref=await page.locator(".destination-strip > a").first().getAttribute("href");
   const journeyHref=await page.locator(".journey-card").first().getAttribute("href");
   const storyHref=await page.locator(".story-card").first().getAttribute("href");
   for(const href of [destinationHref,journeyHref,storyHref]){
