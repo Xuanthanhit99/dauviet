@@ -1,6 +1,6 @@
 import './config/load-env';
 import { NestFactory } from '@nestjs/core';
-import { PutBucketCommand, S3Client } from '@aws-sdk/client-s3';
+import { PutBucketCommand, PutBucketPolicyCommand, S3Client } from '@aws-sdk/client-s3';
 import { AppModule } from '../app.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { MediaService } from '../modules/media/media.service';
@@ -80,6 +80,8 @@ async function main() {
     const name = (error as { name?: string }).name;
     if (!['BucketAlreadyOwnedByYou', 'BucketAlreadyExists'].includes(name ?? '')) throw error;
   }
+
+  await client.send(new PutBucketPolicyCommand({ Bucket: s3.bucket, Policy: JSON.stringify({ Version: '2012-10-17', Statement: [{ Effect: 'Allow', Principal: '*', Action: ['s3:GetObject'], Resource: [`arn:aws:s3:::${s3.bucket}/*`] }] }) }));
 
   const app = await NestFactory.createApplicationContext(AppModule);
   const prisma = app.get(PrismaService);
