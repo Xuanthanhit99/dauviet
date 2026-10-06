@@ -84,7 +84,7 @@ export default function HomeV6() {
     let active = true;
     (async () => {
       try {
-        const [d, j, s, p, a, x, t, m, e] = await Promise.all([
+        const responses = await Promise.allSettled([
           getJson("/v1/destinations?page=1&pageSize=8"),
           getJson("/v1/journeys?limit=8"),
           getJson("/v1/stories?limit=8&featured=true"),
@@ -97,14 +97,20 @@ export default function HomeV6() {
         ]);
         if (!active) return;
 
-        const ds = listOf<Item>(d);
-        const js = listOf<Item>(j);
-        const ss = listOf<Item>(s);
-        const ps = listOf<Item>(p);
-        const acc = listOf<Item>(a);
-        const acts = listOf<Item>(x);
-        const tl = listOf<TimelineItem>(t);
-        const mf = listOf<MapFeature>(m);
+        const valueAt = <T,>(index: number, fallback: T): T => {
+          const result = responses[index];
+          return result.status === "fulfilled" ? result.value : fallback;
+        };
+
+        const ds = listOf<Item>(valueAt(0, []));
+        const js = listOf<Item>(valueAt(1, []));
+        const ss = listOf<Item>(valueAt(2, []));
+        const ps = listOf<Item>(valueAt(3, []));
+        const acc = listOf<Item>(valueAt(4, []));
+        const acts = listOf<Item>(valueAt(5, []));
+        const tl = listOf<TimelineItem>(valueAt(6, []));
+        const mf = listOf<MapFeature>(valueAt(7, []));
+        const e = valueAt<Record<string, Item[]>>(8, {});
 
         setDestinations(ds);
         setJourneys(js);
