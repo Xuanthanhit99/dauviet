@@ -498,3 +498,12 @@
 .cta{padding:25px 0;min-height:100px}.cta h2{font-size:30px;margin:5px 0 12px}.gold-button,.outline-button{min-height:28px;padding:0 10px;font-size:7px}
 @media(max-width:900px){.home-v6 .container{width:calc(100% - 24px)}.home-v6-nav{grid-template-columns:auto 1fr}.home-v6-hero-inner{grid-template-columns:1fr}.journey-grid{grid-template-columns:repeat(3,1fr)}.destination-strip{grid-template-columns:repeat(4,1fr)}.dual-discovery,.story-map-grid,.history-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.home-v6-nav{height:48px}.home-v6-logo img{width:125px}.home-v6-actions{gap:5px}.home-v6-actions span{display:none}.home-v6-hero-inner{padding-top:22px}.home-v6 h1{font-size:38px;max-width:8ch}.home-v6-copy>p{font-size:11px}.home-v6-search{width:100%}.context-card{margin-top:8px}.hero-planner .planner-grid{grid-template-columns:1fr}.hero-planner .planner-main{padding:14px}.planner-form{grid-template-columns:1fr 1fr}.planner-form label:nth-child(4){grid-column:1/-1}.services{grid-template-columns:1fr 1fr}.home-v6-stats{grid-template-columns:1fr 1fr}.home-v6-stats blockquote{grid-column:1/-1}.journey-grid{display:flex;overflow:auto}.journey-card{min-width:200px}.destination-strip{display:flex;overflow:auto}.destination-strip a{min-width:112px}.dual-discovery{gap:14px}.mini-cards{grid-template-columns:repeat(3,1fr)}.story-grid{grid-template-columns:repeat(2,1fr)}.story-map-grid{display:flex;flex-direction:column}.map-discovery{min-height:150px}.cta{min-height:180px}.cta h2{font-size:38px}}
+
+/* Responsive gate: preserve locked desktop composition while keeping mobile form controls touch-sized. */
+@media(max-width:600px){
+  .home-v6-search input,
+  .home-v6-search button,
+  .planner-form input,
+  .planner-form select,
+  .plan-button{min-height:44px}
+}
