@@ -42,7 +42,7 @@ function textOf(item: Item, field: "name" | "title" | "summary" | "tagline") {
   return item[field] ?? item.translation?.[field] ?? "";
 }
 
-function hrefFor(item: Item) {
+function hrefFor(item: { slug?: string; type?: string }) {
   const type = String(item.type ?? "").toUpperCase();
   if (type === "JOURNEY") return "/journeys/" + item.slug;
   if (type === "STORY") return "/stories/" + item.slug;
@@ -153,8 +153,8 @@ export default function HomeV6() {
     return () => { active = false; };
   }, []);
 
-  const hydrated = (item?: Item | null) =>
-    item.heroMedia?.url ? item : item.heroMedia?.id && mediaById[item.heroMedia.id] ? { ...item, heroMedia: mediaById[item.heroMedia.id] } : item;
+  const hydrated = (item?: any) =>
+    item?.heroMedia?.url ? item : item?.heroMedia?.id && mediaById[item.heroMedia.id] ? { ...item, heroMedia: mediaById[item.heroMedia.id] } : item;
 
   const editorialJourneys = useMemo(() => listOf<Item>(editorial.HOME_JOURNEY), [editorial]);
   const editorialStories = useMemo(() => listOf<Item>(editorial.HOME_FEATURED_STORY), [editorial]);
