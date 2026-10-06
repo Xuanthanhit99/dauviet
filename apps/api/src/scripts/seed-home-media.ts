@@ -88,10 +88,13 @@ async function main() {
       continue;
     }
 
-    const source = await prisma.source.upsert({
-      where: { url: item.sourceUrl },
-      update: { title: item.title },
-      create: {
+    const existingSource = await prisma.source.findFirst({
+      where: { url: item.sourceUrl, archivedAt: null },
+      select: { id: true },
+    });
+
+    const source = existingSource ?? await prisma.source.create({
+      data: {
         sourceType: 'WEBSITE',
         title: item.title,
         url: item.sourceUrl,
