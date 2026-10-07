@@ -8,7 +8,7 @@ import { AuditService } from '../audit/audit.service';
 import { buildHistoricalDateColumns } from '../../common/historical-date/historical-date.util';
 import { AppConfig } from '../../config/configuration';
 import { S3Service } from './s3.service';
-import type { StorageProvider } from './storage-provider';
+import { StorageProvider } from './storage-provider';
 import { assertWithinPolicy, matchesSignature, ALLOWED_MEDIA_TYPES_BY_PURPOSE } from './file-signature.util';
 import { hashStream } from './checksum.util';
 import { MEDIA_ERROR_CODES } from './media-error-codes';
