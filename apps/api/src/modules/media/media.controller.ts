@@ -1,11 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { EntityKind, Role } from '@prisma/client';
 import { IsEnum, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { Public } from '../../common/decorators/public.decorator';
+import { LocalTestStorageService } from './local-test-storage.service';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 import { MediaService } from './media.service';
+import type { Response } from 'express';
 import {
   ArchiveMediaDto,
   ConfirmUploadDto,
@@ -53,12 +55,21 @@ class SetHeroMediaDto {
 // @Public() and the class-level declaration made OpenAPI claim it required a bearer token.
 @Controller('media')
 export class MediaController {
-  constructor(private readonly media: MediaService) {}
+  constructor(private readonly media: MediaService, private readonly localStorage: LocalTestStorageService) {}
 
   @Public()
   @Get(':id')
   getById(@Param('id') id: string) {
     return this.media.findPublicById(id);
+  }
+
+  @Public()
+  @Get('test-public/:key')
+  async getTestPublic(@Param('key') key: string, @Res() res: Response) {
+    if (process.env.MEDIA_STORAGE_DRIVER !== 'local-test') return res.status(404).end();
+    const decoded = decodeURIComponent(key);
+    const stream = await this.localStorage.getObjectStream(decoded);
+    stream.pipe(res);
   }
 
   @ApiBearerAuth()
