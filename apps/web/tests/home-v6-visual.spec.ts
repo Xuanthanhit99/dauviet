@@ -73,6 +73,27 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
     img.onerror=()=>resolve(false);
     img.src=url;
   }))),backgroundUrls);
+  const mediaHttpDiagnostics=await Promise.all([...new Set(backgroundUrls)].map(async(url)=>{
+    try {
+      const response=await page.request.get(url);
+      const body=await response.body();
+      return {
+        url,
+        status:response.status(),
+        contentType:response.headers()["content-type"]??null,
+        contentLength:response.headers()["content-length"]??null,
+        bodyBytes:body.byteLength,
+        bodyPrefix:Array.from(body.subarray(0,16)),
+      };
+    } catch(error) {
+      return {url,error:String(error)};
+    }
+  }));
+  await fs.writeFile(
+    test.info().outputPath("home-v6-media-request-diagnostics.json"),
+    JSON.stringify(mediaHttpDiagnostics,null,2),
+    "utf8"
+  );
   const backgroundFailures=backgroundUrls.filter((_,i)=>!backgroundLoads[i]);
   await fs.writeFile(
     test.info().outputPath("home-v6-media-responses.json"),
