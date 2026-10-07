@@ -6,7 +6,7 @@ export interface ObjectStats {
   contentType?: string;
 }
 
-export interface StorageProvider {
+export abstract class StorageProvider {
   buildStorageKey(mimeType: string, prefix: string): string;
   createUploadUrl(storageKey: string, mimeType: string): Promise<string>;
   createDownloadUrl(storageKey: string, restricted?: boolean): Promise<string>;
