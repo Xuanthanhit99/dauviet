@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { EntityKind, Role } from '@prisma/client';
 import { IsEnum, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
@@ -64,9 +64,9 @@ export class MediaController {
   }
 
   @Public()
-  @Get('test-public/:key')
-  async getTestPublic(@Param('key') key: string, @Res() res: Response) {
-    if (process.env.MEDIA_STORAGE_DRIVER !== 'local-test') return res.status(404).end();
+  @Get('test-public')
+  async getTestPublic(@Query('key') key: string, @Res() res: Response) {
+    if (process.env.MEDIA_STORAGE_DRIVER !== 'local-test' || !key) return res.status(404).end();
     const decoded = decodeURIComponent(key);
     const stream = await this.localStorage.getObjectStream(decoded);
     stream.pipe(res);
