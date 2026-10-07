@@ -122,7 +122,13 @@ export default function HomeV6() {
         setMapFeatures(mf);
         setEditorial(e && typeof e === "object" ? e : {});
 
-        const detailTargets = [...ds, ...js, ...ss].slice(0, 18);
+        const editorialItems = [
+          ...listOf<Item>(e?.HOME_JOURNEY),
+          ...listOf<Item>(e?.HOME_FEATURED_STORY),
+        ];
+        const detailTargets = [...ds, ...js, ...ss, ...editorialItems]
+          .filter((item, index, items) => item?.slug && items.findIndex((x) => x.slug === item.slug) === index)
+          .slice(0, 30);
         const details = await Promise.all(detailTargets.map(async (item) => {
           try {
             const prefix = String(item.type ?? "").toUpperCase() === "JOURNEY" ? "/v1/journeys/" : String(item.type ?? "").toUpperCase() === "STORY" ? "/v1/stories/" : "/v1/destinations/";
