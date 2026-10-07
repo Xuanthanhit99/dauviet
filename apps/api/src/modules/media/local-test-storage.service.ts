@@ -67,6 +67,6 @@ export class LocalTestStorageService implements StorageProvider {
   }
 
   publicUrl(storageKey: string) {
-    return `${this.baseUrl}/${encodeURIComponent(storageKey)}`;
+    return `${this.baseUrl}?key=${encodeURIComponent(storageKey)}`;
   }
 }
