@@ -58,21 +58,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Start isolated MinIO
-        run: |
-          docker run -d --name dauviet-ci-minio \
-            -p 9000:9000 -p 9001:9001 \
-            -e MINIO_ROOT_USER=minioadmin \
-            -e MINIO_ROOT_PASSWORD=minioadmin \
-            quay.io/minio/minio:latest server /data --console-address ":9001"
-          for i in {1..30}; do
-            curl -fsS http://127.0.0.1:9000/minio/health/live >/dev/null && exit 0
-            sleep 1
-          done
-          docker logs dauviet-ci-minio
-          exit 1
-
-
       - uses: pnpm/action-setup@v4
         with:
           version: 10
@@ -96,6 +81,9 @@ jobs:
         env:
           NODE_ENV: development
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public
+      - name: Local media storage contract test
+        run: pnpm --filter @dauviet/api test -- --runInBand src/modules/media/local-test-storage.service.spec.ts
+
       - name: Home V6 isolated media fixture gate
         run: pnpm --filter @dauviet/api seed:home-media:ci
         env:
