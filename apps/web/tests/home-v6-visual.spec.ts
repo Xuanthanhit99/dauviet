@@ -6,12 +6,30 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
   await page.setViewportSize({width:viewport.width,height:viewport.height});
   let editorialHomePayload:any = null;
   let editorialHomeResponse:any = null;
+  const mediaResponses:any[] = [];
   page.on("response", async(response)=>{
-    if(!response.url().includes("/v1/editorial/home")) return;
+    if(response.url().includes("/v1/editorial/home")){
+      try {
+        editorialHomeResponse = {url:response.url(),status:response.status()};
+        editorialHomePayload = await response.json();
+      } catch {}
+      return;
+    }
+    if(!response.url().includes("/v1/media/test-public")) return;
     try {
-      editorialHomeResponse = {url:response.url(),status:response.status()};
-      editorialHomePayload = await response.json();
-    } catch {}
+      const headers=response.headers();
+      const body=await response.body();
+      mediaResponses.push({
+        url:response.url(),
+        status:response.status(),
+        contentType:headers["content-type"]??null,
+        contentLength:headers["content-length"]??null,
+        bodyBytes:body.byteLength,
+        bodyPrefix:Array.from(body.subarray(0,16)),
+      });
+    } catch(error) {
+      mediaResponses.push({url:response.url(),status:response.status(),error:String(error)});
+    }
   });
   await page.goto("/",{waitUntil:"domcontentloaded"});
   await expect(page.locator(".home-v6")).toBeVisible();
@@ -56,6 +74,11 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
     img.src=url;
   }))),backgroundUrls);
   const backgroundFailures=backgroundUrls.filter((_,i)=>!backgroundLoads[i]);
+  await fs.writeFile(
+    test.info().outputPath("home-v6-media-responses.json"),
+    JSON.stringify(mediaResponses,null,2),
+    "utf8"
+  );
   expect(backgroundFailures, "Broken Home V6 background media: "+JSON.stringify(backgroundFailures)).toHaveLength(0);
 
   // Smoke-test the three core content paths without mutating the current page.
