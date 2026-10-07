@@ -420,6 +420,11 @@ export class MediaService {
    * used by `findPublicById`; every other privileged caller in this file
    * still reads the full row directly, unaffected.
    */
+  /** Public media projection shared by public domain responses (e.g. Editorial Home). */
+  toPublicResponse<T extends { storageKey: string; accessPolicy: AccessPolicy }>(media: T) {
+    return this.withPublicUrl(media);
+  }
+
   private withPublicUrl<T extends { storageKey: string; accessPolicy: AccessPolicy }>(media: T) {
     const publicFields = omitKeys(media, ['storageKey', 'checksum', 'uploadedById', 'rightsReviewedById', 'quarantinedById', 'quarantineReason', 'archivedById']);
     const url = media.accessPolicy === AccessPolicy.PUBLIC ? this.s3.publicUrl(media.storageKey) : null;
