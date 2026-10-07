@@ -166,6 +166,7 @@ jobs:
           name: home-v6-runtime-diagnostics-${{ github.sha }}
           path: |
             apps/web/test-results/**/home-v6-editorial-home-payload.json
+            apps/web/test-results/**/home-v6-media-responses.json
             apps/web/test-results/**/trace.zip
           if-no-files-found: warn
           retention-days: 14
