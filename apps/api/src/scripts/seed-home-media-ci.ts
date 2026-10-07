@@ -1,6 +1,5 @@
 import './config/load-env';
 import { NestFactory } from '@nestjs/core';
-import { PutBucketCommand, PutBucketPolicyCommand, S3Client } from '@aws-sdk/client-s3';
 import { AppModule } from '../app.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { MediaService } from '../modules/media/media.service';
