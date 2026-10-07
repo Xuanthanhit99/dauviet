@@ -69,21 +69,6 @@ async function commonsImage(title: string) {
 }
 
 async function main() {
-  const s3 = {
-    endpoint: process.env.S3_ENDPOINT ?? 'http://127.0.0.1:9000',
-    region: process.env.S3_REGION ?? 'us-east-1',
-    accessKeyId: process.env.S3_ACCESS_KEY_ID ?? 'minioadmin',
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? 'minioadmin',
-    bucket: process.env.S3_BUCKET ?? 'dauviet-media',
-  };
-  const client = new S3Client({ endpoint: s3.endpoint, region: s3.region, forcePathStyle: true, credentials: { accessKeyId: s3.accessKeyId, secretAccessKey: s3.secretAccessKey } });
-  try { await client.send(new PutBucketCommand({ Bucket: s3.bucket })); } catch (error) {
-    const name = (error as { name?: string }).name;
-    if (!['BucketAlreadyOwnedByYou', 'BucketAlreadyExists'].includes(name ?? '')) throw error;
-  }
-
-  await client.send(new PutBucketPolicyCommand({ Bucket: s3.bucket, Policy: JSON.stringify({ Version: '2012-10-17', Statement: [{ Effect: 'Allow', Principal: '*', Action: ['s3:GetObject'], Resource: [`arn:aws:s3:::${s3.bucket}/*`] }] }) }));
-
   const app = await NestFactory.createApplicationContext(AppModule);
   const prisma = app.get(PrismaService);
   const media = app.get(MediaService);
