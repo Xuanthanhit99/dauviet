@@ -58,18 +58,18 @@ export class MediaController {
   constructor(private readonly media: MediaService, private readonly localStorage: LocalTestStorageService) {}
 
   @Public()
-  @Get(':id')
-  getById(@Param('id') id: string) {
-    return this.media.findPublicById(id);
-  }
-
-  @Public()
   @Get('test-public')
   async getTestPublic(@Query('key') key: string, @Res() res: Response) {
     if (process.env.MEDIA_STORAGE_DRIVER !== 'local-test' || !key) return res.status(404).end();
     const decoded = decodeURIComponent(key);
     const stream = await this.localStorage.getObjectStream(decoded);
     stream.pipe(res);
+  }
+
+  @Public()
+  @Get(':id')
+  getById(@Param('id') id: string) {
+    return this.media.findPublicById(id);
   }
 
   @ApiBearerAuth()
