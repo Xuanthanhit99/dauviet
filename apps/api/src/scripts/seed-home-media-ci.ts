@@ -4,6 +4,7 @@ import { PutBucketCommand, PutBucketPolicyCommand, S3Client } from '@aws-sdk/cli
 import { AppModule } from '../app.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { MediaService } from '../modules/media/media.service';
+import { StorageProvider } from '../modules/media/storage-provider';
 
 type Target = { kind: 'STORY' | 'JOURNEY' | 'DESTINATION'; slug: string };
 type Fixture = {
@@ -86,6 +87,7 @@ async function main() {
   const app = await NestFactory.createApplicationContext(AppModule);
   const prisma = app.get(PrismaService);
   const media = app.get(MediaService);
+  const storage = app.get(StorageProvider);
   const editor = await prisma.user.findFirst({ where: { roles: { has: 'EDITOR' } }, select: { id: true } });
   if (!editor) throw new Error('Golden seed did not create an EDITOR actor.');
 
@@ -118,8 +120,7 @@ async function main() {
       accessPolicy: 'PUBLIC',
     }, editor.id);
 
-    const put = await fetch(upload.uploadUrl, { method: 'PUT', headers: { 'content-type': info.mime }, body });
-    if (!put.ok) throw new Error('Local MinIO fixture upload failed: ' + put.status);
+    await storage.putObject(upload.storageKey, body, info.mime);
     await media.confirmUpload(upload.id, {}, { id: editor.id, roles: ['EDITOR'] });
 
     for (let i = 0; i < 30; i++) {
