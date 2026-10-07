@@ -4,7 +4,7 @@ import { Job } from 'bullmq';
 import { AccessPolicy, MediaAsset, MediaAssetStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
-import type { StorageProvider } from './storage-provider';
+import { StorageProvider } from './storage-provider';
 import { generateImageVariants, PROCESSABLE_IMAGE_MIME_TYPES } from './image-processing.util';
 
 export interface MediaProcessingJob {
