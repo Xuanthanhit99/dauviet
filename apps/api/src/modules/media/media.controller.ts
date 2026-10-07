@@ -62,7 +62,16 @@ export class MediaController {
   async getTestPublic(@Query('key') key: string, @Res() res: Response) {
     if (process.env.MEDIA_STORAGE_DRIVER !== 'local-test' || !key) return res.status(404).end();
     const decoded = decodeURIComponent(key);
+    const info = await this.localStorage.statObject(decoded);
+    if (!info.exists) return res.status(404).end();
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.type(decoded);
+    res.setHeader('Content-Length', String(info.sizeBytes));
     const stream = await this.localStorage.getObjectStream(decoded);
+    stream.on('error', () => {
+      if (!res.headersSent) res.status(404).end();
+      else res.destroy();
+    });
     stream.pipe(res);
   }
 
