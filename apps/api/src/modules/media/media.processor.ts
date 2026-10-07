@@ -4,7 +4,7 @@ import { Job } from 'bullmq';
 import { AccessPolicy, MediaAsset, MediaAssetStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
-import { S3Service } from './s3.service';
+import type { StorageProvider } from './storage-provider';
 import { generateImageVariants, PROCESSABLE_IMAGE_MIME_TYPES } from './image-processing.util';
 
 export interface MediaProcessingJob {
@@ -33,7 +33,7 @@ export class MediaProcessor extends WorkerHost {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly s3: S3Service,
+    private readonly s3: StorageProvider,
     private readonly audit: AuditService,
   ) {
     super();
