@@ -89,16 +89,16 @@ export class EditorialService {
 
   private async resolvePublicEntity(kind: EntityKind, id: string, locale: string) {
     if (kind === EntityKind.STORY) {
-      const story = await this.prisma.story.findUnique({ where: { id }, include: { translations: true } });
+      const story = await this.prisma.story.findUnique({ where: { id }, include: { translations: true, heroMedia: true } });
       if (!story || story.editorialStatus !== StoryEditorialStatus.PUBLISHED) return null;
       const { translation } = resolveTranslation(story.translations, locale);
-      return { kind: 'STORY', id: story.id, slug: story.canonicalSlug, title: translation?.title ?? story.canonicalSlug };
+      return { kind: 'STORY', id: story.id, slug: story.canonicalSlug, title: translation?.title ?? story.canonicalSlug, heroMedia: story.heroMedia };
     }
     if (kind === EntityKind.JOURNEY) {
-      const journey = await this.prisma.journey.findUnique({ where: { id }, include: { translations: true } });
+      const journey = await this.prisma.journey.findUnique({ where: { id }, include: { translations: true, heroMedia: true } });
       if (!journey || journey.editorialStatus !== PublicationStatus.PUBLISHED) return null;
       const { translation } = resolveTranslation(journey.translations, locale);
-      return { kind: 'JOURNEY', id: journey.id, slug: journey.canonicalSlug, title: translation?.title ?? journey.canonicalSlug };
+      return { kind: 'JOURNEY', id: journey.id, slug: journey.canonicalSlug, title: translation?.title ?? journey.canonicalSlug, heroMedia: journey.heroMedia };
     }
     if (kind === EntityKind.PLACE) {
       const place = await this.prisma.place.findUnique({ where: { id }, include: { translations: true } });
