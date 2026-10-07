@@ -67,12 +67,6 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
   }));
   expect(backgroundUrls.length).toBeGreaterThan(0);
   expect(backgroundUrls.some(url=>url.includes("Ha_Long_Bay_in_Vietnam.jpg")), "Stale Home V6 hero media URL detected").toBe(false);
-  const backgroundLoads=await page.evaluate(async(urls:string[])=>await Promise.all(urls.map(url=>new Promise<boolean>(resolve=>{
-    const img=new Image();
-    img.onload=()=>resolve(img.naturalWidth>0);
-    img.onerror=()=>resolve(false);
-    img.src=url;
-  }))),backgroundUrls);
   const mediaHttpDiagnostics=await Promise.all([...new Set(backgroundUrls)].map(async(url)=>{
     try {
       const response=await page.request.get(url);
@@ -94,6 +88,12 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
     JSON.stringify(mediaHttpDiagnostics,null,2),
     "utf8"
   );
+  const backgroundLoads=await page.evaluate(async(urls:string[])=>await Promise.all(urls.map(url=>new Promise<boolean>(resolve=>{
+    const img=new Image();
+    img.onload=()=>resolve(img.naturalWidth>0);
+    img.onerror=()=>resolve(false);
+    img.src=url;
+  }))),backgroundUrls);
   const backgroundFailures=backgroundUrls.filter((_,i)=>!backgroundLoads[i]);
   await fs.writeFile(
     test.info().outputPath("home-v6-media-responses.json"),
