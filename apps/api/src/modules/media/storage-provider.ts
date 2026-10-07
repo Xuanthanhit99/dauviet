@@ -7,13 +7,13 @@ export interface ObjectStats {
 }
 
 export abstract class StorageProvider {
-  buildStorageKey(mimeType: string, prefix: string): string;
-  createUploadUrl(storageKey: string, mimeType: string): Promise<string>;
-  createDownloadUrl(storageKey: string, restricted?: boolean): Promise<string>;
-  statObject(storageKey: string): Promise<ObjectStats>;
-  readLeadingBytes(storageKey: string, byteCount?: number): Promise<Buffer>;
-  getObjectStream(storageKey: string): Promise<Readable>;
-  putObject(storageKey: string, body: Buffer, contentType: string): Promise<void>;
-  deleteObject(storageKey: string): Promise<void>;
-  publicUrl(storageKey: string): string;
+  abstract buildStorageKey(mimeType: string, prefix: string): string;
+  abstract createUploadUrl(storageKey: string, mimeType: string): Promise<string>;
+  abstract createDownloadUrl(storageKey: string, restricted?: boolean): Promise<string>;
+  abstract statObject(storageKey: string): Promise<ObjectStats>;
+  abstract readLeadingBytes(storageKey: string, byteCount?: number): Promise<Buffer>;
+  abstract getObjectStream(storageKey: string): Promise<Readable>;
+  abstract putObject(storageKey: string, body: Buffer, contentType: string): Promise<void>;
+  abstract deleteObject(storageKey: string): Promise<void>;
+  abstract publicUrl(storageKey: string): string;
 }
