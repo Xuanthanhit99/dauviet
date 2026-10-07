@@ -1,8 +1,18 @@
 import {expect,test} from "@playwright/test";
+import fs from "node:fs/promises";
 
 for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1536",width:1536,height:960}]){
  test("Home V6 visual evidence — "+viewport.name,async({page})=>{
   await page.setViewportSize({width:viewport.width,height:viewport.height});
+  let editorialHomePayload:any = null;
+  let editorialHomeResponse:any = null;
+  page.on("response", async(response)=>{
+    if(!response.url().includes("/v1/editorial/home")) return;
+    try {
+      editorialHomeResponse = {url:response.url(),status:response.status()};
+      editorialHomePayload = await response.json();
+    } catch {}
+  });
   await page.goto("/",{waitUntil:"domcontentloaded"});
   await expect(page.locator(".home-v6")).toBeVisible();
 
@@ -10,6 +20,13 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
   await expect.poll(async()=>await page.locator(".journey-card").count(),{timeout:15000}).toBeGreaterThan(0);
   await expect.poll(async()=>await page.locator(".destination-strip > a").count(),{timeout:15000}).toBeGreaterThan(0);
   await expect.poll(async()=>await page.locator(".story-card").count(),{timeout:15000}).toBeGreaterThan(0);
+
+  await expect.poll(()=>editorialHomePayload,{timeout:15000}).not.toBeNull();
+  await fs.writeFile(
+    test.info().outputPath("home-v6-editorial-home-payload.json"),
+    JSON.stringify({response:editorialHomeResponse,payload:editorialHomePayload},null,2),
+    "utf8"
+  );
 
   await expect(page.getByText("Đi để khám phá.",{exact:false}).first()).toBeVisible();
   await expect(page.getByText("Lên kế hoạch hành trình của bạn",{exact:true})).toBeVisible();
