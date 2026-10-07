@@ -422,7 +422,7 @@ export class MediaService {
    */
   private withPublicUrl<T extends { storageKey: string; accessPolicy: AccessPolicy }>(media: T) {
     const publicFields = omitKeys(media, ['storageKey', 'checksum', 'uploadedById', 'rightsReviewedById', 'quarantinedById', 'quarantineReason', 'archivedById']);
-    const url = media.accessPolicy === AccessPolicy.PUBLIC ? this.storage.publicUrl(media.storageKey) : null;
+    const url = media.accessPolicy === AccessPolicy.PUBLIC ? this.s3.publicUrl(media.storageKey) : null;
     return { ...publicFields, url };
   }
 }
