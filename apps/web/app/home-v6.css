@@ -719,3 +719,48 @@
   .map-discovery-section .map-discovery{min-height:145px!important}
   .cta{min-height:165px!important;padding:22px 0!important}
 }
+
+
+/* Home V6 Desktop 1536 fidelity recovery — 2026-10-08
+   Restores the locked travel-first hierarchy after the over-compact P0 pass.
+   Mobile <=900px remains untouched. */
+@media(min-width:901px){
+  .home-v6 .container{width:min(1240px,calc(100% - 64px))}
+  .home-v6-hero{height:auto;min-height:560px;background-position:center 42%!important}
+  .home-v6-hero-inner{height:auto;min-height:430px;grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr);gap:42px;padding:48px 0 34px;align-items:center}
+  .home-v6-copy{max-width:690px}
+  .home-v6 h1{font-size:72px;line-height:.94;max-width:9ch;margin:14px 0 18px}
+  .home-v6-copy>p{font-size:16px;line-height:1.5;max-width:620px}
+  .home-v6-search{width:620px;max-width:100%;margin-top:22px;padding:6px 7px 6px 15px;border-radius:12px}
+  .home-v6-search input,.home-v6-search button{min-height:42px;font-size:13px}
+  .home-v6-search button{padding:0 18px;border-radius:9px}
+  .home-v6-chips{gap:8px;margin-top:10px}
+  .home-v6-chips a{padding:8px 12px;font-size:10px}
+  .context-card{padding:18px;border-radius:16px;max-height:none;overflow:visible}
+  .context-head span{font-size:9px}.context-head strong{font-size:17px;margin-top:5px}.context-head button{min-height:40px;padding:8px;font-size:9px}
+  .context-list{display:grid;grid-template-columns:1fr;gap:0;margin-top:10px}
+  .context-list a{display:grid;grid-template-columns:64px 1fr 14px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid rgba(255,255,255,.12)}
+  .context-thumb{width:64px;height:50px}
+  .context-list strong{font-size:11px;margin-top:0}.context-list small{font-size:8px}.context-list i{display:block}
+  .home-v6-stats{height:auto;grid-template-columns:repeat(4,1fr) 1.55fr;padding:15px 0}
+  .home-v6-stats span{font-size:9px;padding:0 14px}.home-v6-stats b{font-size:22px}.home-v6-stats blockquote{font-size:11px;padding-left:18px}
+  .home-v6-section{padding:48px 0}
+  .section-head{margin-bottom:20px}.section-head h2{font-size:36px;margin:7px 0}.section-head p{font-size:11px}.section-head>a{font-size:10px}
+  .featured-journeys{padding-top:44px;padding-bottom:42px}
+  .journey-filters{gap:7px;margin:-4px 0 16px}.journey-filters>*{padding:7px 10px;font-size:9px}
+  .journey-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .journey-card{border-radius:12px;padding-bottom:12px}.journey-card .media{height:190px;padding:10px}
+  .journey-card .media>span{font-size:8px;padding:4px 6px}.journey-card small{font-size:8px;margin:10px 12px 0}
+  .journey-card h3{font-size:21px;margin:5px 12px;white-space:normal}.journey-card p{font-size:9px;margin:5px 12px;min-height:28px}.journey-card b{font-size:9px;margin:6px 12px}
+  .planner{padding:46px 0}.planner-grid{min-height:300px;border-radius:16px;grid-template-columns:1.5fr .5fr}
+  .planner-main{padding:34px}.planner-main h2{font-size:34px;margin:7px 0}.planner-main>p{font-size:11px;line-height:1.5;margin:5px 0 15px}
+  .steps{margin:14px 0}.steps>*{padding:8px 10px;font-size:9px}
+  .planner-form{grid-template-columns:1.35fr .75fr .55fr 1fr auto;gap:8px}.planner-form label{font-size:8px;gap:5px}.planner-form input,.planner-form select,.plan-button{min-height:42px;font-size:10px;padding:0 9px}
+  .services{padding:28px 24px}.services h3{font-size:23px;margin-bottom:10px}.services a{padding:11px 0;font-size:10px}
+  .destinations-section{padding:44px 0}.destination-strip{grid-template-columns:repeat(4,1fr);gap:12px}.destination-strip a{height:170px;border-radius:11px;padding:14px}.destination-strip strong{font-size:18px}.destination-strip small{font-size:8px}
+  .stay-experience{padding:40px 0}.dual-discovery{gap:28px}.dual-discovery .section-head h2{font-size:31px}.mini-cards{gap:10px}.mini-cards a{height:145px;border-radius:10px;padding:12px}.mini-cards strong{font-size:15px}.mini-cards small{font-size:8px}
+  .history{padding:64px 0}.history-grid{gap:48px}.history h2{font-size:48px;margin:10px 0 14px}.history p{font-size:11px;line-height:1.55}.timeline-photo{height:270px;border-radius:14px}.timeline-track{bottom:24px;font-size:9px}.timeline-track b{font-size:7px}
+  .stories-section{padding:46px 0}.master-story-grid{gap:12px}.master-story-grid .story-card{min-height:190px;border-radius:11px;padding:15px}.story-grid small{font-size:7px}.story-grid h3{font-size:18px;margin:6px 0}.story-grid p{font-size:9px}
+  .map-discovery-section{padding:0 0 46px}.map-discovery-section .map-discovery{min-height:250px;border-radius:14px}.map-discovery-section .map-copy{padding:34px}.map-copy h2{font-size:32px;margin:7px 0}.map-copy p{font-size:10px}.map-discovery-section .gold-button{min-height:40px;font-size:9px;padding:0 14px}
+  .cta{min-height:310px;padding:62px 0}.cta h2{font-size:58px;margin:10px 0 20px}.gold-button,.outline-button{min-height:42px;padding:0 15px;font-size:9px}
+}
