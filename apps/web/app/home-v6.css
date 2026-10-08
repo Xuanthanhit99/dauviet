@@ -802,7 +802,7 @@
   .home-v6 h1 { font-size:clamp(39px,11vw,48px)!important;line-height:1.02!important;max-width:10ch; }
   .home-v6-copy>p { font-size:13px!important;line-height:1.5!important;max-width:32ch; }
   .home-v6-search { padding:7px!important; }
-  .home-v6-search input,.home-v6-search button { min-height:42px;font-size:12px; }
+  .home-v6-search input,.home-v6-search button { min-height:46px;font-size:12px; }
   .home-v6-chips { overflow-x:auto;scrollbar-width:none; }
   .home-v6-chips a { flex:none;font-size:10px;padding:8px 10px; }
   .home-v6 .region-discovery { padding:15px; }
