@@ -40,6 +40,17 @@ for(const viewport of [{name:"mobile-390",width:390,height:844},{name:"desktop-1
   await expect.poll(async()=>await page.locator(".story-card").count(),{timeout:15000}).toBeGreaterThan(0);
 
   await expect.poll(()=>editorialHomePayload,{timeout:15000}).not.toBeNull();
+  const regionTiles=page.locator(".region-discovery-grid .region-tile");
+  await expect.poll(()=>regionTiles.count(),{timeout:15000}).toBeGreaterThan(0);
+  const regionEvidence=await regionTiles.evaluateAll(nodes=>nodes.map(node=>({
+    label:node.textContent?.trim()??"",
+    href:node.getAttribute("href"),
+    background:getComputedStyle(node).backgroundImage,
+  })));
+  await fs.writeFile(test.info().outputPath("home-v6-region-data-evidence.json"),JSON.stringify(regionEvidence,null,2),"utf8");
+  expect(regionEvidence.every(item=>Boolean(item.label)&&Boolean(item.href)), "Region tiles must link to real published content").toBe(true);
+  expect(regionEvidence.some(item=>item.background.includes("url(")), "No published region tile has real media; visual data gate must not silently pass").toBe(true);
+  await expect(page.locator(".home-v6-data-status"),"API groups must not fail silently in QA").toHaveCount(0);
   await fs.writeFile(
     test.info().outputPath("home-v6-editorial-home-payload.json"),
     JSON.stringify({response:editorialHomeResponse,payload:editorialHomePayload},null,2),
