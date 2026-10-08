@@ -130,10 +130,6 @@ export default function HomeV6() {
         setMapFeatures(mf);
         setEditorial(e && typeof e === "object" ? e : {});
 
-        const editorialItems = [
-          ...listOf<Item>(e?.HOME_JOURNEY),
-          ...listOf<Item>(e?.HOME_FEATURED_STORY),
-        ];
         const detailTargets = [
           ...ds.map(item => ({ item, kind: "DESTINATION" })),
           ...js.map(item => ({ item, kind: "JOURNEY" })),
