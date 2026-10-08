@@ -708,6 +708,7 @@ model User {
   // a Trip is private, single-owner planning data (spec section 9/59).
   trips                   Trip[]
   // Added G07 (Global Backend V2 Extension, Trip Collaboration) - additive.
+  tripDiscussionMessages  TripDiscussionMessage[]
   tripMemberships         TripMember[]
   tripInvitationsSent     TripInvitation[]         @relation("TripInvitationInviter")
   tripInvitationsAccepted TripInvitation[]         @relation("TripInvitationAcceptedBy")
@@ -4336,6 +4337,7 @@ model Trip {
   // G07 - Trip Collaboration (additive). Owner is NOT materialized as a
   // TripMember row (see docs/backend/G07_PRE_IMPLEMENTATION_REPORT.md
   // section 8) - Trip.ownerId remains the sole ownership authority.
+  discussionMessages  TripDiscussionMessage[]
   members             TripMember[]
   invitations         TripInvitation[]
   collaborationEvents TripCollaborationEvent[]
@@ -5801,4 +5803,20 @@ model SearchProjectionRun {
   error      String?
 
   @@index([startedAt])
+}
+
+// Private trip-scoped messages; membership is checked at request time, not stored as authorization.
+model TripDiscussionMessage {
+  id        String   @id @default(cuid())
+  tripId    String
+  authorId  String
+  body      String   @db.VarChar(4000)
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
+
+  trip   Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([tripId, createdAt, id])
+  @@index([authorId])
 }
