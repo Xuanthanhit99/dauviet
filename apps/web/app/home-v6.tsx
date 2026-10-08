@@ -183,8 +183,8 @@ export default function HomeV6() {
 
   const hero = useMemo(() => {
     const selected = destinations.find((x) => x.slug === selectedDestination);
-    return hydrated(selected ?? destinations.find((x) => mediaUrl(hydrated(x))) ?? destinations[0]);
-  }, [destinations, selectedDestination, mediaById]);
+    return hydrated(selected ?? destinations.find((x) => mediaUrl(hydrated(x)) && !hydrated(x).heroMedia?.isAiGenerated) ?? places.find((x) => mediaUrl(hydrated(x)) && !hydrated(x).heroMedia?.isAiGenerated) ?? journeys.find((x) => mediaUrl(hydrated(x)) && !hydrated(x).heroMedia?.isAiGenerated) ?? destinations[0]);
+  }, [destinations, places, journeys, selectedDestination, mediaById]);
 
   const context = location === "granted" && nearby.length ? nearby.slice(0, 3) : places.slice(0, 3);
 
@@ -209,7 +209,7 @@ export default function HomeV6() {
     }, () => setLocation("denied"), { maximumAge: 300000, timeout: 8000 });
   }
 
-  const heroStyle = mediaUrl(hero) ? {
+  const heroStyle = mediaUrl(hero) && !hero?.heroMedia?.isAiGenerated ? {
     backgroundImage: "linear-gradient(90deg,rgba(4,24,20,.72),rgba(4,24,20,.16) 62%,rgba(4,24,20,.34)),url(" + mediaUrl(hero) + ")"
   } : undefined;
 
@@ -236,10 +236,14 @@ export default function HomeV6() {
             <div className="home-v6-chips">{["Địa điểm","Hành trình","Nơi ở","Trải nghiệm","Câu chuyện","Nhân vật"].map((label) => <a key={label} href={label === "Hành trình" ? "/journeys" : label === "Địa điểm" ? "/explore" : label === "Câu chuyện" ? "/stories" : "/book"}>{label}</a>)}</div>
           </div>
 
-          <aside className="context-card">
-            <div className="context-head"><div><span>{location === "granted" ? "📍 GẦN BẠN" : "KHÁM PHÁ THEO VÙNG"}</span><strong>{location === "granted" ? "Những nơi quanh bạn" : "Những nơi đang có dữ liệu"}</strong></div><button onClick={locate}>{location === "loading" ? "Đang tìm..." : location === "granted" ? "Đã cập nhật" : "Dùng vị trí"}</button></div>
-            <div className="context-list">{context.map((item) => <a key={item.id} href={hrefFor(item)}><span className="context-thumb">{mediaUrl(hydrated(item)) ? <img src={mediaUrl(hydrated(item))!} alt="" /> : <b>✦</b>}</span><span><strong>{textOf(item, "name") || textOf(item, "title")}</strong><small>{item.type ?? "Địa danh"}</small></span><i>→</i></a>)}</div>
-            {location === "denied" && <p className="context-note">Không cần vị trí để khám phá. Bạn có thể chọn bất kỳ nơi nào trong ô tìm kiếm.</p>}
+          <aside className="context-card region-discovery">
+            <div className="context-head"><div><span>KHÁM PHÁ THEO VÙNG</span><strong>Chọn nơi bạn muốn đến</strong></div><button onClick={locate}>{location === "loading" ? "Đang tìm..." : location === "granted" ? "Gần bạn ✓" : "Gần tôi"}</button></div>
+            <div className="region-discovery-grid">{[...destinations, ...places].filter((item, index, all) => all.findIndex((other) => other.id === item.id) === index).slice(0, 4).map((item) => {
+              const resolved = hydrated(item);
+              return <a key={item.id} href={hrefFor(item)} className="region-tile" style={mediaUrl(resolved) && !resolved.heroMedia?.isAiGenerated ? { backgroundImage: "linear-gradient(180deg,transparent 25%,rgba(5,33,27,.85)),url(" + mediaUrl(resolved) + ")" } : undefined}><strong>{textOf(item, "name") || textOf(item, "title") || item.slug}</strong></a>;
+            })}</div>
+            {location === "granted" && nearby.length > 0 && <div className="region-nearby"><span>Gần bạn:</span> {nearby.slice(0,2).map((item) => <a key={item.id} href={hrefFor(item)}>{textOf(item,"name") || item.slug} →</a>)}</div>}
+            {location === "denied" && <p className="context-note">Không cần vị trí để khám phá; bạn vẫn có thể chọn một điểm đến.</p>}
           </aside>
         </div>
       </section>
@@ -250,6 +254,11 @@ export default function HomeV6() {
         <span><b>{stories.length || "—"}</b>Câu chuyện hiện có</span>
         <blockquote>Dữ liệu hiển thị được lấy từ hệ thống nội dung đã xuất bản của Dấu Việt.</blockquote>
       </div>
+
+      <section className="home-v6-section destinations-section"><div className="container">
+        <div className="section-head"><div><span className="kicker dark">ĐIỂM ĐẾN</span><h2>Điểm đến đang được quan tâm</h2><p>Những vùng đất giàu giá trị lịch sử và trải nghiệm hấp dẫn.</p></div><a href="/explore">Xem tất cả →</a></div>
+        <div className="destination-strip">{destinations.map((item) => <a key={item.id} href={hrefFor({ ...item, type: "DESTINATION" })} style={mediaUrl(hydrated(item)) ? { backgroundImage: "linear-gradient(180deg,transparent 20%,rgba(5,33,27,.72)),url(" + mediaUrl(hydrated(item)) + ")" } : undefined}><strong>{textOf(item, "name") || item.slug}</strong><small>{textOf(item, "tagline") || textOf(item, "summary") || "Điểm đến"}</small></a>)}</div>
+      </div></section>
 
       <section className="home-v6-section featured-journeys"><div className="container">
         <div className="section-head"><div><span className="kicker dark">HÀNH TRÌNH NỔI BẬT</span><h2>Hành trình nổi bật</h2><p>Những hành trình kết hợp giữa du lịch và khám phá lịch sử.</p></div><a href="/journeys">Xem tất cả →</a></div>
@@ -274,11 +283,6 @@ export default function HomeV6() {
           <datalist id="home-destinations">{destinations.map((item) => <option key={item.id} value={textOf(item, "name") || item.slug} />)}</datalist>
         </div>
         <div className="services"><h3>Dịch vụ du lịch</h3><a href="/book">Khách sạn & Homestay <b>→</b></a><a href="/book">Vé tham quan di tích <b>→</b></a><a href="/book">Tour lịch sử <b>→</b></a><a href="/book">Ẩm thực địa phương <b>→</b></a><a href="/book">Di chuyển <b>→</b></a><a href="/book">Trải nghiệm <b>→</b></a></div>
-      </div></section>
-
-      <section className="home-v6-section destinations-section"><div className="container">
-        <div className="section-head"><div><span className="kicker dark">ĐIỂM ĐẾN</span><h2>Điểm đến đang được quan tâm</h2><p>Những vùng đất giàu giá trị lịch sử và trải nghiệm hấp dẫn.</p></div><a href="/explore">Xem tất cả →</a></div>
-        <div className="destination-strip">{destinations.map((item) => <a key={item.id} href={hrefFor({ ...item, type: "DESTINATION" })} style={mediaUrl(hydrated(item)) ? { backgroundImage: "linear-gradient(180deg,transparent 20%,rgba(5,33,27,.72)),url(" + mediaUrl(hydrated(item)) + ")" } : undefined}><strong>{textOf(item, "name") || item.slug}</strong><small>{textOf(item, "tagline") || textOf(item, "summary") || "Điểm đến"}</small></a>)}</div>
       </div></section>
 
       <section className="home-v6-section stay-experience"><div className="container dual-discovery">
