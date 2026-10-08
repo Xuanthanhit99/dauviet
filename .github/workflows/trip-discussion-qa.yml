@@ -1,6 +1,14 @@
 name: Trip Discussion QA
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feat/global-travel-trip-discussion-slice1
+    paths:
+      - "prisma/schema.prisma"
+      - "prisma/migrations/**"
+      - "apps/api/src/modules/trips/**"
+      - ".github/workflows/trip-discussion-qa.yml"
 
 permissions:
   contents: read
@@ -10,9 +18,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  api-unit-and-build:
+  api-security:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
+    services:
+      postgis:
+        image: postgis/postgis:17-master
+        env:
+          POSTGRES_DB: dauviet_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d dauviet_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -24,10 +48,14 @@ jobs:
           node-version: 20
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
+      - name: Prisma schema validation
+        run: pnpm exec prisma validate --schema prisma/schema.prisma
       - name: Generate Prisma Client
         run: pnpm db:generate
-      - name: Run trip discussion authorization tests
-        run: pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath src/modules/trips/trip-discussion-access.service.spec.ts
-      - name: Build API
+      - name: Deploy migrations on clean PostGIS
+        run: pnpm db:migrate:deploy
+      - name: Trip discussion authorization and service tests
+        run: pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath src/modules/trips/trip-discussion-access.service.spec.ts src/modules/trips/trip-discussion.service.spec.ts
+      - name: API production build
         run: pnpm --filter @dauviet/api build
