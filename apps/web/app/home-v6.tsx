@@ -78,6 +78,7 @@ export default function HomeV6() {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dataIssues, setDataIssues] = useState<string[]>([]);
   const [plan, setPlan] = useState({ destination: "", days: "2", travellers: "2", stay: "Khách sạn hoặc homestay" });
 
   useEffect(() => {
@@ -102,6 +103,8 @@ export default function HomeV6() {
           return result.status === "fulfilled" ? result.value : fallback;
         };
 
+        const groups = ["Điểm đến", "Hành trình", "Câu chuyện", "Địa danh", "Nơi ở", "Trải nghiệm", "Dòng thời gian", "Bản đồ", "Biên tập"];
+        const failures = responses.flatMap((result, index) => result.status === "rejected" ? [groups[index] + ": không tải được API"] : []);
         const ds = listOf<Item>(valueAt(0, []));
         const js = listOf<Item>(valueAt(1, []));
         const ss = listOf<Item>(valueAt(2, []));
@@ -112,6 +115,11 @@ export default function HomeV6() {
         const mf = listOf<MapFeature>(valueAt(7, []));
         const e = valueAt<Record<string, Item[]>>(8, {});
 
+        if (!ds.length) failures.push("Điểm đến: chưa có nội dung xuất bản");
+        if (!js.length) failures.push("Hành trình: chưa có nội dung xuất bản");
+        if (!ss.length) failures.push("Câu chuyện: chưa có nội dung xuất bản");
+        if (!ps.length) failures.push("Địa danh: chưa có nội dung xuất bản");
+        setDataIssues(failures);
         setDestinations(ds);
         setJourneys(js);
         setStories(ss);
@@ -126,12 +134,12 @@ export default function HomeV6() {
           ...listOf<Item>(e?.HOME_JOURNEY),
           ...listOf<Item>(e?.HOME_FEATURED_STORY),
         ];
-        const detailTargets = [...ds, ...js, ...ss, ...editorialItems]
+        const detailTargets = [...ds, ...js, ...ss, ...ps, ...editorialItems]
           .filter((item, index, items) => item?.slug && items.findIndex((x) => x.slug === item.slug) === index)
           .slice(0, 30);
         const details = await Promise.all(detailTargets.map(async (item) => {
           try {
-            const prefix = String(item.type ?? "").toUpperCase() === "JOURNEY" ? "/v1/journeys/" : String(item.type ?? "").toUpperCase() === "STORY" ? "/v1/stories/" : "/v1/destinations/";
+            const prefix = String(item.type ?? "").toUpperCase() === "JOURNEY" ? "/v1/journeys/" : String(item.type ?? "").toUpperCase() === "STORY" ? "/v1/stories/" : ps.some((place) => place.id === item.id) ? "/v1/places/" : "/v1/destinations/";
             return await getJson(prefix + encodeURIComponent(item.slug));
           } catch { return null; }
         }));
@@ -156,10 +164,11 @@ export default function HomeV6() {
           setDestinations(withResolvedMedia(ds));
           setJourneys(withResolvedMedia(js));
           setStories(withResolvedMedia(ss));
+          setPlaces(withResolvedMedia(ps));
           setLoading(false);
         }
       } catch {
-        if (active) setLoading(false);
+        if (active) { setDataIssues(["Không thể tải dữ liệu trang chủ. Vui lòng thử lại sau."]); setLoading(false); }
       }
     })();
     return () => { active = false; };
@@ -186,7 +195,10 @@ export default function HomeV6() {
     return hydrated(selected ?? destinations.find((x) => mediaUrl(hydrated(x)) && !hydrated(x).heroMedia?.isAiGenerated) ?? places.find((x) => mediaUrl(hydrated(x)) && !hydrated(x).heroMedia?.isAiGenerated) ?? journeys.find((x) => mediaUrl(hydrated(x)) && !hydrated(x).heroMedia?.isAiGenerated) ?? destinations[0]);
   }, [destinations, places, journeys, selectedDestination, mediaById]);
 
-  const context = location === "granted" && nearby.length ? nearby.slice(0, 3) : places.slice(0, 3);
+  const hasUsablePhoto = (item?: Item | null) => Boolean(mediaUrl(hydrated(item)) && !hydrated(item)?.heroMedia?.isAiGenerated);
+  const regionItems = [...destinations.map((item) => ({ ...item, type: "DESTINATION" })), ...places.map((item) => ({ ...item, type: "PLACE" }))]
+    .filter((item, index, all) => all.findIndex((other) => other.id === item.id) === index)
+    .sort((a, b) => Number(hasUsablePhoto(b)) - Number(hasUsablePhoto(a))).slice(0, 4);
 
   async function search(value: string) {
     setQ(value);
@@ -238,10 +250,11 @@ export default function HomeV6() {
 
           <aside className="context-card region-discovery">
             <div className="context-head"><div><span>KHÁM PHÁ THEO VÙNG</span><strong>Chọn nơi bạn muốn đến</strong></div><button onClick={locate}>{location === "loading" ? "Đang tìm..." : location === "granted" ? "Gần bạn ✓" : "Gần tôi"}</button></div>
-            <div className="region-discovery-grid">{[...destinations, ...places].filter((item, index, all) => all.findIndex((other) => other.id === item.id) === index).slice(0, 4).map((item) => {
+            <div className="region-discovery-grid">{regionItems.map((item) => {
               const resolved = hydrated(item);
               return <a key={item.id} href={hrefFor(item)} className="region-tile" style={mediaUrl(resolved) && !resolved.heroMedia?.isAiGenerated ? { backgroundImage: "linear-gradient(180deg,transparent 25%,rgba(5,33,27,.85)),url(" + mediaUrl(resolved) + ")" } : undefined}><strong>{textOf(item, "name") || textOf(item, "title") || item.slug}</strong></a>;
             })}</div>
+            {!loading && regionItems.length === 0 && <p className="context-note">Chưa có điểm đến được xuất bản để khám phá.</p>}
             {location === "granted" && nearby.length > 0 && <div className="region-nearby"><span>Gần bạn:</span> {nearby.slice(0,2).map((item) => <a key={item.id} href={hrefFor(item)}>{textOf(item,"name") || item.slug} →</a>)}</div>}
             {location === "denied" && <p className="context-note">Không cần vị trí để khám phá; bạn vẫn có thể chọn một điểm đến.</p>}
           </aside>
@@ -312,6 +325,7 @@ export default function HomeV6() {
       <section className="cta"><div className="container"><span className="kicker">DẤU VIỆT</span><h2>Đi để khám phá.<br /><em>Ở lại để hiểu.</em></h2><a className="gold-button" href="/explore">Bắt đầu khám phá →</a><a className="outline-button" href="/journeys">Chọn một hành trình</a></div></section>
 
       {loading && <div aria-live="polite" className="home-v6-loading">Đang tải dữ liệu Dấu Việt…</div>}
+      {!loading && dataIssues.length > 0 && <div className="home-v6-data-status container" role="status"><strong>Một số nội dung hiện chưa sẵn sàng</strong><p>{dataIssues.join(" · ")}. Các nội dung còn lại vẫn lấy từ dữ liệu đã xuất bản.</p></div>}
     </div>
   );
 }
