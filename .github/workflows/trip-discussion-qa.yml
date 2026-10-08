@@ -35,7 +35,20 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     env:
+      NODE_ENV: test
+      REDIS_URL: redis://127.0.0.1:6379
+      JWT_ACCESS_SECRET: trip-discussion-ci-access-secret-32chars
+      JWT_REFRESH_SECRET: trip-discussion-ci-refresh-secret-32chars
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public
     steps:
       - uses: actions/checkout@v4
@@ -59,3 +72,5 @@ jobs:
         run: pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath src/modules/trips/trip-discussion-access.service.spec.ts src/modules/trips/trip-discussion.service.spec.ts src/modules/trips/trip-discussion.http.spec.ts
       - name: API production build
         run: pnpm --filter @dauviet/api build
+      - name: Real JWT + PostGIS + Redis HTTP E2E
+        run: pnpm --filter @dauviet/api exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/trip-discussion.e2e-spec.ts
