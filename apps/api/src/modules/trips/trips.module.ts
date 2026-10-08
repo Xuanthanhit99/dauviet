@@ -5,6 +5,7 @@ import { TripCostEstimatesService } from './trip-cost-estimates.service';
 import { TripsController } from './trips.controller';
 import { ProvidersModule } from '../providers/providers.module';
 import { TripAuthorizationService } from './trip-authorization.service';
+import { TripDiscussionAccessService } from './trip-discussion-access.service';
 import { TripCollaborationEventService } from './trip-collaboration-event.service';
 import { TripMembersService } from './trip-members.service';
 import { TripInvitationsService } from './trip-invitations.service';
@@ -27,6 +28,7 @@ import { TripFinanceSummaryService } from './trip-finance-summary.service';
     TripItineraryService,
     TripCostEstimatesService,
     TripAuthorizationService,
+    TripDiscussionAccessService,
     TripCollaborationEventService,
     TripMembersService,
     TripInvitationsService,
@@ -37,6 +39,6 @@ import { TripFinanceSummaryService } from './trip-finance-summary.service';
     TripFinanceSummaryService,
   ],
   controllers: [TripsController, TripMembersController, TripInvitationsController],
-  exports: [TripsService, TripItineraryService, TripCostEstimatesService, TripAuthorizationService],
+  exports: [TripsService, TripItineraryService, TripCostEstimatesService, TripAuthorizationService, TripDiscussionAccessService],
 })
 export class TripsModule {}
