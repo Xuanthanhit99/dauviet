@@ -93,7 +93,7 @@ export default function HomeV6() {
           getJson("/v1/accommodations?page=1&pageSize=6"),
           getJson("/v1/activities?page=1&pageSize=6"),
           getJson("/v1/timeline?limit=8&minImportance=7"),
-          getJson("/v1/map/features?zoom=4&kinds=PLACE,EVENT,DESTINATION&locale=vi"),
+          getJson("/v1/map/features?bbox=100,7,120,24&zoom=4&kinds=PLACE,EVENT,DESTINATION&locale=vi"),
           getJson("/v1/editorial/home")
         ]);
         if (!active) return;
