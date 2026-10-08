@@ -1,0 +1,33 @@
+name: Trip Discussion QA
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trip-discussion-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-unit-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+      - name: Run trip discussion authorization tests
+        run: pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath src/modules/trips/trip-discussion-access.service.spec.ts
+      - name: Build API
+        run: pnpm --filter @dauviet/api build
