@@ -134,12 +134,17 @@ export default function HomeV6() {
           ...listOf<Item>(e?.HOME_JOURNEY),
           ...listOf<Item>(e?.HOME_FEATURED_STORY),
         ];
-        const detailTargets = [...ds, ...js, ...ss, ...ps, ...editorialItems]
-          .filter((item, index, items) => item?.slug && items.findIndex((x) => x.slug === item.slug) === index)
-          .slice(0, 30);
-        const details = await Promise.all(detailTargets.map(async (item) => {
+        const detailTargets = [
+          ...ds.map(item => ({ item, kind: "DESTINATION" })),
+          ...js.map(item => ({ item, kind: "JOURNEY" })),
+          ...ss.map(item => ({ item, kind: "STORY" })),
+          ...ps.map(item => ({ item, kind: "PLACE" })),
+          ...listOf<Item>(e?.HOME_JOURNEY).map(item => ({ item, kind: "JOURNEY" })),
+          ...listOf<Item>(e?.HOME_FEATURED_STORY).map(item => ({ item, kind: "STORY" })),
+        ].filter(({ item }, index, items) => item?.slug && items.findIndex(x => x.kind === items[index].kind && x.item.slug === item.slug) === index).slice(0, 40);
+        const details = await Promise.all(detailTargets.map(async ({ item, kind }) => {
           try {
-            const prefix = String(item.type ?? "").toUpperCase() === "JOURNEY" ? "/v1/journeys/" : String(item.type ?? "").toUpperCase() === "STORY" ? "/v1/stories/" : ps.some((place) => place.id === item.id) ? "/v1/places/" : "/v1/destinations/";
+            const prefix = kind === "JOURNEY" ? "/v1/journeys/" : kind === "STORY" ? "/v1/stories/" : kind === "PLACE" ? "/v1/places/" : "/v1/destinations/";
             return await getJson(prefix + encodeURIComponent(item.slug));
           } catch { return null; }
         }));
@@ -156,7 +161,7 @@ export default function HomeV6() {
         }
 
         const withResolvedMedia = (items: Item[]) => items.map((item) => {
-          const detail = normalized.find((x) => x.id === item.id || x.slug === item.slug);
+          const detail = normalized.find((x) => x.id === item.id) ?? normalized.find((x) => x.slug === item.slug);
           return detail?.heroMedia ? { ...item, heroMedia: detail.heroMedia } : item;
         });
 
@@ -174,8 +179,11 @@ export default function HomeV6() {
     return () => { active = false; };
   }, []);
 
-  const hydrated = (item?: any) =>
-    item?.heroMedia?.url ? item : item?.heroMedia?.id && mediaById[item.heroMedia.id] ? { ...item, heroMedia: mediaById[item.heroMedia.id] } : item;
+  const hydrated = (item?: any) => {
+    if (!item?.heroMedia) return item;
+    const resolved = item.heroMedia.id ? mediaById[item.heroMedia.id] : undefined;
+    return resolved ? { ...item, heroMedia: { ...item.heroMedia, ...resolved, url: resolved.url || item.heroMedia.url } } : item;
+  };
 
   const editorialJourneys = useMemo(() => listOf<Item>(editorial.HOME_JOURNEY), [editorial]);
   const editorialStories = useMemo(() => listOf<Item>(editorial.HOME_FEATURED_STORY), [editorial]);
