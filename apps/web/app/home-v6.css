@@ -764,3 +764,29 @@
   .map-discovery-section{padding:0 0 46px}.map-discovery-section .map-discovery{min-height:250px;border-radius:14px}.map-discovery-section .map-copy{padding:34px}.map-copy h2{font-size:32px;margin:7px 0}.map-copy p{font-size:10px}.map-discovery-section .gold-button{min-height:40px;font-size:9px;padding:0 14px}
   .cta{min-height:310px;padding:62px 0}.cta h2{font-size:58px;margin:10px 0 20px}.gold-button,.outline-button{min-height:42px;padding:0 15px;font-size:9px}
 }
+
+/* Home V6 desktop composition correction — QA candidate, not a visual lock. */
+@media (min-width: 1024px) {
+  .home-v6-hero { background-position:center 44%; }
+  .home-v6-hero-inner { grid-template-columns:minmax(0,1.1fr) minmax(380px,.9fr); gap:32px; min-height:480px; }
+  .home-v6-copy { padding:38px 0 52px; }
+  .home-v6 h1 { font-size:clamp(50px,4.4vw,70px); line-height:1.04; max-width:14ch; }
+  .home-v6-hero:before { background:linear-gradient(90deg,rgba(4,24,20,.83),rgba(4,24,20,.30) 62%,rgba(4,24,20,.44)); }
+  .home-v6 .region-discovery { align-self:center; margin:10px 0 30px; background:rgba(7,31,25,.67); padding:18px; }
+  .home-v6 .region-discovery-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:16px; }
+  .home-v6 .region-tile { position:relative; display:flex; align-items:end; min-height:140px; padding:15px; border-radius:12px; background:#295247; background-size:cover; background-position:center; overflow:hidden; }
+  .home-v6 .region-tile strong { position:relative; color:#fff; font:600 19px/1.15 var(--dv-font-display); text-shadow:0 1px 8px rgba(0,0,0,.5); }
+  .home-v6 .region-nearby { display:flex; gap:9px; flex-wrap:wrap; padding-top:12px; font-size:12px; }
+  .home-v6 .destinations-section { padding-top:44px; padding-bottom:40px; }
+  .home-v6 .destination-strip a { min-height:215px; background-position:center; background-size:cover; }
+  .home-v6 .planner-grid { grid-template-columns:minmax(0,1.5fr) minmax(280px,.5fr); }
+  .home-v6 .services { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; align-content:start; }
+  .home-v6 .services h3 { grid-column:1/-1; }
+  .home-v6 .services a { border:1px solid rgba(255,255,255,.15); border-radius:10px; padding:16px 10px; min-height:70px; }
+}
+@media (max-width:1023px) {
+  .home-v6 .region-discovery-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:12px; }
+  .home-v6 .region-tile { display:flex; align-items:end; min-height:125px; border-radius:10px; padding:12px; background:#295247; background-size:cover; background-position:center; }
+  .home-v6 .region-tile strong { color:#fff; font-size:14px; text-shadow:0 1px 6px rgba(0,0,0,.5); }
+  .home-v6 .region-nearby { display:flex; flex-wrap:wrap; gap:8px; font-size:12px; padding-top:10px; }
+}
