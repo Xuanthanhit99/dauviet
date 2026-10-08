@@ -56,6 +56,6 @@ jobs:
       - name: Deploy migrations on clean PostGIS
         run: pnpm db:migrate:deploy
       - name: Trip discussion authorization and service tests
-        run: pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath src/modules/trips/trip-discussion-access.service.spec.ts src/modules/trips/trip-discussion.service.spec.ts
+        run: pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath src/modules/trips/trip-discussion-access.service.spec.ts src/modules/trips/trip-discussion.service.spec.ts src/modules/trips/trip-discussion.http.spec.ts
       - name: API production build
         run: pnpm --filter @dauviet/api build
