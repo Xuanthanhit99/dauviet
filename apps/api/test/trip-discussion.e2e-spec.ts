@@ -50,6 +50,7 @@ describe('Trip discussion membership revocation (live e2e)', () => {
   afterAll(async () => {
     if (prisma) {
       // Deleting the owning user cascades the trip and its discussion messages.
+      await prisma.tripDiscussionMessage.deleteMany({ where: { tripId } });
       await prisma.user.deleteMany({ where: { email: { in: emails } } });
     }
     await app?.close();
