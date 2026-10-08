@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MediaService } from '../modules/media/media.service';
 import { StorageProvider } from '../modules/media/storage-provider';
 
-type Target = { kind: 'STORY' | 'JOURNEY' | 'DESTINATION'; slug: string };
+type Target = { kind: 'STORY' | 'JOURNEY' | 'DESTINATION' | 'PLACE'; slug: string };
 type Fixture = {
   commonsTitle: string;
   sourcePage: string;
@@ -39,6 +39,7 @@ const FIXTURES: Fixture[] = [
     target: [
       { kind: 'STORY', slug: 'hue-va-dau-an-kinh-do-trieu-nguyen' },
       { kind: 'JOURNEY', slug: 'di-san-mien-trung' },
+      { kind: 'PLACE', slug: 'co-do-hue' },
     ],
     title: 'Cố đô Huế — Hoàng thành',
     altText: 'Hoàng thành Huế, cố đô của Việt Nam',
@@ -117,6 +118,7 @@ async function main() {
     for (const target of fixture.target) {
       if (target.kind === 'STORY') await prisma.story.update({ where: { canonicalSlug: target.slug }, data: { heroMediaId: upload.id } });
       else if (target.kind === 'JOURNEY') await prisma.journey.update({ where: { canonicalSlug: target.slug }, data: { heroMediaId: upload.id } });
+      else if (target.kind === 'PLACE') await prisma.place.update({ where: { canonicalSlug: target.slug }, data: { heroMediaId: upload.id } });
       else await prisma.destination.update({ where: { canonicalSlug: target.slug }, data: { heroMediaId: upload.id } });
 
       const publicMedia = await media.findPublicById(upload.id);
