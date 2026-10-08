@@ -73,4 +73,4 @@ jobs:
       - name: API production build
         run: pnpm --filter @dauviet/api build
       - name: Real JWT + PostGIS + Redis HTTP E2E
-        run: timeout --signal=TERM --kill-after=10s 120s pnpm --filter @dauviet/api exec jest --config ./test/jest-e2e.json --runInBand --detectOpenHandles --runTestsByPath test/trip-discussion.e2e-spec.ts
+        run: timeout --signal=TERM --kill-after=10s 120s pnpm --filter @dauviet/api exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/trip-discussion.e2e-spec.ts
