@@ -8,6 +8,7 @@ on:
       - "prisma/schema.prisma"
       - "prisma/migrations/**"
       - "apps/api/src/modules/trips/**"
+      - "apps/api/test/trip-discussion.e2e-spec.ts"
       - ".github/workflows/trip-discussion-qa.yml"
 
 permissions:
