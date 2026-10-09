@@ -8,13 +8,19 @@ describe('TripDiscussionService security', () => {
   const assertCanPost = jest.fn();
   const findMany = jest.fn();
   const create = jest.fn();
+  const queryRaw = jest.fn();
+  const tripFind = jest.fn();
+  const memberFind = jest.fn();
+  const transaction = jest.fn(async (fn) => fn({ $queryRaw: queryRaw, trip: { findUnique: tripFind }, tripMember: { findUnique: memberFind }, tripDiscussionMessage: { create } }));
   const service = new TripDiscussionService(
-    { tripDiscussionMessage: { findMany, create } } as unknown as PrismaService,
+    { tripDiscussionMessage: { findMany, create }, $transaction: transaction } as unknown as PrismaService,
     { assertCanRead, assertCanPost } as unknown as TripDiscussionAccessService,
   );
 
   beforeEach(() => {
     jest.resetAllMocks();
+    tripFind.mockResolvedValue({ ownerId: 'owner' });
+    memberFind.mockResolvedValue({ role: 'VIEWER' });
   });
 
   it('denies unrelated users before querying any messages', async () => {
@@ -24,7 +30,7 @@ describe('TripDiscussionService security', () => {
   });
 
   it('denies removed members before creating messages', async () => {
-    assertCanPost.mockRejectedValue(new ForbiddenException());
+    memberFind.mockResolvedValue(null);
     await expect(service.post('private-trip', 'removed', 'hello')).rejects.toThrow(ForbiddenException);
     expect(create).not.toHaveBeenCalled();
   });
@@ -40,12 +46,17 @@ describe('TripDiscussionService security', () => {
   });
 
   it('creates only as the authenticated actor in the authorized trip', async () => {
-    assertCanPost.mockResolvedValue(undefined);
     create.mockResolvedValue({ id: 'msg' });
     await service.post('trip-a', 'member', '  hello  ');
     expect(create).toHaveBeenCalledWith(expect.objectContaining({
       data: { tripId: 'trip-a', authorId: 'member', body: 'hello' },
     }));
+  });
+
+  it('denies a removed member inside the write transaction', async () => {
+    memberFind.mockResolvedValue(null);
+    await expect(service.post('trip-a', 'removed', 'hello')).rejects.toThrow(ForbiddenException);
+    expect(create).not.toHaveBeenCalled();
   });
 
   it('rejects empty messages before touching the database', async () => {
