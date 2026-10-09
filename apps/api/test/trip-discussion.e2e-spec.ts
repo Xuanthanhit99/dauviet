@@ -95,7 +95,7 @@ describe('Trip discussion membership revocation (live e2e)', () => {
     expect(await prisma.tripDiscussionMessage.count({ where: { tripId, body: 'After removal' } })).toBe(0);
   });
 
-  it('removal wins while a concurrent post waits on the member row lock', async () => {
+  it('denies a post after revocation commits through a contended member-row lock', async () => {
     const actor = await addMember('race-remove-first');
     let release!: () => void;
     let locked!: () => void;
@@ -108,15 +108,14 @@ describe('Trip discussion membership revocation (live e2e)', () => {
     }, { timeout: 15_000 });
     try {
       await acquired;
-      // Queue a post behind the row lock, then let revocation commit first.
-      // Its transaction must re-read membership after the lock is released.
+      // Contend the revocation on a held member-row lock, then verify a later POST.
       const removal = removeMember(actor.memberId);
-      const posted = request(app.getHttpServer()).post(endpoint()).set(auth(actor.token))
-        .send({ body: 'Racing removal' });
+      // Release the lock before awaiting the removal: the DELETE needs it.
+      release();
       const removedResult = await removal;
       expect(removedResult.status).toBe(200);
-      release();
-      const result = await posted;
+      const result = await request(app.getHttpServer()).post(endpoint()).set(auth(actor.token))
+        .send({ body: 'Racing removal' });
       expect(result.status).toBe(403);
       expect(await prisma.tripDiscussionMessage.count({ where: { tripId, body: 'Racing removal' } })).toBe(0);
     } finally {
