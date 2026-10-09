@@ -95,6 +95,17 @@ describe('Trip discussion membership revocation (live e2e)', () => {
     expect(await prisma.tripDiscussionMessage.count({ where: { tripId, body: 'After removal' } })).toBe(0);
   });
 
+  it('DELETE committed first denies both POST and GET with the same valid JWT', async () => {
+    const actor = await addMember('race-delete-first');
+    expect((await removeMember(actor.memberId)).status).toBe(200);
+    await request(app.getHttpServer()).post(endpoint()).set(auth(actor.token))
+      .send({ body: 'Delete first must deny' }).expect(403);
+    await request(app.getHttpServer()).get(endpoint()).set(auth(actor.token)).expect(403);
+    expect(await prisma.tripDiscussionMessage.count({
+      where: { tripId, body: 'Delete first must deny' },
+    })).toBe(0);
+  });
+
   it('serializes concurrent POST and DELETE under a contended membership lock', async () => {
     const actor = await addMember('race-concurrent');
     let release!: () => void;
