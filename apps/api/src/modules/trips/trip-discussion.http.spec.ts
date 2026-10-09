@@ -29,7 +29,9 @@ describe('Trip discussion HTTP access boundary (isolated controller E2E)', () =>
       trip: { findUnique: jest.fn().mockImplementation(async ({ where }) => where.id === trip.id ? trip : null) },
       tripMember: { findUnique: jest.fn().mockImplementation(async ({ where }) => members.has(where.tripId_userId.userId) ? { role: 'VIEWER' } : null) },
       tripDiscussionMessage: { findMany, create },
+      $queryRaw: jest.fn().mockResolvedValue([]),
     };
+    (prisma as typeof prisma & { $transaction?: unknown }).$transaction = async (fn: (tx: typeof prisma) => Promise<unknown>) => fn(prisma);
     const { TripAuthorizationService } = await import('./trip-authorization.service');
     const moduleRef = await Test.createTestingModule({
       controllers: [TripDiscussionController],
