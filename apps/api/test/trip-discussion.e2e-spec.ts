@@ -88,7 +88,7 @@ describe('Trip discussion membership revocation (live e2e)', () => {
     const actor = await addMember('race-post-first');
     const posted = await request(app.getHttpServer()).post(endpoint()).set(auth(actor.token))
       .send({ body: 'Before removal' }).expect(201);
-    await removeMember(actor.memberId).expect(200);
+    expect((await removeMember(actor.memberId)).status).toBe(200);
     expect(await prisma.tripDiscussionMessage.count({ where: { id: posted.body.data.id } })).toBe(1);
     await request(app.getHttpServer()).post(endpoint()).set(auth(actor.token))
       .send({ body: 'After removal' }).expect(403);
