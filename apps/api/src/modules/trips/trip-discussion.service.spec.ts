@@ -19,6 +19,7 @@ describe('TripDiscussionService security', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
+    transaction.mockImplementation(async (fn) => fn({ $queryRaw: queryRaw, trip: { findUnique: tripFind }, tripMember: { findUnique: memberFind }, tripDiscussionMessage: { create } }));
     tripFind.mockResolvedValue({ ownerId: 'owner' });
     memberFind.mockResolvedValue({ role: 'VIEWER' });
   });
