@@ -10,12 +10,23 @@ export class TripDiscussionService {
   ) {}
 
   async list(tripId: string, userId: string) {
-    await this.access.assertCanRead(tripId, userId);
-    return this.prisma.tripDiscussionMessage.findMany({
-      where: { tripId, deletedAt: null },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      take: 50,
-      select: { id: true, tripId: true, authorId: true, body: true, createdAt: true },
+    // Keep authorization and message selection in the same transaction.
+    // A membership DELETE must not commit between permission check and read.
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT 1 FROM "TripMember" WHERE "tripId" = ${tripId} AND "userId" = ${userId} FOR SHARE`;
+      await tx.$queryRaw`SELECT 1 FROM "Trip" WHERE "id" = ${tripId} FOR SHARE`;
+      const trip = await tx.trip.findUnique({ where: { id: tripId }, select: { ownerId: true } });
+      if (!trip) throw new NotFoundException('Trip not found.');
+      if (trip.ownerId !== userId) {
+        const member = await tx.tripMember.findUnique({ where: { tripId_userId: { tripId, userId } } });
+        if (!member) throw new ForbiddenException('You do not have permission to read this trip discussion.');
+      }
+      return tx.tripDiscussionMessage.findMany({
+        where: { tripId, deletedAt: null },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: 50,
+        select: { id: true, tripId: true, authorId: true, body: true, createdAt: true },
+      });
     });
   }
 
