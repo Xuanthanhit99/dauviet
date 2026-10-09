@@ -107,7 +107,15 @@ describe('Trip discussion membership revocation (live e2e)', () => {
   });
 
   it('serializes concurrent POST and DELETE under a contended membership lock', async () => {
-    const actor = await addMember('race-concurrent');
+    // Reuse an existing authenticated account instead of exceeding the
+    // registration endpoint's rate limit during this E2E suite.
+    const existing = await prisma.user.findUniqueOrThrow({
+      where: { email: `discussion-stranger-${stamp}@example.com` },
+    });
+    const membership = await prisma.tripMember.create({
+      data: { tripId, userId: existing.id, role: 'VIEWER' },
+    });
+    const actor = { token: strangerToken, userId: existing.id, memberId: membership.id };
     let release!: () => void;
     let locked!: () => void;
     const acquired = new Promise<void>((resolve) => { locked = resolve; });
