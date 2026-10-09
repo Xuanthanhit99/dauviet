@@ -95,8 +95,8 @@ describe('Trip discussion membership revocation (live e2e)', () => {
     expect(await prisma.tripDiscussionMessage.count({ where: { tripId, body: 'After removal' } })).toBe(0);
   });
 
-  it('denies a post after revocation commits through a contended member-row lock', async () => {
-    const actor = await addMember('race-remove-first');
+  it('serializes concurrent POST and DELETE under a contended membership lock', async () => {
+    const actor = await addMember('race-concurrent');
     let release!: () => void;
     let locked!: () => void;
     const acquired = new Promise<void>((resolve) => { locked = resolve; });
@@ -108,16 +108,22 @@ describe('Trip discussion membership revocation (live e2e)', () => {
     }, { timeout: 15_000 });
     try {
       await acquired;
-      // Contend the revocation on a held member-row lock, then verify a later POST.
-      const removal = removeMember(actor.memberId);
-      // Release the lock before awaiting the removal: the DELETE needs it.
+      const version = (await prisma.trip.findUniqueOrThrow({ where: { id: tripId } })).version;
+      // .then starts both Supertest HTTP requests before the held lock is released.
+      const removal = request(app.getHttpServer()).delete(`/v1/trips/${tripId}/members/${actor.memberId}`)
+        .set(auth(ownerToken)).send({ expectedVersion: version }).then((res) => res);
+      const posting = request(app.getHttpServer()).post(endpoint()).set(auth(actor.token))
+        .send({ body: 'Racing removal' }).then((res) => res);
       release();
-      const removedResult = await removal;
-      expect(removedResult.status).toBe(200);
-      const result = await request(app.getHttpServer()).post(endpoint()).set(auth(actor.token))
-        .send({ body: 'Racing removal' });
-      expect(result.status).toBe(403);
-      expect(await prisma.tripDiscussionMessage.count({ where: { tripId, body: 'Racing removal' } })).toBe(0);
+      const [removed, posted] = await Promise.all([removal, posting]);
+      expect(removed.status).toBe(200);
+      expect([201, 403]).toContain(posted.status);
+      // Either a committed post precedes revocation, or a denied post follows it.
+      expect(await prisma.tripDiscussionMessage.count({ where: { tripId, body: 'Racing removal' } }))
+        .toBe(posted.status === 201 ? 1 : 0);
+      await request(app.getHttpServer()).post(endpoint()).set(auth(actor.token))
+        .send({ body: 'After concurrent removal' }).expect(403);
+      expect(await prisma.tripDiscussionMessage.count({ where: { tripId, body: 'After concurrent removal' } })).toBe(0);
     } finally {
       release();
       await holding;
