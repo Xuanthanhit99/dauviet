@@ -71,6 +71,60 @@ describe('Trip discussion membership revocation (live e2e)', () => {
     expect(await prisma.tripDiscussionMessage.count({ where: { tripId } })).toBe(1);
   });
 
+  async function addMember(label: string) {
+    const user = await account(label);
+    const record = await prisma.user.findUniqueOrThrow({ where: { email: user.email } });
+    const membership = await prisma.tripMember.create({ data: { tripId, userId: record.id, role: 'VIEWER' } });
+    return { token: user.token, userId: record.id, memberId: membership.id };
+  }
+
+  async function removeMember(id: string) {
+    const trip = await prisma.trip.findUniqueOrThrow({ where: { id: tripId } });
+    return request(app.getHttpServer()).delete(`/v1/trips/${tripId}/members/${id}`)
+      .set(auth(ownerToken)).send({ expectedVersion: trip.version });
+  }
+
+  it('post committed before removal remains in history; subsequent posts are forbidden', async () => {
+    const actor = await addMember('race-post-first');
+    const posted = await request(app.getHttpServer()).post(endpoint()).set(auth(actor.token))
+      .send({ body: 'Before removal' }).expect(201);
+    await removeMember(actor.memberId).expect(200);
+    expect(await prisma.tripDiscussionMessage.count({ where: { id: posted.body.data.id } })).toBe(1);
+    await request(app.getHttpServer()).post(endpoint()).set(auth(actor.token))
+      .send({ body: 'After removal' }).expect(403);
+    expect(await prisma.tripDiscussionMessage.count({ where: { tripId, body: 'After removal' } })).toBe(0);
+  });
+
+  it('removal wins while a concurrent post waits on the member row lock', async () => {
+    const actor = await addMember('race-remove-first');
+    let release!: () => void;
+    let locked!: () => void;
+    const acquired = new Promise<void>((resolve) => { locked = resolve; });
+    const barrier = new Promise<void>((resolve) => { release = resolve; });
+    const holding = prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT 1 FROM "TripMember" WHERE "id" = ${actor.memberId} FOR UPDATE`;
+      locked();
+      await barrier;
+    }, { timeout: 15_000 });
+    try {
+      await acquired;
+      // Queue a post behind the row lock, then let revocation commit first.
+      // Its transaction must re-read membership after the lock is released.
+      const removal = removeMember(actor.memberId);
+      const posted = request(app.getHttpServer()).post(endpoint()).set(auth(actor.token))
+        .send({ body: 'Racing removal' });
+      const removedResult = await removal;
+      expect(removedResult.status).toBe(200);
+      release();
+      const result = await posted;
+      expect(result.status).toBe(403);
+      expect(await prisma.tripDiscussionMessage.count({ where: { tripId, body: 'Racing removal' } })).toBe(0);
+    } finally {
+      release();
+      await holding;
+    }
+  }, 30_000);
+
   it('immediately blocks the same still-valid JWT after owner removes the member', async () => {
     const trip = await prisma.trip.findUniqueOrThrow({ where: { id: tripId } });
     await request(app.getHttpServer()).delete(`/v1/trips/${tripId}/members/${memberId}`)
