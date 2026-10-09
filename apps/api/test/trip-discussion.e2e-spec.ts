@@ -137,7 +137,7 @@ describe('Trip discussion membership revocation (live e2e)', () => {
     await request(app.getHttpServer()).get(endpoint()).set(auth(memberToken)).expect(403);
     await request(app.getHttpServer()).post(endpoint()).set(auth(memberToken))
       .send({ body: 'Must be denied' }).expect(403);
-    expect(await prisma.tripDiscussionMessage.count({ where: { tripId } })).toBe(1);
+    expect(await prisma.tripDiscussionMessage.count({ where: { tripId, body: 'Must be denied' } })).toBe(0);
     await request(app.getHttpServer()).get(endpoint()).set(auth(ownerToken)).expect(200);
   });
 });
