@@ -1,0 +1,77 @@
+name: Trip Discussion QA
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/global-travel-trip-discussion-slice1
+    paths:
+      - "prisma/schema.prisma"
+      - "prisma/migrations/**"
+      - "apps/api/src/modules/trips/**"
+      - "apps/api/test/trip-discussion.e2e-spec.ts"
+      - ".github/workflows/trip-discussion-qa.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trip-discussion-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgis:
+        image: postgis/postgis:17-master
+        env:
+          POSTGRES_DB: dauviet_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d dauviet_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      REDIS_URL: redis://127.0.0.1:6379
+      JWT_ACCESS_SECRET: trip-discussion-ci-access-secret-32chars
+      JWT_REFRESH_SECRET: trip-discussion-ci-refresh-secret-32chars
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dauviet_ci?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Prisma schema validation
+        run: pnpm exec prisma validate --schema prisma/schema.prisma
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+      - name: Deploy migrations on clean PostGIS
+        run: pnpm db:migrate:deploy
+      - name: Trip discussion authorization and service tests
+        run: pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath src/modules/trips/trip-discussion-access.service.spec.ts src/modules/trips/trip-discussion.service.spec.ts src/modules/trips/trip-discussion.http.spec.ts
+      - name: API production build
+        run: pnpm --filter @dauviet/api build
+      - name: Real JWT + PostGIS + Redis HTTP E2E
+        run: timeout --signal=TERM --kill-after=10s 120s pnpm --filter @dauviet/api exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/trip-discussion.e2e-spec.ts
