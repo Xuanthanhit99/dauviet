@@ -25,7 +25,9 @@
     "admin:build": "pnpm --filter @dauviet/admin build",
     "mobile:start": "pnpm --filter @dauviet/mobile start",
     "consumer:typecheck": "pnpm --filter @dauviet/web typecheck && pnpm --filter @dauviet/admin typecheck && pnpm --filter @dauviet/mobile typecheck",
-    "admin:provision": "tsx scripts/admin/provision-production-admin.ts"
+    "admin:provision": "tsx scripts/admin/provision-production-admin.ts",
+    "db:recover:golden-places": "tsx scripts/db/recover-golden-places.ts",
+    "db:diagnose:production": "tsx scripts/db/diagnose-production.ts"
   },
   "devDependencies": {
     "prisma": "5.20.0",
