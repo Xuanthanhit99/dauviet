@@ -7,6 +7,8 @@ import { nanoid } from 'nanoid';
 import { AppConfig } from '../../config/configuration';
 import { safeExtensionFor } from './file-signature.util';
 
+import type { StorageProvider } from './storage-provider';
+
 export interface ObjectStats {
   exists: boolean;
   sizeBytes?: number;
@@ -21,7 +23,7 @@ export interface ObjectStats {
  * business-logic change (spec section 38).
  */
 @Injectable()
-export class S3Service {
+export class S3Service implements StorageProvider {
   private readonly client: S3Client;
   private readonly bucket: string;
   private readonly publicBaseUrl: string;

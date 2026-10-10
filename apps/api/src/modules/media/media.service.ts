@@ -8,6 +8,7 @@ import { AuditService } from '../audit/audit.service';
 import { buildHistoricalDateColumns } from '../../common/historical-date/historical-date.util';
 import { AppConfig } from '../../config/configuration';
 import { S3Service } from './s3.service';
+import { StorageProvider } from './storage-provider';
 import { assertWithinPolicy, matchesSignature, ALLOWED_MEDIA_TYPES_BY_PURPOSE } from './file-signature.util';
 import { hashStream } from './checksum.util';
 import { MEDIA_ERROR_CODES } from './media-error-codes';
@@ -34,7 +35,7 @@ const EDITOR_ROLES: Role[] = [Role.EDITOR, Role.HISTORIAN_REVIEWER, Role.ADMIN];
 export class MediaService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly s3: S3Service,
+    private readonly s3: StorageProvider,
     private readonly audit: AuditService,
     private readonly config: ConfigService<AppConfig, true>,
     @InjectQueue('media-processing') private readonly queue: Queue,
@@ -419,6 +420,11 @@ export class MediaService {
    * used by `findPublicById`; every other privileged caller in this file
    * still reads the full row directly, unaffected.
    */
+  /** Public media projection shared by public domain responses (e.g. Editorial Home). */
+  toPublicResponse<T extends { storageKey: string; accessPolicy: AccessPolicy }>(media: T) {
+    return this.withPublicUrl(media);
+  }
+
   private withPublicUrl<T extends { storageKey: string; accessPolicy: AccessPolicy }>(media: T) {
     const publicFields = omitKeys(media, ['storageKey', 'checksum', 'uploadedById', 'rightsReviewedById', 'quarantinedById', 'quarantineReason', 'archivedById']);
     const url = media.accessPolicy === AccessPolicy.PUBLIC ? this.s3.publicUrl(media.storageKey) : null;
