@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { resolveTranslation } from '../../common/translation/resolve-translation.util';
 import { UpsertEditorialSlotDto } from './dto/editorial-slot.dto';
+import { MediaService } from '../media/media.service';
 
 const RESOLVABLE_KINDS: EntityKind[] = [EntityKind.STORY, EntityKind.JOURNEY, EntityKind.PLACE];
 
@@ -17,7 +18,7 @@ const RESOLVABLE_KINDS: EntityKind[] = [EntityKind.STORY, EntityKind.JOURNEY, En
  */
 @Injectable()
 export class EditorialService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly media: MediaService) {}
 
   async upsertSlot(dto: UpsertEditorialSlotDto, actorId: string) {
     if (!RESOLVABLE_KINDS.includes(dto.entityKind)) {
@@ -89,16 +90,16 @@ export class EditorialService {
 
   private async resolvePublicEntity(kind: EntityKind, id: string, locale: string) {
     if (kind === EntityKind.STORY) {
-      const story = await this.prisma.story.findUnique({ where: { id }, include: { translations: true } });
+      const story = await this.prisma.story.findUnique({ where: { id }, include: { translations: true, heroMedia: true } });
       if (!story || story.editorialStatus !== StoryEditorialStatus.PUBLISHED) return null;
       const { translation } = resolveTranslation(story.translations, locale);
-      return { kind: 'STORY', id: story.id, slug: story.canonicalSlug, title: translation?.title ?? story.canonicalSlug };
+      return { kind: 'STORY', id: story.id, slug: story.canonicalSlug, title: translation?.title ?? story.canonicalSlug, heroMedia: story.heroMedia ? this.media.toPublicResponse(story.heroMedia) : null };
     }
     if (kind === EntityKind.JOURNEY) {
-      const journey = await this.prisma.journey.findUnique({ where: { id }, include: { translations: true } });
+      const journey = await this.prisma.journey.findUnique({ where: { id }, include: { translations: true, heroMedia: true } });
       if (!journey || journey.editorialStatus !== PublicationStatus.PUBLISHED) return null;
       const { translation } = resolveTranslation(journey.translations, locale);
-      return { kind: 'JOURNEY', id: journey.id, slug: journey.canonicalSlug, title: translation?.title ?? journey.canonicalSlug };
+      return { kind: 'JOURNEY', id: journey.id, slug: journey.canonicalSlug, title: translation?.title ?? journey.canonicalSlug, heroMedia: journey.heroMedia ? this.media.toPublicResponse(journey.heroMedia) : null };
     }
     if (kind === EntityKind.PLACE) {
       const place = await this.prisma.place.findUnique({ where: { id }, include: { translations: true } });

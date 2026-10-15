@@ -18,7 +18,7 @@ type Journey = {
   meta: { requestedLocale: string; resolvedLocale: string; fallbackApplied: boolean };
 };
 const JourneyMap = dynamic(() => import("./journey-map"), { ssr: false, loading: () => <p role="status">Đang mở bản đồ điểm dừng…</p> });
-const API = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const API = (process.env.NEXT_PUBLIC_API_URL ?? "https://dauvietapi-production.up.railway.app").replace(/\/$/, "");
 const formatNumber = (value: number) => new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(value);
 const formatMinutes = (value: number) => value >= 60 ? `${Math.floor(value / 60)} giờ${value % 60 ? ` ${value % 60} phút` : ""}` : `${value} phút`;
 const suppliedNumber = (value: number | null | undefined): value is number => typeof value === "number" && Number.isFinite(value) && value >= 0;
