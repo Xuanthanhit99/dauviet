@@ -42,6 +42,7 @@ import { CountriesModule } from './modules/countries/countries.module';
 import { RegionsModule } from './modules/regions/regions.module';
 import { CitiesModule } from './modules/cities/cities.module';
 import { DestinationsModule } from './modules/destinations/destinations.module';
+import { DestinationWatchModule } from './modules/destination-watch/destination-watch.module';
 import { ProvidersModule } from './modules/providers/providers.module';
 import { AccommodationsModule } from './modules/accommodations/accommodations.module';
 import { CuisinesModule } from './modules/cuisines/cuisines.module';
@@ -114,6 +115,7 @@ import { AffiliateModule } from './modules/affiliate/affiliate.module';
     RegionsModule,
     CitiesModule,
     DestinationsModule,
+    DestinationWatchModule,
     // G02 - Global Backend V2 Extension, Provider + Licensing Foundation.
     // Entirely geography-independent (spec section 37) - no import
     // relationship to the geography modules above.

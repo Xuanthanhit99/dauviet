@@ -14,6 +14,11 @@ function makeHarness() {
   const prisma: any = {
     affiliateSession: { findUnique: jest.fn().mockResolvedValue(null), create: jest.fn((args) => ({ id: 'session-1', ...args.data })) },
     affiliateClick: { create: jest.fn((args) => ({ id: 'click-1', ...args.data })), findUnique: jest.fn() },
+    accommodationOffer: { findFirst: jest.fn().mockResolvedValue({ id: 'offer-1' }) },
+    activityOffer: { findFirst: jest.fn().mockResolvedValue(null) },
+    providerAccommodationReference: { findFirst: jest.fn().mockResolvedValue(null) },
+    providerRestaurantReference: { findFirst: jest.fn().mockResolvedValue(null) },
+    providerActivityReference: { findFirst: jest.fn().mockResolvedValue(null) },
   };
   // G12: default to an eligible gate (resolveRedirect now re-checks it); tests that need a failing gate set it explicitly.
   const registry = { getExecutionContext: jest.fn().mockResolvedValue(OK_CONTEXT) } as unknown as ProviderRegistryService;
@@ -100,6 +105,33 @@ describe('AffiliateClicksService.createClick (spec sections 6, 16-18, 76)', () =
     const createArgs = prisma.affiliateClick.create.mock.calls[0][0];
     expect(createArgs.data.redirectUrl).toContain('www.fixture-provider.example');
     expect(createArgs.data.redirectUrl).toContain('offer=offer-1');
+  });
+  it('rejects an unknown or foreign-provider offer before creating a click', async () => {
+    const { service, prisma } = makeHarness();
+    prisma.accommodationOffer.findFirst.mockResolvedValue(null);
+
+    await expect(service.createClick(undefined, {
+      providerCode: FIXTURE_AFFILIATE_PROVIDER_CODE,
+      providerOfferId: 'foreign-offer',
+      surface: 'DESTINATION_STAY',
+    } as any)).rejects.toMatchObject({
+      response: { code: 'AFFILIATE_PROVIDER_ENTITY_REQUIRED' },
+    });
+    expect(prisma.activityOffer.findFirst).toHaveBeenCalled();
+    expect(prisma.affiliateClick.create).not.toHaveBeenCalled();
+  });
+
+  it('scopes provider offer lookup to the provider approved by the policy gate', async () => {
+    const { service, prisma } = makeHarness();
+    await service.createClick(undefined, {
+      providerCode: FIXTURE_AFFILIATE_PROVIDER_CODE,
+      providerOfferId: 'offer-1',
+      surface: 'DESTINATION_STAY',
+    } as any);
+    expect(prisma.accommodationOffer.findFirst).toHaveBeenCalledWith({
+      where: { id: 'offer-1', providerReference: { providerId: 'provider-1' } },
+      select: { id: true },
+    });
   });
 });
 

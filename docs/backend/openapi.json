@@ -3805,6 +3805,35 @@
         ]
       }
     },
+    "/v1/media/set-hero": {
+      "post": {
+        "operationId": "MediaController_setHero",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetHeroMediaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "media"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/v1/media/attach": {
       "post": {
         "operationId": "MediaController_attach",
@@ -8043,6 +8072,182 @@
         ]
       }
     },
+    "/v1/me/destination-watches": {
+      "get": {
+        "operationId": "DestinationWatchController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-watch"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "DestinationWatchController_follow",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FollowDestinationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-watch"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/me/destination-watches/{destinationId}": {
+      "delete": {
+        "operationId": "DestinationWatchController_unfollow",
+        "parameters": [
+          {
+            "name": "destinationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-watch"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/me/watch-preferences": {
+      "get": {
+        "operationId": "DestinationWatchController_preferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-watch"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "DestinationWatchController_updatePreferences",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWatchPreferencesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-watch"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/me/watch-notifications": {
+      "get": {
+        "operationId": "DestinationWatchController_notifications",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-watch"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/me/watch-notifications/{id}/read": {
+      "patch": {
+        "operationId": "DestinationWatchController_markRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "destination-watch"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/v1/admin/providers": {
       "get": {
         "operationId": "ProvidersController_list",
@@ -12048,6 +12253,70 @@
         ]
       }
     },
+    "/v1/trips/{id}/discussion/messages": {
+      "get": {
+        "operationId": "TripDiscussionController_list",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "TripDiscussionController_post",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostTripDiscussionMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "trips"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/v1/admin/cost-assumptions": {
       "post": {
         "operationId": "CostAssumptionsController_create",
@@ -14586,6 +14855,10 @@
           }
         }
       },
+      "SetHeroMediaDto": {
+        "type": "object",
+        "properties": {}
+      },
       "AttachMediaDto": {
         "type": "object",
         "properties": {}
@@ -16408,6 +16681,14 @@
         "required": [
           "members"
         ]
+      },
+      "FollowDestinationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateWatchPreferencesDto": {
+        "type": "object",
+        "properties": {}
       },
       "CreateProviderDto": {
         "type": "object",
@@ -18468,6 +18749,19 @@
         },
         "required": [
           "token"
+        ]
+      },
+      "PostTripDiscussionMessageDto": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "body"
         ]
       },
       "CreateCostAssumptionDto": {
