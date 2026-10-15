@@ -122,6 +122,40 @@ function minImportanceForZoom(zoom: number | undefined): number {
 export class MapService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async productionDiagnostic() {
+    const extensions = await this.prisma.$queryRaw<Array<{extname:string; extversion:string}>>`
+      SELECT extname, extversion FROM pg_extension
+      WHERE extname IN ('postgis','pg_trgm','unaccent') ORDER BY extname
+    `;
+    const golden = await this.prisma.$queryRaw<Array<{id:string; canonicalSlug:string; publicationStatus:string; historicalImportance:number; location:string|null; name:string|null}>>`
+      SELECT p."id", p."canonicalSlug", p."publicationStatus", p."historicalImportance",
+             ST_AsText(p."location") AS location, t."name"
+      FROM "Place" p LEFT JOIN "PlaceTranslation" t ON t."placeId"=p."id" AND t."locale"='vi'
+      WHERE p."canonicalSlug" IN ('hoang-thanh-thang-long','van-mieu-quoc-tu-giam','co-loa')
+      ORDER BY p."canonicalSlug"
+    `;
+    const [hanoi] = await this.prisma.$queryRaw<Array<{count:bigint}>>`
+      SELECT COUNT(*)::bigint AS count FROM "Place" p
+      WHERE p."publicationStatus"='PUBLISHED' AND p."historicalImportance">=4 AND p."location" IS NOT NULL
+      AND ST_Within(p."location", ST_MakeEnvelope(105.70,20.90,106.00,21.20,4326))
+    `;
+    const [spatial] = await this.prisma.$queryRaw<Array<{count:bigint}>>`
+      SELECT COUNT(*)::bigint AS count FROM "Place"
+      WHERE "publicationStatus"='PUBLISHED' AND "location" IS NOT NULL
+    `;
+    const projection = await this.prisma.searchProjectionQueue.groupBy({
+      by:['attempts'], _count:{_all:true}, where:{entityKind:'PLACE'}
+    });
+    return {
+      ok:true, readOnly:true,
+      databaseHost:(() => { try { return new URL(process.env.DATABASE_URL ?? '').hostname; } catch { return 'unparseable'; } })(),
+      extensions, goldenPlaces:golden,
+      hanoiPublishedSpatialImportance4Plus:Number(hanoi?.count ?? 0),
+      publishedSpatialPlaces:Number(spatial?.count ?? 0),
+      searchProjectionQueueByAttempts:projection,
+    };
+  }
+
   async getFeatures(query: MapFeaturesQueryDto, locale: string) {
     const { minLng, minLat, maxLng, maxLat } = parseBbox(query.bbox, DISCOVERY_ERROR_CODES.MAP_INVALID_BBOX);
 
