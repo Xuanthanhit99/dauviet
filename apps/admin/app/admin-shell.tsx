@@ -1,0 +1,6 @@
+"use client";
+import {useEffect,useState,type ReactNode} from "react";
+import type {AuthUser} from "@dauviet/api-client";
+import {adminApi,restoreAdmin} from "./admin-session";
+const items=[["/","Tổng quan"],["/contributions","Đóng góp"],["/editorial","Biên tập"],["/media","Tư liệu"],["/moderation","Kiểm duyệt"],["/ingestion","Nhập dữ liệu"],["/operations","Vận hành"]];
+export function AdminShell({children}:{children:ReactNode}){const[user,setUser]=useState<AuthUser|null>(null);useEffect(()=>{void restoreAdmin().then(setUser)},[]);return <div className="admin-shell"><aside className="admin-sidebar"><a className="admin-brand" href="/"><span className="admin-mark">DV</span><span><strong>Dấu Việt</strong><small>Editorial Console</small></span></a><nav className="admin-nav" aria-label="Quản trị">{items.map(([href,label])=><a key={href} href={href}>{label}</a>)}</nav><div className="admin-sidebar-foot">Trust-first CMS · Production</div></aside><div className="admin-main"><header className="admin-topbar"><span className="muted"><span className="status-dot"/>Hệ thống quản trị</span><div className="admin-topbar-actions"><span>{user?.displayName??user?.email??"Admin"}</span><button className="btn" onClick={async()=>{await adminApi.logout();location.assign("/login")}}>Đăng xuất</button></div></header><div className="admin-content">{children}</div></div></div>}
