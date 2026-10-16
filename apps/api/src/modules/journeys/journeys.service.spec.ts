@@ -5,15 +5,23 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 
 function makePrismaStub() {
-  return {
+  const prisma = {
     journey: { findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
     journeyStop: { findMany: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn(), findUnique: jest.fn() },
     place: { findUnique: jest.fn() },
     mediaAsset: { findUnique: jest.fn() },
     revision: { create: jest.fn() },
-    $transaction: jest.fn((ops: unknown[]) => Promise.all(ops as Promise<unknown>[])),
+    destinationJourney: { findMany: jest.fn().mockResolvedValue([]) },
+    notificationOutbox: { create: jest.fn() },
+    $transaction: jest.fn(),
     $queryRaw: jest.fn().mockResolvedValue([{ lng: 105.8, lat: 21.0 }]),
   };
+
+  prisma.$transaction.mockImplementation((arg: any) =>
+    typeof arg === 'function' ? arg(prisma) : Promise.all(arg)
+  );
+
+  return prisma;
 }
 
 function makeService(prisma = makePrismaStub()) {

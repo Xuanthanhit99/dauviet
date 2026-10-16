@@ -5,6 +5,7 @@ import { AuditService } from '../audit/audit.service';
 import { resolveTranslation } from '../../common/translation/resolve-translation.util';
 import { toSlug } from '../../common/util/slug.util';
 import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
+import { enqueuePublication, lockPublicationRow } from '../destination-watch/publication-outbox';
 import { EDITORIAL_ERROR_CODES } from '../stories/editorial-error-codes';
 import {
   AddJourneyStopDto,
@@ -309,7 +310,9 @@ export class JourneysService {
   }
 
   async setEditorialStatus(id: string, status: PublicationStatus, actorId: string, options: { notes?: string; expectedVersion?: number } = {}) {
-    const journey = await this.prisma.journey.findUnique({ where: { id }, include: JOURNEY_INCLUDE });
+    return this.prisma.$transaction(async (tx) => {
+      await lockPublicationRow(tx, 'Journey', id);
+    const journey = await tx.journey.findUnique({ where: { id }, include: JOURNEY_INCLUDE });
     if (!journey) throw new NotFoundException('Journey not found.');
 
     if (options.expectedVersion !== undefined && options.expectedVersion !== journey.version) {
@@ -334,7 +337,8 @@ export class JourneysService {
       throw new BadRequestException('Sending a Journey back to draft requires a documented reason.');
     }
 
-    const updated = await this.prisma.journey.update({
+    if (journey.editorialStatus === status) return journey;
+    const updated = await tx.journey.update({
       where: { id },
       data: {
         editorialStatus: status,
@@ -343,17 +347,21 @@ export class JourneysService {
         archivedAt: status === PublicationStatus.ARCHIVED ? new Date() : journey.archivedAt,
       },
     });
-    await this.snapshot(id, actorId, `journey.editorialStatus.${status}`);
+    await this.snapshot(id, actorId, `journey.editorialStatus.${status}`, tx);
+    if (status === PublicationStatus.PUBLISHED) {
+      await enqueuePublication(tx, 'Journey', id, updated.version, 'editorialUpdates');
+    }
     return updated;
+  });
   }
 
   async archive(id: string, actorId: string, notes?: string) {
     return this.setEditorialStatus(id, PublicationStatus.ARCHIVED, actorId, { notes: notes ?? 'Archived by editorial decision.' });
   }
 
-  private async snapshot(journeyId: string, actorId: string, note: string) {
-    const journey = await this.prisma.journey.findUnique({ where: { id: journeyId }, include: JOURNEY_INCLUDE });
-    await this.prisma.revision.create({
+  private async snapshot(journeyId: string, actorId: string, note: string, db: Prisma.TransactionClient | PrismaService = this.prisma) {
+    const journey = await db.journey.findUnique({ where: { id: journeyId }, include: JOURNEY_INCLUDE });
+    await db.revision.create({
       data: {
         entityType: EntityKind.JOURNEY,
         entityId: journeyId,
@@ -363,6 +371,6 @@ export class JourneysService {
         changedById: actorId,
       },
     });
-    await this.audit.log({ actorId, action: note, entityType: EntityKind.JOURNEY, entityId: journeyId });
+    await this.audit.log({ actorId, action: note, entityType: EntityKind.JOURNEY, entityId: journeyId }, db);
   }
 }

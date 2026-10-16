@@ -5,6 +5,7 @@ import { AuditService } from '../audit/audit.service';
 import { MediaService } from '../media/media.service';
 import { resolveTranslation } from '../../common/translation/resolve-translation.util';
 import { toSlug } from '../../common/util/slug.util';
+import { lockPublicationRow } from '../destination-watch/publication-outbox';
 import { GEOGRAPHY_ERROR_CODES } from '../../common/errors/geography-error-codes';
 import { assertSameCountry } from '../../common/geography/geography-consistency.util';
 import { toHistoricalDateResponse } from '../../common/historical-date/historical-date.util';
@@ -202,19 +203,20 @@ export class DestinationsService {
   }
 
   async setStatus(id: string, status: PublicationStatus, actorId: string) {
-    const destination = await this.prisma.destination.findUnique({ where: { id }, include: { translations: true } });
-    if (!destination) throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.DESTINATION_NOT_FOUND, message: 'Destination not found.' });
-
-    if (status === PublicationStatus.PUBLISHED && destination.translations.length === 0) {
-      throw new BadRequestException({
-        code: GEOGRAPHY_ERROR_CODES.GEOGRAPHY_CANNOT_PUBLISH_WITHOUT_TRANSLATION,
-        message: 'Cannot publish a destination with no translations.',
-      });
-    }
-
-    const updated = await this.prisma.destination.update({ where: { id }, data: { status } });
-    await this.audit.log({ actorId, action: 'destination.status.changed', entityType: 'DESTINATION', entityId: id, metadata: { status } });
-    return updated;
+    return this.prisma.$transaction(async (tx) => {
+      await lockPublicationRow(tx, 'Destination', id);
+      const destination = await tx.destination.findUnique({ where: { id }, include: { translations: true } });
+      if (!destination) throw new NotFoundException({ code: GEOGRAPHY_ERROR_CODES.DESTINATION_NOT_FOUND, message: 'Destination not found.' });
+      if (status === PublicationStatus.PUBLISHED && destination.translations.length === 0) {
+        throw new BadRequestException({ code: GEOGRAPHY_ERROR_CODES.GEOGRAPHY_CANNOT_PUBLISH_WITHOUT_TRANSLATION, message: 'Cannot publish a destination with no translations.' });
+      }
+      if (destination.status === status) return destination;
+      const updated = await tx.destination.update({ where: { id }, data: {
+        status, publicationRevision: { increment: 1 },
+      } });
+      await this.audit.log({ actorId, action: 'destination.status.changed', entityType: 'DESTINATION', entityId: id, metadata: { status } }, tx);
+      return updated;
+    });
   }
 
   // -----------------------------------------------------------------------

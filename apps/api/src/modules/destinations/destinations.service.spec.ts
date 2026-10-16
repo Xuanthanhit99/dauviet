@@ -23,7 +23,8 @@ describe('DestinationsService', () => {
       theme: { findFirst: jest.fn() },
       destination: { findUnique: jest.fn(), findMany: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0), create: jest.fn(), update: jest.fn() },
       destinationTranslation: { upsert: jest.fn() },
-      $transaction: jest.fn((ops: any[]) => Promise.all(ops)),
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      $transaction: jest.fn((arg: any) => typeof arg === 'function' ? arg(prisma) : Promise.all(arg)),
     };
     audit = { log: jest.fn() };
     media = { findPublicById: jest.fn() };

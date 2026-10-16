@@ -15,6 +15,7 @@ import { resolveTranslation } from '../../common/translation/resolve-translation
 import { toSlug } from '../../common/util/slug.util';
 import { CANONICAL_LOCALE } from '../../common/decorators/locale.decorator';
 import { AuthUser } from '../../common/decorators/current-user.decorator';
+import { enqueuePublication, lockPublicationRow } from '../destination-watch/publication-outbox';
 import { EDITORIAL_ERROR_CODES } from './editorial-error-codes';
 import { extractReferencedMediaAssetIds, validateStoryBody } from './story-body.util';
 import { CreateStoryDto, LinkStoryCitationDto, LinkStoryEntityDto, LinkStoryFactDto, SetStoryFeaturedDto } from './dto/story.dto';
@@ -305,7 +306,7 @@ export class StoriesService {
    * at automated historical-truth verification, only "does the required
    * structure/state actually exist".
    */
-  private async validateForPublication(story: Prisma.StoryGetPayload<{ include: typeof STORY_INCLUDE }>) {
+  private async validateForPublication(story: Prisma.StoryGetPayload<{ include: typeof STORY_INCLUDE }>, db: Prisma.TransactionClient | PrismaService = this.prisma) {
     const canonical = story.translations.find((t) => t.locale === CANONICAL_LOCALE) ?? story.translations[0];
     if (!canonical || !canonical.title?.trim()) {
       throw new BadRequestException({ code: EDITORIAL_ERROR_CODES.STORY_TRANSLATION_REQUIRED, message: 'Cannot publish a Story with no translated title.' });
@@ -332,7 +333,7 @@ export class StoriesService {
       for (const id of extractReferencedMediaAssetIds(validateStoryBody(t.content))) inlineMediaIds.add(id);
     }
     if (inlineMediaIds.size > 0) {
-      const inline = await this.prisma.mediaAsset.findMany({ where: { id: { in: Array.from(inlineMediaIds) } } });
+      const inline = await db.mediaAsset.findMany({ where: { id: { in: Array.from(inlineMediaIds) } } });
       const notReady = inline.find((m) => m.status !== MediaAssetStatus.READY);
       if (notReady || inline.length !== inlineMediaIds.size) {
         throw new BadRequestException({
@@ -367,7 +368,9 @@ export class StoriesService {
     actor: AuthUser,
     options: { notes?: string; decision?: ReviewDecision; scheduledAt?: string; expectedVersion?: number } = {},
   ) {
-    const story = await this.prisma.story.findUnique({ where: { id }, include: STORY_INCLUDE });
+    return this.prisma.$transaction(async (tx) => {
+      await lockPublicationRow(tx, 'Story', id);
+    const story = await tx.story.findUnique({ where: { id }, include: STORY_INCLUDE });
     if (!story) throw new NotFoundException('Story not found.');
 
     if (options.expectedVersion !== undefined && options.expectedVersion !== story.version) {
@@ -412,7 +415,7 @@ export class StoriesService {
     }
 
     if (newStatus === StoryEditorialStatus.PUBLISHED) {
-      await this.validateForPublication(story);
+      await this.validateForPublication(story, tx);
     }
 
     if (
@@ -440,9 +443,14 @@ export class StoriesService {
       updateData.lastReviewedAt = new Date();
     }
 
-    const updated = await this.prisma.story.update({ where: { id }, data: updateData });
-    await this.snapshot(id, actor.id, `story.editorialStatus.${newStatus}`, { stage: story.editorialStatus, decision, notes: options.notes });
+    if (story.editorialStatus === newStatus) return story;
+    const updated = await tx.story.update({ where: { id }, data: updateData });
+    await this.snapshot(id, actor.id, `story.editorialStatus.${newStatus}`, { stage: story.editorialStatus, decision, notes: options.notes }, tx);
+    if (newStatus === StoryEditorialStatus.PUBLISHED) {
+      await enqueuePublication(tx, 'Story', id, updated.version, 'editorialUpdates');
+    }
     return updated;
+  });
   }
 
   /** Archive/deactivate, never hard-delete (spec section 22) - revisions/links/citations/audit are untouched. */
@@ -456,9 +464,9 @@ export class StoriesService {
    * model (Phase 04 precedent, `FactsService.snapshot`) rather than a
    * typed StoryRevision table - see docs/backend/EDITORIAL_CONTENT.md.
    */
-  private async snapshot(storyId: string, actorId: string, note: string, review?: { stage: StoryEditorialStatus; decision: ReviewDecision; notes?: string }) {
-    const story = await this.prisma.story.findUnique({ where: { id: storyId }, include: STORY_INCLUDE });
-    await this.prisma.revision.create({
+  private async snapshot(storyId: string, actorId: string, note: string, review?: { stage: StoryEditorialStatus; decision: ReviewDecision; notes?: string }, db: Prisma.TransactionClient | PrismaService = this.prisma) {
+    const story = await db.story.findUnique({ where: { id: storyId }, include: STORY_INCLUDE });
+    await db.revision.create({
       data: {
         entityType: EntityKind.STORY,
         entityId: storyId,
@@ -468,6 +476,6 @@ export class StoriesService {
         changedById: actorId,
       },
     });
-    await this.audit.log({ actorId, action: note, entityType: EntityKind.STORY, entityId: storyId, metadata: review });
+    await this.audit.log({ actorId, action: note, entityType: EntityKind.STORY, entityId: storyId, metadata: review }, db);
   }
 }

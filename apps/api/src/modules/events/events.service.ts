@@ -9,6 +9,7 @@ import { buildHistoricalDateColumns, toHistoricalDateResponse } from '../../comm
 import { getPublicSourcesForEntity } from '../facts/fact-sources.util';
 import { StoriesService } from '../stories/stories.service';
 import { CreateEventDto, EventCountryLinkInputDto } from './dto/event.dto';
+import { enqueuePublication, lockPublicationRow } from '../destination-watch/publication-outbox';
 import { GEOGRAPHY_ERROR_CODES } from '../../common/errors/geography-error-codes';
 
 @Injectable()
@@ -227,13 +228,22 @@ export class EventsService {
   }
 
   async setPublicationStatus(id: string, status: PublicationStatus, actorId: string) {
-    const event = await this.prisma.historicalEvent.findUnique({ where: { id }, include: { translations: true } });
-    if (!event) throw new NotFoundException('Event not found.');
-    if (status === PublicationStatus.PUBLISHED && event.translations.length === 0) {
-      throw new BadRequestException('Cannot publish an event with no translations.');
-    }
-    const updated = await this.prisma.historicalEvent.update({ where: { id }, data: { publicationStatus: status } });
-    await this.audit.log({ actorId, action: 'event.publicationStatus.changed', entityType: 'EVENT', entityId: id, metadata: { status } });
-    return updated;
+    return this.prisma.$transaction(async (tx) => {
+      await lockPublicationRow(tx, 'HistoricalEvent', id);
+      const event = await tx.historicalEvent.findUnique({ where: { id }, include: { translations: true } });
+      if (!event) throw new NotFoundException('Event not found.');
+      if (status === PublicationStatus.PUBLISHED && event.translations.length === 0) {
+        throw new BadRequestException('Cannot publish an event with no translations.');
+      }
+      if (event.publicationStatus === status) return event;
+      const updated = await tx.historicalEvent.update({ where: { id }, data: {
+        publicationStatus: status, publicationRevision: { increment: 1 },
+      } });
+      await this.audit.log({ actorId, action: 'event.publicationStatus.changed', entityType: 'EVENT', entityId: id, metadata: { status } }, tx);
+      if (status === PublicationStatus.PUBLISHED) {
+        await enqueuePublication(tx, 'HistoricalEvent', id, updated.publicationRevision, 'eventUpdates');
+      }
+      return updated;
+    });
   }
 }
