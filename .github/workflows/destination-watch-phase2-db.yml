@@ -61,3 +61,12 @@ jobs:
         run: pnpm exec prisma migrate status --schema prisma/schema.prisma
       - name: Run Phase 2 PostgreSQL integration
         run: pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath src/modules/destination-watch/publication-outbox.db.spec.ts
+      - name: TypeScript API gate
+        run: pnpm --filter @dauviet/api exec tsc --noEmit -p tsconfig.json
+      - name: Publication and watch regression gate
+        run: >-
+          pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath
+          src/modules/events/events.service.spec.ts
+          src/modules/destinations/destinations.service.spec.ts
+          src/modules/journeys/journeys.service.spec.ts
+          src/modules/destination-watch/destination-watch.service.spec.ts
