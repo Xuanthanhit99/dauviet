@@ -6,6 +6,11 @@ on:
       - feat/destination-watch-v15-notification-delivery
     paths:
       - '.github/workflows/destination-watch-phase2-db.yml'
+      - 'apps/api/src/modules/events/events.service.ts'
+      - 'apps/api/src/modules/destination-watch/publication-outbox.db.spec.ts'
+      - 'apps/api/src/modules/destination-watch/publication-outbox.ts'
+      - 'prisma/schema.prisma'
+      - 'prisma/migrations/20261015170000_destination_watch_notification_delivery/migration.sql'
   workflow_dispatch:
 
 permissions:
