@@ -1,0 +1,58 @@
+name: Destination Watch Phase 2 PostgreSQL Gate
+
+on:
+  push:
+    branches:
+      - feat/destination-watch-v15-notification-delivery
+    paths:
+      - '.github/workflows/destination-watch-phase2-db.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: destination-watch-phase2-db-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publication-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: dauviet_qa
+          POSTGRES_PASSWORD: phase2_ci_only_password
+          POSTGRES_DB: dauviet_qa
+        ports:
+          - 55435:5432
+        options: >-
+          --health-cmd "pg_isready -U dauviet_qa -d dauviet_qa"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://dauviet_qa:phase2_ci_only_password@127.0.0.1:55435/dauviet_qa?schema=public
+      DESTINATION_WATCH_PHASE2_DB_QA: '1'
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '9'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate --schema prisma/schema.prisma
+      - name: Apply QA migrations
+        run: pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+      - name: Validate QA migration state
+        run: pnpm exec prisma migrate status --schema prisma/schema.prisma
+      - name: Run Phase 2 PostgreSQL integration
+        run: pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath src/modules/destination-watch/publication-outbox.db.spec.ts
