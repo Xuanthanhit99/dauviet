@@ -242,6 +242,14 @@ export class EventsService {
       await this.audit.log({ actorId, action: 'event.publicationStatus.changed', entityType: 'EVENT', entityId: id, metadata: { status } }, tx);
       if (status === PublicationStatus.PUBLISHED) {
         await enqueuePublication(tx, 'HistoricalEvent', id, updated.publicationRevision, 'eventUpdates');
+      } else {
+        // Unpublishing invalidates unsent publication events atomically.
+        // Never mutate rows already claimed by a worker: delivery must recheck
+        // the source publication status immediately before external sending.
+        await tx.notificationOutbox.updateMany({
+          where: { sourceType: 'HistoricalEvent', sourceId: id, status: 'PENDING' },
+          data: { status: 'CANCELLED', leaseOwner: null, leaseUntil: null },
+        });
       }
       return updated;
     });
