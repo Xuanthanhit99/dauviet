@@ -11,6 +11,8 @@ on:
       - 'apps/api/src/modules/destination-watch/publication-outbox.ts'
       - 'apps/api/src/modules/destination-watch/publication-fanout.ts'
       - 'apps/api/src/modules/destination-watch/publication-fanout.db.spec.ts'
+      - 'apps/api/src/modules/destination-watch/publication-worker.ts'
+      - 'apps/api/src/modules/destination-watch/publication-worker.db.spec.ts'
       - 'prisma/schema.prisma'
       - 'prisma/migrations/20261015170000_destination_watch_notification_delivery/migration.sql'
   workflow_dispatch:
@@ -74,3 +76,5 @@ jobs:
           src/modules/destination-watch/destination-watch.service.spec.ts
       - name: Run Phase 3.1 PostgreSQL fan-out integration
         run: pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath src/modules/destination-watch/publication-fanout.db.spec.ts
+      - name: Run Phase 3.2 PostgreSQL worker claim and fencing integration
+        run: pnpm --filter @dauviet/api exec jest --runInBand --runTestsByPath src/modules/destination-watch/publication-worker.db.spec.ts
