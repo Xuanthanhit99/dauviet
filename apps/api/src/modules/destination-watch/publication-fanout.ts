@@ -7,14 +7,18 @@ import { Prisma, PrismaClient, PublicationStatus, StoryEditorialStatus } from '@
  * A transaction locks the outbox row; concurrent invocations serialize.
  * An exception before commit rolls back both inbox rows and outbox status.
  */
-export async function fanOutPublication(prisma: PrismaClient, outboxId: string): Promise<'PROCESSED' | 'CANCELLED' | 'SKIPPED'> {
+export type OutboxClaim = { id: string; owner: string; generation: number };
+
+export async function fanOutPublication(prisma: PrismaClient, outboxId: string, claim?: OutboxClaim): Promise<'PROCESSED' | 'CANCELLED' | 'SKIPPED'> {
   return prisma.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<Array<{ id: string }>>(
       Prisma.sql`SELECT "id" FROM "NotificationOutbox" WHERE "id" = ${outboxId} FOR UPDATE`,
     );
     if (!locked.length) return 'SKIPPED';
     const outbox = await tx.notificationOutbox.findUniqueOrThrow({ where: { id: outboxId } });
-    if (outbox.status !== 'PENDING') return 'SKIPPED';
+    if (claim) {
+      if (outbox.status !== 'CLAIMED' || outbox.leaseOwner !== claim.owner || outbox.leaseGeneration !== claim.generation || !outbox.leaseUntil || outbox.leaseUntil <= new Date()) return 'SKIPPED';
+    } else if (outbox.status !== 'PENDING') return 'SKIPPED';
 
     const destination = await tx.destination.findUnique({
       where: { id: outbox.destinationId }, select: { status: true },
@@ -51,7 +55,7 @@ export async function fanOutPublication(prisma: PrismaClient, outboxId: string):
     }
 
     if (!published || !title || !['eventUpdates', 'editorialUpdates'].includes(outbox.kind)) {
-      await tx.notificationOutbox.update({ where: { id: outboxId }, data: { status: 'CANCELLED', processedAt: new Date() } });
+      await tx.notificationOutbox.update({ where: { id: outboxId }, data: { status: 'CANCELLED', processedAt: new Date(), leaseOwner: null, leaseUntil: null } });
       return 'CANCELLED';
     }
 
@@ -72,7 +76,7 @@ export async function fanOutPublication(prisma: PrismaClient, outboxId: string):
         skipDuplicates: true,
       });
     }
-    await tx.notificationOutbox.update({ where: { id: outboxId }, data: { status: 'PROCESSED', processedAt: new Date() } });
+    await tx.notificationOutbox.update({ where: { id: outboxId }, data: { status: 'PROCESSED', processedAt: new Date(), leaseOwner: null, leaseUntil: null } });
     return 'PROCESSED';
   }, { maxWait: 5000, timeout: 15000 });
 }
