@@ -41,9 +41,9 @@ export async function fanOutPublication(prisma: PrismaClient, outboxId: string):
     } else if (published && outbox.sourceType === 'Journey') {
       const source = await tx.journey.findUnique({
         where: { id: outbox.sourceId },
-        select: { status: true, version: true, translations: { where: { locale: 'vi' }, take: 1 } },
+        select: { editorialStatus: true, version: true, translations: { where: { locale: 'vi' }, take: 1 } },
       });
-      published = source?.status === PublicationStatus.PUBLISHED && source.version === outbox.sourceVersion;
+      published = source?.editorialStatus === PublicationStatus.PUBLISHED && source.version === outbox.sourceVersion;
       title = source?.translations[0]?.title ?? '';
       summary = source?.translations[0]?.summary ?? null;
     } else {
